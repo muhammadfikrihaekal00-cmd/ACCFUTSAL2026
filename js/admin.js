@@ -364,6 +364,34 @@ const admin = {
       if (document.getElementById("settingMvpAssists")) document.getElementById("settingMvpAssists").value = mvp.assists || 0;
       if (document.getElementById("settingMvpQuote")) document.getElementById("settingMvpQuote").value = mvp.quote || "";
     }
+
+    // Supabase fields
+    try {
+      const stored = localStorage.getItem("acc_supabase_cfg");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.url && document.getElementById("settingSupabaseUrl")) document.getElementById("settingSupabaseUrl").value = parsed.url;
+        if (parsed.anonKey && document.getElementById("settingSupabaseKey")) document.getElementById("settingSupabaseKey").value = parsed.anonKey;
+      }
+    } catch (e) {}
+  },
+
+  saveSupabaseConfig() {
+    const url = document.getElementById("settingSupabaseUrl")?.value.trim() || "";
+    const key = document.getElementById("settingSupabaseKey")?.value.trim() || "";
+    if (!url || !key) {
+      alert("Harap masukkan URL dan Anon Key Supabase yang lengkap!");
+      return;
+    }
+    if (window.SupabaseService) {
+      const ok = window.SupabaseService.configure(url, key);
+      if (ok) {
+        app.showToast("⚡ Supabase Cloud aktif & tersambung!");
+        if (app.initSupabaseSync) app.initSupabaseSync();
+      } else {
+        alert("Gagal menginisialisasi Supabase. Periksa kembali URL dan Anon Key Anda.");
+      }
+    }
   },
 
   async saveSettings() {

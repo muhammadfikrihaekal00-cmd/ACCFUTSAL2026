@@ -801,6 +801,27 @@
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
 
+        <!-- Supabase Cloud Connection -->
+        <div>
+          <h4 style="color: #10b981; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">☁️ Sambungan Supabase Database</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
+            Masukkan Project URL dan Anon Key dari Supabase untuk mengaktifkan sinkronisasi live score real-time otomatis.
+          </p>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <label class="form-label" style="font-size: 0.75rem;">Supabase Project URL</label>
+            <input type="text" id="settingSupabaseUrl" class="form-input" placeholder="https://xyzabcdef.supabase.co" style="font-size: 0.78rem;">
+          </div>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <label class="form-label" style="font-size: 0.75rem;">Supabase Anon / Public Key</label>
+            <input type="password" id="settingSupabaseKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="font-size: 0.78rem;">
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="admin.saveSupabaseConfig()" style="color: #10b981; border-color: #10b981;">
+            ⚡ Simpan & Aktifkan Supabase
+          </button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
+
         <!-- Backup & Restore -->
         <div>
           <h4 style="color: var(--secondary); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">3. Backup & Pemulihan Data</h4>
