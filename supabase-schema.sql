@@ -122,12 +122,18 @@ CREATE POLICY "Public Read matches" ON public.matches FOR SELECT USING (true);
 CREATE POLICY "Public Read moments" ON public.moments FOR SELECT USING (true);
 CREATE POLICY "Public Read sponsors" ON public.sponsors FOR SELECT USING (true);
 
--- B. AUTHENTICATED ADMIN FULL ACCESS (For dashboard sessions)
-CREATE POLICY "Admin All tournament_config" ON public.tournament_config FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin All teams" ON public.teams FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin All matches" ON public.matches FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin All moments" ON public.moments FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Admin All sponsors" ON public.sponsors FOR ALL USING (auth.role() = 'authenticated');
+-- B. READ & WRITE ACCESS FOR APP (Synchronized via Publishable Key & Admin Dashboard)
+DROP POLICY IF EXISTS "App All tournament_config" ON public.tournament_config;
+DROP POLICY IF EXISTS "App All teams" ON public.teams;
+DROP POLICY IF EXISTS "App All matches" ON public.matches;
+DROP POLICY IF EXISTS "App All moments" ON public.moments;
+DROP POLICY IF EXISTS "App All sponsors" ON public.sponsors;
+
+CREATE POLICY "App All tournament_config" ON public.tournament_config FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "App All teams" ON public.teams FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "App All matches" ON public.matches FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "App All moments" ON public.moments FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "App All sponsors" ON public.sponsors FOR ALL USING (true) WITH CHECK (true);
 
 -- =========================================================================
 -- 8. CRYPTOGRAPHIC STORED PROCEDURE (RPC) FOR HIGH-SECURITY SCORE UPDATES
@@ -208,11 +214,16 @@ ON CONFLICT (id) DO NOTHING;
 
 DROP POLICY IF EXISTS "Public Read tournament-assets" ON storage.objects;
 DROP POLICY IF EXISTS "Admin Upload tournament-assets" ON storage.objects;
+DROP POLICY IF EXISTS "App Upload tournament-assets" ON storage.objects;
 
 CREATE POLICY "Public Read tournament-assets"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'tournament-assets');
 
-CREATE POLICY "Admin Upload tournament-assets"
+CREATE POLICY "App Upload tournament-assets"
 ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'tournament-assets' AND auth.role() = 'authenticated');
+WITH CHECK (bucket_id = 'tournament-assets');
+
+CREATE POLICY "App Update tournament-assets"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'tournament-assets');

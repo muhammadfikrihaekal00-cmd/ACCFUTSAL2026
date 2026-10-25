@@ -5,7 +5,7 @@
   // Default configuration placeholders (Can be injected via window.SUPABASE_CONFIG or localStorage)
   // Sensitive keys are NEVER exposed in plain text in GitHub repositories!
   const DEFAULT_CONFIG = {
-    url: window.__ENV_SUPABASE_URL || "",
+    url: window.__ENV_SUPABASE_URL || "https://qxanfoqijpznszezwzef.supabase.co",
     anonKey: window.__ENV_SUPABASE_ANON_KEY || "",
     storageBucket: "tournament-assets"
   };
@@ -29,15 +29,44 @@
       return url;
     }
 
+    cleanKey(rawKey) {
+      if (!rawKey) return "";
+      let key = rawKey.trim();
+      key = key.replace(/^["']|["']$/g, '');
+      const match = key.match(/(sb_publishable_[a-zA-Z0-9_\-]+|sb_secret_[a-zA-Z0-9_\-]+|eyJ[a-zA-Z0-9._\-]+)/);
+      if (match) {
+        return match[1];
+      }
+      return key;
+    }
+
+    parseEnvSnippet(text) {
+      if (!text) return null;
+      let url = "";
+      let key = "";
+      const urlMatch = text.match(/https?:\/\/[a-zA-Z0-9.-]+\.supabase\.co/i);
+      if (urlMatch) {
+        url = urlMatch[0];
+      }
+      const keyMatch = text.match(/(sb_publishable_[a-zA-Z0-9_\-]+|sb_secret_[a-zA-Z0-9_\-]+|eyJ[a-zA-Z0-9._\-]+)/);
+      if (keyMatch) {
+        key = keyMatch[1];
+      }
+      if (url || key) {
+        return { url, key };
+      }
+      return null;
+    }
+
     init() {
       // Check for config from window or localStorage
-      let cfg = DEFAULT_CONFIG;
+      let cfg = { ...DEFAULT_CONFIG };
       try {
         const stored = localStorage.getItem("acc_supabase_cfg");
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.url && parsed.anonKey) {
-            cfg = parsed;
+          if (parsed && (parsed.url || parsed.anonKey)) {
+            cfg = { ...cfg, ...parsed };
           }
         }
       } catch (e) {
@@ -45,21 +74,21 @@
       }
 
       if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey) {
-        cfg = window.SUPABASE_CONFIG;
+        cfg = { ...cfg, ...window.SUPABASE_CONFIG };
       }
 
       this.lastError = null;
 
-      if (!targetUrl || !targetKey) return;
+      const targetUrl = this.cleanUrl(cfg.url);
+      const targetKey = this.cleanKey(cfg.anonKey);
 
-      if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-        this.lastError = "Library Supabase JS belum selesai dimuat. Coba refresh halaman Anda.";
+      if (!targetUrl || !targetKey) {
         this.isConfigured = false;
         return;
       }
 
-      if (targetKey.startsWith("sb_publishable_")) {
-        this.lastError = "Kunci yang Anda masukkan adalah 'Publishable Key' format baru (sb_publishable_...).\n\nAplikasi membutuhkan Kunci 'anon' standar yang diawali dengan huruf 'eyJ...'.\n\nCara mengambilnya sangat mudah: Di dashboard Supabase Anda, klik tombol hijau 'Connect' di bagian atas layar, lalu salin kuncinya yang berawalan 'eyJ...'!";
+      if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+        this.lastError = "Library Supabase JS belum selesai dimuat. Coba refresh halaman Anda.";
         this.isConfigured = false;
         return;
       }
@@ -90,12 +119,31 @@
     configure(url, anonKey) {
       if (!url || !anonKey) return false;
       try {
-        const cleaned = this.cleanUrl(url);
-        localStorage.setItem("acc_supabase_cfg", JSON.stringify({ url: cleaned, anonKey: anonKey.trim() }));
+        const cleanedUrl = this.cleanUrl(url);
+        const cleanedKey = this.cleanKey(anonKey);
+        localStorage.setItem("acc_supabase_cfg", JSON.stringify({ url: cleanedUrl, anonKey: cleanedKey }));
         this.init();
         return this.isConfigured;
       } catch (e) {
         return false;
+      }
+    }
+
+    async testConnection() {
+      if (!this.client || !this.isConfigured) {
+        return { ok: false, message: this.lastError || "Client belum aktif." };
+      }
+      try {
+        const { data, error } = await this.client.from('tournament_config').select('id').limit(1);
+        if (error) {
+          if (error.code === '42P01') {
+            return { ok: true, message: "Tersambung ke Supabase (tabel sedang disiapkan)." };
+          }
+          return { ok: false, message: error.message || "Gagal query ke Supabase." };
+        }
+        return { ok: true, message: "Tersambung sempurna ke Supabase Cloud!" };
+      } catch (e) {
+        return { ok: false, message: e.message || "Gagal menghubungi Supabase." };
       }
     }
 

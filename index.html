@@ -805,15 +805,18 @@
         <div>
           <h4 style="color: #10b981; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">☁️ Sambungan Supabase Database</h4>
           <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
-            Masukkan Project URL dan Anon Key dari Supabase untuk mengaktifkan sinkronisasi live score real-time otomatis.
+            Sinkronisasi live score & jadwal real-time online. Masukkan URL dan Publishable Key dari dashboard Supabase Anda.
           </p>
           <div class="form-group" style="margin-bottom: 8px;">
             <label class="form-label" style="font-size: 0.75rem;">Supabase Project URL</label>
-            <input type="text" id="settingSupabaseUrl" class="form-input" placeholder="https://xyzabcdef.supabase.co" style="font-size: 0.78rem;">
+            <input type="text" id="settingSupabaseUrl" class="form-input" placeholder="https://qxanfoqijpznszezwzef.supabase.co" style="font-size: 0.78rem; font-family: monospace;">
           </div>
           <div class="form-group" style="margin-bottom: 8px;">
-            <label class="form-label" style="font-size: 0.75rem;">Supabase Anon / Public Key</label>
-            <input type="password" id="settingSupabaseKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="font-size: 0.78rem;">
+            <label class="form-label" style="font-size: 0.75rem;">Supabase Publishable Key (sb_publishable_... atau eyJ...)</label>
+            <input type="text" id="settingSupabaseKey" class="form-input" placeholder="sb_publishable_3sH1x2Ehz..." autocomplete="off" style="font-size: 0.78rem; font-family: monospace;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
+              💡 <em>Tips:</em> Klik tombol salin (copy) pada tab <code>.env.local</code> di Supabase Anda, lalu tempel di kolom ini. Sistem akan otomatis mendeteksi kuncinya!
+            </span>
           </div>
           <button type="button" class="btn btn-outline btn-sm" onclick="admin.saveSupabaseConfig()" style="color: #10b981; border-color: #10b981;">
             ⚡ Simpan & Aktifkan Supabase

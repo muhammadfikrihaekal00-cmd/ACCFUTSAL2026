@@ -367,37 +367,71 @@ const admin = {
 
     // Supabase fields
     try {
+      const defaultUrl = "https://qxanfoqijpznszezwzef.supabase.co";
       const stored = localStorage.getItem("acc_supabase_cfg");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.url && document.getElementById("settingSupabaseUrl")) document.getElementById("settingSupabaseUrl").value = parsed.url;
-        if (parsed.anonKey && document.getElementById("settingSupabaseKey")) document.getElementById("settingSupabaseKey").value = parsed.anonKey;
+        if (document.getElementById("settingSupabaseUrl")) {
+          document.getElementById("settingSupabaseUrl").value = parsed.url || defaultUrl;
+        }
+        if (parsed.anonKey && document.getElementById("settingSupabaseKey")) {
+          document.getElementById("settingSupabaseKey").value = parsed.anonKey;
+        }
+      } else {
+        if (document.getElementById("settingSupabaseUrl")) {
+          document.getElementById("settingSupabaseUrl").value = defaultUrl;
+        }
       }
     } catch (e) {}
   },
 
-  saveSupabaseConfig() {
-    let url = document.getElementById("settingSupabaseUrl")?.value.trim() || "";
-    const key = document.getElementById("settingSupabaseKey")?.value.trim() || "";
-    if (!url || !key) {
-      alert("Harap masukkan URL dan Anon Key Supabase yang lengkap!");
+  async saveSupabaseConfig() {
+    const urlInput = document.getElementById("settingSupabaseUrl");
+    const keyInput = document.getElementById("settingSupabaseKey");
+    let url = urlInput?.value.trim() || "";
+    let key = keyInput?.value.trim() || "";
+
+    // Auto-detect if user pasted .env.local snippet into URL or Key input
+    if (window.SupabaseService && window.SupabaseService.parseEnvSnippet) {
+      const fromKey = window.SupabaseService.parseEnvSnippet(key);
+      const fromUrl = window.SupabaseService.parseEnvSnippet(url);
+      if (fromKey) {
+        if (fromKey.url && (!url || url.length < 15)) url = fromKey.url;
+        if (fromKey.key) key = fromKey.key;
+      }
+      if (fromUrl) {
+        if (fromUrl.url) url = fromUrl.url;
+        if (fromUrl.key && !key) key = fromUrl.key;
+      }
+    }
+
+    if (!url) {
+      url = "https://qxanfoqijpznszezwzef.supabase.co";
+    }
+
+    if (!key) {
+      alert("Harap masukkan Kunci Supabase (bisa yang diawali 'sb_publishable_' atau 'eyJ...')!");
       return;
     }
-    // Auto-clean URL (remove /rest/v1 or trailing slashes)
-    url = url.replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url;
-    }
-    const inputEl = document.getElementById("settingSupabaseUrl");
-    if (inputEl) inputEl.value = url;
 
     if (window.SupabaseService) {
       const ok = window.SupabaseService.configure(url, key);
       if (ok) {
+        if (urlInput) urlInput.value = window.SupabaseService.cleanUrl(url);
+        if (keyInput) keyInput.value = window.SupabaseService.cleanKey(key);
+
         app.showToast("⚡ Supabase Cloud aktif & tersambung!");
+
+        if (window.SupabaseService.testConnection) {
+          const test = await window.SupabaseService.testConnection();
+          if (!test.ok) {
+            console.warn("Supabase test info:", test.message);
+          }
+        }
+
         if (app.initSupabaseSync) app.initSupabaseSync();
       } else {
-        const detail = (window.SupabaseService && window.SupabaseService.lastError) || "Periksa kembali URL dan Kunci Anon Anda.";
+        const detail = (window.SupabaseService && window.SupabaseService.lastError) || "Periksa kembali URL dan Kunci Supabase Anda.";
         alert(detail);
       }
     } else {
