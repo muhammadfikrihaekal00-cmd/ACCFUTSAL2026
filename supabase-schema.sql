@@ -1,6 +1,7 @@
 -- =========================================================================
 -- ACC AL-FAYYADH CHAMPIONS CUP 2026 - PRODUCTION SUPABASE DATABASE SCHEMA
 -- HIGH SECURITY ARCHITECTURE WITH ROW LEVEL SECURITY (RLS) & CRYTOGRAPHIC RPC
+-- (100% IDEMPOTENT - AMAN DIJALANKAN BERULANG KALI TANPA ERROR)
 -- =========================================================================
 
 -- 1. EXTENSIONS
@@ -52,7 +53,7 @@ CREATE TABLE IF NOT EXISTS public.matches (
   stage TEXT DEFAULT 'group',
   group_letter CHAR(1),
   round_name TEXT DEFAULT '',
-  status TEXT DEFAULT 'scheduled', -- 'scheduled', 'live', 'finished'
+  status TEXT DEFAULT 'scheduled',
   home_score INT DEFAULT 0,
   away_score INT DEFAULT 0,
   home_score_live INT DEFAULT 0,
@@ -82,7 +83,7 @@ CREATE TABLE IF NOT EXISTS public.moments (
 -- 6. SPONSORS TABLE
 CREATE TABLE IF NOT EXISTS public.sponsors (
   id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-  tier TEXT NOT NULL DEFAULT 'co', -- 'main', 'official', 'co', 'media'
+  tier TEXT NOT NULL DEFAULT 'co',
   name TEXT NOT NULL,
   subtitle TEXT DEFAULT '',
   logo_url TEXT NOT NULL,
@@ -101,18 +102,18 @@ ALTER TABLE public.matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.moments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sponsors ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if any
+-- Drop all existing policies cleanly before creating
 DROP POLICY IF EXISTS "Public Read tournament_config" ON public.tournament_config;
 DROP POLICY IF EXISTS "Public Read teams" ON public.teams;
 DROP POLICY IF EXISTS "Public Read matches" ON public.matches;
 DROP POLICY IF EXISTS "Public Read moments" ON public.moments;
 DROP POLICY IF EXISTS "Public Read sponsors" ON public.sponsors;
 
-DROP POLICY IF EXISTS "Deny Direct Anon Write config" ON public.tournament_config;
-DROP POLICY IF EXISTS "Deny Direct Anon Write teams" ON public.teams;
-DROP POLICY IF EXISTS "Deny Direct Anon Write matches" ON public.matches;
-DROP POLICY IF EXISTS "Deny Direct Anon Write moments" ON public.moments;
-DROP POLICY IF EXISTS "Deny Direct Anon Write sponsors" ON public.sponsors;
+DROP POLICY IF EXISTS "Admin All tournament_config" ON public.tournament_config;
+DROP POLICY IF EXISTS "Admin All teams" ON public.teams;
+DROP POLICY IF EXISTS "Admin All matches" ON public.matches;
+DROP POLICY IF EXISTS "Admin All moments" ON public.moments;
+DROP POLICY IF EXISTS "Admin All sponsors" ON public.sponsors;
 
 -- A. PUBLIC READ ACCESS: Anyone can view tournament results, standings & photos
 CREATE POLICY "Public Read tournament_config" ON public.tournament_config FOR SELECT USING (true);
@@ -130,8 +131,6 @@ CREATE POLICY "Admin All sponsors" ON public.sponsors FOR ALL USING (auth.role()
 
 -- =========================================================================
 -- 8. CRYPTOGRAPHIC STORED PROCEDURE (RPC) FOR HIGH-SECURITY SCORE UPDATES
--- Even if an attacker has the public Anon Key, PostgreSQL directly rejects 
--- any write attempt without the cryptographic SHA-256 salt verification!
 -- =========================================================================
 CREATE OR REPLACE FUNCTION public.secure_update_match(
   p_match_id TEXT,
@@ -150,23 +149,19 @@ AS $$
 DECLARE
   v_stored_hash TEXT;
 BEGIN
-  -- Retrieve official stored hash from tournament configuration
   SELECT admin_pin_hash INTO v_stored_hash 
   FROM public.tournament_config 
   WHERE id = 'config_main' 
   LIMIT 1;
 
-  -- Fallback to default cryptographic salt hash if config row not yet populated
   IF v_stored_hash IS NULL THEN
     v_stored_hash := '327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348';
   END IF;
 
-  -- Strict constant-time cryptographic verification
   IF p_pin_hash IS NULL OR p_pin_hash != v_stored_hash THEN
     RAISE EXCEPTION 'Akses Ditolak: Kredensial Keamanan Tidak Sah!';
   END IF;
 
-  -- Update match safely
   UPDATE public.matches
   SET
     home_score = p_home_score,
@@ -181,16 +176,28 @@ BEGIN
 END;
 $$;
 
--- Allow anonymous clients to invoke the verification function (verification handled inside PostgreSQL)
 GRANT EXECUTE ON FUNCTION public.secure_update_match TO anon, authenticated;
 
 -- =========================================================================
--- 9. REALTIME PUBLICATION ENABLEMENT
+-- 9. REALTIME PUBLICATION ENABLEMENT (IDEMPOTENT CHECK)
 -- =========================================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE public.matches;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.teams;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.moments;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.tournament_config;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'matches') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.matches;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'teams') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.teams;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'moments') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.moments;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'tournament_config') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.tournament_config;
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
 
 -- =========================================================================
 -- 10. STORAGE BUCKET FOR TOURNAMENT ASSETS
@@ -199,12 +206,13 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('tournament-assets', 'tournament-assets', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Public read for assets (Photos, Banners, Moments)
+DROP POLICY IF EXISTS "Public Read tournament-assets" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Upload tournament-assets" ON storage.objects;
+
 CREATE POLICY "Public Read tournament-assets"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'tournament-assets');
 
--- Restricted upload policy (Authenticated users)
 CREATE POLICY "Admin Upload tournament-assets"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'tournament-assets' AND auth.role() = 'authenticated');
