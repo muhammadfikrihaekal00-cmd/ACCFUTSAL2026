@@ -377,20 +377,30 @@ const admin = {
   },
 
   saveSupabaseConfig() {
-    const url = document.getElementById("settingSupabaseUrl")?.value.trim() || "";
+    let url = document.getElementById("settingSupabaseUrl")?.value.trim() || "";
     const key = document.getElementById("settingSupabaseKey")?.value.trim() || "";
     if (!url || !key) {
       alert("Harap masukkan URL dan Anon Key Supabase yang lengkap!");
       return;
     }
+    // Auto-clean URL (remove /rest/v1 or trailing slashes)
+    url = url.replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+    const inputEl = document.getElementById("settingSupabaseUrl");
+    if (inputEl) inputEl.value = url;
+
     if (window.SupabaseService) {
       const ok = window.SupabaseService.configure(url, key);
       if (ok) {
         app.showToast("⚡ Supabase Cloud aktif & tersambung!");
         if (app.initSupabaseSync) app.initSupabaseSync();
       } else {
-        alert("Gagal menginisialisasi Supabase. Periksa kembali URL dan Anon Key Anda.");
+        alert("Gagal menginisialisasi Supabase. Pastikan URL berbentuk 'https://xyz.supabase.co' (tanpa /rest/v1) dan gunakan Publishable/Anon Key yang valid.");
       }
+    } else {
+      alert("Library Supabase belum siap dimuat. Coba refresh halaman Anda.");
     }
   },
 

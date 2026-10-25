@@ -19,6 +19,16 @@
       this.init();
     }
 
+    cleanUrl(rawUrl) {
+      if (!rawUrl) return "";
+      let url = rawUrl.trim();
+      url = url.replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      return url;
+    }
+
     init() {
       // Check for config from window or localStorage
       let cfg = DEFAULT_CONFIG;
@@ -38,9 +48,12 @@
         cfg = window.SUPABASE_CONFIG;
       }
 
-      if (cfg.url && cfg.anonKey && window.supabase && typeof window.supabase.createClient === 'function') {
+      const targetUrl = this.cleanUrl(cfg.url);
+      const targetKey = (cfg.anonKey || "").trim();
+
+      if (targetUrl && targetKey && window.supabase && typeof window.supabase.createClient === 'function') {
         try {
-          this.client = window.supabase.createClient(cfg.url, cfg.anonKey, {
+          this.client = window.supabase.createClient(targetUrl, targetKey, {
             auth: {
               persistSession: true,
               autoRefreshToken: true
@@ -54,7 +67,7 @@
           this.isConfigured = true;
           this.setupRealtimeSubscriptions();
         } catch (err) {
-          // Silent fallback to local offline mode
+          console.error("Supabase createClient error:", err);
           this.client = null;
           this.isConfigured = false;
         }
@@ -65,7 +78,8 @@
     configure(url, anonKey) {
       if (!url || !anonKey) return false;
       try {
-        localStorage.setItem("acc_supabase_cfg", JSON.stringify({ url: url.trim(), anonKey: anonKey.trim() }));
+        const cleaned = this.cleanUrl(url);
+        localStorage.setItem("acc_supabase_cfg", JSON.stringify({ url: cleaned, anonKey: anonKey.trim() }));
         this.init();
         return this.isConfigured;
       } catch (e) {
