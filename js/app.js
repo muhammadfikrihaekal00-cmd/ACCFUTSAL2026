@@ -1093,11 +1093,9 @@ const app = {
               <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')">
                 ℹ️ Detail Laga
               </button>
-              ${admin.isAuthenticated === true ? `
-                <button class="btn btn-admin btn-sm" onclick="admin.openQuickScore('${m.id}')">
-                  ✏️ Input Skor
-                </button>
-              ` : ''}
+              <button class="btn ${admin.isAuthenticated === true ? 'btn-admin' : 'btn-outline'} btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan">
+                ✏️ Input Skor
+              </button>
             </div>
           </div>
         </div>

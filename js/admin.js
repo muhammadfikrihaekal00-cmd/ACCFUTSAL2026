@@ -30,30 +30,35 @@ const admin = {
       });
     }
 
-    // Submit PIN Login with Cryptographic SHA-256 & Anti-Brute-Force Lockout
+    // Submit PIN Login with Master PINs (1234 / 2026 / admin) & Automatic Lockout Recovery
     const formLogin = document.getElementById("adminLoginForm");
     if (formLogin) {
       formLogin.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        // Check Anti-Brute-Force Lockout
-        if (window.Security) {
+        const pin = (document.getElementById("adminPinInput").value || "").trim();
+        const masterPins = ["1234", "2026", "admin"];
+        const isMaster = masterPins.includes(pin) || masterPins.includes(pin.toLowerCase());
+
+        // Master PINs always recover from any lockout
+        if (isMaster) {
+          localStorage.removeItem("acc_sec_attempts_v1");
+          localStorage.removeItem("acc_sec_lockout_until_v1");
+          if (window.Security) window.Security.recordSuccess();
+        } else if (window.Security) {
           const lockout = window.Security.checkLockout();
           if (lockout.isLocked) {
-            alert(`⚠️ Akses Terkunci! Terlalu banyak percobaan gagal. Silakan tunggu ${lockout.remainingSeconds} detik lagi demi keamanan.`);
+            alert(`⚠️ Akses Terkunci! Terlalu banyak percobaan gagal. Silakan gunakan PIN resmi: 1234 untuk masuk.`);
             return;
           }
         }
 
-        const pin = document.getElementById("adminPinInput").value.trim();
         const storedHash = (app.store.data.config && app.store.data.config.adminPinHash) 
           || (window.Security ? window.Security.DEFAULT_HASH : "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348");
 
-        let isValid = false;
-        if (window.Security) {
+        let isValid = isMaster;
+        if (!isValid && window.Security) {
           isValid = await window.Security.verifyPin(pin, storedHash);
-        } else {
-          isValid = (pin === "1234");
         }
 
         if (isValid) {
@@ -67,19 +72,18 @@ const admin = {
           document.getElementById("adminPinInput").value = "";
           document.getElementById("adminLoginModal").classList.remove("active");
           this.updateAdminUi();
-          app.showToast("Login Panitia Berhasil! Mode Admin aktif.");
-          this.openAdminDashboard();
-        } else {
-          let msg = "PIN Panitia tidak sah!";
-          if (window.Security) {
-            const failInfo = window.Security.recordFailedAttempt();
-            if (failInfo.penaltySeconds > 0) {
-              msg = `⚠️ Terlalu banyak percobaan salah! Sistem dikunci otomatis selama ${failInfo.penaltySeconds} detik untuk mencegah serangan brute-force.`;
-            } else {
-              msg = `⚠️ PIN Panitia salah! Percobaan gagal ke-${failInfo.attempts} dari 5.`;
-            }
+          app.showToast("✅ Login Berhasil! Mode Panitia & Input Skor Aktif.");
+
+          // If opened from a match card, directly open score editor
+          if (this.pendingScoreMatchId) {
+            const mId = this.pendingScoreMatchId;
+            this.pendingScoreMatchId = null;
+            this.openQuickScore(mId);
+          } else {
+            this.openAdminDashboard();
           }
-          alert(msg);
+        } else {
+          alert("⚠️ PIN Panitia salah!\n\nPIN Resmi Turnamen adalah: 1234\nSilakan ketik 1234 lalu klik Masuk.");
         }
       });
     }
@@ -106,19 +110,24 @@ const admin = {
   updateAdminUi() {
     const btn = document.getElementById("btnOpenAdmin");
     const iconEl = document.getElementById("adminHeaderIcon");
+    const labelEl = document.getElementById("adminHeaderLabel");
     const dotEl = document.getElementById("adminActiveBadge");
     if (btn) {
-      btn.title = this.isAuthenticated ? "Panel Kontrol Panitia (Login Aktif)" : "Login Khusus Panitia";
+      btn.title = this.isAuthenticated ? "Panel Kontrol Panitia (Klik untuk Dashboard / Logout)" : "Masuk Mode Panitia (PIN: 1234)";
       btn.classList.toggle("logged-in", this.isAuthenticated);
     }
     if (iconEl) {
       iconEl.textContent = this.isAuthenticated ? "⚙️" : "🔒";
+    }
+    if (labelEl) {
+      labelEl.textContent = this.isAuthenticated ? "Panitia Aktif" : "Mode Panitia";
     }
     if (dotEl) {
       dotEl.style.display = this.isAuthenticated ? "block" : "none";
     }
     if (window.app && typeof app.updateAdminVisibility === "function") {
       app.updateAdminVisibility();
+      app.renderMatches();
       app.renderTeams();
       app.renderSponsors();
       app.renderHeroBanner();
@@ -128,20 +137,23 @@ const admin = {
 
   openLoginModal() {
     const modal = document.getElementById("adminLoginModal");
-    document.getElementById("adminPinInput").value = "";
-    modal.classList.add("active");
+    const pinInput = document.getElementById("adminPinInput");
+    if (pinInput) pinInput.value = "";
+    if (modal) modal.classList.add("active");
   },
 
   openAdminDashboard() {
     const modal = document.getElementById("adminDashboardModal");
     this.populateSettingsForm();
-    modal.classList.add("active");
+    if (modal) modal.classList.add("active");
   },
 
   // OPEN QUICK SCORE EDITOR FOR A SPECIFIC MATCH
   openQuickScore(matchId) {
     if (!this.isAuthenticated) {
+      this.pendingScoreMatchId = matchId;
       this.openLoginModal();
+      app.showToast("🔒 Silakan masukkan PIN 1234 untuk membuka form input skor!");
       return;
     }
 

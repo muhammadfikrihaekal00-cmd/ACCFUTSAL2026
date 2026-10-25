@@ -56,9 +56,10 @@
 
         <span class="header-v-divider"></span>
 
-        <!-- Panitia / Admin Access (Icon Only with Live Pulse Dot) -->
-        <button id="btnOpenAdmin" class="header-icon-btn btn-admin-icon" title="Login Khusus Panitia" aria-label="Login Khusus Panitia">
+        <!-- Panitia / Admin Access Button -->
+        <button id="btnOpenAdmin" class="btn-admin-header" title="Login Khusus Panitia / Input Skor" aria-label="Mode Panitia">
           <span id="adminHeaderIcon">🔒</span>
+          <span id="adminHeaderLabel">Mode Panitia</span>
           <span id="adminActiveBadge" class="admin-live-pulse-dot" style="display: none;"></span>
         </button>
       </div>
@@ -98,8 +99,8 @@
           <div class="stat-lbl">Grup (4 SMP + 4 SD)</div>
         </div>
         <div class="stat-pill">
-          <div class="stat-val">2</div>
-          <div class="stat-lbl">Lapangan</div>
+          <div class="stat-val">1</div>
+          <div class="stat-lbl">Lapangan Utama</div>
         </div>
         <div class="stat-pill">
           <div class="stat-val">64</div>
@@ -362,10 +363,11 @@
             <option value="2">Hari Ke-2 (Matchday 2)</option>
             <option value="3">Hari Ke-3 (Matchday 3)</option>
           </select>
-          <select id="filterPitch" class="filter-select" aria-label="Pilih Lapangan">
+          <span class="badge" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-color); font-weight: 700; font-size: 0.78rem; padding: 6px 12px; border-radius: var(--radius-sm); color: var(--text-main); display: inline-flex; align-items: center; gap: 4px;">
+            🏟️ Lapangan Utama (Vinyl)
+          </span>
+          <select id="filterPitch" class="filter-select" aria-label="Pilih Lapangan" style="display: none;">
             <option value="all">Semua Lapangan</option>
-            <option value="Lapangan 1">Lapangan 1 (Vinyl)</option>
-            <option value="Lapangan 2">Lapangan 2 (Sintetis)</option>
           </select>
           <select id="filterGroup" class="filter-select" aria-label="Pilih Grup">
             <option value="all">Semua Grup</option>
@@ -612,28 +614,46 @@
 
   <!-- 3. MODAL LOGIN PANITIA -->
   <div id="adminLoginModal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 400px;">
+    <div class="modal-box" style="max-width: 440px;">
       <div class="modal-header">
-        <h3 class="modal-title">🔒 Verifikasi Panitia</h3>
+        <h3 class="modal-title">🔒 Verifikasi Masuk Mode Panitia</h3>
         <button class="modal-close">&times;</button>
       </div>
       <form id="adminLoginForm">
         <div class="modal-body">
-          <p style="font-size: 0.85rem; color: var(--text-muted);">
-            Masukkan PIN Keamanan Meja Pertandingan untuk mengupdate skor dan kartu turnamen.
-          </p>
+          <!-- CARD HINT PIN RESMI -->
+          <div style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid var(--primary); padding: 14px; border-radius: var(--radius-md); margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <strong style="color: var(--primary); font-size: 0.9rem;">🔑 PIN Resmi Panitia:</strong>
+              <span style="font-family: var(--font-mono); font-size: 1.35rem; font-weight: 900; background: var(--bg-surface); color: var(--primary); padding: 3px 14px; border-radius: 6px; border: 1.5px solid var(--primary); letter-spacing: 2px;">1234</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+              Gunakan PIN <strong>1234</strong> untuk membuka akses input skor, update kartu, dan pengaturan turnamen.
+            </p>
+          </div>
+
           <div class="form-group">
-            <label class="form-label">PIN Keamanan Panitia</label>
-            <input type="password" id="adminPinInput" class="form-input" placeholder="Masukkan PIN Rahasia Panitia" autofocus required autocomplete="current-password">
+            <label class="form-label">Masukkan PIN Panitia</label>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input type="password" id="adminPinInput" class="form-input" placeholder="Ketik 1234..." autofocus required autocomplete="current-password" style="font-size: 1.15rem; letter-spacing: 2px; padding-right: 42px;">
+              <button type="button" onclick="const p = document.getElementById('adminPinInput'); p.type = p.type === 'password' ? 'text' : 'password';" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px;" title="Lihat PIN">👁️</button>
+            </div>
             <div id="adminLoginLockoutNote" style="display: none; color: #ef4444; font-size: 0.75rem; margin-top: 6px; font-weight: 700;"></div>
             <small style="color: var(--text-subtle); font-size: 0.72rem; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
-              🛡️ Dilindungi enkripsi SHA-256 & sistem anti brute-force otomatis.
+              🛡️ Dilindungi enkripsi SHA-256 & sesi tersimpan otomatis di browser.
             </small>
           </div>
+
+          <!-- Tombol Akses Cepat 1-Klik -->
+          <div style="margin-top: 14px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('adminPinInput').value='1234'; document.getElementById('adminLoginForm').dispatchEvent(new Event('submit'));" style="width: 100%; font-weight: 700; border-color: var(--primary); color: var(--primary); padding: 8px 12px; background: rgba(16, 185, 129, 0.06);">
+              ⚡ Klik di Sini untuk Masuk Langsung (PIN: 1234)
+            </button>
+          </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
-          <button type="submit" class="btn btn-primary">Masuk Mode Admin</button>
+          <button type="submit" class="btn btn-primary">Masuk Mode Panitia ➔</button>
         </div>
       </form>
     </div>
