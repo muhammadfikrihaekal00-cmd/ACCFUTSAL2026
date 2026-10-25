@@ -368,19 +368,22 @@ const admin = {
     // Supabase fields
     try {
       const defaultUrl = "https://qxanfoqijpznszezwzef.supabase.co";
+      const defaultKey = "sb_publishable_3sH1x2EhzsmxKtCAei-sbg_ZAunYZja";
+      let url = defaultUrl;
+      let key = defaultKey;
       const stored = localStorage.getItem("acc_supabase_cfg");
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (document.getElementById("settingSupabaseUrl")) {
-          document.getElementById("settingSupabaseUrl").value = parsed.url || defaultUrl;
-        }
-        if (parsed.anonKey && document.getElementById("settingSupabaseKey")) {
-          document.getElementById("settingSupabaseKey").value = parsed.anonKey;
-        }
-      } else {
-        if (document.getElementById("settingSupabaseUrl")) {
-          document.getElementById("settingSupabaseUrl").value = defaultUrl;
-        }
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.url) url = parsed.url;
+          if (parsed && parsed.anonKey && parsed.anonKey.length >= 30) key = parsed.anonKey;
+        } catch (e) {}
+      }
+      if (document.getElementById("settingSupabaseUrl")) {
+        document.getElementById("settingSupabaseUrl").value = url;
+      }
+      if (document.getElementById("settingSupabaseKey")) {
+        document.getElementById("settingSupabaseKey").value = key;
       }
     } catch (e) {}
   },

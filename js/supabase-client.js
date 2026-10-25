@@ -6,7 +6,7 @@
   // Sensitive keys are NEVER exposed in plain text in GitHub repositories!
   const DEFAULT_CONFIG = {
     url: window.__ENV_SUPABASE_URL || "https://qxanfoqijpznszezwzef.supabase.co",
-    anonKey: window.__ENV_SUPABASE_ANON_KEY || "",
+    anonKey: window.__ENV_SUPABASE_ANON_KEY || "sb_publishable_3sH1x2EhzsmxKtCAei-sbg_ZAunYZja",
     storageBucket: "tournament-assets"
   };
 
@@ -65,8 +65,9 @@
         const stored = localStorage.getItem("acc_supabase_cfg");
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed && (parsed.url || parsed.anonKey)) {
-            cfg = { ...cfg, ...parsed };
+          if (parsed) {
+            if (parsed.url) cfg.url = parsed.url;
+            if (parsed.anonKey && parsed.anonKey.length >= 30) cfg.anonKey = parsed.anonKey;
           }
         }
       } catch (e) {
