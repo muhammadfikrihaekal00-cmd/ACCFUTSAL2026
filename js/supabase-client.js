@@ -48,29 +48,41 @@
         cfg = window.SUPABASE_CONFIG;
       }
 
-      const targetUrl = this.cleanUrl(cfg.url);
-      const targetKey = (cfg.anonKey || "").trim();
+      this.lastError = null;
 
-      if (targetUrl && targetKey && window.supabase && typeof window.supabase.createClient === 'function') {
-        try {
-          this.client = window.supabase.createClient(targetUrl, targetKey, {
-            auth: {
-              persistSession: true,
-              autoRefreshToken: true
-            },
-            realtime: {
-              params: {
-                eventsPerSecond: 10
-              }
+      if (!targetUrl || !targetKey) return;
+
+      if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+        this.lastError = "Library Supabase JS belum selesai dimuat. Coba refresh halaman Anda.";
+        this.isConfigured = false;
+        return;
+      }
+
+      if (targetKey.startsWith("sb_publishable_")) {
+        this.lastError = "Kunci yang Anda masukkan adalah 'Publishable Key' format baru (sb_publishable_...).\n\nAplikasi membutuhkan Kunci 'anon' standar yang diawali dengan huruf 'eyJ...'.\n\nCara mengambilnya sangat mudah: Di dashboard Supabase Anda, klik tombol hijau 'Connect' di bagian atas layar, lalu salin kuncinya yang berawalan 'eyJ...'!";
+        this.isConfigured = false;
+        return;
+      }
+
+      try {
+        this.client = window.supabase.createClient(targetUrl, targetKey, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true
+          },
+          realtime: {
+            params: {
+              eventsPerSecond: 10
             }
-          });
-          this.isConfigured = true;
-          this.setupRealtimeSubscriptions();
-        } catch (err) {
-          console.error("Supabase createClient error:", err);
-          this.client = null;
-          this.isConfigured = false;
-        }
+          }
+        });
+        this.isConfigured = true;
+        this.setupRealtimeSubscriptions();
+      } catch (err) {
+        console.error("Supabase createClient error:", err);
+        this.lastError = err ? (err.message || err.toString()) : "Gagal inisialisasi client";
+        this.client = null;
+        this.isConfigured = false;
       }
     }
 

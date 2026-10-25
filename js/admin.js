@@ -397,7 +397,8 @@ const admin = {
         app.showToast("⚡ Supabase Cloud aktif & tersambung!");
         if (app.initSupabaseSync) app.initSupabaseSync();
       } else {
-        alert("Gagal menginisialisasi Supabase. Pastikan URL berbentuk 'https://xyz.supabase.co' (tanpa /rest/v1) dan gunakan Publishable/Anon Key yang valid.");
+        const detail = (window.SupabaseService && window.SupabaseService.lastError) || "Periksa kembali URL dan Kunci Anon Anda.";
+        alert(detail);
       }
     } else {
       alert("Library Supabase belum siap dimuat. Coba refresh halaman Anda.");
