@@ -1,0 +1,20 @@
+# Environment & Secrets (NEVER PUSH TO GITHUB!)
+.env
+.env.local
+.env.*.local
+.env.production
+*.env
+
+# Local logs & caches
+*.log
+.system_generated/
+.DS_Store
+Thumbs.db
+
+# Dependencies & Build artifacts (if any)
+node_modules/
+dist/
+.vercel/
+
+# Local Dev scripts
+server.ps1

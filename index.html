@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Portal Resmi Pemantauan Pertandingan, Skor Langsung, Klasemen, Bagan Gugur, dan Disiplin Kartu ACC Al-Fayyadh Champions Cup 2026 - Ma'had Tahfizhul Qur'an Al Fayyadh.">
+  <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
+
+  <!-- PWA Manifest & Favicon -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="assets/acc_logo.png">
+  <link rel="apple-touch-icon" href="assets/acc_logo.png">
+
+  <!-- Fonts & Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- TOP RUNNING ANNOUNCEMENT TICKER (RUNNING TEXT) -->
+  <div class="ticker-bar">
+    <div class="ticker-tag">📢 INFO RESMI ACC 2026</div>
+    <div class="ticker-track">
+      <div class="ticker-content" id="tickerText">
+        🏆 Selamat Datang Official & Peserta ACC "Al-Fayyadh Champions Cup" 2026 Ma'had Tahfizhul Qur'an Al Fayyadh! Harap registrasi line-up maksimal 30 menit sebelum kick-off di Meja Pertandingan. Junjung tinggi sportivitas, ukhuwah Islamiyah, dan fair play!
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN HEADER -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="brand-group">
+        <img src="assets/acc_logo.png" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo">
+        <div class="brand-text">
+          <h1 id="headerTitle">ACC 2026</h1>
+          <p>Ma'had Tahfizhul Qur'an Al Fayyadh</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Theme Toggle (Icon Only) -->
+        <button id="themeToggleBtn" class="header-icon-btn" onclick="app.toggleTheme()" title="Ganti Tema (Terang / Gelap)" aria-label="Ganti Tema">
+          <span id="themeToggleIcon">🌙</span>
+        </button>
+
+        <!-- Share to WhatsApp (Icon Only) -->
+        <button id="btnShareWa" class="header-icon-btn btn-share-header" title="Bagikan ke WhatsApp Official" aria-label="Bagikan ke WhatsApp">
+          <span>📤</span>
+        </button>
+
+        <span class="header-v-divider"></span>
+
+        <!-- Panitia / Admin Access (Icon Only with Live Pulse Dot) -->
+        <button id="btnOpenAdmin" class="header-icon-btn btn-admin-icon" title="Login Khusus Panitia" aria-label="Login Khusus Panitia">
+          <span id="adminHeaderIcon">🔒</span>
+          <span id="adminActiveBadge" class="admin-live-pulse-dot" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER (WHITE SPACE & USER FRIENDLY) -->
+  <main class="container" style="padding-top: 14px;">
+
+    <!-- HERO SECTION / BANNER RAMAH DENGAN BANYAK WHITE SPACE -->
+    <div class="hero-card">
+      <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+        <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge">
+        <div class="hero-details">
+          <div class="hero-badge-live">
+            <span class="pulse-dot"></span>
+            <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
+          </div>
+          <div class="hero-title" id="heroTitle">ACC "Al-Fayyadh Champions Cup" 2026</div>
+          <p id="heroSub" style="color: var(--text-muted); font-size: 0.9rem;">
+            Turnamen Futsal Antar-Sekolah & Pesantren • Ma'had Tahfizhul Qur'an Al Fayyadh
+          </p>
+          <div class="hero-meta">
+            <span>📍 <strong id="heroVenue">GOR Futsal Ma'had Tahfizhul Qur'an Al Fayyadh</strong></span>
+            <span>📅 <strong id="heroDates">15 - 20 November 2026</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-quick-stats">
+        <div class="stat-pill">
+          <div class="stat-val">16</div>
+          <div class="stat-lbl">Sekolah</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-val">4</div>
+          <div class="stat-lbl">Grup</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-val">2</div>
+          <div class="stat-lbl">Lapangan</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-val">32</div>
+          <div class="stat-lbl">Laga</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- NAVIGATION TABS: HYBRID FIFA & UEFA (MINIMALIST, SLEEK, SIMPLE) -->
+    <!-- ========================================================= -->
+    <div class="nav-tabs-wrapper">
+      <nav class="nav-tabs" aria-label="Menu Utama Turnamen">
+        <button class="tab-btn active" data-tab="home">Beranda</button>
+        <button class="tab-btn" data-tab="matches">Jadwal</button>
+        <button class="tab-btn" data-tab="standings">Klasemen</button>
+        <button class="tab-btn" data-tab="bracket">Bagan</button>
+        <button class="tab-btn" data-tab="teams">Tim</button>
+        <button class="tab-btn" data-tab="scorers">Top Skor</button>
+        <button class="tab-btn" data-tab="discipline">Disiplin</button>
+        <button class="tab-btn" data-tab="juknis">Regulasi</button>
+      </nav>
+    </div>
+
+    <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
+    <section id="pane-home" class="tab-pane active">
+      
+      <!-- 1. OPENING SHOWCASE BANNER -->
+      <div class="home-hero-banner" id="homeHeroBanner">
+        <button id="btnChangeBannerQuick" class="btn-banner-edit-overlay" onclick="admin.openHeroBannerModal()" title="Ubah Gambar Banner Turnamen" style="display: none;">
+          📷 Ganti Gambar Banner (Panitia)
+        </button>
+        <div class="home-banner-overlay">
+          <div class="banner-badge-row">
+            <span class="banner-badge-gold">👑 TURNAMEN RESMI PESANTREN 2026</span>
+            <span style="color: #cbd5e1; font-size: 0.8rem; font-weight: 700;">📍 GOR Futsal MTQ Al-Fayyadh</span>
+          </div>
+          <h2 class="banner-title-text">ACC "Al-Fayyadh Champions Cup" 2026</h2>
+          <p class="banner-subtitle-text">
+            Pusat Informasi & Pemantauan Turnamen Futsal Antar-Sekolah & Pesantren se-Wilayah. Menjalin Ukhuwah, Mengukir Prestasi, dan Menjunjung Tinggi Adab Sportivitas.
+          </p>
+          <div class="banner-cta-group">
+            <button class="btn btn-primary" onclick="app.switchTab('matches')">
+              🏟️ Cek Jadwal & Live Skor
+            </button>
+            <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.switchTab('standings')">
+              📊 Klasemen Sementara
+            </button>
+            <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.switchTab('juknis')">
+              📋 Juknis & Regulasi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. ACC 2026 MOMENTS™ SHOWCASE BAR (INSPIRED BY FIFA WORLD CUP MOMENTS) -->
+      <section class="acc-moments-section" id="accMomentsContainer">
+        <div class="moments-header-row">
+          <div class="moments-title-wrap">
+            <h2 class="moments-main-title">
+              <span>ACC 2026 Moments™</span>
+            </h2>
+            <p class="moments-sub-title">Sorotan Aksi Spektakuler, Gol Menawan & Selebrasi Emas Turnamen</p>
+          </div>
+          <div class="moments-controls-wrap">
+            <button id="btnAddMomentBtn" class="btn btn-primary btn-sm btn-panitia-moment" onclick="admin.openMomentEditorModal()" style="display: none;">
+              ➕ Tambah Momen (Panitia)
+            </button>
+            <div class="moments-nav-arrows">
+              <button class="moment-arrow-btn" id="btnMomentPrev" onclick="app.scrollMoments(-1)" title="Geser ke kiri" aria-label="Geser ke kiri">
+                ‹
+              </button>
+              <button class="moment-arrow-btn" id="btnMomentNext" onclick="app.scrollMoments(1)" title="Geser ke kanan" aria-label="Geser ke kanan">
+                ›
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="moments-carousel-wrapper">
+          <div class="moments-carousel" id="momentsCarousel">
+            <!-- Injected dynamically by app.renderMoments() -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. SPOTLIGHT PEMAIN TERBAIK / MVP OF THE MATCHDAY -->
+      <div class="section-header" style="margin-top: 10px;">
+        <h2 class="section-title">
+          <span>⭐</span> Bintang Lapangan (MVP of the Matchday)
+        </h2>
+        <span style="font-size: 0.78rem; color: var(--accent-gold); font-weight: 700;">
+          Pemain Bersinar Hari Ini
+        </span>
+      </div>
+
+      <div class="mvp-spotlight-card">
+        <div class="mvp-photo-wrapper">
+          <img src="assets/mvp_player.jpg" alt="Foto MVP Pemain Bintang ACC" class="mvp-photo-img" id="mvpPhoto">
+          <div class="mvp-badge-overlay">
+            <span>🏆</span> <span>MVP MATCHDAY #2</span>
+          </div>
+        </div>
+
+        <div class="mvp-details-col">
+          <div class="mvp-tagline">
+            <span>🔥</span> <span id="mvpTagline">PERFORMA GEMILANG & FAIR PLAY</span>
+          </div>
+          <div class="mvp-player-name" id="mvpName">Aiman Muzaffar (#10)</div>
+          <div class="mvp-team-row">
+            <span class="mini-badge" style="background: #721c24; width: 24px; height: 24px;">AF</span>
+            <span id="mvpTeam">MTQ Al-Fayyadh FC</span>
+            <span>•</span>
+            <span style="color: var(--secondary);" id="mvpPos">Posisi: Pivot</span>
+          </div>
+
+          <div class="mvp-stats-grid">
+            <div class="mvp-stat-box">
+              <div class="mvp-stat-val" id="mvpGoals">4</div>
+              <div class="mvp-stat-lbl">GOL</div>
+            </div>
+            <div class="mvp-stat-box">
+              <div class="mvp-stat-val" id="mvpAssists">3</div>
+              <div class="mvp-stat-lbl">ASSIST</div>
+            </div>
+            <div class="mvp-stat-box">
+              <div class="mvp-stat-val" id="mvpMotm">2x</div>
+              <div class="mvp-stat-lbl">Man of the Match</div>
+            </div>
+            <div class="mvp-stat-box">
+              <div class="mvp-stat-val" style="color: var(--accent-gold);" id="mvpRating">9.6</div>
+              <div class="mvp-stat-lbl">Rating Performa</div>
+            </div>
+          </div>
+
+          <div class="mvp-quote-box">
+            <p id="mvpQuote">
+              "Bermain bukan hanya sekadar mengejar piala, tetapi menjaga adab, ukhuwah Islamiyah, dan sportivitas santri di atas lapangan."
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap;">
+            <button class="btn btn-outline btn-sm" onclick="app.switchTab('scorers')">
+              ⚽ Lihat Peringkat Top Skor Lengkap
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="app.openTeamModal('T09')">
+              👥 Lihat Skuad MTQ Al-Fayyadh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. KILAS INFO & BERITA KEGIATAN TURNAMEN -->
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>📰</span> Informasi & Kilas Kegiatan Turnamen
+        </h2>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">
+          Update Resmi Panitia ACC 2026
+        </span>
+      </div>
+
+      <div class="news-grid" id="homeNewsContainer">
+        <!-- Rendered by app.renderHome() -->
+      </div>
+
+      <!-- 4. SPONSORSHIP & MITRA PENDUKUNG (SHOWCASE BAR KHUSUS, MENARIK & BESAR) -->
+      <div class="sponsors-showcase-bar" id="sponsorsShowcaseBar">
+        <div class="sponsors-bar-ribbon">
+          <span>✨ OFFICIAL TOURNAMENT PARTNERS & SPONSORS ✨</span>
+        </div>
+
+        <div class="section-header sponsors-header-row">
+          <div>
+            <h2 class="section-title sponsors-main-title">
+              <span>🤝</span> Sponsor Resmi & Mitra Pendukung ACC 2026
+            </h2>
+            <span class="sponsors-sub-title">
+              Dukungan penuh mitra kebaikan demi kemajuan ukhuwah & olahraga santri
+            </span>
+          </div>
+          <button id="btnManageSponsors" class="btn btn-primary btn-sm btn-manage-sponsors" onclick="admin.openSponsorEditorModal()" style="display: none;">
+            ⚙️ Kelola / Tambah Sponsor (Panitia)
+          </button>
+        </div>
+
+        <!-- Tier 1: Platinum Sponsor (Sponsor Utama - Kartu Lebih Besar & Menonjol) -->
+        <div class="sponsor-tier-header tier-platinum">
+          <span>👑 SPONSOR UTAMA (PLATINUM PARTNERS)</span>
+        </div>
+        <div class="sponsors-grid-platinum" id="sponsorsPlatinumGrid">
+          <!-- Rendered dynamically by app.renderSponsors() -->
+        </div>
+
+        <!-- Tier 2: Official Partners -->
+        <div class="sponsor-tier-header tier-gold">
+          <span>⚽ MITRA PENDUKUNG RESMI (OFFICIAL PARTNERS)</span>
+        </div>
+        <div class="sponsors-grid" id="sponsorsGoldGrid">
+          <!-- Rendered dynamically by app.renderSponsors() -->
+        </div>
+
+        <!-- Tier 3: Media Partners -->
+        <div class="sponsor-tier-header tier-media">
+          <span>📡 MEDIA PARTNER & LIPUTAN RESMI</span>
+        </div>
+        <div class="sponsors-grid" id="sponsorsMediaGrid">
+          <!-- Rendered dynamically by app.renderSponsors() -->
+        </div>
+
+        <!-- Callout Ingin Menjadi Sponsor -->
+        <div class="sponsor-cta-banner">
+          <div>
+            <strong style="color: var(--accent-gold); font-size: 0.95rem;">Tertarik Menjadi Sponsor / Mitra ACC 2026?</strong>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+              Dukung kemajuan olahraga santri dan dapatkan penempatan logo di jersey, backdrop panggung, dan aplikasi resmi.
+            </p>
+          </div>
+          <a href="https://wa.me/6281298765432?text=Halo%20Panitia%20ACC%202026%2C%20kami%20tertarik%20bekerjasama%20sebagai%20Sponsor%2FPartner" target="_blank" class="btn btn-primary btn-sm">
+            💬 Hubungi Panitia Sponsorship
+          </a>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 1: JADWAL & SKOR (MATCH CENTER) -->
+    <section id="pane-matches" class="tab-pane">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>🏟️</span> Jadwal & Hasil Pertandingan
+        </h2>
+        <div class="filter-group">
+          <select id="filterDay" class="filter-select" aria-label="Pilih Hari Pertandingan">
+            <option value="all">Semua Hari / Matchday</option>
+            <option value="1">Hari Ke-1 (Matchday 1)</option>
+            <option value="2">Hari Ke-2 (Matchday 2)</option>
+            <option value="3">Hari Ke-3 (Matchday 3)</option>
+          </select>
+          <select id="filterPitch" class="filter-select" aria-label="Pilih Lapangan">
+            <option value="all">Semua Lapangan</option>
+            <option value="Lapangan 1">Lapangan 1 (Vinyl)</option>
+            <option value="Lapangan 2">Lapangan 2 (Sintetis)</option>
+          </select>
+          <select id="filterGroup" class="filter-select" aria-label="Pilih Grup">
+            <option value="all">Semua Grup</option>
+            <option value="A">Grup A</option>
+            <option value="B">Grup B</option>
+            <option value="C">Grup C</option>
+            <option value="D">Grup D</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="matches-grid" id="matchesList">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- TAB 2: KLASEMEN GRUP (STANDINGS) -->
+    <section id="pane-standings" class="tab-pane">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>📊</span> Klasemen Babak Penyisihan (4 Grup)
+        </h2>
+      </div>
+      <div class="groups-container" id="groupsStandingsContainer">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- TAB 3: BAGAN FASE GUGUR (BRACKET) -->
+    <section id="pane-bracket" class="tab-pane">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>🏆</span> Bagan Babak Gugur (Perempat Final s/d Final)
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--primary); font-weight: 700;">
+          *Otomatis terisi dari Juara & Runner-up masing-masing grup
+        </span>
+      </div>
+      <div class="bracket-wrapper">
+        <div class="bracket-tree" id="bracketTree">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: PORTAL TIM & OFFICIAL (ROSTER & CONTACTS) -->
+    <section id="pane-teams" class="tab-pane">
+      <div class="section-header" style="flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 class="section-title">
+            <span>👥</span> Profil Tim & Manajemen Sekolah (<span id="teamsTotalCount">16</span> Tim)
+          </h2>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">
+            Klik kartu tim untuk melihat daftar nama pemain & nomor punggung
+          </span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()" style="display: none;">
+            ➕ Tambah Tim Baru (Panitia)
+          </button>
+        </div>
+      </div>
+      <div class="team-grid" id="teamGridContainer">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- TAB 5: PAPAN DISIPLIN & SANKSI KARTU -->
+    <section id="pane-discipline" class="tab-pane">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>🟨</span> Papan Rekapitulasi Disiplin & Akumulasi Kartu
+        </h2>
+        <span style="font-size: 0.78rem; color: var(--accent-red); font-weight: 700;">
+          Wajib dipantau oleh Manajer & Pelatih sebelum pertandingan
+        </span>
+      </div>
+
+      <div class="discipline-alert">
+        <span style="font-size: 1.5rem;">⚠️</span>
+        <div>
+          <strong>Regulasi Akumulasi & Sanksi Bertanding:</strong>
+          <p style="margin-top: 3px;">
+            Pemain yang memperoleh <strong>2 Kartu Kuning</strong> pada laga berbeda atau <strong>1 Kartu Merah Langsung</strong> dikenakan sanksi <strong>larangan bertanding 1 laga berikutnya</strong>. Pemutihan kartu kuning dilakukan menjelang babak Semifinal.
+          </p>
+        </div>
+      </div>
+
+      <div class="discipline-table-card">
+        <div class="table-responsive">
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th style="width: 35px;">#</th>
+                <th style="text-align: left;">Nama Pemain</th>
+                <th class="col-secondary" style="text-align: left;">Asal Sekolah / Tim</th>
+                <th>Total Kartu</th>
+                <th>Status Sanksi</th>
+                <th style="text-align: center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="disciplineTableBody">
+              <!-- Rendered by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: TOP SCORER (GOLDEN BOOT) -->
+    <section id="pane-scorers" class="tab-pane">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">
+            <span>⚽</span> Papan Top Scorer & Pemain Tersubur (Golden Boot)
+          </h2>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">
+            Daftar resmi pencetak gol terbanyak turnamen ACC 2026
+          </span>
+        </div>
+      </div>
+
+      <div class="top-scorers-layout">
+        <!-- Leaderboard Table with Featured 3-Row Leader at Rank 1 -->
+        <div class="group-card top-scorers-card">
+          <div class="table-responsive">
+            <table class="standings-table top-scorers-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px; text-align: center;">#</th>
+                  <th style="text-align: left;">Pemain</th>
+                  <th class="col-secondary" style="text-align: left;">Sekolah / Tim</th>
+                  <th class="col-secondary" style="text-align: center; width: 90px;">Posisi</th>
+                  <th style="text-align: center; width: 80px;">GOL</th>
+                </tr>
+              </thead>
+              <tbody id="topScorersTableBody">
+                <!-- Rendered by app.js (Rank 1 is rendered as a 3-row tall featured leader) -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 7: JUKNIS & TATA TERTIB -->
+    <section id="pane-juknis" class="tab-pane">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>📋</span> Petunjuk Teknis & Regulasi Resmi Turnamen
+        </h2>
+      </div>
+
+      <div class="juknis-card">
+        <div class="juknis-body" id="juknisContent">
+          <!-- Rendered by app.js from config -->
+        </div>
+
+        <div class="contact-box">
+          <div>
+            <strong style="font-size: 0.95rem; color: var(--text-main);">📞 Layanan Informasi & Pengaduan Panitia:</strong>
+            <p id="juknisContact" style="font-size: 0.85rem; color: var(--secondary); margin-top: 2px; font-weight: 700;">
+              0812-9876-5432 (Kak Harun - Sie. Pertandingan)
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.print()">
+            🖨️ Cetak / Simpan PDF
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MOBILE BOTTOM NAVIGATION (App-like experience) -->
+  <nav class="mobile-nav" aria-label="Navigasi Bawah HP">
+    <button class="mobile-nav-item active" data-tab="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Beranda</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="matches">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span>Skor</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="standings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      <span>Klasemen</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="bracket">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+      <span>Bagan</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="teams">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Tim</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="scorers">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+      <span>Top Skor</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="discipline">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+      <span>Kartu</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="juknis">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Juknis</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. MODAL DETAIL TIM & ROSTER -->
+  <div id="teamModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="teamModalTitle">Detail Tim</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="teamModalBody">
+        <!-- Rendered by app.openTeamModal -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MODAL DETAIL PERTANDINGAN -->
+  <div id="matchDetailModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="matchDetailTitle">Detail Pertandingan</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="matchDetailBody">
+        <!-- Rendered by app.showMatchDetail -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MODAL LOGIN PANITIA -->
+  <div id="adminLoginModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🔒 Verifikasi Panitia</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="adminLoginForm">
+        <div class="modal-body">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Masukkan PIN Keamanan Meja Pertandingan untuk mengupdate skor dan kartu turnamen.
+          </p>
+          <div class="form-group">
+            <label class="form-label">PIN Keamanan Panitia</label>
+            <input type="password" id="adminPinInput" class="form-input" placeholder="Masukkan PIN Rahasia Panitia" autofocus required autocomplete="current-password">
+            <div id="adminLoginLockoutNote" style="display: none; color: #ef4444; font-size: 0.75rem; margin-top: 6px; font-weight: 700;"></div>
+            <small style="color: var(--text-subtle); font-size: 0.72rem; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+              🛡️ Dilindungi enkripsi SHA-256 & sistem anti brute-force otomatis.
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
+          <button type="submit" class="btn btn-primary">Masuk Mode Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. MODAL QUICK SCORE & EVENT (MEJA PERTANDINGAN) -->
+  <div id="quickScoreModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="quickScoreMatchTitle">✏️ Input Skor Laga</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="quickScoreForm">
+        <div class="modal-body">
+          <!-- Counter Score Tap -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: var(--bg-surface-elevated); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <div style="text-align: center;">
+              <strong id="homeTeamLabel" style="font-size: 0.9rem; color: var(--text-main);">Tim Home</strong>
+              <div class="tap-counter-wrap" style="margin-top: 10px;">
+                <button type="button" class="btn-tap" onclick="admin.adjustScore('home', -1)">-</button>
+                <div class="score-val-display" id="homeScoreDisplay">0</div>
+                <button type="button" class="btn-tap" onclick="admin.adjustScore('home', 1)">+</button>
+              </div>
+            </div>
+
+            <div style="text-align: center;">
+              <strong id="awayTeamLabel" style="font-size: 0.9rem; color: var(--text-main);">Tim Away</strong>
+              <div class="tap-counter-wrap" style="margin-top: 10px;">
+                <button type="button" class="btn-tap" onclick="admin.adjustScore('away', -1)">-</button>
+                <div class="score-val-display" id="awayScoreDisplay">0</div>
+                <button type="button" class="btn-tap" onclick="admin.adjustScore('away', 1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status & Live Minute -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Status Pertandingan</label>
+              <select id="matchStatusSelect" class="form-select">
+                <option value="upcoming">Belum Dimulai (Upcoming)</option>
+                <option value="live">🔴 Sedang Berlangsung (LIVE)</option>
+                <option value="finished">✅ Selesai (Finished)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Menit Laga (Jika Live)</label>
+              <input type="text" id="matchMinuteInput" class="form-input" placeholder="contoh: 18'">
+            </div>
+          </div>
+
+          <!-- Add Match Event (Goal & Card) -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <label class="form-label" style="color: var(--primary);">+ Tambah Kejadian Gol / Kartu</label>
+            <div class="form-row" style="margin-top: 8px;">
+              <select id="eventTeamSelect" class="form-select">
+                <option value="">Pilih Tim</option>
+              </select>
+              <select id="eventPlayerSelect" class="form-select">
+                <option value="">Pilih Pemain</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+              <input type="text" id="eventMinuteInput" class="form-input" style="width: 100px;" placeholder="Menit (12')">
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.addGoalEvent()">
+                ⚽ Catat Gol
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" style="color: var(--card-yellow); border-color: rgba(202,138,4,0.4);" onclick="admin.addCardEvent('yellow')">
+                🟨 Kartu Kuning
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" style="color: var(--card-red); border-color: rgba(220,38,38,0.4);" onclick="admin.addCardEvent('red')">
+                🟥 Kartu Merah
+              </button>
+            </div>
+          </div>
+
+          <!-- Event Log List -->
+          <div class="form-group">
+            <label class="form-label">Daftar Kejadian Pertandingan Ini</label>
+            <div id="adminEventsList" style="display: flex; flex-direction: column; gap: 6px; max-height: 130px; overflow-y: auto;">
+              <!-- Rendered by admin.renderAdminEventsList -->
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Hasil Pertandingan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. MODAL ADMIN DASHBOARD (PENGATURAN & BACKUP) -->
+  <div id="adminDashboardModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Panel Kontrol Panitia Turnamen</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="adminSettingsForm" style="display: flex; flex-direction: column; gap: 14px;">
+          <h4 style="color: var(--primary); font-size: 0.9rem; text-transform: uppercase;">1. Informasi Utama Turnamen</h4>
+          
+          <div class="form-group">
+            <label class="form-label">Nama Turnamen</label>
+            <input type="text" id="settingName" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Sub Judul</label>
+            <input type="text" id="settingSub" class="form-input">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Lokasi / Venue</label>
+              <input type="text" id="settingVenue" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tanggal Turnamen</label>
+              <input type="text" id="settingDates" class="form-input">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Pengumuman Berjalan (Running Text Ticker)</label>
+            <textarea id="settingAnnouncement" class="form-textarea" rows="2"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ganti PIN Panitia</label>
+            <input type="password" id="settingPin" class="form-input" style="width: 150px;">
+          </div>
+
+          <!-- MVP Spotlight Editor -->
+          <h4 style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; margin-top: 6px;">⭐ Atur Pemain Bintang (MVP of Matchday)</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nama Pemain MVP</label>
+              <input type="text" id="settingMvpName" class="form-input" placeholder="contoh: Aiman Muzaffar">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nomor Punggung</label>
+              <input type="number" id="settingMvpNumber" class="form-input" placeholder="10">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Klub / Sekolah</label>
+              <input type="text" id="settingMvpTeam" class="form-input" placeholder="MTQ Al-Fayyadh FC">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Posisi</label>
+              <input type="text" id="settingMvpPos" class="form-input" placeholder="Pivot">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Jumlah Gol</label>
+              <input type="number" id="settingMvpGoals" class="form-input" placeholder="4">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Jumlah Assist</label>
+              <input type="number" id="settingMvpAssists" class="form-input" placeholder="3">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kutipan Kata Mutiara Pemain</label>
+            <input type="text" id="settingMvpQuote" class="form-input" placeholder="Bermain menjaga ukhuwah dan sportivitas...">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 6px;">
+            💾 Simpan Seluruh Pengaturan Turnamen
+          </button>
+        </form>
+
+        <!-- Quick Panitia Tools -->
+        <div>
+          <h4 style="color: #00d2ff; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">⚡ Kelola Konten Visual Beranda</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openHeroBannerModal()">
+              📷 Ganti Banner Hero
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openMomentEditorModal()">
+              ⚡ Kelola ACC Moments
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openSponsorEditorModal()">
+              🤝 Kelola Sponsor
+            </button>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
+
+        <!-- Backup & Restore -->
+        <div>
+          <h4 style="color: var(--secondary); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">3. Backup & Pemulihan Data</h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+            Simpan cadangan data turnamen ke file JSON agar data skor dan jadwal tidak hilang jika ganti perangkat.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.exportData()">
+              📥 Download Backup Data (JSON)
+            </button>
+            <label class="btn btn-outline btn-sm" style="cursor: pointer;">
+              📤 Upload / Restore JSON
+              <input type="file" accept=".json" onchange="admin.importData(event)" style="display: none;">
+            </label>
+            <button type="button" class="btn btn-outline btn-sm" style="color: #ef4444; border-color: rgba(239,68,68,0.4);" onclick="admin.resetAllData()">
+              🔄 Reset ke Default
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="admin.logout()" style="color: #ef4444;">
+          Keluar (Logout Panitia)
+        </button>
+        <button type="button" class="btn btn-outline btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL GANTI GAMBAR BANNER (PANITIA) -->
+  <div id="heroBannerModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🖼️ Ganti Gambar Banner Beranda</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+          Panitia dapat mengubah gambar latar hero banner utama dengan upload file foto dari perangkat atau memasukkan URL gambar langsung.
+        </p>
+
+        <!-- Preview Box -->
+        <div style="margin-bottom: 16px;">
+          <label class="form-label">Pratinjau Banner Saat Ini:</label>
+          <div id="bannerPreviewBox" style="width: 100%; height: 160px; border-radius: var(--radius-md); background-size: cover; background-position: center; border: 2px dashed var(--accent-gold); position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 10px;">
+            <span style="background: rgba(0,0,0,0.7); color: #fff; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px;">Live Preview</span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label">Opsi 1: Upload Gambar dari HP / Komputer</label>
+          <input type="file" id="heroBannerFileInput" accept="image/*" class="form-input" onchange="admin.handleBannerFileUpload(event)">
+          <small style="color: var(--text-subtle); font-size: 0.72rem;">Mendukung format JPG, PNG, WebP</small>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label">Opsi 2: Atau Masukkan Link / URL Gambar</label>
+          <input type="text" id="heroBannerUrlInput" class="form-input" placeholder="contoh: https://... atau assets/hero_banner.jpg" oninput="admin.handleBannerUrlInput(this.value)">
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="admin.setPresetBanner('assets/hero_banner.jpg')">
+            🏟️ Banner GOR Bawaan
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="admin.setPresetBanner('assets/acc_logo.png')">
+            🏆 Logo ACC
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="admin.resetHeroBanner()" style="color: #ef4444;">
+          Reset Default
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
+          <button type="button" class="btn btn-primary" onclick="admin.saveHeroBanner()">Terapkan Banner</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. MODAL INPUT & EDIT TIM & SKUAD PEMAIN (PANITIA) -->
+  <div id="teamEditorModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 760px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="teamEditorModalTitle">✏️ Input & Edit Data Tim</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="teamEditorForm" onsubmit="event.preventDefault(); admin.saveTeamData();">
+          <input type="hidden" id="editTeamId">
+
+          <!-- Profil Utama Tim -->
+          <h4 style="color: var(--primary); font-size: 0.88rem; text-transform: uppercase; margin-bottom: 10px;">
+            1. Profil Sekolah & Tim
+          </h4>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label class="form-label">Nama Lengkap Tim / Sekolah <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="editTeamName" class="form-input" placeholder="contoh: SMA Islam Al-Azhar" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Nama Singkat / Inisial <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="editTeamShortName" class="form-input" placeholder="contoh: AL-AZHAR" maxlength="16" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Grup Turnamen <span style="color:#ef4444;">*</span></label>
+              <select id="editTeamGroup" class="form-select" required>
+                <option value="A">Grup A</option>
+                <option value="B">Grup B</option>
+                <option value="C">Grup C</option>
+                <option value="D">Grup D</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Asal Kota / Wilayah</label>
+              <input type="text" id="editTeamCity" class="form-input" placeholder="contoh: Jakarta Timur">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Warna Tema / Badge</label>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="color" id="editTeamColorPicker" value="#10b981" style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; padding: 2px;" onchange="document.getElementById('editTeamColor').value = this.value">
+                <input type="text" id="editTeamColor" class="form-input" value="#10b981" placeholder="#10b981" oninput="document.getElementById('editTeamColorPicker').value = this.value">
+              </div>
+            </div>
+          </div>
+
+          <!-- Official Manajemen -->
+          <h4 style="color: var(--secondary); font-size: 0.88rem; text-transform: uppercase; margin: 16px 0 10px 0;">
+            2. Struktur Manajemen & Kontak Official
+          </h4>
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Nama Pelatih (Coach)</label>
+              <input type="text" id="editTeamCoach" class="form-input" placeholder="contoh: Coach Bayu Saputra">
+              <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+                <label class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 3px 8px; cursor: pointer;">
+                  📷 Upload Foto Pelatih
+                  <input type="file" id="coachPhotoFileInput" accept="image/*" style="display: none;" onchange="admin.handleCoachPhotoUpload(event)">
+                </label>
+                <input type="hidden" id="editTeamCoachPhoto" value="">
+                <img id="coachPhotoThumb" src="" alt="Preview Pelatih" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); display: none;">
+              </div>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Nama Manajer Tim</label>
+              <input type="text" id="editTeamManager" class="form-input" placeholder="contoh: Ust. M. Ridwan, S.Pd">
+              <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+                <label class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 3px 8px; cursor: pointer;">
+                  📷 Upload Foto Manajer
+                  <input type="file" id="managerPhotoFileInput" accept="image/*" style="display: none;" onchange="admin.handleManagerPhotoUpload(event)">
+                </label>
+                <input type="hidden" id="editTeamManagerPhoto" value="">
+                <img id="managerPhotoThumb" src="" alt="Preview Manajer" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent-gold); display: none;">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Petugas Medis Tim</label>
+              <input type="text" id="editTeamMedic" class="form-input" placeholder="contoh: Rian Hidayat">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nomor WhatsApp Official</label>
+              <input type="text" id="editTeamPhone" class="form-input" placeholder="contoh: 0812-1122-3344">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Warna Jersey Utama (Home)</label>
+              <input type="text" id="editTeamJerseyHome" class="form-input" placeholder="contoh: Hijau - Putih">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Warna Jersey Cadangan (Away)</label>
+              <input type="text" id="editTeamJerseyAway" class="form-input" placeholder="contoh: Hitam - Emas">
+            </div>
+          </div>
+
+          <!-- Roster Pemain -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 0 10px 0;">
+            <h4 style="color: var(--accent-gold); font-size: 0.88rem; text-transform: uppercase; margin: 0;">
+              3. Daftar Nama Pemain & Foto (Roster Resmi)
+            </h4>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.addPlayerRow()" style="font-size: 0.75rem;">
+              ➕ Tambah Baris Pemain
+            </button>
+          </div>
+
+          <div class="table-responsive" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <table class="standings-table" style="font-size: 0.78rem;">
+              <thead>
+                <tr>
+                  <th style="width: 45px;">No</th>
+                  <th style="width: 48px;">Foto</th>
+                  <th style="text-align: left;">Nama Lengkap Pemain</th>
+                  <th style="width: 95px;">Posisi</th>
+                  <th style="width: 50px;">Gol</th>
+                  <th style="width: 50px;">🟨</th>
+                  <th style="width: 50px;">🟥</th>
+                  <th style="width: 45px;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="teamEditorPlayersTbody">
+                <!-- Rows injected dynamically by admin.renderPlayerRows() -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <button type="button" id="btnDeleteTeam" class="btn btn-outline btn-sm" onclick="admin.deleteTeam()" style="color: #ef4444; border-color: rgba(239,68,68,0.4); display: none;">
+              🗑️ Hapus Tim Ini
+            </button>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+              <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
+              <button type="submit" class="btn btn-primary">💾 Simpan Data Tim & Skuad</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. MODAL KELOLA & INPUT SPONSOR (PANITIA) -->
+  <div id="sponsorEditorModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🤝 Kelola & Input Sponsor ACC 2026</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Form Tambah / Edit Sponsor -->
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
+          <h4 style="color: var(--accent-gold); font-size: 0.88rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <span id="sponsorFormTitle">➕ Input Sponsor Baru</span>
+            <button type="button" id="btnCancelEditSponsor" class="btn btn-outline btn-sm" onclick="admin.resetSponsorForm()" style="display: none; padding: 2px 8px; font-size: 0.72rem;">Batal Edit</button>
+          </h4>
+
+          <form id="sponsorForm" onsubmit="event.preventDefault(); admin.saveSponsor();">
+            <input type="hidden" id="editSponsorId">
+            <input type="hidden" id="editSponsorImage">
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">Nama Perusahaan / Sponsor <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="sponsorNameInput" class="form-input" placeholder="contoh: Bank Syariah Al-Barakah" required>
+              </div>
+              <div class="form-group" style="flex: 1.5;">
+                <label class="form-label">Kategori / Tier Sponsor <span style="color:#ef4444;">*</span></label>
+                <select id="sponsorTierSelect" class="form-select" required>
+                  <option value="platinum">👑 Sponsor Utama (Platinum - Tampilan Besar)</option>
+                  <option value="gold">⚽ Mitra Pendukung Resmi (Gold Partner)</option>
+                  <option value="media">📡 Media Partner & Liputan Resmi</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Peran / Keterangan Kemitraan <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="sponsorRoleInput" class="form-input" placeholder="contoh: Official Banking & Financial Partner" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label">Pilih Icon Emoji (Cepat)</label>
+                <select id="sponsorIconSelect" class="form-select">
+                  <option value="🏦">🏦 Bank / Finance</option>
+                  <option value="👕">👕 Apparel / Jersey</option>
+                  <option value="⚽">⚽ Bola / Olahraga</option>
+                  <option value="💧">💧 Minuman / Hidrasi</option>
+                  <option value="🏥">🏥 Medis / Rumah Sakit</option>
+                  <option value="📡">📡 TV / Media Siaran</option>
+                  <option value="📱">📱 Media Digital</option>
+                  <option value="🎥">🎥 Streaming & Video</option>
+                  <option value="🏆">🏆 Trophy / Turnamen</option>
+                  <option value="🏢">🏢 Korporat / Yayasan</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label">Atau Upload Logo Foto / Gambar Sponsor</label>
+                <input type="file" id="sponsorLogoFileInput" accept="image/*" class="form-input" onchange="admin.handleSponsorLogoUpload(event)">
+              </div>
+            </div>
+
+            <!-- Preview Logo -->
+            <div id="sponsorLogoPreviewRow" style="display: none; align-items: center; gap: 10px; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: var(--radius-sm);">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Pratinjau Logo:</span>
+              <img id="sponsorLogoPreviewImg" src="" alt="Preview Logo" style="max-height: 40px; max-width: 120px; object-fit: contain; background: #fff; padding: 2px; border-radius: 4px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeSponsorLogo()" style="color: #ef4444; padding: 2px 6px; font-size: 0.7rem;">Hapus Foto</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 4px;">
+              💾 Simpan Data Sponsor
+            </button>
+          </form>
+        </div>
+
+        <!-- Daftar Sponsor Terdaftar -->
+        <h4 style="color: var(--text-main); font-size: 0.85rem; margin-bottom: 8px;">Daftar Sponsor ACC 2026 Saat Ini:</h4>
+        <div id="adminSponsorsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto;">
+          <!-- Injected dynamically by admin.renderSponsorsList() -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL PREVIEW ACC MOMENT (FIFA WORLD CUP MOMENTS VIEWER)  -->
+  <!-- ========================================================= -->
+  <div id="momentModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 520px; background: #070e20; border: 1px solid rgba(0,210,255,0.35); color: #fff;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <h3 class="modal-title" id="momentModalTitle" style="color: #00d2ff; display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span> ACC 2026 Moments™
+        </h3>
+        <button class="modal-close btn-modal-close" style="color: #fff;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div style="position: relative; border-radius: 14px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 10px 28px rgba(0,0,0,0.6); background: #0b1329;">
+          <img id="momentModalImg" src="" alt="Moment ACC 2026" style="width: 100%; max-height: 420px; object-fit: cover; display: block;">
+          <div id="momentModalBadgeNew" class="moment-badge-new" style="top: 12px; right: 12px;">NEW</div>
+          <div id="momentModalBadgeTag" class="moment-badge-tag" style="top: 12px; left: 12px;">🔥 HIGHLIGHT</div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+          <h4 id="momentModalHeadline" style="font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0; font-family: var(--font-display);"></h4>
+          <span id="momentModalPlayer" style="font-size: 0.85rem; font-weight: 800; color: #00d2ff;"></span>
+        </div>
+        <p id="momentModalTeam" style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 12px; font-weight: 600;"></p>
+        <div style="background: rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; border-left: 3px solid #00d2ff;">
+          <p id="momentModalCaption" style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6; margin: 0;"></p>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="app.shareMoment()" style="color: #00d2ff; border-color: rgba(0,210,255,0.4); background: rgba(0,210,255,0.08);">
+          📤 Bagikan Momen
+        </button>
+        <button type="button" class="btn btn-primary btn-sm btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL EDIT MOMENT (PANITIA)                              -->
+  <!-- ========================================================= -->
+  <div id="momentEditorModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="momentFormTitle">📷 Kelola ACC 2026 Moments (Panitia)</h3>
+        <button class="modal-close btn-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="callout callout-info" style="margin-bottom: 14px;">
+          Panitia dapat menambahkan sorotan momen aksi pertandingan futsal (foto selebrasi, gol roket, save kiper, dsb) pada bar <strong>ACC 2026 Moments™</strong> di Beranda.
+        </div>
+
+        <form id="formMomentEditor" onsubmit="admin.saveMoment(event)" style="background: var(--bg-surface-elevated); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
+          <input type="hidden" id="editMomentId" value="">
+          <input type="hidden" id="editMomentImage" value="">
+
+          <div class="form-group">
+            <label class="form-label">Judul Momen Spektakuler *</label>
+            <input type="text" id="momentTitleInput" class="form-input" placeholder="Contoh: Tendangan Roket Voli Spektakuler" required>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Nama Pemain & No Punggung *</label>
+              <input type="text" id="momentPlayerInput" class="form-input" placeholder="Contoh: Athar Barra (#9)" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Nama Sekolah / Tim *</label>
+              <input type="text" id="momentTeamInput" class="form-input" placeholder="Contoh: SMA Islam Al-Azhar" required>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Kategori / Badge</label>
+              <select id="momentBadgeSelect" class="form-select">
+                <option value="🔥 MATCHDAY HIGHLIGHT">🔥 MATCHDAY HIGHLIGHT</option>
+                <option value="🚀 GOAL OF THE TOURNAMENT">🚀 GOAL OF THE TOURNAMENT</option>
+                <option value="🧤 SAVE OF THE DAY">🧤 SAVE OF THE DAY</option>
+                <option value="🏆 CHAMPION MOMENT">🏆 CHAMPION MOMENT</option>
+                <option value="⚡ MAGIC SKILL">⚡ MAGIC SKILL</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Pita Tag</label>
+              <select id="momentTagSelect" class="form-select">
+                <option value="NEW">NEW (Baru)</option>
+                <option value="HOT">HOT (Viral)</option>
+                <option value="MVP">MVP (Bintang)</option>
+                <option value="FINAL">FINAL</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Upload Foto Momen (dari HP / Laptop)</label>
+            <input type="file" id="momentFileInput" accept="image/*" class="form-input" onchange="admin.handleMomentImageUpload(event)">
+          </div>
+
+          <div id="momentPhotoPreviewRow" style="display: none; align-items: center; gap: 10px; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: var(--radius-sm);">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Pratinjau Foto:</span>
+            <img id="momentPhotoPreviewImg" src="" alt="Preview Moment" style="max-height: 60px; max-width: 100px; object-fit: cover; border-radius: 4px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeMomentPhoto()" style="color: #ef4444; padding: 2px 6px; font-size: 0.7rem;">Hapus Foto</button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Deskripsi / Cerita Momen *</label>
+            <textarea id="momentCaptionInput" class="form-textarea" rows="2" placeholder="Ceritakan momen seru ini..." required></textarea>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary btn-sm">💾 Simpan Momen</button>
+            <button type="button" id="btnCancelEditMoment" class="btn btn-outline btn-sm" onclick="admin.resetMomentForm()" style="display: none;">Batal Edit</button>
+          </div>
+        </form>
+
+        <h4 style="color: var(--text-main); font-size: 0.85rem; margin-bottom: 8px;">Daftar ACC 2026 Moments Saat Ini:</h4>
+        <div id="adminMomentsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto;">
+          <!-- Injected dynamically by admin.renderMomentsList() -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAVIGATION (RAMAH HP & PRAKTIS) -->
+  <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi Bawah Khusus HP">
+    <button class="mobile-nav-item active" data-tab="home" aria-label="Beranda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Beranda</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="matches" aria-label="Jadwal & Skor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span>Jadwal</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="standings" aria-label="Klasemen Grup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+      <span>Klasemen</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="bracket" aria-label="Bagan Fase Gugur">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M9 6h6a3 3 0 0 1 3 3v6M9 18h6a3 3 0 0 0 3-3"></path><circle cx="18" cy="12" r="3"></circle></svg>
+      <span>Bagan</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="teams" aria-label="Daftar Tim">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <span>Tim</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="scorers" aria-label="Top Skor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="12 6 15 10 13 15 11 15 9 10"></polygon></svg>
+      <span>Top Skor</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="discipline" aria-label="Papan Disiplin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"></rect></svg>
+      <span>Disiplin</span>
+    </button>
+  </nav>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="appToast" class="toast"></div>
+
+  <!-- JAVASCRIPT & SUPABASE MODULES -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/security.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+
+  <!-- Service Worker for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('PWA ServiceWorker registered', reg.scope))
+          .catch(err => console.log('PWA ServiceWorker failed', err));
+      });
+    }
+  </script>
+</body>
+</html>
