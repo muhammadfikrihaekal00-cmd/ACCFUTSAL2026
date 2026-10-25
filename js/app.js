@@ -16,8 +16,10 @@ class TournamentStore {
         console.error("Gagal memuat data dari localStorage, menggunakan default", e);
       }
     }
-    if (!data) {
+    // Pastikan jika belum ada data atau data kurang dari 32 tim (16 SMP + 16 SD), muat ulang dari DEFAULT_DATA
+    if (!data || !data.teams || data.teams.length < 32) {
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     }
     // Pastikan data sponsor selalu ada
     if (!data.sponsors) {
@@ -177,46 +179,85 @@ class TournamentStore {
     });
   }
 
-  // Automatically sync Group Winners & Runners-Up to Knockout
+  // Automatically sync Group Winners & Runners-Up to Knockout (4 Grup SMP & 4 Grup SD)
   syncKnockoutFromStandings() {
-    const standingsA = this.calculateGroupStandings("A", "SMP");
-    const standingsB = this.calculateGroupStandings("B", "SMP");
-    const standingsC = this.calculateGroupStandings("C", "SD");
-    const standingsD = this.calculateGroupStandings("D", "SD");
+    // SMP Standings (Grup A, B, C, D)
+    const stA_SMP = this.calculateGroupStandings("A", "SMP");
+    const stB_SMP = this.calculateGroupStandings("B", "SMP");
+    const stC_SMP = this.calculateGroupStandings("C", "SMP");
+    const stD_SMP = this.calculateGroupStandings("D", "SMP");
 
-    const qf1 = this.data.matches.find(m => m.id === "QF1");
-    if (qf1) {
-      qf1.category = "SMP";
-      if (standingsA[0] && standingsB[1]) {
-        qf1.homeId = standingsA[0].team.id;
-        qf1.awayId = standingsB[1].team.id;
+    // SD Standings (Grup A, B, C, D)
+    const stA_SD = this.calculateGroupStandings("A", "SD");
+    const stB_SD = this.calculateGroupStandings("B", "SD");
+    const stC_SD = this.calculateGroupStandings("C", "SD");
+    const stD_SD = this.calculateGroupStandings("D", "SD");
+
+    // 1. QF SMP: 1A vs 2B, 1C vs 2D, 1B vs 2A, 1D vs 2C
+    const qf1_smp = this.data.matches.find(m => m.id === "QF1_SMP" || m.id === "QF1");
+    if (qf1_smp) {
+      qf1_smp.category = "SMP";
+      if (stA_SMP[0] && stB_SMP[1]) {
+        qf1_smp.homeId = stA_SMP[0].team.id;
+        qf1_smp.awayId = stB_SMP[1].team.id;
+      }
+    }
+    const qf2_smp = this.data.matches.find(m => m.id === "QF2_SMP");
+    if (qf2_smp) {
+      qf2_smp.category = "SMP";
+      if (stC_SMP[0] && stD_SMP[1]) {
+        qf2_smp.homeId = stC_SMP[0].team.id;
+        qf2_smp.awayId = stD_SMP[1].team.id;
+      }
+    }
+    const qf3_smp = this.data.matches.find(m => m.id === "QF3_SMP" || m.id === "QF3");
+    if (qf3_smp) {
+      qf3_smp.category = "SMP";
+      if (stB_SMP[0] && stA_SMP[1]) {
+        qf3_smp.homeId = stB_SMP[0].team.id;
+        qf3_smp.awayId = stA_SMP[1].team.id;
+      }
+    }
+    const qf4_smp = this.data.matches.find(m => m.id === "QF4_SMP");
+    if (qf4_smp) {
+      qf4_smp.category = "SMP";
+      if (stD_SMP[0] && stC_SMP[1]) {
+        qf4_smp.homeId = stD_SMP[0].team.id;
+        qf4_smp.awayId = stC_SMP[1].team.id;
       }
     }
 
-    const qf3 = this.data.matches.find(m => m.id === "QF3");
-    if (qf3) {
-      qf3.category = "SMP";
-      if (standingsB[0] && standingsA[1]) {
-        qf3.homeId = standingsB[0].team.id;
-        qf3.awayId = standingsA[1].team.id;
+    // 2. QF SD: 1A vs 2B, 1C vs 2D, 1B vs 2A, 1D vs 2C
+    const qf1_sd = this.data.matches.find(m => m.id === "QF1_SD" || m.id === "QF2");
+    if (qf1_sd) {
+      qf1_sd.category = "SD";
+      if (stA_SD[0] && stB_SD[1]) {
+        qf1_sd.homeId = stA_SD[0].team.id;
+        qf1_sd.awayId = stB_SD[1].team.id;
       }
     }
-
-    const qf2 = this.data.matches.find(m => m.id === "QF2");
-    if (qf2) {
-      qf2.category = "SD";
-      if (standingsC[0] && standingsD[1]) {
-        qf2.homeId = standingsC[0].team.id;
-        qf2.awayId = standingsD[1].team.id;
+    const qf2_sd = this.data.matches.find(m => m.id === "QF2_SD");
+    if (qf2_sd) {
+      qf2_sd.category = "SD";
+      if (stC_SD[0] && stD_SD[1]) {
+        qf2_sd.homeId = stC_SD[0].team.id;
+        qf2_sd.awayId = stD_SD[1].team.id;
       }
     }
-
-    const qf4 = this.data.matches.find(m => m.id === "QF4");
-    if (qf4) {
-      qf4.category = "SD";
-      if (standingsD[0] && standingsC[1]) {
-        qf4.homeId = standingsD[0].team.id;
-        qf4.awayId = standingsC[1].team.id;
+    const qf3_sd = this.data.matches.find(m => m.id === "QF3_SD" || m.id === "QF4");
+    if (qf3_sd) {
+      qf3_sd.category = "SD";
+      if (stB_SD[0] && stA_SD[1]) {
+        qf3_sd.homeId = stB_SD[0].team.id;
+        qf3_sd.awayId = stA_SD[1].team.id;
+      }
+    }
+    const qf4_sd = this.data.matches.find(m => m.id === "QF4_SD");
+    if (qf4_sd) {
+      qf4_sd.category = "SD";
+      if (stD_SD[0] && stC_SD[1]) {
+        qf4_sd.homeId = stD_SD[0].team.id;
+        qf4_sd.awayId = stC_SD[1].team.id;
       }
     }
   }
@@ -358,12 +399,13 @@ const app = {
   },
 
   setCategory(cat, showToastMsg = true) {
+    if (cat !== "SMP" && cat !== "SD") cat = "SMP";
     this.currentCategory = cat;
     localStorage.setItem("acc_active_category", cat);
     this.updateCategoryUI();
     this.renderCurrentView();
     if (showToastMsg) {
-      const lbl = cat === "all" ? "Semua Kelas" : (cat === "SMP" ? "🏆 Kategori SMP (U-15)" : "⚽ Kategori SD (U-12)");
+      const lbl = cat === "SMP" ? "🏆 Kelas SMP (U-15)" : "⚽ Kelas SD (U-12)";
       this.showToast(`Beralih ke ${lbl}`);
     }
   },
@@ -371,10 +413,8 @@ const app = {
   updateCategoryUI() {
     const btnSMP = document.getElementById("btnCatSMP");
     const btnSD = document.getElementById("btnCatSD");
-    const btnAll = document.getElementById("btnCatAll");
     if (btnSMP) btnSMP.classList.toggle("active", this.currentCategory === "SMP");
     if (btnSD) btnSD.classList.toggle("active", this.currentCategory === "SD");
-    if (btnAll) btnAll.classList.toggle("active", this.currentCategory === "all");
   },
 
   initSupabaseSync() {
@@ -951,103 +991,121 @@ const app = {
         `<span class="match-category-tag cat-smp">🏆 SMP (U-15)</span>`;
 
       return `
-        <div class="match-card ${isLive ? 'is-live' : ''}">
-          <div class="match-header-meta">
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+        <div class="match-card uefa-fixture-card ${isLive ? 'is-live' : ''}">
+          <!-- HEADER META -->
+          <div class="fixture-header-meta">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${catBadge}
-              <span class="match-pitch-badge">🏟️ ${m.pitch}</span>
+              <span class="fixture-pitch-pill">🏟️ ${m.pitch}</span>
+              <span class="fixture-group-pill">${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : `Grup ${m.group}`}</span>
             </div>
-            <span class="match-status-tag ${m.status}">
-              ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}` : (isFinished ? 'Selesai' : m.time)}
-            </span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="fixture-time-hint">📅 ${m.date}</span>
+              <span class="match-status-tag ${m.status}">
+                ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}` : (isFinished ? 'Selesai' : m.time)}
+              </span>
+            </div>
           </div>
 
-          <!-- REVAMPED DUAL TEAM MATCH BODY -->
-          <div class="match-body-revamped">
+          <!-- FIXTURE ROWS BODY (2 BARIS TIM LEGA, TANPA TERPOTONG) -->
+          <div class="match-fixture-content">
             
-            <!-- KOLOM TIM HOME (KIRI) -->
-            <div class="team-col-custom home" onclick="app.openTeamModal('${home.id}')" style="cursor: pointer;" title="Klik untuk lihat profil tim">
-              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${home.badgeColor || '#10b981'}, #0f172a);">
-                ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : home.shortName.substring(0, 3)}
+            <!-- BARIS 1: TIM HOME -->
+            <div class="fixture-team-row" onclick="app.openTeamModal('${home.id}')" title="Klik untuk lihat profil tim">
+              <div class="fixture-team-left">
+                <div class="team-avatar-mini" style="background: ${home.badgeColor || '#10b981'};">
+                  ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : (home.shortName || 'TBD').substring(0, 3)}
+                </div>
+                <div class="fixture-team-name-wrap">
+                  <div class="fixture-team-fullname">${home.name}</div>
+                  <div class="fixture-team-subcity">📍 ${home.city || '-'}</div>
+                </div>
               </div>
-              <div class="team-name-label" title="${home.name}">${home.name}</div>
-              <div class="team-city-label">${home.city || ''}</div>
+              <div class="fixture-score-number ${isLive ? 'live' : ''}">
+                ${homeScore}
+              </div>
+            </div>
 
-              <!-- GOL & KARTU TIM HOME BERADA PERSIS DI BAWAH NAMA TIM HOME -->
-              <div class="team-events-box home">
+            <!-- GOL & KARTU TIM HOME (BERADA PERSIS DI BAWAH NAMA TIM HOME) -->
+            ${(homeScorers.length > 0 || homeCards.length > 0) ? `
+              <div class="fixture-team-events">
                 ${homeScorers.map(s => `
-                  <div class="event-item-badge scorer">
+                  <span class="fixture-event-chip scorer">
                     <span>⚽</span>
                     <span>${s.player}</span>
-                    <span class="event-minute-pill">${s.minute}</span>
-                  </div>
+                    <span class="chip-min">${s.minute}</span>
+                  </span>
                 `).join("")}
                 ${homeCards.map(c => `
-                  <div class="event-item-badge">
+                  <span class="fixture-event-chip">
                     <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
                     <span>${c.player}</span>
-                    <span class="event-minute-pill">${c.minute}</span>
-                  </div>
+                    <span class="chip-min">${c.minute}</span>
+                  </span>
                 `).join("")}
               </div>
+            ` : ''}
+
+            <div class="fixture-row-divider"></div>
+
+            <!-- BARIS 2: TIM AWAY -->
+            <div class="fixture-team-row" onclick="app.openTeamModal('${away.id}')" title="Klik untuk lihat profil tim">
+              <div class="fixture-team-left">
+                <div class="team-avatar-mini" style="background: ${away.badgeColor || '#3b82f6'};">
+                  ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : (away.shortName || 'TBD').substring(0, 3)}
+                </div>
+                <div class="fixture-team-name-wrap">
+                  <div class="fixture-team-fullname">${away.name}</div>
+                  <div class="fixture-team-subcity">📍 ${away.city || '-'}</div>
+                </div>
+              </div>
+              <div class="fixture-score-number ${isLive ? 'live' : ''}">
+                ${awayScore}
+              </div>
             </div>
 
-            <!-- KOLOM SKOR TENGAH (PROMINENT, BERSIH, TERPUSAT) -->
-            <div class="score-col-centered">
-              <div class="score-box-prominent ${isLive ? 'live' : ''}">
-                <span>${homeScore}</span>
-                <span class="score-divider">:</span>
-                <span>${awayScore}</span>
-              </div>
-              <div class="match-time-sub">${m.date}</div>
-              <div style="font-size: 0.7rem; color: var(--text-subtle); margin-top: 2px; font-weight: 600;">${m.time}</div>
-            </div>
-
-            <!-- KOLOM TIM AWAY (KANAN) -->
-            <div class="team-col-custom away" onclick="app.openTeamModal('${away.id}')" style="cursor: pointer;" title="Klik untuk lihat profil tim">
-              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${away.badgeColor || '#3b82f6'}, #0f172a);">
-                ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : away.shortName.substring(0, 3)}
-              </div>
-              <div class="team-name-label" title="${away.name}">${away.name}</div>
-              <div class="team-city-label">${away.city || ''}</div>
-
-              <!-- GOL & KARTU TIM AWAY BERADA PERSIS DI BAWAH NAMA TIM AWAY -->
-              <div class="team-events-box away">
+            <!-- GOL & KARTU TIM AWAY (BERADA PERSIS DI BAWAH NAMA TIM AWAY) -->
+            ${(awayScorers.length > 0 || awayCards.length > 0) ? `
+              <div class="fixture-team-events">
                 ${awayScorers.map(s => `
-                  <div class="event-item-badge away scorer">
-                    <span class="event-minute-pill">${s.minute}</span>
-                    <span>${s.player}</span>
+                  <span class="fixture-event-chip scorer">
                     <span>⚽</span>
-                  </div>
+                    <span>${s.player}</span>
+                    <span class="chip-min">${s.minute}</span>
+                  </span>
                 `).join("")}
                 ${awayCards.map(c => `
-                  <div class="event-item-badge away">
-                    <span class="event-minute-pill">${c.minute}</span>
-                    <span>${c.player}</span>
+                  <span class="fixture-event-chip">
                     <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
-                  </div>
+                    <span>${c.player}</span>
+                    <span class="chip-min">${c.minute}</span>
+                  </span>
                 `).join("")}
               </div>
-            </div>
+            ` : ''}
 
           </div>
 
-          <div class="match-footer-actions">
-            <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')">
-              ℹ️ Detail Laga
-            </button>
-            ${admin.isAuthenticated === true ? `
-              <button class="btn btn-admin btn-sm" onclick="admin.openQuickScore('${m.id}')">
-                ✏️ Input Skor
+          <!-- FOOTER AKSI -->
+          <div class="fixture-footer-bar">
+            <span class="fixture-time-hint">⏰ Kick-off: ${m.time}</span>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')">
+                ℹ️ Detail Laga
               </button>
-            ` : ''}
+              ${admin.isAuthenticated === true ? `
+                <button class="btn btn-admin btn-sm" onclick="admin.openQuickScore('${m.id}')">
+                  ✏️ Input Skor
+                </button>
+              ` : ''}
+            </div>
           </div>
         </div>
       `;
     }).join("");
   },
 
-  // 2. RENDER STANDINGS (4 Groups with SMP / SD Division)
+  // 2. RENDER STANDINGS (4 Grup Lengkap per Kategori: A, B, C, D)
   renderStandings() {
     const container = document.getElementById("groupsStandingsContainer");
     if (!container) return;
@@ -1056,19 +1114,16 @@ const app = {
     if (this.currentCategory === "SMP") {
       groupsToShow = [
         { letter: "A", label: "GRUP A (SMP / MTs)", category: "SMP" },
-        { letter: "B", label: "GRUP B (SMP / MTs)", category: "SMP" }
-      ];
-    } else if (this.currentCategory === "SD") {
-      groupsToShow = [
-        { letter: "C", label: "GRUP A (SD / MI)", category: "SD" },
-        { letter: "D", label: "GRUP B (SD / MI)", category: "SD" }
+        { letter: "B", label: "GRUP B (SMP / MTs)", category: "SMP" },
+        { letter: "C", label: "GRUP C (SMP / MTs)", category: "SMP" },
+        { letter: "D", label: "GRUP D (SMP / MTs)", category: "SMP" }
       ];
     } else {
       groupsToShow = [
-        { letter: "A", label: "GRUP A (SMP / MTs)", category: "SMP" },
-        { letter: "B", label: "GRUP B (SMP / MTs)", category: "SMP" },
-        { letter: "C", label: "GRUP A (SD / MI)", category: "SD" },
-        { letter: "D", label: "GRUP B (SD / MI)", category: "SD" }
+        { letter: "A", label: "GRUP A (SD / MI)", category: "SD" },
+        { letter: "B", label: "GRUP B (SD / MI)", category: "SD" },
+        { letter: "C", label: "GRUP C (SD / MI)", category: "SD" },
+        { letter: "D", label: "GRUP D (SD / MI)", category: "SD" }
       ];
     }
 
@@ -1084,7 +1139,7 @@ const app = {
               </span>
               <span>${g.label}</span>
             </div>
-            <small style="color: var(--primary); font-size: 0.72rem; font-weight: 700;">Top 2 Lolos Babak Gugur</small>
+            <small style="color: var(--primary); font-size: 0.72rem; font-weight: 700;">Top 2 Lolos 8 Besar</small>
           </div>
 
           <div class="table-responsive">
@@ -1113,7 +1168,7 @@ const app = {
                         <span class="mini-badge" style="background: ${row.team.badgeColor};">
                           ${row.team.logo ? `<img src="${row.team.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : row.team.shortName.substring(0, 2)}
                         </span>
-                        <span>${row.team.shortName}</span>
+                        <span>${row.team.name}</span>
                       </td>
                       <td class="col-secondary">${row.mp}</td>
                       <td>${row.w}</td>
@@ -1132,31 +1187,32 @@ const app = {
 
           <div class="table-legend">
             <span class="legend-dot"></span>
-            <span>Peringkat 1 & 2 melaju ke Babak Semifinal & Final ${g.category}</span>
+            <span>Peringkat 1 & 2 melaju ke Babak 8 Besar (Perempat Final) ${g.category}</span>
           </div>
         </div>
       `;
     }).join("");
   },
 
-  // 3. RENDER BRACKET (Knockout Stage - Multi Category Supported)
+  // 3. RENDER BRACKET (Bagan 8 Besar Lengkap per Kategori)
   renderBracket() {
     const container = document.getElementById("bracketTree");
     if (!container) return;
 
     this.store.syncKnockoutFromStandings();
 
-    const qfMatches = this.store.data.matches.filter(m => m.id.startsWith("QF"));
-    const sfMatches = this.store.data.matches.filter(m => m.id.startsWith("SF"));
-    const thirdMatch = this.store.data.matches.find(m => m.id === "3RD");
-    const finalMatch = this.store.data.matches.find(m => m.id === "FINAL");
+    const activeCat = this.currentCategory;
+    const qfMatches = this.store.data.matches.filter(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("QF"));
+    const sfMatches = this.store.data.matches.filter(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("SF"));
+    const thirdMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("3RD"));
+    const finalMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("FINAL"));
 
     const renderBracketCard = (m, isFinal = false) => {
       const home = this.store.getTeam(m.homeId);
       const away = this.store.getTeam(m.awayId);
 
-      const homeName = home ? home.shortName : (m.homePlaceholder || "TBD");
-      const awayName = away ? away.shortName : (m.awayPlaceholder || "TBD");
+      const homeName = home ? home.name : (m.homePlaceholder || "TBD");
+      const awayName = away ? away.name : (m.awayPlaceholder || "TBD");
 
       const homeScore = m.status === "finished" ? m.homeScore : "-";
       const awayScore = m.status === "finished" ? m.awayScore : "-";
@@ -1172,18 +1228,18 @@ const app = {
           <div class="bracket-team-row ${isHomeWinner ? 'winner' : ''}">
             <div class="bracket-team-info">
               <span class="mini-badge" style="background: ${home ? home.badgeColor : '#475569'};">
-                ${home && home.logo ? `<img src="${home.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : homeName.substring(0,2)}
+                ${home && home.logo ? `<img src="${home.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (home ? home.shortName.substring(0,2) : 'TBD')}
               </span>
-              <span>${homeName}</span>
+              <span title="${homeName}">${homeName}</span>
             </div>
             <div class="bracket-score">${homeScore}</div>
           </div>
           <div class="bracket-team-row ${isAwayWinner ? 'winner' : ''}">
             <div class="bracket-team-info">
               <span class="mini-badge" style="background: ${away ? away.badgeColor : '#475569'};">
-                ${away && away.logo ? `<img src="${away.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : awayName.substring(0,2)}
+                ${away && away.logo ? `<img src="${away.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (away ? away.shortName.substring(0,2) : 'TBD')}
               </span>
-              <span>${awayName}</span>
+              <span title="${awayName}">${awayName}</span>
             </div>
             <div class="bracket-score">${awayScore}</div>
           </div>
@@ -1195,12 +1251,11 @@ const app = {
     };
 
     const isSMP = this.currentCategory === "SMP";
-    const isSD = this.currentCategory === "SD";
 
     container.innerHTML = `
       <div style="grid-column: 1/-1; margin-bottom: 8px;">
         <span class="badge" style="background: rgba(16,185,129,0.15); color: var(--primary); font-weight: 800; padding: 6px 14px; border-radius: 8px;">
-          ${isSMP ? '🏆 BAGAN BABAK GUGUR KATEGORI SMP (U-15)' : (isSD ? '🎒 BAGAN BABAK GUGUR KATEGORI SD (U-12)' : '🌐 BAGAN BABAK GUGUR SEMUA KELAS')}
+          ${isSMP ? '🏆 BAGAN BABAK GUGUR KATEGORI SMP (U-15) • 8 BESAR S/D FINAL' : '🎒 BAGAN BABAK GUGUR KATEGORI SD (U-12) • 8 BESAR S/D FINAL'}
         </span>
       </div>
 
