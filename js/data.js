@@ -1,4 +1,4 @@
-﻿// data.js - Initial Default Tournament Data (32 Teams: 16 SMP + 16 SD)
+// data.js - Initial Default Tournament Data (32 Teams: 16 SMP + 16 SD)
 const DEFAULT_DATA = {
   config: {
     tournamentName: 'ACC "Al-Fayyadh Champions Cup" 2026',
@@ -12,7 +12,7 @@ const DEFAULT_DATA = {
     runningAnnouncement: "ðŸ† Selamat Datang di ACC 'Al-Fayyadh Champions Cup' 2026 Ma'had Tahfizhul Qur'an Al Fayyadh! Total 32 Tim (16 SMP & 16 SD). Junjung tinggi sportivitas, ukhuwah Islamiyah, dan fair play. Registrasi line-up maksimal 30 menit sebelum kick-off.",
     contactCommittee: "0812-9876-5432 (Panitia ACC - Sie. Pertandingan)",
     heroBannerImage: "assets/hero_banner.jpg",
-    rulesText: \
+    rulesText: `
 ### 1. FORMAT & KATEGORI TURNAMEN
 - Turnamen diselenggarakan dalam 2 Kategori Resmi: **Kategori SMP (U-15)** dan **Kategori SD (U-12)**.
 - Setiap kategori diikuti oleh **16 Tim Sekolah/Pesantren** yang dibagi ke dalam 4 Grup (**Grup A, B, C, D**), masing-masing grup berisi 4 tim.
@@ -38,7 +38,7 @@ const DEFAULT_DATA = {
 - 2 Kartu Kuning pada pertandingan berbeda mengakibatkan larangan bermain 1 pertandingan berikutnya.
 - 1 Kartu Merah Langsung mengakibatkan larangan bertanding 1 pertandingan berikutnya.
 - Pemutihan kartu kuning dilakukan saat memasuki babak Semifinal.
-\
+`
   },
   homeData: {
     mvp: {
@@ -1844,3 +1844,5 @@ const DEFAULT_DATA = {
     }
   ]
 };
+
+window.DEFAULT_DATA = DEFAULT_DATA;

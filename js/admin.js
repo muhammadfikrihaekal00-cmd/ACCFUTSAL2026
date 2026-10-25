@@ -1687,3 +1687,5 @@ const admin = {
 document.addEventListener("DOMContentLoaded", () => {
   admin.init();
 });
+
+window.admin = admin;
