@@ -33,58 +33,9 @@ const admin = {
     // Submit PIN Login with Master PINs (1234 / 2026 / admin) & Automatic Lockout Recovery
     const formLogin = document.getElementById("adminLoginForm");
     if (formLogin) {
-      formLogin.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const pin = (document.getElementById("adminPinInput").value || "").trim();
-        const masterPins = ["1234", "2026", "admin"];
-        const isMaster = masterPins.includes(pin) || masterPins.includes(pin.toLowerCase());
-
-        // Master PINs always recover from any lockout
-        if (isMaster) {
-          localStorage.removeItem("acc_sec_attempts_v1");
-          localStorage.removeItem("acc_sec_lockout_until_v1");
-          if (window.Security) window.Security.recordSuccess();
-        } else if (window.Security) {
-          const lockout = window.Security.checkLockout();
-          if (lockout.isLocked) {
-            alert(`⚠️ Akses Terkunci! Terlalu banyak percobaan gagal. Silakan gunakan PIN resmi: 1234 untuk masuk.`);
-            return;
-          }
-        }
-
-        const storedHash = (app.store.data.config && app.store.data.config.adminPinHash) 
-          || (window.Security ? window.Security.DEFAULT_HASH : "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348");
-
-        let isValid = isMaster;
-        if (!isValid && window.Security) {
-          isValid = await window.Security.verifyPin(pin, storedHash);
-        }
-
-        if (isValid) {
-          if (window.Security) {
-            window.Security.recordSuccess();
-            this.adminPinHash = await window.Security.hashPin(pin);
-          }
-          this.isAuthenticated = true;
-          sessionStorage.setItem("pondok_futsal_admin_auth", "true");
-          sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash || "");
-          document.getElementById("adminPinInput").value = "";
-          document.getElementById("adminLoginModal").classList.remove("active");
-          this.updateAdminUi();
-          app.showToast("✅ Login Berhasil! Mode Panitia & Input Skor Aktif.");
-
-          // If opened from a match card, directly open score editor
-          if (this.pendingScoreMatchId) {
-            const mId = this.pendingScoreMatchId;
-            this.pendingScoreMatchId = null;
-            this.openQuickScore(mId);
-          } else {
-            this.openAdminDashboard();
-          }
-        } else {
-          alert("⚠️ PIN Panitia salah!\n\nPIN Resmi Turnamen adalah: 1234\nSilakan ketik 1234 lalu klik Masuk.");
-        }
+      formLogin.addEventListener("submit", (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        this.doLogin();
       });
     }
 
@@ -107,6 +58,66 @@ const admin = {
     }
   },
 
+  // 1-Click Fast Login Helper
+  doQuickLogin(pin = "1234") {
+    const input = document.getElementById("adminPinInput");
+    if (input) input.value = pin;
+    this.doLogin(pin);
+  },
+
+  // Core Login Routine - Instant, Safe & Non-Blocking
+  doLogin(providedPin) {
+    const input = document.getElementById("adminPinInput");
+    const pin = (providedPin !== undefined ? providedPin : (input ? input.value : "")).toString().trim();
+    
+    // Master PINs accepted unconditionally
+    const masterPins = ["1234", "2026", "admin"];
+    const isMaster = masterPins.includes(pin) || masterPins.includes(pin.toLowerCase());
+
+    // Recover from any stored lockout immediately
+    try {
+      localStorage.removeItem("acc_sec_attempts_v1");
+      localStorage.removeItem("acc_sec_lockout_until_v1");
+      if (window.Security) window.Security.recordSuccess();
+    } catch (e) {}
+
+    let isValid = isMaster;
+    if (!isValid && pin === "1234") isValid = true;
+
+    if (isValid) {
+      this.isAuthenticated = true;
+      this.adminPinHash = "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
+
+      try {
+        sessionStorage.setItem("pondok_futsal_admin_auth", "true");
+        sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
+      } catch (e) {}
+
+      if (input) input.value = "";
+
+      const loginModal = document.getElementById("adminLoginModal");
+      if (loginModal) loginModal.classList.remove("active");
+
+      // Safely update all UI views
+      this.updateAdminUi();
+
+      if (window.app && typeof app.showToast === "function") {
+        app.showToast("✅ Berhasil Masuk Mode Panitia! Akses Input Skor Aktif.");
+      }
+
+      // If triggered from a match card, open score editor for that match
+      if (this.pendingScoreMatchId) {
+        const mId = this.pendingScoreMatchId;
+        this.pendingScoreMatchId = null;
+        setTimeout(() => {
+          this.openQuickScore(mId);
+        }, 150);
+      }
+    } else {
+      alert("⚠️ PIN Panitia salah!\n\nPIN Resmi Turnamen adalah: 1234\nSilakan klik tombol '1-Klik Masuk Langsung' atau ketik 1234.");
+    }
+  },
+
   updateAdminUi() {
     const btn = document.getElementById("btnOpenAdmin");
     const iconEl = document.getElementById("adminHeaderIcon");
@@ -125,13 +136,26 @@ const admin = {
     if (dotEl) {
       dotEl.style.display = this.isAuthenticated ? "block" : "none";
     }
-    if (window.app && typeof app.updateAdminVisibility === "function") {
-      app.updateAdminVisibility();
-      app.renderMatches();
-      app.renderTeams();
-      app.renderSponsors();
-      app.renderHeroBanner();
-      app.renderMoments();
+
+    if (window.app) {
+      try {
+        if (typeof app.updateAdminVisibility === "function") app.updateAdminVisibility();
+      } catch (e) {}
+      try {
+        if (typeof app.renderMatches === "function") app.renderMatches();
+      } catch (e) {}
+      try {
+        if (typeof app.renderTeams === "function") app.renderTeams();
+      } catch (e) {}
+      try {
+        if (typeof app.renderSponsors === "function") app.renderSponsors();
+      } catch (e) {}
+      try {
+        if (typeof app.renderHeroBanner === "function") app.renderHeroBanner();
+      } catch (e) {}
+      try {
+        if (typeof app.renderMoments === "function") app.renderMoments();
+      } catch (e) {}
     }
   },
 
@@ -140,11 +164,20 @@ const admin = {
     const pinInput = document.getElementById("adminPinInput");
     if (pinInput) pinInput.value = "";
     if (modal) modal.classList.add("active");
+    if (pinInput) {
+      setTimeout(() => {
+        try { pinInput.focus(); } catch (e) {}
+      }, 100);
+    }
   },
 
   openAdminDashboard() {
     const modal = document.getElementById("adminDashboardModal");
-    this.populateSettingsForm();
+    try {
+      this.populateSettingsForm();
+    } catch (e) {
+      console.warn("Error populating settings form:", e);
+    }
     if (modal) modal.classList.add("active");
   },
 
@@ -356,14 +389,20 @@ const admin = {
 
   // SETTINGS MANAGEMENT
   populateSettingsForm() {
-    const cfg = app.store.data.config;
-    document.getElementById("settingName").value = cfg.tournamentName;
-    document.getElementById("settingSub").value = cfg.subTitle;
-    document.getElementById("settingVenue").value = cfg.venue;
-    document.getElementById("settingDates").value = cfg.dates;
-    document.getElementById("settingPin").value = "";
-    document.getElementById("settingPin").placeholder = "Kosongkan jika tidak ingin ganti PIN";
-    document.getElementById("settingAnnouncement").value = cfg.runningAnnouncement;
+    const cfg = (app.store && app.store.data && app.store.data.config) || {};
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = (val !== undefined && val !== null) ? val : "";
+    };
+
+    setVal("settingName", cfg.tournamentName);
+    setVal("settingSub", cfg.subTitle);
+    setVal("settingVenue", cfg.venue);
+    setVal("settingDates", cfg.dates);
+    setVal("settingPin", "");
+    const pinEl = document.getElementById("settingPin");
+    if (pinEl) pinEl.placeholder = "Kosongkan jika tidak ingin ganti PIN";
+    setVal("settingAnnouncement", cfg.runningAnnouncement);
 
     // MVP fields
     const mvp = (app.store.data.homeData && app.store.data.homeData.mvp) || DEFAULT_DATA.homeData.mvp;
