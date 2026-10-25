@@ -677,6 +677,14 @@ const admin = {
         }
       }
 
+      const catSelect = document.getElementById("editTeamCategory");
+      if (catSelect) catSelect.value = team.category || "SMP";
+
+      const logoInput = document.getElementById("editTeamLogo");
+      const logoThumb = document.getElementById("teamLogoThumb");
+      if (logoInput) logoInput.value = team.logo || "";
+      if (logoThumb) logoThumb.src = team.logo || "assets/acc_logo.png";
+
       if (btnDelete) btnDelete.style.display = "inline-flex";
 
       this.renderPlayerRows(team.players || []);
@@ -689,6 +697,14 @@ const admin = {
       if (cityInput) cityInput.value = "";
       if (colorInput) colorInput.value = "#10b981";
       if (pickerInput) pickerInput.value = "#10b981";
+
+      const catSelect = document.getElementById("editTeamCategory");
+      if (catSelect) catSelect.value = app.currentCategory === "SD" ? "SD" : "SMP";
+
+      const logoInput = document.getElementById("editTeamLogo");
+      const logoThumb = document.getElementById("teamLogoThumb");
+      if (logoInput) logoInput.value = "";
+      if (logoThumb) logoThumb.src = "assets/acc_logo.png";
 
       if (coachInput) coachInput.value = "";
       if (managerInput) managerInput.value = "";
@@ -712,6 +728,30 @@ const admin = {
     }
 
     document.getElementById("teamEditorModal").classList.add("active");
+  },
+
+  handleTeamLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result;
+      const hiddenInput = document.getElementById("editTeamLogo");
+      const thumb = document.getElementById("teamLogoThumb");
+      if (hiddenInput) hiddenInput.value = dataUrl;
+      if (thumb) thumb.src = dataUrl;
+
+      // Try uploading to Supabase Storage in background
+      if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
+        const cloudUrl = await window.SupabaseService.uploadImage(file, "team_logo");
+        if (cloudUrl && hiddenInput) {
+          hiddenInput.value = cloudUrl;
+          if (thumb) thumb.src = cloudUrl;
+        }
+      }
+      app.showToast("Logo tim siap disimpan!");
+    };
+    reader.readAsDataURL(file);
   },
 
   handleCoachPhotoUpload(event) {
@@ -923,10 +963,14 @@ const admin = {
 
     const coachPhoto = document.getElementById("editTeamCoachPhoto")?.value || "";
     const managerPhoto = document.getElementById("editTeamManagerPhoto")?.value || "";
+    const category = document.getElementById("editTeamCategory")?.value || "SMP";
+    const logo = document.getElementById("editTeamLogo")?.value || "";
 
     const teamPayload = {
       name,
       shortName: shortName || name.substring(0, 10).toUpperCase(),
+      category,
+      logo,
       group,
       badgeColor,
       city,
@@ -972,6 +1016,157 @@ const admin = {
 
     document.getElementById("teamEditorModal").classList.remove("active");
     app.showToast(`Data tim ${name} berhasil disimpan!`);
+  },
+
+  // ==========================================
+  // MEDIA HUB (PUSAT UPLOAD FOTO & MEDIA)
+  // ==========================================
+  mediaHubSelectedFiles: [],
+
+  openMediaHubModal() {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+    this.mediaHubSelectedFiles = [];
+    const controls = document.getElementById("mediaHubControls");
+    const previewSec = document.getElementById("mediaHubPreviewSection");
+    const previewGrid = document.getElementById("mediaHubPreviewGrid");
+    const fileInput = document.getElementById("mediaHubFileInput");
+
+    if (controls) controls.style.display = "none";
+    if (previewSec) previewSec.style.display = "none";
+    if (previewGrid) previewGrid.innerHTML = "";
+    if (fileInput) fileInput.value = "";
+
+    this.populateMediaHubTeams();
+    this.updateMediaHubTargetOptions();
+
+    const modal = document.getElementById("mediaHubModal");
+    if (modal) modal.classList.add("active");
+  },
+
+  populateMediaHubTeams() {
+    const select = document.getElementById("mediaHubTargetTeam");
+    if (!select) return;
+    const teams = app.store.data.teams || [];
+    select.innerHTML = teams.map(t => `
+      <option value="${t.id}">[${t.category || 'SMP'}] ${t.name}</option>
+    `).join("");
+  },
+
+  updateMediaHubTargetOptions() {
+    const type = document.getElementById("mediaHubTargetType")?.value;
+    const teamGroup = document.getElementById("mediaHubTeamGroup");
+    const captionGroup = document.getElementById("mediaHubCaptionGroup");
+
+    if (teamGroup) {
+      teamGroup.style.display = (type === "teamLogo") ? "block" : "none";
+    }
+    if (captionGroup) {
+      captionGroup.style.display = (type === "moment") ? "block" : "none";
+    }
+  },
+
+  handleMediaHubFileSelect(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    this.mediaHubSelectedFiles = [];
+    const previewGrid = document.getElementById("mediaHubPreviewGrid");
+    const countEl = document.getElementById("mediaHubSelectedCount");
+    const controls = document.getElementById("mediaHubControls");
+    const previewSec = document.getElementById("mediaHubPreviewSection");
+
+    if (previewGrid) previewGrid.innerHTML = "";
+    if (countEl) countEl.textContent = files.length;
+    if (controls) controls.style.display = "block";
+    if (previewSec) previewSec.style.display = "block";
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        this.mediaHubSelectedFiles.push({ file, dataUrl, name: file.name });
+
+        if (previewGrid) {
+          const card = document.createElement("div");
+          card.className = "media-preview-card";
+          card.innerHTML = `
+            <img src="${dataUrl}" alt="${file.name}">
+            <div class="file-name" title="${file.name}">${file.name}</div>
+          `;
+          previewGrid.appendChild(card);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    app.showToast(`${files.length} foto siap ditugaskan!`);
+  },
+
+  async applyMediaHubUpload() {
+    if (!this.mediaHubSelectedFiles || this.mediaHubSelectedFiles.length === 0) {
+      alert("Harap pilih foto terlebih dahulu!");
+      return;
+    }
+
+    const type = document.getElementById("mediaHubTargetType")?.value || "moment";
+    const teamId = document.getElementById("mediaHubTargetTeam")?.value;
+    const caption = document.getElementById("mediaHubCaptionInput")?.value.trim() || "";
+
+    app.showToast("⏳ Menyimpan foto...");
+
+    for (let i = 0; i < this.mediaHubSelectedFiles.length; i++) {
+      const item = this.mediaHubSelectedFiles[i];
+      let photoUrl = item.dataUrl;
+
+      // Upload to Supabase Storage if online
+      if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
+        const cloudUrl = await window.SupabaseService.uploadImage(item.file, type);
+        if (cloudUrl) photoUrl = cloudUrl;
+      }
+
+      if (type === "teamLogo" && teamId) {
+        const team = app.store.getTeam(teamId);
+        if (team) {
+          team.logo = photoUrl;
+          if (window.SupabaseService && window.SupabaseService.syncTeam) {
+            window.SupabaseService.syncTeam(team);
+          }
+        }
+      } else if (type === "banner") {
+        if (!app.store.data.config) app.store.data.config = {};
+        app.store.data.config.heroBannerImage = photoUrl;
+      } else if (type === "moment") {
+        const newMoment = {
+          id: "M_" + Date.now() + "_" + i,
+          title: caption || "Momen Turnamen ACC 2026",
+          player: "Sorotan Laga",
+          team: teamId ? (app.store.getTeam(teamId)?.name || "ACC 2026") : "ACC 2026",
+          tag: "NEW",
+          badge: "🔥 HIGHLIGHT",
+          image: photoUrl,
+          caption: caption || "Dokumentasi aksi spektakuler turnamen futsal ACC 2026."
+        };
+        if (!app.store.data.moments) app.store.data.moments = [];
+        app.store.data.moments.unshift(newMoment);
+        if (app.store.data.homeData) {
+          if (!app.store.data.homeData.moments) app.store.data.homeData.moments = [];
+          app.store.data.homeData.moments.unshift(newMoment);
+        }
+        if (window.SupabaseService && window.SupabaseService.syncMoment) {
+          window.SupabaseService.syncMoment(newMoment);
+        }
+      }
+    }
+
+    app.store.saveData();
+    app.renderHeroBanner();
+    app.renderCurrentView();
+
+    document.getElementById("mediaHubModal")?.classList.remove("active");
+    app.showToast("🎉 Foto berhasil disimpan!");
   },
 
   deleteTeam() {

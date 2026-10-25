@@ -308,6 +308,38 @@
         return false;
       }
     }
+
+    // Upload Image to Supabase Storage Bucket
+    async uploadImage(file, prefix = "acc") {
+      if (!this.client || !this.isConfigured) return null;
+      try {
+        const ext = (file.name && file.name.split('.').pop()) || 'jpg';
+        const cleanExt = ext.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${cleanExt || 'jpg'}`;
+        const filePath = `uploads/${fileName}`;
+
+        const { data, error } = await this.client.storage
+          .from('tournament-assets')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (error) {
+          console.warn("Supabase Storage upload note:", error.message);
+          return null;
+        }
+
+        const { data: publicData } = this.client.storage
+          .from('tournament-assets')
+          .getPublicUrl(filePath);
+
+        return publicData?.publicUrl || null;
+      } catch (err) {
+        console.warn("Storage upload exception:", err);
+        return null;
+      }
+    }
   }
 
   window.SupabaseService = new SupabaseService();

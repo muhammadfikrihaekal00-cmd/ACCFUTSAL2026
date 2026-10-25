@@ -139,11 +139,13 @@ const DEFAULT_DATA = {
     }
   },
   teams: [
-    // GRUP A
+    // GRUP A (KATEGORI SMP)
     {
       id: "T01",
-      name: "SMA Islam Al-Azhar",
+      name: "SMP Islam Al-Azhar",
       shortName: "AL-AZHAR",
+      category: "SMP",
+      logo: "",
       group: "A",
       badgeColor: "#10b981",
       city: "Jakarta Timur",
@@ -169,8 +171,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T02",
-      name: "MA Darul Ulum",
+      name: "MTs Darul Ulum",
       shortName: "DARUL ULUM",
+      category: "SMP",
+      logo: "",
       group: "A",
       badgeColor: "#3b82f6",
       city: "Bogor",
@@ -195,8 +199,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T03",
-      name: "SMK Bina Taruna",
+      name: "SMP Bina Taruna",
       shortName: "BINA TARUNA",
+      category: "SMP",
+      logo: "",
       group: "A",
       badgeColor: "#f59e0b",
       city: "Bekasi",
@@ -221,8 +227,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T04",
-      name: "SMA Muhammadiyah 1",
-      shortName: "SMAM 1",
+      name: "SMP Muhammadiyah 1",
+      shortName: "SMPM 1",
+      category: "SMP",
+      logo: "",
       group: "A",
       badgeColor: "#8b5cf6",
       city: "Tangerang",
@@ -246,11 +254,13 @@ const DEFAULT_DATA = {
       ]
     },
 
-    // GRUP B
+    // GRUP B (KATEGORI SMP)
     {
       id: "T05",
-      name: "SMA IT Asy-Syifa",
+      name: "SMP IT Asy-Syifa",
       shortName: "ASY-SYIFA",
+      category: "SMP",
+      logo: "",
       group: "B",
       badgeColor: "#06b6d4",
       city: "Subang",
@@ -276,8 +286,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T06",
-      name: "MA Husnul Khotimah",
+      name: "MTs Husnul Khotimah",
       shortName: "HUSNUL KHOTIMAH",
+      category: "SMP",
+      logo: "",
       group: "B",
       badgeColor: "#ec4899",
       city: "Kuningan",
@@ -303,8 +315,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T07",
-      name: "SMKN 1 Pembangunan",
-      shortName: "SMKN 1 KOTA",
+      name: "SMPN 1 Pembangunan",
+      shortName: "SMPN 1 KOTA",
+      category: "SMP",
+      logo: "",
       group: "B",
       badgeColor: "#14b8a6",
       city: "Depok",
@@ -329,8 +343,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T08",
-      name: "SMA Al-Irsyad Al-Islamiyyah",
+      name: "SMP Al-Irsyad Al-Islamiyyah",
       shortName: "AL-IRSYAD",
+      category: "SMP",
+      logo: "",
       group: "B",
       badgeColor: "#eab308",
       city: "Cirebon",
@@ -354,11 +370,13 @@ const DEFAULT_DATA = {
       ]
     },
 
-    // GRUP C
+    // GRUP C (KATEGORI SD)
     {
       id: "T09",
-      name: "MTQ Al-Fayyadh FC",
+      name: "SD MTQ Al-Fayyadh",
       shortName: "AL-FAYYADH",
+      category: "SD",
+      logo: "",
       group: "C",
       badgeColor: "#721c24",
       city: "Ma'had Al-Fayyadh",
@@ -384,8 +402,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T10",
-      name: "SMA Nurul Fikri Boarding School",
+      name: "SD Islam Nurul Fikri",
       shortName: "NURUL FIKRI",
+      category: "SD",
+      logo: "",
       group: "C",
       badgeColor: "#6366f1",
       city: "Serang",
@@ -410,8 +430,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T11",
-      name: "MA Al-Kahfi",
+      name: "MI Al-Kahfi",
       shortName: "AL-KAHFI",
+      category: "SD",
+      logo: "",
       group: "C",
       badgeColor: "#f97316",
       city: "Bogor Selatan",
@@ -436,8 +458,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T12",
-      name: "SMK TI Global Informatika",
-      shortName: "TI GLOBAL",
+      name: "SD IT Global Cendekia",
+      shortName: "GLOBAL C.",
+      category: "SD",
+      logo: "",
       group: "C",
       badgeColor: "#0ea5e9",
       city: "Tangerang Selatan",
@@ -461,11 +485,13 @@ const DEFAULT_DATA = {
       ]
     },
 
-    // GRUP D
+    // GRUP D (KATEGORI SD)
     {
       id: "T13",
-      name: "SMA Bina Bangsa Mandiri",
+      name: "SD Bina Bangsa Mandiri",
       shortName: "BINA BANGSA",
+      category: "SD",
+      logo: "",
       group: "D",
       badgeColor: "#ef4444",
       city: "Bekasi Timur",
@@ -490,8 +516,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T14",
-      name: "MA Ar-Rahman Islamic High",
+      name: "MI Ar-Rahman Islamic",
       shortName: "AR-RAHMAN",
+      category: "SD",
+      logo: "",
       group: "D",
       badgeColor: "#a855f7",
       city: "Sukabumi",
@@ -516,8 +544,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T15",
-      name: "SMA Insan Cendekia Madani",
+      name: "SD Insan Cendekia",
       shortName: "INSAN C.",
+      category: "SD",
+      logo: "",
       group: "D",
       badgeColor: "#10b981",
       city: "Serpong",
@@ -542,8 +572,10 @@ const DEFAULT_DATA = {
     },
     {
       id: "T16",
-      name: "SMK Patriot Mandiri",
+      name: "SD Patriot Mandiri",
       shortName: "PATRIOT",
+      category: "SD",
+      logo: "",
       group: "D",
       badgeColor: "#f43f5e",
       city: "Karawang",

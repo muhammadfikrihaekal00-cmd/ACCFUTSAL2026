@@ -39,6 +39,11 @@
       </div>
 
       <div class="header-actions">
+        <!-- Quick Media & Photo Upload Button -->
+        <button id="btnQuickMediaHub" class="header-icon-btn" onclick="admin.openMediaHubModal()" title="Upload Foto & Media (Logo Tim, Pemain, Momen)" aria-label="Upload Foto & Media">
+          <span>📸</span>
+        </button>
+
         <!-- Theme Toggle (Icon Only) -->
         <button id="themeToggleBtn" class="header-icon-btn" onclick="app.toggleTheme()" title="Ganti Tema (Terang / Gelap)" aria-label="Ganti Tema">
           <span id="themeToggleIcon">🌙</span>
@@ -99,6 +104,33 @@
         <div class="stat-pill">
           <div class="stat-val">32</div>
           <div class="stat-lbl">Laga</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- DIVISION / CATEGORY SELECTOR (UEFA & FIFA WORLD CUP STYLE) -->
+    <!-- ========================================================= -->
+    <div class="category-selector-bar">
+      <div class="category-selector-inner">
+        <span class="category-selector-label">
+          <span class="pulse-dot-green"></span> KELAS / KATEGORI:
+        </span>
+        <div class="category-pill-group">
+          <button type="button" class="category-pill active" id="btnCatSMP" onclick="app.setCategory('SMP')">
+            <span class="pill-icon">🏆</span>
+            <span class="pill-title">KATEGORI SMP</span>
+            <span class="pill-badge">U-15</span>
+          </button>
+          <button type="button" class="category-pill" id="btnCatSD" onclick="app.setCategory('SD')">
+            <span class="pill-icon">⚽</span>
+            <span class="pill-title">KATEGORI SD</span>
+            <span class="pill-badge">U-12</span>
+          </button>
+          <button type="button" class="category-pill" id="btnCatAll" onclick="app.setCategory('all')">
+            <span class="pill-icon">🌟</span>
+            <span class="pill-title">SEMUA KELAS</span>
+          </button>
         </div>
       </div>
     </div>
@@ -787,6 +819,9 @@
         <div>
           <h4 style="color: #00d2ff; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">⚡ Kelola Konten Visual Beranda</h4>
           <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="admin.openMediaHubModal()" style="background: linear-gradient(135deg, #10b981, #06b6d4);">
+              📸 Pusat Upload Foto & Media
+            </button>
             <button type="button" class="btn btn-outline btn-sm" onclick="admin.openHeroBannerModal()">
               📷 Ganti Banner Hero
             </button>
@@ -925,7 +960,7 @@
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label class="form-label">Nama Lengkap Tim / Sekolah <span style="color:#ef4444;">*</span></label>
-              <input type="text" id="editTeamName" class="form-input" placeholder="contoh: SMA Islam Al-Azhar" required>
+              <input type="text" id="editTeamName" class="form-input" placeholder="contoh: SMP Islam Al-Azhar" required>
             </div>
             <div class="form-group" style="flex: 1;">
               <label class="form-label">Nama Singkat / Inisial <span style="color:#ef4444;">*</span></label>
@@ -934,7 +969,14 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Kelas / Kategori <span style="color:#ef4444;">*</span></label>
+              <select id="editTeamCategory" class="form-select" required>
+                <option value="SMP">🏆 Kategori SMP (U-15)</option>
+                <option value="SD">⚽ Kategori SD (U-12)</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
               <label class="form-label">Grup Turnamen <span style="color:#ef4444;">*</span></label>
               <select id="editTeamGroup" class="form-select" required>
                 <option value="A">Grup A</option>
@@ -943,11 +985,29 @@
                 <option value="D">Grup D</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="flex: 1;">
               <label class="form-label">Asal Kota / Wilayah</label>
               <input type="text" id="editTeamCity" class="form-input" placeholder="contoh: Jakarta Timur">
             </div>
-            <div class="form-group">
+          </div>
+
+          <!-- Logo & Color Row -->
+          <div class="form-row" style="align-items: center; margin-top: 8px;">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Logo / Lambang Tim Sekolah</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img id="teamLogoThumb" class="team-logo-preview-box" src="assets/acc_logo.png" onerror="this.src='assets/acc_logo.png'">
+                <div>
+                  <label class="btn btn-outline btn-sm" style="cursor: pointer; padding: 4px 10px;">
+                    📁 Upload Logo Tim
+                    <input type="file" id="teamLogoFileInput" accept="image/*" style="display: none;" onchange="admin.handleTeamLogoUpload(event)">
+                  </label>
+                  <input type="hidden" id="editTeamLogo" value="">
+                  <span style="display: block; font-size: 0.68rem; color: var(--text-muted); margin-top: 3px;">Dari galeri HP / file laptop</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="flex: 1;">
               <label class="form-label">Warna Tema / Badge</label>
               <div style="display: flex; gap: 6px; align-items: center;">
                 <input type="color" id="editTeamColorPicker" value="#10b981" style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; padding: 2px;" onchange="document.getElementById('editTeamColor').value = this.value">
@@ -1257,6 +1317,83 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 10. MODAL PUSAT UPLOAD & MEDIA HUB (INPUT FOTO MANUAL)    -->
+  <!-- ========================================================= -->
+  <div id="mediaHubModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+          📸 Pusat Upload Foto & Media Turnamen
+        </h3>
+        <button class="modal-close btn-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="callout callout-info" style="margin-bottom: 12px; font-size: 0.8rem;">
+          💡 <strong>Upload Manual:</strong> Anda dapat mengunggah foto logo tim sekolah, foto pemain, momen highlight, banner, ataupun sponsor langsung dari galeri HP atau folder laptop Anda. Foto tersimpan otomatis ke cloud database.
+        </div>
+
+        <!-- Big Drag/Click Dropzone -->
+        <div class="media-hub-dropzone" onclick="document.getElementById('mediaHubFileInput').click()">
+          <div style="font-size: 2.4rem; margin-bottom: 6px;">📂</div>
+          <strong style="color: var(--primary); font-size: 0.95rem; display: block;">
+            Pilih Foto dari HP atau Laptop
+          </strong>
+          <span style="font-size: 0.76rem; color: var(--text-muted); display: block; margin-top: 4px;">
+            Mendukung file JPG, PNG, atau WebP (Bisa pilih 1 foto atau beberapa sekaligus)
+          </span>
+          <input type="file" id="mediaHubFileInput" accept="image/*" multiple style="display: none;" onchange="admin.handleMediaHubFileSelect(event)">
+        </div>
+
+        <!-- Target Destination Selector -->
+        <div id="mediaHubControls" style="display: none; margin-top: 14px; background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <h4 style="font-size: 0.82rem; color: var(--primary); text-transform: uppercase; margin-bottom: 10px;">
+            🎯 Tentukan Tujuan Foto Ini:
+          </h4>
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Gunakan Sebagai</label>
+              <select id="mediaHubTargetType" class="form-select" onchange="admin.updateMediaHubTargetOptions()">
+                <option value="teamLogo">🏫 Logo Tim / Lambang Sekolah</option>
+                <option value="moment">⚡ Momen ACC (Galeri Highlight Beranda)</option>
+                <option value="banner">🖼️ Banner Turnamen Utama</option>
+                <option value="sponsor">🤝 Logo Sponsor</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;" id="mediaHubTeamGroup">
+              <label class="form-label">Pilih Tim / Sekolah</label>
+              <select id="mediaHubTargetTeam" class="form-select">
+                <!-- Injected dynamically by admin -->
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="mediaHubCaptionGroup" style="display: none;">
+            <label class="form-label">Judul / Keterangan Momen</label>
+            <input type="text" id="mediaHubCaptionInput" class="form-input" placeholder="contoh: Selebrasi Tiket Semifinal">
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="admin.applyMediaHubUpload()">
+              💾 Simpan & Terapkan Foto
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview Grid of Selected Images -->
+        <div id="mediaHubPreviewSection" style="display: none; margin-top: 14px;">
+          <h4 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">
+            Foto yang Dipilih (<span id="mediaHubSelectedCount">0</span>):
+          </h4>
+          <div class="media-preview-grid" id="mediaHubPreviewGrid"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline btn-modal-close">Selesai / Tutup</button>
       </div>
     </div>
   </div>

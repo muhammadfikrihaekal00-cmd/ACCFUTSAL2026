@@ -35,11 +35,25 @@ class TournamentStore {
         data.moments = JSON.parse(JSON.stringify(DEFAULT_DATA.homeData.moments));
       }
     }
-    // Pastikan foto pemain dan pelatih terhubung jika belum ada
+    // Pastikan foto pemain, logo, dan kategori SD / SMP terhubung jika belum ada
     if (data.teams && Array.isArray(data.teams)) {
       data.teams.forEach(t => {
+        // Auto-assign category if missing (T01-T08 = SMP, T09-T16 = SD)
+        const numId = parseInt((t.id || '').replace(/\D/g, ''), 10);
+        if (!t.category) {
+          t.category = (numId >= 9) ? "SD" : "SMP";
+        }
+        // Normalize school prefix to SMP / MTs vs SD / MI
+        if (t.category === "SMP") {
+          t.name = t.name.replace(/^SMA /, "SMP ").replace(/^SMK /, "SMP ").replace(/^SMKN 1 /, "SMPN 1 ");
+        } else if (t.category === "SD") {
+          t.name = t.name.replace(/^SMA /, "SD ").replace(/^SMK /, "SD IT ").replace(/^MA /, "MI ").replace(/^MTQ /, "SD MTQ ");
+        }
+        if (t.logo === undefined) t.logo = "";
+
         const defTeam = DEFAULT_DATA.teams.find(dt => dt.id === t.id);
         if (defTeam) {
+          if (!t.logo && defTeam.logo) t.logo = defTeam.logo;
           if (defTeam.official) {
             if (!t.official) t.official = {};
             if (!t.official.coachPhoto && defTeam.official.coachPhoto) {
@@ -57,6 +71,17 @@ class TournamentStore {
         }
       });
     }
+
+    // Pastikan laga terhubung dengan kategori
+    if (data.matches && Array.isArray(data.matches)) {
+      data.matches.forEach(m => {
+        if (!m.category) {
+          const homeTeam = data.teams.find(t => t.id === m.homeId);
+          m.category = (homeTeam && homeTeam.category) || (m.group === "C" || m.group === "D" ? "SD" : "SMP");
+        }
+      });
+    }
+
     return data;
   }
 
@@ -74,9 +99,12 @@ class TournamentStore {
     return this.data.teams.find(t => t.id === id);
   }
 
-  // Calculate Standings for a specific group
-  calculateGroupStandings(groupLetter) {
-    const groupTeams = this.data.teams.filter(t => t.group === groupLetter);
+  // Calculate Standings for a specific group & category
+  calculateGroupStandings(groupLetter, category = null) {
+    let groupTeams = this.data.teams.filter(t => t.group === groupLetter);
+    if (category && category !== "all") {
+      groupTeams = groupTeams.filter(t => (t.category || "SMP") === category);
+    }
     const stats = {};
 
     groupTeams.forEach(t => {
@@ -95,7 +123,9 @@ class TournamentStore {
     });
 
     const groupMatches = this.data.matches.filter(
-      m => m.stage === "group" && m.group === groupLetter && (m.status === "finished" || m.status === "live")
+      m => m.stage === "group" && m.group === groupLetter &&
+           (!category || category === "all" || (m.category || "SMP") === category) &&
+           (m.status === "finished" || m.status === "live")
     );
 
     groupMatches.forEach(m => {
@@ -147,48 +177,65 @@ class TournamentStore {
     });
   }
 
-  // Automatically sync Group Winners & Runners-Up to Knockout Quarterfinals
+  // Automatically sync Group Winners & Runners-Up to Knockout
   syncKnockoutFromStandings() {
-    const standingsA = this.calculateGroupStandings("A");
-    const standingsB = this.calculateGroupStandings("B");
-    const standingsC = this.calculateGroupStandings("C");
-    const standingsD = this.calculateGroupStandings("D");
+    const standingsA = this.calculateGroupStandings("A", "SMP");
+    const standingsB = this.calculateGroupStandings("B", "SMP");
+    const standingsC = this.calculateGroupStandings("C", "SD");
+    const standingsD = this.calculateGroupStandings("D", "SD");
 
     const qf1 = this.data.matches.find(m => m.id === "QF1");
-    if (qf1 && standingsA[0] && standingsB[1]) {
-      qf1.homeId = standingsA[0].team.id;
-      qf1.awayId = standingsB[1].team.id;
-    }
-
-    const qf2 = this.data.matches.find(m => m.id === "QF2");
-    if (qf2 && standingsC[0] && standingsD[1]) {
-      qf2.homeId = standingsC[0].team.id;
-      qf2.awayId = standingsD[1].team.id;
+    if (qf1) {
+      qf1.category = "SMP";
+      if (standingsA[0] && standingsB[1]) {
+        qf1.homeId = standingsA[0].team.id;
+        qf1.awayId = standingsB[1].team.id;
+      }
     }
 
     const qf3 = this.data.matches.find(m => m.id === "QF3");
-    if (qf3 && standingsB[0] && standingsA[1]) {
-      qf3.homeId = standingsB[0].team.id;
-      qf3.awayId = standingsA[1].team.id;
+    if (qf3) {
+      qf3.category = "SMP";
+      if (standingsB[0] && standingsA[1]) {
+        qf3.homeId = standingsB[0].team.id;
+        qf3.awayId = standingsA[1].team.id;
+      }
+    }
+
+    const qf2 = this.data.matches.find(m => m.id === "QF2");
+    if (qf2) {
+      qf2.category = "SD";
+      if (standingsC[0] && standingsD[1]) {
+        qf2.homeId = standingsC[0].team.id;
+        qf2.awayId = standingsD[1].team.id;
+      }
     }
 
     const qf4 = this.data.matches.find(m => m.id === "QF4");
-    if (qf4 && standingsD[0] && standingsC[1]) {
-      qf4.homeId = standingsD[0].team.id;
-      qf4.awayId = standingsC[1].team.id;
+    if (qf4) {
+      qf4.category = "SD";
+      if (standingsD[0] && standingsC[1]) {
+        qf4.homeId = standingsD[0].team.id;
+        qf4.awayId = standingsC[1].team.id;
+      }
     }
   }
 
   // Calculate Disciplinary status (Yellow/Red Cards across all matches)
-  getDisciplinaryRecords() {
+  getDisciplinaryRecords(category = null) {
     const playerStats = {};
+    let teams = this.data.teams;
+    if (category && category !== "all") {
+      teams = teams.filter(t => (t.category || "SMP") === category);
+    }
 
-    this.data.teams.forEach(t => {
+    teams.forEach(t => {
       t.players.forEach(p => {
         const key = `${t.id}-${p.name}`;
         playerStats[key] = {
           teamId: t.id,
           teamName: t.name,
+          category: t.category || "SMP",
           manager: t.official.manager,
           managerPhone: t.official.phone,
           playerNo: p.no,
@@ -248,15 +295,20 @@ class TournamentStore {
   }
 
   // Calculate Golden Boot / Top Scorers
-  getTopScorersList() {
+  getTopScorersList(category = null) {
     const scorers = {};
+    let teams = this.data.teams;
+    if (category && category !== "all") {
+      teams = teams.filter(t => (t.category || "SMP") === category);
+    }
 
-    this.data.teams.forEach(t => {
+    teams.forEach(t => {
       t.players.forEach(p => {
         const key = `${t.id}-${p.name}`;
         scorers[key] = {
           teamId: t.id,
           teamName: t.name,
+          category: t.category || "SMP",
           badgeColor: t.badgeColor,
           playerNo: p.no,
           playerName: p.name,
@@ -288,6 +340,7 @@ class TournamentStore {
 const app = {
   store: new TournamentStore(),
   currentTab: "home", // Default sekarang membuka tab Beranda Utama
+  currentCategory: localStorage.getItem("acc_active_category") || "SMP",
   filterDay: "all",
   filterPitch: "all",
   filterGroup: "all",
@@ -296,11 +349,32 @@ const app = {
 
   init() {
     this.initThemeAndViewMode();
+    this.updateCategoryUI();
     this.renderHeader();
     this.bindEvents();
     this.renderCurrentView();
     this.initPwa();
     this.initSupabaseSync();
+  },
+
+  setCategory(cat, showToastMsg = true) {
+    this.currentCategory = cat;
+    localStorage.setItem("acc_active_category", cat);
+    this.updateCategoryUI();
+    this.renderCurrentView();
+    if (showToastMsg) {
+      const lbl = cat === "all" ? "Semua Kelas" : (cat === "SMP" ? "🏆 Kategori SMP (U-15)" : "⚽ Kategori SD (U-12)");
+      this.showToast(`Beralih ke ${lbl}`);
+    }
+  },
+
+  updateCategoryUI() {
+    const btnSMP = document.getElementById("btnCatSMP");
+    const btnSD = document.getElementById("btnCatSD");
+    const btnAll = document.getElementById("btnCatAll");
+    if (btnSMP) btnSMP.classList.toggle("active", this.currentCategory === "SMP");
+    if (btnSD) btnSD.classList.toggle("active", this.currentCategory === "SD");
+    if (btnAll) btnAll.classList.toggle("active", this.currentCategory === "all");
   },
 
   initSupabaseSync() {
@@ -822,20 +896,27 @@ const app = {
     }
   },
 
-  // 1. RENDER MATCHES
+  // 1. RENDER MATCHES (UEFA & WORLD CUP STYLE - DUAL TEAM EVENTS SPLIT)
   renderMatches() {
     const container = document.getElementById("matchesList");
     if (!container) return;
 
     let matches = this.store.data.matches;
 
-    // Filter
+    // Filter by Active Category (SMP / SD / all)
+    if (this.currentCategory !== "all") {
+      matches = matches.filter(m => (m.category || "SMP") === this.currentCategory);
+    }
+
+    // Filter by Day
     if (this.filterDay !== "all") {
       matches = matches.filter(m => String(m.matchday) === this.filterDay);
     }
+    // Filter by Pitch
     if (this.filterPitch !== "all") {
       matches = matches.filter(m => m.pitch.includes(this.filterPitch));
     }
+    // Filter by Group
     if (this.filterGroup !== "all") {
       matches = matches.filter(m => m.group === this.filterGroup);
     }
@@ -843,7 +924,7 @@ const app = {
     if (matches.length === 0) {
       container.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg);">
-          <p>Tidak ada jadwal pertandingan pada filter yang dipilih.</p>
+          <p>Tidak ada jadwal pertandingan pada kategori atau filter yang dipilih.</p>
         </div>
       `;
       return;
@@ -859,65 +940,97 @@ const app = {
       const homeScore = isLive ? (m.homeScoreLive ?? 0) : (isFinished ? m.homeScore : "-");
       const awayScore = isLive ? (m.awayScoreLive ?? 0) : (isFinished ? m.awayScore : "-");
 
-      // Scorers detail
-      const hasEvents = (m.scorers && m.scorers.length > 0) || (m.cards && m.cards.length > 0);
-      let eventsHtml = "";
-      if (hasEvents) {
-        eventsHtml = `
-          <div class="match-details-drawer">
-            ${(m.scorers || []).map(s => `
-              <div class="event-row scorer">
-                <span>⚽</span>
-                <strong>${s.player}</strong> (${s.minute}) - <small style="color:var(--text-subtle)">${this.store.getTeam(s.team)?.shortName || ""}</small>
-              </div>
-            `).join("")}
-            ${(m.cards || []).map(c => `
-              <div class="event-row">
-                <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
-                <span>${c.player} (${c.minute})</span>
-              </div>
-            `).join("")}
-          </div>
-        `;
-      }
+      // Split scorers & cards per team
+      const homeScorers = (m.scorers || []).filter(s => s.team === m.homeId);
+      const awayScorers = (m.scorers || []).filter(s => s.team === m.awayId);
+      const homeCards = (m.cards || []).filter(c => c.team === m.homeId);
+      const awayCards = (m.cards || []).filter(c => c.team === m.awayId);
+
+      const catBadge = (m.category || "SMP") === "SD" ?
+        `<span class="match-category-tag cat-sd">🎒 SD (U-12)</span>` :
+        `<span class="match-category-tag cat-smp">🏆 SMP (U-15)</span>`;
 
       return `
         <div class="match-card ${isLive ? 'is-live' : ''}">
           <div class="match-header-meta">
-            <span class="match-pitch-badge">🏟️ ${m.pitch}</span>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              ${catBadge}
+              <span class="match-pitch-badge">🏟️ ${m.pitch}</span>
+            </div>
             <span class="match-status-tag ${m.status}">
               ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}` : (isFinished ? 'Selesai' : m.time)}
             </span>
           </div>
 
-          <div class="match-body">
-            <div class="team-col">
-              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${home.badgeColor}, #0f172a);">
-                ${home.shortName.substring(0, 3)}
+          <!-- REVAMPED DUAL TEAM MATCH BODY -->
+          <div class="match-body-revamped">
+            
+            <!-- KOLOM TIM HOME (KIRI) -->
+            <div class="team-col-custom home" onclick="app.openTeamModal('${home.id}')" style="cursor: pointer;" title="Klik untuk lihat profil tim">
+              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${home.badgeColor || '#10b981'}, #0f172a);">
+                ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : home.shortName.substring(0, 3)}
               </div>
               <div class="team-name-label" title="${home.name}">${home.name}</div>
               <div class="team-city-label">${home.city || ''}</div>
+
+              <!-- GOL & KARTU TIM HOME BERADA PERSIS DI BAWAH NAMA TIM HOME -->
+              <div class="team-events-box home">
+                ${homeScorers.map(s => `
+                  <div class="event-item-badge scorer">
+                    <span>⚽</span>
+                    <span>${s.player}</span>
+                    <span class="event-minute-pill">${s.minute}</span>
+                  </div>
+                `).join("")}
+                ${homeCards.map(c => `
+                  <div class="event-item-badge">
+                    <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
+                    <span>${c.player}</span>
+                    <span class="event-minute-pill">${c.minute}</span>
+                  </div>
+                `).join("")}
+              </div>
             </div>
 
-            <div class="score-col">
-              <div class="score-box ${isLive ? 'live' : ''}">
+            <!-- KOLOM SKOR TENGAH (PROMINENT, BERSIH, TERPUSAT) -->
+            <div class="score-col-centered">
+              <div class="score-box-prominent ${isLive ? 'live' : ''}">
                 <span>${homeScore}</span>
                 <span class="score-divider">:</span>
                 <span>${awayScore}</span>
               </div>
               <div class="match-time-sub">${m.date}</div>
+              <div style="font-size: 0.7rem; color: var(--text-subtle); margin-top: 2px; font-weight: 600;">${m.time}</div>
             </div>
 
-            <div class="team-col">
-              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${away.badgeColor}, #0f172a);">
-                ${away.shortName.substring(0, 3)}
+            <!-- KOLOM TIM AWAY (KANAN) -->
+            <div class="team-col-custom away" onclick="app.openTeamModal('${away.id}')" style="cursor: pointer;" title="Klik untuk lihat profil tim">
+              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${away.badgeColor || '#3b82f6'}, #0f172a);">
+                ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : away.shortName.substring(0, 3)}
               </div>
               <div class="team-name-label" title="${away.name}">${away.name}</div>
               <div class="team-city-label">${away.city || ''}</div>
-            </div>
-          </div>
 
-          ${eventsHtml}
+              <!-- GOL & KARTU TIM AWAY BERADA PERSIS DI BAWAH NAMA TIM AWAY -->
+              <div class="team-events-box away">
+                ${awayScorers.map(s => `
+                  <div class="event-item-badge away scorer">
+                    <span class="event-minute-pill">${s.minute}</span>
+                    <span>${s.player}</span>
+                    <span>⚽</span>
+                  </div>
+                `).join("")}
+                ${awayCards.map(c => `
+                  <div class="event-item-badge away">
+                    <span class="event-minute-pill">${c.minute}</span>
+                    <span>${c.player}</span>
+                    <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+
+          </div>
 
           <div class="match-footer-actions">
             <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')">
@@ -934,24 +1047,44 @@ const app = {
     }).join("");
   },
 
-  // 2. RENDER STANDINGS (4 Groups)
+  // 2. RENDER STANDINGS (4 Groups with SMP / SD Division)
   renderStandings() {
     const container = document.getElementById("groupsStandingsContainer");
     if (!container) return;
 
-    const groups = ["A", "B", "C", "D"];
+    let groupsToShow = [];
+    if (this.currentCategory === "SMP") {
+      groupsToShow = [
+        { letter: "A", label: "GRUP A (SMP / MTs)", category: "SMP" },
+        { letter: "B", label: "GRUP B (SMP / MTs)", category: "SMP" }
+      ];
+    } else if (this.currentCategory === "SD") {
+      groupsToShow = [
+        { letter: "C", label: "GRUP A (SD / MI)", category: "SD" },
+        { letter: "D", label: "GRUP B (SD / MI)", category: "SD" }
+      ];
+    } else {
+      groupsToShow = [
+        { letter: "A", label: "GRUP A (SMP / MTs)", category: "SMP" },
+        { letter: "B", label: "GRUP B (SMP / MTs)", category: "SMP" },
+        { letter: "C", label: "GRUP A (SD / MI)", category: "SD" },
+        { letter: "D", label: "GRUP B (SD / MI)", category: "SD" }
+      ];
+    }
 
-    container.innerHTML = groups.map(g => {
-      const standings = this.store.calculateGroupStandings(g);
+    container.innerHTML = groupsToShow.map(g => {
+      const standings = this.store.calculateGroupStandings(g.letter, g.category);
 
       return `
         <div class="group-card">
           <div class="group-card-header">
             <div class="group-title">
-              <span class="group-badge">GRUP ${g}</span>
-              <span>Klasemen Sementara</span>
+              <span class="group-badge" style="background: ${g.category === 'SD' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'linear-gradient(135deg, #10b981, #047857)'};">
+                ${g.category === 'SD' ? '🎒 SD' : '🏆 SMP'}
+              </span>
+              <span>${g.label}</span>
             </div>
-            <small style="color: var(--primary); font-size: 0.72rem; font-weight: 700;">Top 2 Lolos 8 Besar</small>
+            <small style="color: var(--primary); font-size: 0.72rem; font-weight: 700;">Top 2 Lolos Babak Gugur</small>
           </div>
 
           <div class="table-responsive">
@@ -978,7 +1111,7 @@ const app = {
                       <td class="td-pos">${idx + 1}</td>
                       <td class="td-team" onclick="app.openTeamModal('${row.team.id}')" style="cursor: pointer;" title="Klik untuk lihat skuad">
                         <span class="mini-badge" style="background: ${row.team.badgeColor};">
-                          ${row.team.shortName.substring(0, 2)}
+                          ${row.team.logo ? `<img src="${row.team.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : row.team.shortName.substring(0, 2)}
                         </span>
                         <span>${row.team.shortName}</span>
                       </td>
@@ -999,14 +1132,14 @@ const app = {
 
           <div class="table-legend">
             <span class="legend-dot"></span>
-            <span>Peringkat 1 & 2 melaju ke Babak Perempat Final</span>
+            <span>Peringkat 1 & 2 melaju ke Babak Semifinal & Final ${g.category}</span>
           </div>
         </div>
       `;
     }).join("");
   },
 
-  // 3. RENDER BRACKET (Knockout Stage)
+  // 3. RENDER BRACKET (Knockout Stage - Multi Category Supported)
   renderBracket() {
     const container = document.getElementById("bracketTree");
     if (!container) return;
@@ -1038,14 +1171,18 @@ const app = {
           </div>
           <div class="bracket-team-row ${isHomeWinner ? 'winner' : ''}">
             <div class="bracket-team-info">
-              <span class="mini-badge" style="background: ${home ? home.badgeColor : '#475569'};">${homeName.substring(0,2)}</span>
+              <span class="mini-badge" style="background: ${home ? home.badgeColor : '#475569'};">
+                ${home && home.logo ? `<img src="${home.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : homeName.substring(0,2)}
+              </span>
               <span>${homeName}</span>
             </div>
             <div class="bracket-score">${homeScore}</div>
           </div>
           <div class="bracket-team-row ${isAwayWinner ? 'winner' : ''}">
             <div class="bracket-team-info">
-              <span class="mini-badge" style="background: ${away ? away.badgeColor : '#475569'};">${awayName.substring(0,2)}</span>
+              <span class="mini-badge" style="background: ${away ? away.badgeColor : '#475569'};">
+                ${away && away.logo ? `<img src="${away.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : awayName.substring(0,2)}
+              </span>
               <span>${awayName}</span>
             </div>
             <div class="bracket-score">${awayScore}</div>
@@ -1057,7 +1194,16 @@ const app = {
       `;
     };
 
+    const isSMP = this.currentCategory === "SMP";
+    const isSD = this.currentCategory === "SD";
+
     container.innerHTML = `
+      <div style="grid-column: 1/-1; margin-bottom: 8px;">
+        <span class="badge" style="background: rgba(16,185,129,0.15); color: var(--primary); font-weight: 800; padding: 6px 14px; border-radius: 8px;">
+          ${isSMP ? '🏆 BAGAN BABAK GUGUR KATEGORI SMP (U-15)' : (isSD ? '🎒 BAGAN BABAK GUGUR KATEGORI SD (U-12)' : '🌐 BAGAN BABAK GUGUR SEMUA KELAS')}
+        </span>
+      </div>
+
       <div class="bracket-round">
         <div class="round-title">Perempat Final (8 Besar)</div>
         ${qfMatches.map(m => renderBracketCard(m)).join("")}
@@ -1084,34 +1230,42 @@ const app = {
     `;
   },
 
-  // 4. RENDER TEAM & OFFICIAL PORTAL
+  // 4. RENDER TEAM & OFFICIAL PORTAL (FILTERED BY CATEGORY)
   renderTeams() {
     const container = document.getElementById("teamGridContainer");
     if (!container) return;
 
-    const teams = this.store.data.teams;
+    let teams = this.store.data.teams;
+    if (this.currentCategory !== "all") {
+      teams = teams.filter(t => (t.category || "SMP") === this.currentCategory);
+    }
+
     const countEl = document.getElementById("teamsTotalCount");
-    if (countEl) countEl.textContent = teams.length;
+    if (countEl) {
+      countEl.textContent = `${teams.length} Tim (${this.currentCategory === 'all' ? 'Semua Kelas' : (this.currentCategory === 'SMP' ? 'SMP / MTs' : 'SD / MI')})`;
+    }
 
     const isPanitia = admin.isAuthenticated === true;
 
     container.innerHTML = teams.map(t => {
       const waNumber = t.official.phone.replace(/[^0-9]/g, "");
-      const waLink = `https://wa.me/62${waNumber.startsWith('0') ? waNumber.slice(1) : waNumber}?text=Halo%20Official%20${encodeURIComponent(t.name)}%2C%20informasi%20Pondok%20Futsal%20Cup%202026`;
+      const waLink = `https://wa.me/62${waNumber.startsWith('0') ? waNumber.slice(1) : waNumber}?text=Halo%20Official%20${encodeURIComponent(t.name)}%2C%20informasi%20ACC%202026`;
 
       return `
         <div class="school-card" onclick="app.openTeamModal('${t.id}')">
-          <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor}, #0f172a);">
-            <span class="group-tag-corner">GRUP ${t.group}</span>
+          <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor || '#10b981'}, #0f172a);">
+            <span class="group-tag-corner">
+              ${(t.category || 'SMP') === 'SD' ? '🎒 SD' : '🏆 SMP'} • GRUP ${t.group}
+            </span>
           </div>
 
           <div class="school-card-body">
-            <div class="school-avatar" style="background: ${t.badgeColor};">
-              ${t.shortName.substring(0, 3)}
+            <div class="school-avatar" style="background: ${t.badgeColor || '#10b981'};">
+              ${t.logo ? `<img src="${t.logo}" class="team-logo-img" alt="${t.name}">` : t.shortName.substring(0, 3)}
             </div>
 
             <div class="school-card-name">${t.name}</div>
-            <div class="school-card-city">📍 ${t.city}</div>
+            <div class="school-card-city">📍 ${t.city || '-'}</div>
 
             <div class="official-info-box">
               <div class="official-row">
@@ -1120,7 +1274,7 @@ const app = {
               </div>
               <div class="official-row">
                 <span>🎽 Jersey:</span>
-                <strong style="font-size: 0.72rem;">${t.official.jerseyHome}</strong>
+                <strong style="font-size: 0.72rem;">${t.official.jerseyHome || '-'}</strong>
               </div>
             </div>
 
@@ -1148,7 +1302,7 @@ const app = {
     const container = document.getElementById("disciplineTableBody");
     if (!container) return;
 
-    const records = this.store.getDisciplinaryRecords();
+    const records = this.store.getDisciplinaryRecords(this.currentCategory);
 
     if (records.length === 0) {
       container.innerHTML = `
@@ -1208,7 +1362,7 @@ const app = {
     const tableContainer = document.getElementById("topScorersTableBody");
     if (!tableContainer) return;
 
-    const scorers = this.store.getTopScorersList();
+    const scorers = this.store.getTopScorersList(this.currentCategory);
 
     if (scorers.length === 0) {
       tableContainer.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Belum ada data gol yang tercatat.</td></tr>`;
@@ -1442,7 +1596,7 @@ const app = {
     modal.classList.add("active");
   },
 
-  // MODAL: Match Details
+  // MODAL: Match Details (Split Under Respective Teams)
   showMatchDetail(matchId) {
     const match = this.store.data.matches.find(m => m.id === matchId);
     if (!match) return;
@@ -1454,48 +1608,93 @@ const app = {
     const title = document.getElementById("matchDetailTitle");
     const body = document.getElementById("matchDetailBody");
 
-    title.innerHTML = `Detail Laga: ${match.id} (${match.stage === 'group' ? 'Grup ' + match.group : match.roundName})`;
+    const catBadge = (match.category || "SMP") === "SD" ? "🎒 Kategori SD (U-12)" : "🏆 Kategori SMP (U-15)";
+    title.innerHTML = `Detail Laga: ${match.id} • ${catBadge} (${match.stage === 'group' ? 'Grup ' + match.group : match.roundName})`;
 
     const hScore = match.status === 'finished' ? match.homeScore : (match.status === 'live' ? match.homeScoreLive : '-');
     const aScore = match.status === 'finished' ? match.awayScore : (match.status === 'live' ? match.awayScoreLive : '-');
 
+    const homeScorers = (match.scorers || []).filter(s => s.team === match.homeId);
+    const awayScorers = (match.scorers || []).filter(s => s.team === match.awayId);
+    const homeCards = (match.cards || []).filter(c => c.team === match.homeId);
+    const awayCards = (match.cards || []).filter(c => c.team === match.awayId);
+
     body.innerHTML = `
       <div class="match-detail-scoreboard">
         <div class="match-detail-meta">
+          <span class="match-category-tag ${match.category === 'SD' ? 'cat-sd' : 'cat-smp'}">${match.category === 'SD' ? 'SD / U-12' : 'SMP / U-15'}</span>
           📍 ${match.pitch} • 📅 ${match.date} (${match.time})
         </div>
-        <div class="match-detail-teams-row">
-          <div class="match-detail-team-col">
-            <div class="match-detail-team-name">${home.name}</div>
+
+        <div class="match-detail-teams-row" style="align-items: flex-start;">
+          <!-- TIM HOME & GOL DI BAWAHNYA -->
+          <div class="match-detail-team-col" style="text-align: left;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${home.badgeColor || '#10b981'}, #0f172a); width: 38px; height: 38px; font-size: 0.85rem; flex-shrink: 0;">
+                ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : home.shortName.substring(0, 3)}
+              </div>
+              <div class="match-detail-team-name">${home.name}</div>
+            </div>
+
+            <!-- GOL TIM HOME DI BAWAH NAMA TIM HOME -->
+            <div class="team-events-box home" style="margin-top: 10px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 6px;">
+              <div style="font-size: 0.7rem; font-weight: 800; color: var(--primary); margin-bottom: 3px;">⚽ GOL & KARTU:</div>
+              ${homeScorers.map(s => `
+                <div class="event-item-badge scorer">
+                  <span>⚽</span>
+                  <span><strong>${s.player}</strong> (${s.minute})</span>
+                </div>
+              `).join("")}
+              ${homeCards.map(c => `
+                <div class="event-item-badge">
+                  <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
+                  <span>${c.player} (${c.minute})</span>
+                </div>
+              `).join("")}
+              ${homeScorers.length === 0 && homeCards.length === 0 ? `<span style="font-size: 0.72rem; color: var(--text-subtle);">- Tidak ada gol/kartu -</span>` : ''}
+            </div>
           </div>
-          <div class="match-detail-score">
-            ${hScore} : ${aScore}
+
+          <!-- SKOR TENGAH -->
+          <div class="score-col-centered" style="padding: 0 10px;">
+            <div class="score-box-prominent ${match.status === 'live' ? 'live' : ''}" style="font-size: 2.6rem;">
+              <span>${hScore}</span>
+              <span class="score-divider">:</span>
+              <span>${aScore}</span>
+            </div>
+            <div class="match-detail-status ${match.status}" style="margin-top: 6px;">
+              ${match.status === 'live' ? '🔴 Sedang Berlangsung' : (match.status === 'finished' ? 'Selesai' : 'Belum Mulai')}
+            </div>
           </div>
-          <div class="match-detail-team-col">
-            <div class="match-detail-team-name">${away.name}</div>
+
+          <!-- TIM AWAY & GOL DI BAWAHNYA -->
+          <div class="match-detail-team-col" style="text-align: right;">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+              <div class="match-detail-team-name">${away.name}</div>
+              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${away.badgeColor || '#3b82f6'}, #0f172a); width: 38px; height: 38px; font-size: 0.85rem; flex-shrink: 0;">
+                ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : away.shortName.substring(0, 3)}
+              </div>
+            </div>
+
+            <!-- GOL TIM AWAY DI BAWAH NAMA TIM AWAY -->
+            <div class="team-events-box away" style="margin-top: 10px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 6px;">
+              <div style="font-size: 0.7rem; font-weight: 800; color: var(--primary); margin-bottom: 3px;">⚽ GOL & KARTU:</div>
+              ${awayScorers.map(s => `
+                <div class="event-item-badge away scorer">
+                  <span>(<strong>${s.minute}</strong>) ${s.player}</span>
+                  <span>⚽</span>
+                </div>
+              `).join("")}
+              ${awayCards.map(c => `
+                <div class="event-item-badge away">
+                  <span>(${c.minute}) ${c.player}</span>
+                  <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
+                </div>
+              `).join("")}
+              ${awayScorers.length === 0 && awayCards.length === 0 ? `<span style="font-size: 0.72rem; color: var(--text-subtle);">- Tidak ada gol/kartu -</span>` : ''}
+            </div>
           </div>
         </div>
-        <div class="match-detail-status ${match.status}">
-          Status: ${match.status === 'live' ? '🔴 Sedang Berlangsung' : (match.status === 'finished' ? 'Selesai' : 'Belum Mulai')}
-        </div>
-      </div>
-
-      <div class="match-detail-section">
-        <h4 class="match-detail-section-title">⚽ Kejadian Gol</h4>
-        ${match.scorers && match.scorers.length > 0 ? `
-          <ul class="match-detail-list">
-            ${match.scorers.map(s => `<li><strong>${s.minute}</strong> - ${s.player} (${this.store.getTeam(s.team)?.shortName})</li>`).join("")}
-          </ul>
-        ` : `<p class="match-detail-empty-note">Belum ada gol tercatat.</p>`}
-      </div>
-
-      <div class="match-detail-section">
-        <h4 class="match-detail-section-title yellow">🟨 Kartu & Disiplin</h4>
-        ${match.cards && match.cards.length > 0 ? `
-          <ul class="match-detail-list">
-            ${match.cards.map(c => `<li><span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span> <strong>${c.minute}</strong> - ${c.player} (${this.store.getTeam(c.team)?.shortName})</li>`).join("")}
-          </ul>
-        ` : `<p class="match-detail-empty-note">Pertandingan bersih tanpa kartu.</p>`}
       </div>
     `;
 
