@@ -137,8 +137,6 @@ const DEFAULT_DATA = {
         { name: "Info Futsal Indonesia", type: "Digital Coverage Partner", icon: "📱" },
         { name: "Suara Pesantren TV", type: "Live Streaming & Broadcast", icon: "🎥" }
       ]
-    }: "Live Streaming & Broadcast", icon: "ðŸŽ¥" }
-      ]
     }
   },
 
