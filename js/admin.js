@@ -401,8 +401,11 @@ const admin = {
     setVal("settingDates", cfg.dates);
     setVal("settingPin", "");
     const pinEl = document.getElementById("settingPin");
-    if (pinEl) pinEl.placeholder = "Kosongkan jika tidak ingin ganti PIN";
-    setVal("settingAnnouncement", cfg.runningAnnouncement);
+    let cleanAnn = cfg.runningAnnouncement || "";
+    if (cleanAnn.includes("Selamat Datang")) {
+      cleanAnn = "🏆 " + cleanAnn.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
+    }
+    setVal("settingAnnouncement", cleanAnn);
 
     // MVP fields
     const mvp = (app.store.data.homeData && app.store.data.homeData.mvp) || DEFAULT_DATA.homeData.mvp;
@@ -507,7 +510,11 @@ const admin = {
       sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
     }
     delete cfg.adminPin; // Ensure plaintext PIN is never saved in storage
-    cfg.runningAnnouncement = document.getElementById("settingAnnouncement").value.trim();
+    let savedAnn = document.getElementById("settingAnnouncement").value.trim();
+    if (savedAnn.includes("Selamat Datang")) {
+      savedAnn = "🏆 " + savedAnn.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
+    }
+    cfg.runningAnnouncement = savedAnn;
 
     // Save MVP
     if (!app.store.data.homeData) app.store.data.homeData = JSON.parse(JSON.stringify(DEFAULT_DATA.homeData));

@@ -23,18 +23,22 @@ class TournamentStore {
     }
 
     // Auto-repair encoding teks rusak dari cache localStorage sebelumnya
+    let needsSaveHealing = false;
     if (data && data.config) {
-      if (data.config.subTitle && (data.config.subTitle.includes("â") || data.config.subTitle.includes("€"))) {
+      if (!data.config.subTitle || data.config.subTitle.includes("â") || data.config.subTitle.includes("€") || !data.config.subTitle.includes("•")) {
         data.config.subTitle = DEFAULT_DATA.config.subTitle;
+        needsSaveHealing = true;
       }
-      if (data.config.runningAnnouncement && (data.config.runningAnnouncement.includes("ð") || data.config.runningAnnouncement.includes("â"))) {
+      if (!data.config.runningAnnouncement || data.config.runningAnnouncement.includes("ð") || data.config.runningAnnouncement.includes("â") || data.config.runningAnnouncement.includes("†") || !data.config.runningAnnouncement.startsWith("🏆")) {
         data.config.runningAnnouncement = DEFAULT_DATA.config.runningAnnouncement;
+        needsSaveHealing = true;
       }
     }
     if (data && data.homeData && data.homeData.moments) {
       data.homeData.moments.forEach((m, idx) => {
-        if (m.badge && (m.badge.includes("ð") || m.badge.includes("â")) && DEFAULT_DATA.homeData.moments[idx]) {
+        if (m.badge && (m.badge.includes("ð") || m.badge.includes("â") || m.badge.includes("†")) && DEFAULT_DATA.homeData.moments[idx]) {
           m.badge = DEFAULT_DATA.homeData.moments[idx].badge;
+          needsSaveHealing = true;
         }
       });
     }
@@ -42,12 +46,18 @@ class TournamentStore {
       ['platinum', 'gold', 'media'].forEach(tier => {
         if (data.sponsors[tier] && DEFAULT_DATA.homeData.sponsors[tier]) {
           data.sponsors[tier].forEach((s, idx) => {
-            if (s.icon && (s.icon.includes("ð") || s.icon.includes("â")) && DEFAULT_DATA.homeData.sponsors[tier][idx]) {
+            if (s.icon && (s.icon.includes("ð") || s.icon.includes("â") || s.icon.includes("†")) && DEFAULT_DATA.homeData.sponsors[tier][idx]) {
               s.icon = DEFAULT_DATA.homeData.sponsors[tier][idx].icon;
+              needsSaveHealing = true;
             }
           });
         }
       });
+    }
+    if (needsSaveHealing) {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      } catch (err) {}
     }
     // Pastikan data sponsor selalu ada
     if (!data.sponsors) {
@@ -502,6 +512,12 @@ const app = {
     this.renderCurrentView();
     this.initPwa();
     this.initSupabaseSync();
+
+    // DOM-level guarantee
+    const tickerEl = document.getElementById("tickerText");
+    if (tickerEl && tickerEl.textContent && (tickerEl.textContent.includes("ð") || tickerEl.textContent.includes("†") || !tickerEl.textContent.trim().startsWith("🏆"))) {
+      tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
+    }
   },
 
   setCategory(cat, showToastMsg = true) {
@@ -534,7 +550,16 @@ const app = {
     // Initial silent load from Supabase if configured
     window.SupabaseService.fetchAllData().then(data => {
       if (data && (data.matches || data.teams)) {
-        if (data.config) Object.assign(this.store.data.config, data.config);
+        if (data.config) {
+          if (data.config.runningAnnouncement && (data.config.runningAnnouncement.includes("ð") || data.config.runningAnnouncement.includes("†"))) {
+            data.config.runningAnnouncement = DEFAULT_DATA.config.runningAnnouncement;
+          }
+          if (data.config.subTitle && (data.config.subTitle.includes("â") || data.config.subTitle.includes("€"))) {
+            data.config.subTitle = DEFAULT_DATA.config.subTitle;
+          }
+          Object.assign(this.store.data.config, data.config);
+          this.renderHeader();
+        }
         if (data.matches && data.matches.length > 0) this.store.data.matches = data.matches;
         if (data.teams && data.teams.length > 0) this.store.data.teams = data.teams;
         if (data.moments && data.moments.length > 0) this.store.data.moments = data.moments;
@@ -691,7 +716,13 @@ const app = {
     document.getElementById("heroSub").textContent = cleanSub;
     document.getElementById("heroVenue").textContent = config.venue;
     document.getElementById("heroDates").textContent = config.dates;
-    const cleanTicker = (config.runningAnnouncement || "").replace(/ðŸ\S*/g, "🏆");
+
+    let cleanTicker = config.runningAnnouncement || "";
+    if (cleanTicker.includes("Selamat Datang")) {
+      cleanTicker = "🏆 " + cleanTicker.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
+    } else {
+      cleanTicker = cleanTicker.replace(/ð[^\s]*\s*†?/g, "🏆 ").replace(/ðŸ\S*/g, "🏆 ");
+    }
     document.getElementById("tickerText").textContent = cleanTicker;
     this.renderHeroBanner();
   },
