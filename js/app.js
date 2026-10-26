@@ -21,6 +21,34 @@ class TournamentStore {
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     }
+
+    // Auto-repair encoding teks rusak dari cache localStorage sebelumnya
+    if (data && data.config) {
+      if (data.config.subTitle && (data.config.subTitle.includes("â") || data.config.subTitle.includes("€"))) {
+        data.config.subTitle = DEFAULT_DATA.config.subTitle;
+      }
+      if (data.config.runningAnnouncement && (data.config.runningAnnouncement.includes("ð") || data.config.runningAnnouncement.includes("â"))) {
+        data.config.runningAnnouncement = DEFAULT_DATA.config.runningAnnouncement;
+      }
+    }
+    if (data && data.homeData && data.homeData.moments) {
+      data.homeData.moments.forEach((m, idx) => {
+        if (m.badge && (m.badge.includes("ð") || m.badge.includes("â")) && DEFAULT_DATA.homeData.moments[idx]) {
+          m.badge = DEFAULT_DATA.homeData.moments[idx].badge;
+        }
+      });
+    }
+    if (data && data.sponsors) {
+      ['platinum', 'gold', 'media'].forEach(tier => {
+        if (data.sponsors[tier] && DEFAULT_DATA.homeData.sponsors[tier]) {
+          data.sponsors[tier].forEach((s, idx) => {
+            if (s.icon && (s.icon.includes("ð") || s.icon.includes("â")) && DEFAULT_DATA.homeData.sponsors[tier][idx]) {
+              s.icon = DEFAULT_DATA.homeData.sponsors[tier][idx].icon;
+            }
+          });
+        }
+      });
+    }
     // Pastikan data sponsor selalu ada
     if (!data.sponsors) {
       if (data.homeData && data.homeData.sponsors) {
@@ -259,6 +287,84 @@ class TournamentStore {
         qf4_sd.homeId = stD_SD[0].team.id;
         qf4_sd.awayId = stC_SD[1].team.id;
       }
+    }
+
+    // Helper to get winner & loser from finished match
+    const getWinnerId = (m) => {
+      if (!m || m.status !== "finished" || m.homeScore === null || m.awayScore === null) return null;
+      if (m.homeScore > m.awayScore) return m.homeId;
+      if (m.awayScore > m.homeScore) return m.awayId;
+      return null;
+    };
+    const getLoserId = (m) => {
+      if (!m || m.status !== "finished" || m.homeScore === null || m.awayScore === null) return null;
+      if (m.homeScore > m.awayScore) return m.awayId;
+      if (m.awayScore > m.homeScore) return m.homeId;
+      return null;
+    };
+
+    // 3. SF SMP: Winner QF1 vs Winner QF2, Winner QF3 vs Winner QF4
+    const sf1_smp = this.data.matches.find(m => m.id === "SF1_SMP");
+    if (sf1_smp) {
+      const w1 = getWinnerId(qf1_smp);
+      const w2 = getWinnerId(qf2_smp);
+      if (w1) sf1_smp.homeId = w1;
+      if (w2) sf1_smp.awayId = w2;
+    }
+    const sf2_smp = this.data.matches.find(m => m.id === "SF2_SMP");
+    if (sf2_smp) {
+      const w3 = getWinnerId(qf3_smp);
+      const w4 = getWinnerId(qf4_smp);
+      if (w3) sf2_smp.homeId = w3;
+      if (w4) sf2_smp.awayId = w4;
+    }
+
+    // 4. Final & 3RD SMP
+    const final_smp = this.data.matches.find(m => m.id === "FINAL_SMP");
+    if (final_smp) {
+      const wSF1 = getWinnerId(sf1_smp);
+      const wSF2 = getWinnerId(sf2_smp);
+      if (wSF1) final_smp.homeId = wSF1;
+      if (wSF2) final_smp.awayId = wSF2;
+    }
+    const third_smp = this.data.matches.find(m => m.id === "3RD_SMP");
+    if (third_smp) {
+      const lSF1 = getLoserId(sf1_smp);
+      const lSF2 = getLoserId(sf2_smp);
+      if (lSF1) third_smp.homeId = lSF1;
+      if (lSF2) third_smp.awayId = lSF2;
+    }
+
+    // 5. SF SD: Winner QF1 vs Winner QF2, Winner QF3 vs Winner QF4
+    const sf1_sd = this.data.matches.find(m => m.id === "SF1_SD");
+    if (sf1_sd) {
+      const w1 = getWinnerId(qf1_sd);
+      const w2 = getWinnerId(qf2_sd);
+      if (w1) sf1_sd.homeId = w1;
+      if (w2) sf1_sd.awayId = w2;
+    }
+    const sf2_sd = this.data.matches.find(m => m.id === "SF2_SD");
+    if (sf2_sd) {
+      const w3 = getWinnerId(qf3_sd);
+      const w4 = getWinnerId(qf4_sd);
+      if (w3) sf2_sd.homeId = w3;
+      if (w4) sf2_sd.awayId = w4;
+    }
+
+    // 6. Final & 3RD SD
+    const final_sd = this.data.matches.find(m => m.id === "FINAL_SD");
+    if (final_sd) {
+      const wSF1 = getWinnerId(sf1_sd);
+      const wSF2 = getWinnerId(sf2_sd);
+      if (wSF1) final_sd.homeId = wSF1;
+      if (wSF2) final_sd.awayId = wSF2;
+    }
+    const third_sd = this.data.matches.find(m => m.id === "3RD_SD");
+    if (third_sd) {
+      const lSF1 = getLoserId(sf1_sd);
+      const lSF2 = getLoserId(sf2_sd);
+      if (lSF1) third_sd.homeId = lSF1;
+      if (lSF2) third_sd.awayId = lSF2;
     }
   }
 
@@ -581,10 +687,12 @@ const app = {
     const config = this.store.data.config;
     document.getElementById("headerTitle").textContent = config.tournamentName;
     document.getElementById("heroTitle").textContent = config.tournamentName;
-    document.getElementById("heroSub").textContent = config.subTitle;
+    const cleanSub = (config.subTitle || "").replace(/â€¢/g, "•").replace(/â\S*¢/g, "•");
+    document.getElementById("heroSub").textContent = cleanSub;
     document.getElementById("heroVenue").textContent = config.venue;
     document.getElementById("heroDates").textContent = config.dates;
-    document.getElementById("tickerText").textContent = config.runningAnnouncement;
+    const cleanTicker = (config.runningAnnouncement || "").replace(/ðŸ\S*/g, "🏆");
+    document.getElementById("tickerText").textContent = cleanTicker;
     this.renderHeroBanner();
   },
 
@@ -1192,7 +1300,7 @@ const app = {
     }).join("");
   },
 
-  // 3. RENDER BRACKET (Bagan 8 Besar Lengkap per Kategori)
+  // 3. RENDER BRACKET (Bagan 8 Besar Lengkap per Kategori - FIFA / UEFA Tournament Tree)
   renderBracket() {
     const container = document.getElementById("bracketTree");
     if (!container) return;
@@ -1200,84 +1308,243 @@ const app = {
     this.store.syncKnockoutFromStandings();
 
     const activeCat = this.currentCategory;
-    const qfMatches = this.store.data.matches.filter(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("QF"));
-    const sfMatches = this.store.data.matches.filter(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("SF"));
-    const thirdMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("3RD"));
-    const finalMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && m.id.startsWith("FINAL"));
+    const isSMP = activeCat === "SMP";
 
-    const renderBracketCard = (m, isFinal = false) => {
+    // Sort knockout matches properly
+    const qfMatches = [
+      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF1_" + activeCat || m.id === "QF1")),
+      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF2_" + activeCat || m.id === "QF2")),
+      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF3_" + activeCat || m.id === "QF3")),
+      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF4_" + activeCat || m.id === "QF4")),
+    ];
+
+    const sfMatches = [
+      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "SF1_" + activeCat || m.id === "SF1")),
+      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "SF2_" + activeCat || m.id === "SF2")),
+    ];
+
+    const thirdMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id.startsWith("3RD")));
+    const finalMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id.startsWith("FINAL")));
+
+    const renderBracketCard = (m, cardType = "qf") => {
+      if (!m) return "";
       const home = this.store.getTeam(m.homeId);
       const away = this.store.getTeam(m.awayId);
 
       const homeName = home ? home.name : (m.homePlaceholder || "TBD");
       const awayName = away ? away.name : (m.awayPlaceholder || "TBD");
 
-      const homeScore = m.status === "finished" ? m.homeScore : "-";
-      const awayScore = m.status === "finished" ? m.awayScore : "-";
+      const isLive = m.status === "live";
+      const isFinished = m.status === "finished";
 
-      const isHomeWinner = m.status === "finished" && m.homeScore > m.awayScore;
-      const isAwayWinner = m.status === "finished" && m.awayScore > m.homeScore;
+      const homeScore = isLive ? (m.homeScoreLive ?? 0) : (isFinished ? m.homeScore : "-");
+      const awayScore = isLive ? (m.awayScoreLive ?? 0) : (isFinished ? m.awayScore : "-");
+
+      const isHomeWinner = isFinished && Number(homeScore) > Number(awayScore);
+      const isAwayWinner = isFinished && Number(awayScore) > Number(homeScore);
+
+      // Seed / placeholder hint (e.g., 1A, 2B, QF1)
+      let homeSeed = "";
+      let awaySeed = "";
+      if (m.homePlaceholder) {
+        const hMatch = m.homePlaceholder.match(/Juara\s+Grup\s+([A-D])/i);
+        const hRunMatch = m.homePlaceholder.match(/Runner-up\s+Grup\s+([A-D])/i);
+        if (hMatch) homeSeed = `1${hMatch[1].toUpperCase()}`;
+        else if (hRunMatch) homeSeed = `2${hRunMatch[1].toUpperCase()}`;
+        else if (m.homePlaceholder.includes("QF")) homeSeed = "QF";
+        else if (m.homePlaceholder.includes("SF")) homeSeed = "SF";
+      }
+      if (m.awayPlaceholder) {
+        const aMatch = m.awayPlaceholder.match(/Juara\s+Grup\s+([A-D])/i);
+        const aRunMatch = m.awayPlaceholder.match(/Runner-up\s+Grup\s+([A-D])/i);
+        if (aMatch) awaySeed = `1${aMatch[1].toUpperCase()}`;
+        else if (aRunMatch) awaySeed = `2${aRunMatch[1].toUpperCase()}`;
+        else if (m.awayPlaceholder.includes("QF")) awaySeed = "QF";
+        else if (m.awayPlaceholder.includes("SF")) awaySeed = "SF";
+      }
+
+      let statusBadge = "";
+      if (isLive) {
+        statusBadge = `<span class="bracket-status-chip live"><span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}</span>`;
+      } else if (isFinished) {
+        statusBadge = `<span class="bracket-status-chip ft">FT • Selesai</span>`;
+      } else {
+        statusBadge = `<span class="bracket-status-chip upcoming">📅 ${m.date ? m.date.replace(' Nov 2026', '') : ''} • ${m.time ? m.time.replace(' WIB', '') : ''}</span>`;
+      }
+
+      const isFinal = cardType === "final";
+      const isBronze = cardType === "bronze";
+
+      const cardClasses = [
+        "bracket-match-card",
+        isFinal ? "is-final" : "",
+        isBronze ? "is-bronze" : "",
+        isLive ? "is-live" : ""
+      ].filter(Boolean).join(" ");
 
       return `
-        <div class="bracket-match ${isFinal ? 'final-card' : ''}">
-          <div style="font-size: 0.68rem; color: ${isFinal ? 'var(--accent-gold)' : 'var(--text-subtle)'}; font-weight: 800; text-align: center;">
-            ${m.roundName}
+        <div class="${cardClasses}" onclick="app.switchTab('matches')" title="Klik untuk lihat detail jadwal babak ini">
+          <div class="bracket-card-header">
+            <span class="bracket-round-label">${m.roundName || 'Babak Gugur'}</span>
+            ${statusBadge}
           </div>
-          <div class="bracket-team-row ${isHomeWinner ? 'winner' : ''}">
-            <div class="bracket-team-info">
-              <span class="mini-badge" style="background: ${home ? home.badgeColor : '#475569'};">
-                ${home && home.logo ? `<img src="${home.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (home ? home.shortName.substring(0,2) : 'TBD')}
-              </span>
-              <span title="${homeName}">${homeName}</span>
+
+          <div class="bracket-teams-container">
+            <!-- HOME -->
+            <div class="bracket-team-line ${isHomeWinner ? 'winner' : ''}">
+              <div class="bracket-team-left">
+                <div class="bracket-team-avatar" style="background: ${home ? home.badgeColor : '#64748b'};">
+                  ${home && home.logo ? `<img src="${home.logo}" alt="${homeName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (home ? (home.shortName || 'TBD').substring(0, 2) : 'TBD')}
+                </div>
+                <div class="bracket-team-name" title="${homeName}">${homeName}</div>
+                ${homeSeed ? `<span class="bracket-team-seed">${homeSeed}</span>` : ''}
+              </div>
+              <div class="bracket-score-val">${homeScore}</div>
             </div>
-            <div class="bracket-score">${homeScore}</div>
-          </div>
-          <div class="bracket-team-row ${isAwayWinner ? 'winner' : ''}">
-            <div class="bracket-team-info">
-              <span class="mini-badge" style="background: ${away ? away.badgeColor : '#475569'};">
-                ${away && away.logo ? `<img src="${away.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (away ? away.shortName.substring(0,2) : 'TBD')}
-              </span>
-              <span title="${awayName}">${awayName}</span>
+
+            <!-- AWAY -->
+            <div class="bracket-team-line ${isAwayWinner ? 'winner' : ''}">
+              <div class="bracket-team-left">
+                <div class="bracket-team-avatar" style="background: ${away ? away.badgeColor : '#64748b'};">
+                  ${away && away.logo ? `<img src="${away.logo}" alt="${awayName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (away ? (away.shortName || 'TBD').substring(0, 2) : 'TBD')}
+                </div>
+                <div class="bracket-team-name" title="${awayName}">${awayName}</div>
+                ${awaySeed ? `<span class="bracket-team-seed">${awaySeed}</span>` : ''}
+              </div>
+              <div class="bracket-score-val">${awayScore}</div>
             </div>
-            <div class="bracket-score">${awayScore}</div>
           </div>
-          <div class="bracket-meta-time">
-            📅 ${m.date} • ${m.time}
+
+          <div class="bracket-card-footer">
+            <span>🏟️ ${m.pitch ? m.pitch.replace(" (Vinyl)", "") : "Lapangan Utama"}</span>
+            <span style="color: var(--primary); font-weight: 700;">${isFinished ? 'Skor Akhir' : 'Detail Laga ➔'}</span>
           </div>
         </div>
       `;
     };
 
-    const isSMP = this.currentCategory === "SMP";
-
     container.innerHTML = `
-      <div style="grid-column: 1/-1; margin-bottom: 8px;">
-        <span class="badge" style="background: rgba(16,185,129,0.15); color: var(--primary); font-weight: 800; padding: 6px 14px; border-radius: 8px;">
-          ${isSMP ? '🏆 BAGAN BABAK GUGUR KATEGORI SMP (U-15) • 8 BESAR S/D FINAL' : '🎒 BAGAN BABAK GUGUR KATEGORI SD (U-12) • 8 BESAR S/D FINAL'}
-        </span>
-      </div>
+      <!-- TOP ANNOUNCEMENT & CATEGORY SWITCHER BAR -->
+      <div class="bracket-top-bar">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span class="bracket-category-badge">
+            ${isSMP ? '🏆 KATEGORI SMP (U-15) • BABAK 8 BESAR S/D GRAND FINAL' : '🎒 KATEGORI SD (U-12) • BABAK 8 BESAR S/D GRAND FINAL'}
+          </span>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">
+            *Juara & Runner-up Grup otomatis masuk ke bagan sistem gugur
+          </span>
+        </div>
 
-      <div class="bracket-round">
-        <div class="round-title">Perempat Final (8 Besar)</div>
-        ${qfMatches.map(m => renderBracketCard(m)).join("")}
-      </div>
-
-      <div class="bracket-round">
-        <div class="round-title">Semifinal</div>
-        ${sfMatches.map(m => renderBracketCard(m)).join("")}
-        <div style="margin-top: 20px;">
-          <div class="round-title" style="color: #94a3b8;">Perebutan Juara 3</div>
-          ${thirdMatch ? renderBracketCard(thirdMatch) : ''}
+        <div class="bracket-cat-switcher">
+          <button type="button" class="bracket-switch-btn ${isSMP ? 'active' : ''}" onclick="app.setCategory('SMP')">
+            🏆 SMP (U-15)
+          </button>
+          <button type="button" class="bracket-switch-btn ${!isSMP ? 'active' : ''}" onclick="app.setCategory('SD')">
+            🎒 SD (U-12)
+          </button>
         </div>
       </div>
 
-      <div class="bracket-round">
-        <div class="round-title" style="color: var(--accent-gold); border-color: var(--accent-gold);">🏆 GRAND FINAL 🏆</div>
-        ${finalMatch ? renderBracketCard(finalMatch, true) : ''}
-        <div style="text-align: center; margin-top: 20px; padding: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed var(--accent-gold); border-radius: var(--radius-md);">
-          <div style="font-size: 1.6rem;">🥇</div>
-          <strong style="color: var(--accent-gold); font-size: 0.85rem;">TROFI BERGILIR & UANG PEMBINAAN</strong>
-          <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Piala Juara 1, 2, 3 + Best Player & Top Scorer</p>
+      <div class="bracket-mobile-hint">
+        👉 Geser layar ke samping untuk melihat Semifinal & Final
+      </div>
+
+      <!-- MAIN TREE CONTAINER -->
+      <div class="bracket-tree-container">
+        <!-- HEADER ROW -->
+        <div class="bracket-tree-headers">
+          <div class="bracket-header-cell col-qf">
+            <div class="bracket-header-pill">BABAK 8 BESAR</div>
+            <div class="bracket-header-title">PEREMPAT FINAL</div>
+            <div class="bracket-header-sub">📅 18 Nov 2026 • 4 Pertandingan</div>
+          </div>
+
+          <div class="bracket-header-spacer"></div>
+
+          <div class="bracket-header-cell col-sf">
+            <div class="bracket-header-pill">BABAK 4 BESAR</div>
+            <div class="bracket-header-title">SEMIFINAL</div>
+            <div class="bracket-header-sub">📅 19 Nov 2026 • 2 Pertandingan</div>
+          </div>
+
+          <div class="bracket-header-spacer"></div>
+
+          <div class="bracket-header-cell col-final">
+            <div class="bracket-header-pill" style="color: var(--accent-gold);">BABAK PUNCAK & JUARA 3</div>
+            <div class="bracket-header-title">🏆 GRAND FINAL 🏆</div>
+            <div class="bracket-header-sub">📅 20 Nov 2026 • Penentuan Juara</div>
+          </div>
+        </div>
+
+        <!-- TREE BODY -->
+        <div class="bracket-tree-body">
+          <!-- COLUMN 1: QUARTERFINALS -->
+          <div class="bracket-col-qf">
+            <!-- Pair 1: QF1 & QF2 -->
+            <div class="bracket-pair">
+              ${qfMatches[0] ? renderBracketCard(qfMatches[0], "qf") : ''}
+              ${qfMatches[1] ? renderBracketCard(qfMatches[1], "qf") : ''}
+            </div>
+            <!-- Pair 2: QF3 & QF4 -->
+            <div class="bracket-pair">
+              ${qfMatches[2] ? renderBracketCard(qfMatches[2], "qf") : ''}
+              ${qfMatches[3] ? renderBracketCard(qfMatches[3], "qf") : ''}
+            </div>
+          </div>
+
+          <!-- CONNECTOR 1: QF TO SF -->
+          <div class="bracket-connector-col">
+            <svg class="bracket-connector-svg" viewBox="0 0 40 580" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 0 62 H 20 V 206 H 0 M 20 134 H 40 M 0 374 H 20 V 518 H 0 M 20 446 H 40" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+
+          <!-- COLUMN 2: SEMIFINALS -->
+          <div class="bracket-col-sf">
+            <div class="bracket-sf-slot">
+              ${sfMatches[0] ? renderBracketCard(sfMatches[0], "sf") : ''}
+            </div>
+            <div class="bracket-sf-slot">
+              ${sfMatches[1] ? renderBracketCard(sfMatches[1], "sf") : ''}
+            </div>
+          </div>
+
+          <!-- CONNECTOR 2: SF TO FINAL -->
+          <div class="bracket-connector-col">
+            <svg class="bracket-connector-svg" viewBox="0 0 40 580" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 0 134 H 20 V 446 H 0 M 20 290 H 40" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+
+          <!-- COLUMN 3: GRAND FINAL & BRONZE -->
+          <div class="bracket-col-final">
+            <!-- Top Trophy Box -->
+            <div class="bracket-trophy-top">
+              <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 4px;">🏆</div>
+              <div style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px;">
+                TROFI BERGILIR ACC 2026
+              </div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+                🥇 Juara 1 • 🥈 Juara 2 • 🥉 Juara 3
+              </div>
+              <div style="font-size: 0.68rem; color: var(--primary); font-weight: 700; margin-top: 4px;">
+                + Medali & Uang Pembinaan Santri
+              </div>
+            </div>
+
+            <!-- Center Grand Final Slot -->
+            <div class="bracket-final-slot">
+              ${finalMatch ? renderBracketCard(finalMatch, "final") : ''}
+            </div>
+
+            <!-- Bottom Bronze Match Slot -->
+            <div class="bracket-bronze-slot">
+              <div style="font-size: 0.75rem; font-weight: 800; color: #cd7f32; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>🥉</span> PEREBUTAN JUARA 3 (BRONZE FINAL)
+              </div>
+              ${thirdMatch ? renderBracketCard(thirdMatch, "bronze") : ''}
+            </div>
+          </div>
         </div>
       </div>
     `;

@@ -2,14 +2,14 @@
 const DEFAULT_DATA = {
   config: {
     tournamentName: 'ACC "Al-Fayyadh Champions Cup" 2026',
-    subTitle: "Turnamen Futsal Antar-Sekolah & Pesantren â€¢ Ma'had Tahfizhul Qur'an Al Fayyadh",
+    subTitle: "Turnamen Futsal Antar-Sekolah & Pesantren • Ma'had Tahfizhul Qur'an Al Fayyadh",
     edition: "ACC Edisi 2026",
     venue: "GOR Futsal Ma'had Tahfizhul Qur'an Al Fayyadh",
     pitch1Name: "Lapangan Utama (Vinyl)",
     pitch2Name: "Lapangan Utama (Vinyl)",
     dates: "15 - 20 November 2026",
     adminPinHash: "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348",
-    runningAnnouncement: "ðŸ† Selamat Datang di ACC 'Al-Fayyadh Champions Cup' 2026 Ma'had Tahfizhul Qur'an Al Fayyadh! Total 32 Tim (16 SMP & 16 SD). Junjung tinggi sportivitas, ukhuwah Islamiyah, dan fair play. Registrasi line-up maksimal 30 menit sebelum kick-off.",
+    runningAnnouncement: "🏆 Selamat Datang di ACC 'Al-Fayyadh Champions Cup' 2026 Ma'had Tahfizhul Qur'an Al Fayyadh! Total 32 Tim (16 SMP & 16 SD). Junjung tinggi sportivitas, ukhuwah Islamiyah, dan fair play. Registrasi line-up maksimal 30 menit sebelum kick-off.",
     contactCommittee: "0812-9876-5432 (Panitia ACC - Sie. Pertandingan)",
     heroBannerImage: "assets/hero_banner.jpg",
     rulesText: `
@@ -87,7 +87,7 @@ const DEFAULT_DATA = {
         player: "Aiman Muzaffar (#10)",
         team: "SD MTQ Al-Fayyadh",
         tag: "NEW",
-        badge: "ðŸ”¥ MATCHDAY HIGHLIGHT",
+        badge: "🔥 MATCHDAY HIGHLIGHT",
         image: "assets/moment_celebration.jpg",
         caption: "Selebrasi penuh emosi skuad Al-Fayyadh usai memastikan tiket babak gugur dengan kemenangan dramatis di menit akhir."
       },
@@ -97,7 +97,7 @@ const DEFAULT_DATA = {
         player: "Farhan Maulana (#1)",
         team: "SMP Islam Al-Azhar",
         tag: "NEW",
-        badge: "ðŸ§¤ SAVE OF THE DAY",
+        badge: "🧤 SAVE OF THE DAY",
         image: "assets/moment_gk_save.jpg",
         caption: "Aksi terbang spektakuler menepis tembakan keras tepat di garis gawang demi mengamankan cleansheet pertandingan."
       },
@@ -107,7 +107,7 @@ const DEFAULT_DATA = {
         player: "Athar Barra (#9)",
         team: "SMP Islam Al-Azhar",
         tag: "NEW",
-        badge: "ðŸš€ GOAL OF THE TOURNAMENT",
+        badge: "🚀 GOAL OF THE TOURNAMENT",
         image: "assets/moment_strike.jpg",
         caption: "Sepakan first-time voli keras meluncur kencang merobek jala atas gawang dan disambut gemuruh suporter di GOR Futsal."
       },
@@ -117,25 +117,27 @@ const DEFAULT_DATA = {
         player: "Sang Juara Turnamen",
         team: "Pondok Futsal Arena",
         tag: "HOT",
-        badge: "ðŸ† CHAMPION MOMENT",
+        badge: "🏆 CHAMPION MOMENT",
         image: "assets/moment_trophy.jpg",
         caption: "Penyerahan piala bergilir ACC 2026 diiringi kilauan konfeti emas lambang supremasi olahraga santri se-wilayah."
       }
     ],
     sponsors: {
       platinum: [
-        { name: "Bank Syariah Al-Barakah", type: "Official Banking Partner", icon: "ðŸ¦" },
-        { name: "Al-Fayyadh Sportswear", type: "Official Apparel & Kit", icon: "ðŸ‘•" }
+        { name: "Bank Syariah Al-Barakah", type: "Official Banking Partner", icon: "🏛️" },
+        { name: "Al-Fayyadh Sportswear", type: "Official Apparel & Kit", icon: "👕" }
       ],
       gold: [
-        { name: "Specs & Molten Futsal", type: "Official Match Ball Partner", icon: "âš½" },
-        { name: "Air Mineral Sehat Kh-Q", type: "Official Hydration Partner", icon: "ðŸ’§" },
-        { name: "RS Islam Medika Care", type: "Official Medical & First Aid", icon: "ðŸ¥" }
+        { name: "Specs & Molten Futsal", type: "Official Match Ball Partner", icon: "⚽" },
+        { name: "Air Mineral Sehat Kh-Q", type: "Official Hydration Partner", icon: "💧" },
+        { name: "RS Islam Medika Care", type: "Official Medical & First Aid", icon: "🏥" }
       ],
       media: [
-        { name: "Media Santri Nusantara", type: "Official Media Partner", icon: "ðŸ“¡" },
-        { name: "Info Futsal Indonesia", type: "Digital Coverage Partner", icon: "ðŸ“±" },
-        { name: "Suara Pesantren TV", type: "Live Streaming & Broadcast", icon: "ðŸŽ¥" }
+        { name: "Media Santri Nusantara", type: "Official Media Partner", icon: "📡" },
+        { name: "Info Futsal Indonesia", type: "Digital Coverage Partner", icon: "📱" },
+        { name: "Suara Pesantren TV", type: "Live Streaming & Broadcast", icon: "🎥" }
+      ]
+    }: "Live Streaming & Broadcast", icon: "ðŸŽ¥" }
       ]
     }
   },
