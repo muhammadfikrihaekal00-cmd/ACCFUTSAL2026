@@ -57,7 +57,7 @@
         <span class="header-v-divider"></span>
 
         <!-- Panitia / Admin Access Button -->
-        <button id="btnOpenAdmin" class="btn-admin-header" title="Login Khusus Panitia / Input Skor" aria-label="Mode Panitia">
+        <button id="btnOpenAdmin" class="btn-admin-header" onclick="if(window.admin){if(admin.isAuthenticated){admin.openAdminDashboard();}else{admin.openLoginModal();}}" title="Login Khusus Panitia / Input Skor" aria-label="Mode Panitia">
           <span id="adminHeaderIcon">🔒</span>
           <span id="adminHeaderLabel">Mode Panitia</span>
           <span id="adminActiveBadge" class="admin-live-pulse-dot" style="display: none;"></span>
@@ -352,10 +352,20 @@
 
     <!-- TAB 1: JADWAL & SKOR (MATCH CENTER) -->
     <section id="pane-matches" class="tab-pane">
-      <div class="section-header">
-        <h2 class="section-title">
-          <span>🏟️</span> Jadwal & Hasil Pertandingan
-        </h2>
+      <div class="section-header" style="flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 class="section-title">
+            <span>🏟️</span> Jadwal & Hasil Pertandingan
+          </h2>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">
+            Klik kartu laga untuk detail / tombol Atur Lawan untuk mengatur pasangan tim hasil undian
+          </span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-sm" onclick="admin.openMatchEditor()" style="font-weight: 700; background: linear-gradient(135deg, #10b981, #0284c7); border: none; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
+            ⚙️ Atur Lawan (Drawing Panitia)
+          </button>
+        </div>
         <div class="filter-group">
           <select id="filterDay" class="filter-select" aria-label="Pilih Hari Pertandingan">
             <option value="all">Semua Hari / Matchday</option>
@@ -668,6 +678,11 @@
       </div>
       <form id="quickScoreForm">
         <div class="modal-body">
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openMatchEditor(admin.activeMatchId)" style="font-size: 0.74rem;">
+              ⚙️ Ubah Pasangan Tim Lawan Laga Ini
+            </button>
+          </div>
           <!-- Counter Score Tap -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: var(--bg-surface-elevated); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
             <div style="text-align: center;">
@@ -742,6 +757,78 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
           <button type="submit" class="btn btn-primary">Simpan Hasil Pertandingan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4B. MODAL ATUR TIM LAWAN & JADWAL PERTANDINGAN (PANITIA) -->
+  <div id="matchEditorModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="editMatchTitle">⚙️ Atur Tim Lawan & Jadwal</h3>
+        <button class="modal-close" onclick="document.getElementById('matchEditorModal').classList.remove('active')">&times;</button>
+      </div>
+      <form id="matchEditorForm" onsubmit="event.preventDefault(); admin.saveMatchSchedule(false);">
+        <input type="hidden" id="editMatchId">
+        <div class="modal-body">
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+            Pilih pasangan tim yang bertanding (Home vs Away) sesuai hasil undian teknikal meeting, serta sesuaikan waktu dan lapangan laga.
+          </p>
+
+          <!-- Match Selector Row -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" style="font-weight: 700; color: var(--accent-gold);">🎯 Pilih Pertandingan yang Ingin Diatur:</label>
+            <select id="editMatchSelect" class="form-select" onchange="admin.switchEditorMatch(this.value)" style="font-weight: 600; font-size: 0.88rem;">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <!-- Matchup Row -->
+          <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label" style="font-weight: 700; color: #10b981;">🟢 Tim 1 (Tuan Rumah / Home)</label>
+              <select id="editMatchHomeSelect" class="form-select" required>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <div style="text-align: center; font-weight: 900; font-size: 1rem; color: var(--accent-gold); margin: 6px 0;">
+              ⚡ VS ⚡
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700; color: #3b82f6;">🔵 Tim 2 (Tamu / Away)</label>
+              <select id="editMatchAwaySelect" class="form-select" required>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Schedule Row -->
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Tanggal Laga</label>
+              <input type="text" id="editMatchDateInput" class="form-input" placeholder="contoh: 22 Nov 2026" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Waktu Kick-off</label>
+              <input type="text" id="editMatchTimeInput" class="form-input" placeholder="contoh: 08:00 - 08:40 WITA" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 8px;">
+            <label class="form-label">Lapangan Pertandingan</label>
+            <input type="text" id="editMatchPitchInput" class="form-input" value="Lapangan Utama (Vinyl) - GOR Futsal MTQ Al-Fayyadh Maros" required>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('matchEditorModal').classList.remove('active')">Batal</button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-outline" onclick="admin.saveMatchSchedule(true)" title="Simpan perubahan ini dan langsung buka laga berikutnya">💾 Simpan & Lanjut ➔</button>
+            <button type="submit" class="btn btn-primary">💾 Simpan Lawan & Jadwal</button>
+          </div>
         </div>
       </form>
     </div>
@@ -862,6 +949,12 @@
 
         <!-- Quick Panitia Tools -->
         <div>
+          <h4 style="color: #10b981; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">⚽ Kelola Pertandingan & Hasil Undian</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('adminDashboardModal').classList.remove('active'); admin.openMatchEditor();" style="background: linear-gradient(135deg, #10b981, #0284c7); font-weight: 700;">
+              ⚙️ Atur Tim Lawan & Jadwal (Drawing Manual)
+            </button>
+          </div>
           <h4 style="color: #00d2ff; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">⚡ Kelola Konten Visual Beranda</h4>
           <div style="display: flex; flex-wrap: wrap; gap: 8px;">
             <button type="button" class="btn btn-primary btn-sm" onclick="admin.openMediaHubModal()" style="background: linear-gradient(135deg, #10b981, #06b6d4);">
@@ -1482,9 +1575,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="js/data.js?v=2.5"></script>
-  <script src="js/app.js?v=2.5"></script>
-  <script src="js/admin.js?v=2.5"></script>
+  <script src="js/data.js?v=2.7"></script>
+  <script src="js/app.js?v=2.7"></script>
+  <script src="js/admin.js?v=2.7"></script>
 
   <!-- Service Worker for PWA -->
   <script>

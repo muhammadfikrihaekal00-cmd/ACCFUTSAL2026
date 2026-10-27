@@ -1228,12 +1228,15 @@ const app = {
           <!-- FOOTER AKSI -->
           <div class="fixture-footer-bar">
             <span class="fixture-time-hint">⏰ Kick-off: ${m.time}</span>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')">
-                ℹ️ Detail Laga
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 8px;">
+                ℹ️ Detail
               </button>
-              <button class="btn ${admin.isAuthenticated === true ? 'btn-admin' : 'btn-outline'} btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan">
-                ✏️ Input Skor
+              <button class="btn ${admin.isAuthenticated === true ? 'btn-admin' : 'btn-outline'} btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Tim Lawan & Jadwal" style="font-size: 0.72rem; padding: 4px 8px;">
+                ⚙️ Atur Lawan
+              </button>
+              <button class="btn ${admin.isAuthenticated === true ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan" style="font-size: 0.72rem; padding: 4px 8px;">
+                ✏️ Skor
               </button>
             </div>
           </div>

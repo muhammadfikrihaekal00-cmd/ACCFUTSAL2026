@@ -105,12 +105,19 @@ const admin = {
         app.showToast("✅ Berhasil Masuk Mode Panitia! Akses Input Skor Aktif.");
       }
 
-      // If triggered from a match card, open score editor for that match
+      // If triggered from a match card, open score editor or opponent editor for that match
       if (this.pendingScoreMatchId) {
         const mId = this.pendingScoreMatchId;
         this.pendingScoreMatchId = null;
         setTimeout(() => {
           this.openQuickScore(mId);
+        }, 150);
+      }
+      if (this.pendingEditorMatchId) {
+        const mId = this.pendingEditorMatchId;
+        this.pendingEditorMatchId = null;
+        setTimeout(() => {
+          this.openMatchEditor(mId);
         }, 150);
       }
     } else {
@@ -385,6 +392,184 @@ const admin = {
     document.getElementById("quickScoreModal").classList.remove("active");
     app.showToast("Skor dan data pertandingan berhasil disimpan!");
     app.renderCurrentView();
+  },
+
+  // ==========================================
+  // ATUR TIM LAWAN & JADWAL PERTANDINGAN (PANITIA)
+  // ==========================================
+  openMatchEditor(matchId = null) {
+    if (!this.isAuthenticated) {
+      this.pendingEditorMatchId = matchId || "first";
+      this.openLoginModal();
+      app.showToast("🔒 Silakan masukkan PIN 1234 untuk mengatur tim lawan!");
+      return;
+    }
+
+    // Tutup modal lain jika terbuka
+    const scoreModal = document.getElementById("quickScoreModal");
+    if (scoreModal) scoreModal.classList.remove("active");
+    const dashModal = document.getElementById("adminDashboardModal");
+    if (dashModal) dashModal.classList.remove("active");
+
+    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    if (!matches.length) {
+      alert("Belum ada data pertandingan!");
+      return;
+    }
+
+    if (!matchId || matchId === "first") {
+      matchId = matches[0].id;
+    }
+
+    this.activeMatchId = matchId;
+    this.switchEditorMatch(matchId, true);
+
+    const modal = document.getElementById("matchEditorModal");
+    if (modal) modal.classList.add("active");
+  },
+
+  switchEditorMatch(matchId, populateSelect = false) {
+    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    this.activeMatchId = match.id;
+    const idInput = document.getElementById("editMatchId");
+    if (idInput) idInput.value = match.id;
+
+    const cat = match.category || "SMP";
+    const stageName = match.stage === "knockout" ? (match.roundName || "Babak Gugur") : `Grup ${match.group || 'A'}`;
+    const titleEl = document.getElementById("editMatchTitle");
+    if (titleEl) {
+      titleEl.textContent = `⚙️ Atur Lawan: ${match.id} (${cat} - ${stageName})`;
+    }
+
+    // Populate Match Selector Dropdown if requested or if options don't match
+    const matchSelect = document.getElementById("editMatchSelect");
+    if (matchSelect) {
+      if (populateSelect || matchSelect.children.length === 0) {
+        let optHtml = "";
+        ["SMP", "SD"].forEach(c => {
+          const catMatches = matches.filter(m => (m.category || "SMP") === c);
+          if (catMatches.length) {
+            optHtml += `<optgroup label="=== KATEGORI ${c} ===">`;
+            catMatches.forEach(m => {
+              const hTeam = app.store.getTeam(m.homeId);
+              const aTeam = app.store.getTeam(m.awayId);
+              const h = hTeam ? hTeam.shortName : (m.homePlaceholder || "TBD");
+              const a = aTeam ? aTeam.shortName : (m.awayPlaceholder || "TBD");
+              const stage = m.stage === "knockout" ? (m.roundName || "Gugur") : `Grup ${m.group}`;
+              optHtml += `<option value="${m.id}" ${m.id === match.id ? 'selected' : ''}>${m.id} [${stage}]: ${h} vs ${a} (${m.date || ''})</option>`;
+            });
+            optHtml += `</optgroup>`;
+          }
+        });
+        matchSelect.innerHTML = optHtml;
+      }
+      matchSelect.value = match.id;
+    }
+
+    // Ambil daftar tim sesuai kategori laga (SMP / SD)
+    const teams = (app.store && app.store.data && app.store.data.teams) ? app.store.data.teams.filter(t => (t.category || "SMP") === cat) : [];
+
+    const homeSelect = document.getElementById("editMatchHomeSelect");
+    const awaySelect = document.getElementById("editMatchAwaySelect");
+
+    // Kelompokkan tim berdasarkan grup yang relevan
+    const inGroupTeams = teams.filter(t => t.group === match.group);
+    const otherTeams = teams.filter(t => t.group !== match.group);
+
+    let teamOptions = `<option value="">-- Pilih Tim (TBD / Kosong) --</option>`;
+    if (match.stage === "group" && inGroupTeams.length > 0) {
+      teamOptions += `<optgroup label="Tim Grup ${match.group || 'A'} (${inGroupTeams.length} Tim)">`;
+      inGroupTeams.forEach(t => {
+        teamOptions += `<option value="${t.id}">${t.name} (Grup ${t.group})</option>`;
+      });
+      teamOptions += `</optgroup>`;
+      if (otherTeams.length > 0) {
+        teamOptions += `<optgroup label="Tim Grup Lain (${cat})">`;
+        otherTeams.forEach(t => {
+          teamOptions += `<option value="${t.id}">${t.name} (Grup ${t.group})</option>`;
+        });
+        teamOptions += `</optgroup>`;
+      }
+    } else {
+      teamOptions += `<optgroup label="Semua Tim ${cat} (${teams.length} Tim)">`;
+      teams.forEach(t => {
+        teamOptions += `<option value="${t.id}">${t.name} (Grup ${t.group})</option>`;
+      });
+      teamOptions += `</optgroup>`;
+    }
+
+    if (homeSelect) homeSelect.innerHTML = teamOptions;
+    if (awaySelect) awaySelect.innerHTML = teamOptions;
+
+    if (homeSelect) homeSelect.value = match.homeId || "";
+    if (awaySelect) awaySelect.value = match.awayId || "";
+
+    const dateInput = document.getElementById("editMatchDateInput");
+    if (dateInput) dateInput.value = match.date || "22 Nov 2026";
+    const timeInput = document.getElementById("editMatchTimeInput");
+    if (timeInput) timeInput.value = match.time || "08:00 - 08:40 WITA";
+    const pitchInput = document.getElementById("editMatchPitchInput");
+    if (pitchInput) pitchInput.value = match.pitch || "Lapangan Utama (Vinyl) - GOR Futsal MTQ Al-Fayyadh Maros";
+  },
+
+  saveMatchSchedule(andNext = false) {
+    const idInput = document.getElementById("editMatchId");
+    if (!idInput) return;
+    const mId = idInput.value;
+    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    const match = matches.find(m => m.id === mId);
+    if (!match) return;
+
+    const homeSelect = document.getElementById("editMatchHomeSelect");
+    const awaySelect = document.getElementById("editMatchAwaySelect");
+    const homeId = homeSelect ? homeSelect.value : "";
+    const awayId = awaySelect ? awaySelect.value : "";
+
+    if (homeId && awayId && homeId === awayId) {
+      alert("⚠️ Tim 1 (Home) dan Tim 2 (Away) tidak boleh tim yang sama!");
+      return;
+    }
+
+    match.homeId = homeId || null;
+    match.awayId = awayId || null;
+    const dateInput = document.getElementById("editMatchDateInput");
+    if (dateInput && dateInput.value.trim()) match.date = dateInput.value.trim();
+    const timeInput = document.getElementById("editMatchTimeInput");
+    if (timeInput && timeInput.value.trim()) match.time = timeInput.value.trim();
+    const pitchInput = document.getElementById("editMatchPitchInput");
+    if (pitchInput && pitchInput.value.trim()) match.pitch = pitchInput.value.trim();
+
+    app.store.saveData();
+    app.store.syncKnockoutFromStandings();
+
+    // Sinkronisasi ke Supabase jika terhubung
+    if (window.SupabaseService) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash);
+    }
+
+    const homeTeam = app.store.getTeam(match.homeId);
+    const awayTeam = app.store.getTeam(match.awayId);
+    const hName = homeTeam ? homeTeam.shortName : (match.homePlaceholder || "TBD");
+    const aName = awayTeam ? awayTeam.shortName : (match.awayPlaceholder || "TBD");
+
+    app.showToast(`✅ Lawan laga ${match.id} berhasil disimpan: ${hName} vs ${aName}!`);
+    app.renderCurrentView();
+
+    if (andNext) {
+      // Cari index laga berikutnya
+      const currIdx = matches.findIndex(m => m.id === mId);
+      if (currIdx >= 0 && currIdx < matches.length - 1) {
+        const nextMatch = matches[currIdx + 1];
+        this.switchEditorMatch(nextMatch.id, true);
+        return;
+      }
+    }
+
+    const modal = document.getElementById("matchEditorModal");
+    if (modal) modal.classList.remove("active");
   },
 
   // SETTINGS MANAGEMENT
