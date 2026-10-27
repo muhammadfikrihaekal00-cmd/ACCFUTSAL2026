@@ -33,6 +33,14 @@ class TournamentStore {
         data.config.runningAnnouncement = DEFAULT_DATA.config.runningAnnouncement;
         needsSaveHealing = true;
       }
+      if (!data.config.youtubeLiveUrl) {
+        data.config.youtubeLiveUrl = DEFAULT_DATA.config.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
+        needsSaveHealing = true;
+      }
+      if (!data.config.youtubeLiveTitle) {
+        data.config.youtubeLiveTitle = DEFAULT_DATA.config.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
+        needsSaveHealing = true;
+      }
     }
     if (data && data.homeData && data.homeData.moments) {
       data.homeData.moments.forEach((m, idx) => {
@@ -501,13 +509,17 @@ const app = {
   filterDay: "all",
   filterPitch: "all",
   filterGroup: "all",
+  filterStatus: "all", // "all", "live", "upcoming", "finished"
+  splashTimeout: null,
   currentTheme: "light", // Default ramah dengan white space luas
   currentViewMode: "participant", // "participant" atau "operator"
 
   init() {
+    this.initSplashScreen();
     this.initThemeAndViewMode();
     this.updateCategoryUI();
     this.renderHeader();
+    this.renderLiveStreamHero();
     this.bindEvents();
     this.renderCurrentView();
     this.initPwa();
@@ -518,6 +530,184 @@ const app = {
     if (tickerEl && tickerEl.textContent && (tickerEl.textContent.includes("ð") || tickerEl.textContent.includes("†") || !tickerEl.textContent.trim().startsWith("🏆"))) {
       tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
     }
+  },
+
+  // =========================================================
+  // OPENING / SPLASH SCREEN MANAGEMENT
+  // =========================================================
+  initSplashScreen() {
+    const splash = document.getElementById("appSplashScreen");
+    if (!splash) return;
+
+    const progressBar = document.getElementById("splashLoaderBar");
+    if (progressBar) {
+      progressBar.style.width = "0%";
+      setTimeout(() => {
+        progressBar.style.width = "100%";
+      }, 50);
+    }
+
+    // Auto dismiss after 3 seconds
+    if (this.splashTimeout) clearTimeout(this.splashTimeout);
+    this.splashTimeout = setTimeout(() => {
+      this.dismissSplashScreen();
+    }, 3200);
+  },
+
+  dismissSplashScreen() {
+    if (this.splashTimeout) {
+      clearTimeout(this.splashTimeout);
+      this.splashTimeout = null;
+    }
+    const splash = document.getElementById("appSplashScreen");
+    if (!splash) return;
+
+    splash.classList.add("splash-fade-out");
+    setTimeout(() => {
+      splash.style.display = "none";
+    }, 480);
+  },
+
+  replaySplashScreen() {
+    const splash = document.getElementById("appSplashScreen");
+    if (!splash) return;
+    splash.style.display = "flex";
+    splash.classList.remove("splash-fade-out");
+    this.initSplashScreen();
+  },
+
+  // =========================================================
+  // STATUS FILTER (SEMUA, LIVE, AKAN DATANG, SELESAI)
+  // =========================================================
+  setStatusFilter(status) {
+    this.filterStatus = status;
+    document.querySelectorAll(".match-status-filter-pills .status-pill").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.status === status);
+    });
+    this.renderMatches();
+  },
+
+  // =========================================================
+  // YOUTUBE EMBED HELPER & LIVE STREAM HERO
+  // =========================================================
+  formatYoutubeEmbedUrl(url) {
+    if (!url) return "https://www.youtube.com/embed/5qap5aO4i9A";
+    url = url.trim();
+    if (url.includes("youtube.com/embed/")) {
+      return url;
+    }
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+    if (shortMatch && shortMatch[1]) {
+      return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1&mute=1`;
+    }
+    const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+    if (watchMatch && watchMatch[1]) {
+      return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1&mute=1`;
+    }
+    const liveMatch = url.match(/youtube\.com\/live\/([a-zA-Z0-9_-]+)/);
+    if (liveMatch && liveMatch[1]) {
+      return `https://www.youtube.com/embed/${liveMatch[1]}?autoplay=1&mute=1`;
+    }
+    if (/^[a-zA-Z0-9_-]{10,12}$/.test(url)) {
+      return `https://www.youtube.com/embed/${url}?autoplay=1&mute=1`;
+    }
+    return url;
+  },
+
+  renderLiveStreamHero() {
+    const container = document.getElementById("liveStreamHero");
+    if (!container) return;
+
+    const cfg = (this.store && this.store.data && this.store.data.config) || {};
+    const rawYtUrl = cfg.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
+    const embedUrl = this.formatYoutubeEmbedUrl(rawYtUrl);
+    const title = cfg.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
+
+    // Cari apakah ada pertandingan yang sedang LIVE saat ini
+    const matches = (this.store && this.store.data && this.store.data.matches) || [];
+    const liveMatches = matches.filter(m => m.status === "live");
+    const upcomingMatches = matches.filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled"));
+
+    let liveTickerHtml = "";
+    if (liveMatches.length > 0) {
+      const lm = liveMatches[0];
+      const hTeam = this.store.getTeam(lm.homeId) || { name: lm.homePlaceholder || "Home", shortName: "HOME" };
+      const aTeam = this.store.getTeam(lm.awayId) || { name: lm.awayPlaceholder || "Away", shortName: "AWAY" };
+      const hScore = lm.homeScoreLive ?? 0;
+      const aScore = lm.awayScoreLive ?? 0;
+      const catBadge = (lm.category || "SMP") === "SD" ? "SD (U-12)" : "SMP (U-15)";
+      const stageName = lm.stage === "knockout" ? (lm.roundName || "Babak Gugur") : `Grup ${lm.group}`;
+
+      liveTickerHtml = `
+        <div class="live-stream-match-ticker live">
+          <div class="ticker-left">
+            <span class="pulse-live-badge">🔴 LIVE • Menit ${lm.liveMinute || "18'"}</span>
+            <span class="ticker-match-title">${catBadge} [${stageName}]</span>
+            <strong class="ticker-score-teams">${hTeam.name} <span class="score-highlight">${hScore} - ${aScore}</span> ${aTeam.name}</strong>
+          </div>
+          <div class="ticker-actions">
+            <button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">✏️ Input Skor Laga</button>
+            <button class="btn btn-sm btn-outline" onclick="app.showMatchDetail('${lm.id}')">ℹ️ Detail Laga</button>
+          </div>
+        </div>
+      `;
+    } else {
+      // Tampilkan info laga berikutnya
+      const nextMatch = upcomingMatches[0] || matches[0];
+      if (nextMatch) {
+        const hTeam = this.store.getTeam(nextMatch.homeId) || { name: nextMatch.homePlaceholder || "Home" };
+        const aTeam = this.store.getTeam(nextMatch.awayId) || { name: nextMatch.awayPlaceholder || "Away" };
+        const catBadge = (nextMatch.category || "SMP") === "SD" ? "SD (U-12)" : "SMP (U-15)";
+        const stageName = nextMatch.stage === "knockout" ? (nextMatch.roundName || "Babak Gugur") : `Grup ${nextMatch.group}`;
+
+        liveTickerHtml = `
+          <div class="live-stream-match-ticker upcoming">
+            <div class="ticker-left">
+              <span class="upcoming-status-badge">⏰ PERTANDINGAN BERIKUTNYA</span>
+              <span class="ticker-match-title">${catBadge} [${stageName}] • ${nextMatch.date}, ${nextMatch.time}</span>
+              <strong class="ticker-score-teams">${hTeam.name} <span class="vs-badge">VS</span> ${aTeam.name}</strong>
+            </div>
+            <div class="ticker-actions">
+              <button class="btn btn-sm btn-primary" onclick="app.switchTab('matches')">🏟️ Lihat Jadwal Lengkap ➔</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    container.innerHTML = `
+      <div class="live-stream-card">
+        <!-- HEADER SIARAN LANGSUNG -->
+        <div class="live-stream-header">
+          <div class="live-stream-header-left">
+            <div class="live-on-air-pill">
+              <span class="live-blink-circle"></span>
+              <span>LIVE BROADCAST</span>
+            </div>
+            <h3 class="live-stream-title">${title}</h3>
+          </div>
+          <div class="live-stream-header-right">
+            <button class="btn btn-outline btn-sm btn-edit-stream" onclick="admin.openYoutubeLiveModal()" title="Ubah Link Siaran Langsung YouTube (Panitia)">
+              ⚙️ Ganti Link YouTube Live
+            </button>
+          </div>
+        </div>
+
+        <!-- YOUTUBE VIDEO EMBED WRAPPER (16:9 RATIO) -->
+        <div class="live-video-player-wrapper">
+          <iframe 
+            id="mainYoutubeIframe" 
+            src="${embedUrl}" 
+            title="YouTube Live Siaran ACC MTQ Al-Fayyadh" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <!-- MATCH TICKER DI BAWAH VIDEO -->
+        ${liveTickerHtml}
+      </div>
+    `;
   },
 
   setCategory(cat, showToastMsg = true) {
@@ -847,6 +1037,7 @@ const app = {
 
   // 0. RENDER HOME (BERANDA UTAMA)
   renderHome() {
+    this.renderLiveStreamHero();
     const homeData = this.store.data.homeData || DEFAULT_DATA.homeData;
     if (!homeData) return;
 
@@ -1100,10 +1291,35 @@ const app = {
       matches = matches.filter(m => m.group === this.filterGroup);
     }
 
+    // Update Status Pill Badges Count
+    const allCatMatches = (this.store.data.matches || []).filter(m => (m.category || "SMP") === this.currentCategory);
+    const countAll = allCatMatches.length;
+    const countLive = allCatMatches.filter(m => m.status === "live").length;
+    const countUpcoming = allCatMatches.filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled")).length;
+    const countFinished = allCatMatches.filter(m => m.status === "finished").length;
+
+    const elAll = document.getElementById("countAllMatches");
+    if (elAll) elAll.textContent = countAll;
+    const elLive = document.getElementById("countLiveMatches");
+    if (elLive) elLive.textContent = countLive;
+    const elUp = document.getElementById("countUpcomingMatches");
+    if (elUp) elUp.textContent = countUpcoming;
+    const elFin = document.getElementById("countFinishedMatches");
+    if (elFin) elFin.textContent = countFinished;
+
+    // Filter by Status (all / live / upcoming / finished)
+    if (this.filterStatus === "live") {
+      matches = matches.filter(m => m.status === "live");
+    } else if (this.filterStatus === "upcoming") {
+      matches = matches.filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled"));
+    } else if (this.filterStatus === "finished") {
+      matches = matches.filter(m => m.status === "finished");
+    }
+
     if (matches.length === 0) {
       container.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg);">
-          <p>Tidak ada jadwal pertandingan pada kategori atau filter yang dipilih.</p>
+          <p>Tidak ada jadwal pertandingan pada kategori atau filter status yang dipilih.</p>
         </div>
       `;
       return;
@@ -1115,6 +1331,47 @@ const app = {
 
       const isLive = m.status === "live";
       const isFinished = m.status === "finished";
+      const isUpcoming = !isLive && !isFinished;
+      const statusClass = isLive ? "status-live" : (isFinished ? "status-finished" : "status-upcoming");
+
+      let statusBarHtml = "";
+      if (isLive) {
+        statusBarHtml = `
+          <div class="match-status-bar bar-live">
+            <div class="bar-left">
+              <span class="pulse-dot"></span>
+              <strong>SEDANG BERLANGSUNG (LIVE) • Menit ${m.liveMinute || "18'"}</strong>
+            </div>
+            <div class="bar-right">
+              <span>🏟️ ${m.pitch || 'Lapangan Utama'}</span>
+            </div>
+          </div>
+        `;
+      } else if (isFinished) {
+        statusBarHtml = `
+          <div class="match-status-bar bar-finished">
+            <div class="bar-left">
+              <span>✅</span>
+              <strong>PERTANDINGAN SELESAI (FULL TIME)</strong>
+            </div>
+            <div class="bar-right">
+              <span>Hasil Skor Resmi</span>
+            </div>
+          </div>
+        `;
+      } else {
+        statusBarHtml = `
+          <div class="match-status-bar bar-upcoming">
+            <div class="bar-left">
+              <span>⏰</span>
+              <strong>JADWAL AKAN DATANG</strong>
+            </div>
+            <div class="bar-right">
+              <span>Kick-off: ${m.time}</span>
+            </div>
+          </div>
+        `;
+      }
 
       const homeScore = isLive ? (m.homeScoreLive ?? 0) : (isFinished ? m.homeScore : "-");
       const awayScore = isLive ? (m.awayScoreLive ?? 0) : (isFinished ? m.awayScore : "-");
@@ -1130,7 +1387,8 @@ const app = {
         `<span class="match-category-tag cat-smp">🏆 SMP (U-15)</span>`;
 
       return `
-        <div class="match-card uefa-fixture-card ${isLive ? 'is-live' : ''}">
+        <div class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''}">
+          ${statusBarHtml}
           <!-- HEADER META -->
           <div class="fixture-header-meta">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">

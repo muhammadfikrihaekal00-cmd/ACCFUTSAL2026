@@ -16,6 +16,8 @@ const DEFAULT_DATA = {
     runningAnnouncement: "🏆 Selamat Datang di ACC 'Al-Fayyadh Champions Cup' 2026 Ma'had Tahfizhul Qur'an Al Fayyadh Maros! Total 32 Tim (16 SMP & 16 SD) se-Makassar, Maros, Pangkep, dan Luwu. 5 Hari Pertandingan (22-26 Nov 2026). Junjung tinggi sportivitas, ukhuwah Islamiyah, dan fair play!",
     contactCommittee: "0812-9876-5432 (Panitia ACC - Sie. Pertandingan)",
     heroBannerImage: "assets/hero_banner.jpg",
+    youtubeLiveUrl: "https://www.youtube.com/embed/5qap5aO4i9A",
+    youtubeLiveTitle: "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros",
     rulesText: `
 ### 1. FORMAT & KATEGORI TURNAMEN
 - Turnamen diselenggarakan dalam 2 Kategori Resmi: **Kategori SMP (U-15)** dan **Kategori SD (U-12)**.

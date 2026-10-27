@@ -3985,3 +3985,544 @@ body.dark-theme .fixture-team-row:hover {
   color: var(--text-muted);
   font-weight: 600;
 }
+
+/* ========================================================= */
+/* 1. APP SPLASH / OPENING SCREEN (ANIMASI BERGERAK & LOGO)   */
+/* ========================================================= */
+.app-splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: radial-gradient(circle at 50% 30%, #0d1b2a 0%, #080d16 60%, #04080e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  overflow: hidden;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+}
+
+.app-splash-screen.splash-fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash-backdrop-glow {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(245, 158, 11, 0.12) 50%, transparent 75%);
+  filter: blur(50px);
+  pointer-events: none;
+  animation: glowPulse 4s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+}
+
+.splash-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+
+/* Logo Animation Container */
+.splash-logo-container {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-logo-pulse-ring {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  animation: ringExpand 2.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  pointer-events: none;
+}
+
+.splash-logo-pulse-ring.delay {
+  animation-delay: 1.1s;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+@keyframes ringExpand {
+  0% { transform: scale(0.85); opacity: 0.9; }
+  80% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.splash-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 25px rgba(16, 185, 129, 0.45));
+  animation: logoFloating 3s infinite ease-in-out;
+}
+
+@keyframes logoFloating {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.05); }
+}
+
+.splash-badge-edition {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.splash-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 5.5vw, 1.95rem);
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.splash-title-highlight {
+  display: inline-block;
+  background: linear-gradient(135deg, #10b981 0%, #38ef7d 50%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.splash-subtitle {
+  font-size: clamp(0.82rem, 3vw, 0.92rem);
+  color: #94a3b8;
+  line-height: 1.45;
+  margin-bottom: 18px;
+  max-width: 380px;
+}
+
+.splash-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+
+.splash-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.splash-loader-bar-wrap {
+  width: 100%;
+  max-width: 240px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.splash-loader-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981, #fbbf24);
+  border-radius: var(--radius-full);
+  transition: width 2.6s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+
+.btn-splash-enter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #10b981, #0284c7);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  max-width: 320px;
+}
+
+.btn-splash-enter:hover,
+.btn-splash-enter:active {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.55);
+}
+
+.splash-skip-hint {
+  margin-top: 14px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ========================================================= */
+/* 2. LIVE STREAMING YOUTUBE & MATCH CENTER (TOP OF HOME)     */
+/* ========================================================= */
+.live-stream-hero-section {
+  margin-bottom: 20px;
+}
+
+.live-stream-card {
+  background: #0f172a;
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 20px rgba(239, 68, 68, 0.15);
+  transition: border-color 0.3s ease;
+}
+
+.live-stream-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.12), rgba(15, 23, 42, 0.9));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.live-stream-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.live-on-air-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ef4444;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.live-blink-circle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: blinkLiveCircle 1.2s infinite ease-in-out;
+}
+
+@keyframes blinkLiveCircle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.7); }
+}
+
+.live-stream-title {
+  color: #f8fafc;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.btn-edit-stream {
+  font-size: 0.74rem;
+  padding: 4px 10px;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+}
+
+/* 16:9 Responsive Video Player */
+.live-video-player-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+}
+
+.live-video-player-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Match Ticker Bar Below Video */
+.live-stream-match-ticker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #1e293b;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.live-stream-match-ticker.live {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.18), #1e293b);
+  border-top: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.live-stream-match-ticker.upcoming {
+  background: linear-gradient(90deg, rgba(2, 132, 199, 0.15), #1e293b);
+  border-top: 1px solid rgba(2, 132, 199, 0.3);
+}
+
+.ticker-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.pulse-live-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.upcoming-status-badge {
+  background: #0284c7;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.ticker-match-title {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.ticker-score-teams {
+  font-size: 0.88rem;
+  color: #ffffff;
+}
+
+.score-highlight {
+  background: #ef4444;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 900;
+  margin: 0 4px;
+}
+
+.vs-badge {
+  color: var(--accent-gold);
+  font-weight: 900;
+  font-size: 0.8rem;
+  margin: 0 4px;
+}
+
+.ticker-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ========================================================= */
+/* 3. PERBEDAAN BAR STATUS PERTANDINGAN (SELESAI, LIVE, JADWAL) */
+/* ========================================================= */
+.match-card.uefa-fixture-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  padding-top: 0 !important; /* Space reserved for status bar */
+}
+
+/* TOP STATUS BAR */
+.match-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  margin: 0 -16px 12px -16px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.match-status-bar .bar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 3.1. SEDANG BERLANGSUNG (LIVE) - NEON RED */
+.match-card.status-live {
+  border: 2px solid #ef4444 !important;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.22) !important;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, var(--bg-card) 60px);
+}
+
+.match-status-bar.bar-live {
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+}
+
+.match-status-bar.bar-live .pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: inline-block;
+  animation: blinkLiveCircle 1s infinite ease-in-out;
+}
+
+/* 3.2. TELAH SELESAI (FINISHED) - EMERALD GREEN */
+.match-card.status-finished {
+  border: 1.5px solid rgba(16, 185, 129, 0.6) !important;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.04) 0%, var(--bg-card) 50px);
+}
+
+.match-status-bar.bar-finished {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+}
+
+/* 3.3. AKAN DATANG (UPCOMING) - SLEEK AMBER / BLUE */
+.match-card.status-upcoming {
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+.match-status-bar.bar-upcoming {
+  background: linear-gradient(90deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+}
+
+/* ========================================================= */
+/* 4. STATUS FILTER PILLS (MOBILE TOUCH-FRIENDLY)             */
+/* ========================================================= */
+.match-status-filter-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px 2px;
+  margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.match-status-filter-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.status-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-pill:hover {
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.status-pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.status-pill.pill-live.active {
+  background: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.status-pill.pill-finished.active {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.status-pill.pill-upcoming.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+/* ========================================================= */
+/* 5. MOBILE-FIRST RESPONSIVE OPTIMIZATIONS (<640px)          */
+/* ========================================================= */
+@media (max-width: 640px) {
+  .live-stream-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .live-stream-match-ticker {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ticker-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .ticker-actions button {
+    flex: 1;
+  }
+  .splash-content {
+    padding: 10px;
+  }
+  .splash-title {
+    font-size: 1.45rem;
+  }
+  .btn-splash-enter {
+    padding: 12px 20px;
+    font-size: 0.88rem;
+  }
+}

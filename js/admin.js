@@ -572,6 +572,59 @@ const admin = {
     if (modal) modal.classList.remove("active");
   },
 
+  // ==========================================
+  // PENGATURAN SIARAN LANGSUNG YOUTUBE (PANITIA)
+  // ==========================================
+  openYoutubeLiveModal() {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      app.showToast("🔒 Silakan masukkan PIN 1234 untuk mengubah siaran langsung YouTube!");
+      return;
+    }
+    const cfg = (app.store && app.store.data && app.store.data.config) || {};
+    const titleInput = document.getElementById("ytLiveTitleInput");
+    const urlInput = document.getElementById("ytLiveUrlInput");
+    if (titleInput) titleInput.value = cfg.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
+    if (urlInput) urlInput.value = cfg.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
+
+    this.previewYoutubeUrl(urlInput ? urlInput.value : "");
+
+    const modal = document.getElementById("youtubeLiveModal");
+    if (modal) modal.classList.add("active");
+  },
+
+  previewYoutubeUrl(url) {
+    const frame = document.getElementById("ytPreviewFrame");
+    if (!frame) return;
+    const embedUrl = app.formatYoutubeEmbedUrl(url);
+    frame.src = embedUrl;
+  },
+
+  saveYoutubeLiveConfig() {
+    const titleInput = document.getElementById("ytLiveTitleInput");
+    const urlInput = document.getElementById("ytLiveUrlInput");
+    if (!urlInput) return;
+
+    const title = titleInput ? titleInput.value.trim() : "";
+    const url = urlInput.value.trim();
+
+    if (!app.store.data.config) app.store.data.config = {};
+    app.store.data.config.youtubeLiveTitle = title || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
+    app.store.data.config.youtubeLiveUrl = url || "https://www.youtube.com/embed/5qap5aO4i9A";
+
+    app.store.saveData();
+
+    if (window.SupabaseService) {
+      window.SupabaseService.syncConfig(app.store.data.config, this.adminPinHash);
+    }
+
+    const modal = document.getElementById("youtubeLiveModal");
+    if (modal) modal.classList.remove("active");
+
+    app.showToast("✅ Siaran Langsung YouTube Berhasil Diperbarui!");
+    app.renderLiveStreamHero();
+  },
+
   // SETTINGS MANAGEMENT
   populateSettingsForm() {
     const cfg = (app.store && app.store.data && app.store.data.config) || {};

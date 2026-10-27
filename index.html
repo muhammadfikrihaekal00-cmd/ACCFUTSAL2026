@@ -13,9 +13,51 @@
   <link rel="apple-touch-icon" href="assets/acc_logo.png">
 
   <!-- Fonts & Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=2.3">
+  <link rel="stylesheet" href="css/styles.css?v=3.0">
 </head>
 <body>
+
+  <!-- ==================== 0. OPENING / SPLASH SCREEN APK ==================== -->
+  <div id="appSplashScreen" class="app-splash-screen" onclick="app.dismissSplashScreen()">
+    <div class="splash-backdrop-glow"></div>
+    <div class="splash-content" onclick="event.stopPropagation()">
+      <div class="splash-logo-container">
+        <div class="splash-logo-pulse-ring"></div>
+        <div class="splash-logo-pulse-ring delay"></div>
+        <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img">
+      </div>
+
+      <div class="splash-badge-edition">
+        <span>👑 RESMI • TURNAMEN FUTSAL 2026</span>
+      </div>
+
+      <h1 class="splash-title">
+        Selamat Datang di<br>
+        <span class="splash-title-highlight">Al-Fayyadh Champions Cup</span>
+      </h1>
+
+      <p class="splash-subtitle">
+        Turnamen Futsal Prestasi & Ukhuwah Antar Sekolah & Pesantren se-Sulawesi Selatan
+      </p>
+
+      <div class="splash-meta-chips">
+        <span class="splash-chip">📅 22 - 26 November 2026</span>
+        <span class="splash-chip">📍 GOR Futsal MTQ Al-Fayyadh Maros</span>
+        <span class="splash-chip">⚽ 32 Tim (16 SMP & 16 SD)</span>
+      </div>
+
+      <div class="splash-loader-bar-wrap">
+        <div class="splash-loader-bar" id="splashLoaderBar"></div>
+      </div>
+
+      <button type="button" class="btn-splash-enter" id="btnSplashEnter" onclick="event.stopPropagation(); app.dismissSplashScreen();">
+        <span>⚽ Masuk ke Aplikasi Turnamen</span>
+        <span>➔</span>
+      </button>
+
+      <span class="splash-skip-hint">Ketuk di mana saja untuk langsung masuk</span>
+    </div>
+  </div>
 
   <!-- TOP RUNNING ANNOUNCEMENT TICKER (RUNNING TEXT) -->
   <div class="ticker-bar">
@@ -151,6 +193,11 @@
     <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
     <section id="pane-home" class="tab-pane active">
       
+      <!-- 0. SIARAN LANGSUNG YOUTUBE & LIVE MATCH CENTER (PALING ATAS BERANDA) -->
+      <section class="live-stream-hero-section" id="liveStreamHero">
+        <!-- Rendered dynamically by app.renderLiveStreamHero() -->
+      </section>
+
       <!-- 1. OPENING SHOWCASE BANNER -->
       <div class="home-hero-banner" id="homeHeroBanner">
         <button id="btnChangeBannerQuick" class="btn-banner-edit-overlay" onclick="admin.openHeroBannerModal()" title="Ubah Gambar Banner Turnamen" style="display: none;">
@@ -172,8 +219,11 @@
             <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.switchTab('standings')">
               📊 Klasemen Sementara
             </button>
+            <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.replaySplashScreen()" title="Putar Ulang Animasi Opening Sambutan">
+              ✨ Putar Opening
+            </button>
             <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.switchTab('juknis')">
-              📋 Juknis & Regulasi
+              📋 Juknis
             </button>
           </div>
         </div>
@@ -387,6 +437,22 @@
             <option value="D">Grup D</option>
           </select>
         </div>
+      </div>
+
+      <!-- STATUS FILTER PILLS (MOBILE TOUCH-FRIENDLY: LIVE, AKAN DATANG, SELESAI) -->
+      <div class="match-status-filter-pills">
+        <button class="status-pill active" data-status="all" onclick="app.setStatusFilter('all')">
+          Semua Laga (<span id="countAllMatches">0</span>)
+        </button>
+        <button class="status-pill pill-live" data-status="live" onclick="app.setStatusFilter('live')">
+          🔴 Sedang Live (<span id="countLiveMatches">0</span>)
+        </button>
+        <button class="status-pill pill-upcoming" data-status="upcoming" onclick="app.setStatusFilter('upcoming')">
+          ⏰ Akan Datang (<span id="countUpcomingMatches">0</span>)
+        </button>
+        <button class="status-pill pill-finished" data-status="finished" onclick="app.setStatusFilter('finished')">
+          ✅ Telah Selesai (<span id="countFinishedMatches">0</span>)
+        </button>
       </div>
 
       <div class="matches-grid" id="matchesList">
@@ -834,6 +900,49 @@
     </div>
   </div>
 
+  <!-- 4C. MODAL PENGATURAN YOUTUBE LIVE STREAMING (PANITIA) -->
+  <div id="youtubeLiveModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🔴 Pengaturan Live Streaming YouTube</h3>
+        <button class="modal-close" onclick="document.getElementById('youtubeLiveModal').classList.remove('active')">&times;</button>
+      </div>
+      <form id="youtubeLiveForm" onsubmit="event.preventDefault(); admin.saveYoutubeLiveConfig();">
+        <div class="modal-body">
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+            Masukkan tautan siaran langsung YouTube resmi dari Pondok / Panitia. Video akan otomatis tayang di bagian paling atas Beranda aplikasi.
+          </p>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-weight: 700;">Judul Siaran Langsung</label>
+            <input type="text" id="ytLiveTitleInput" class="form-input" placeholder="contoh: Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-weight: 700;">Link / URL YouTube Live</label>
+            <input type="text" id="ytLiveUrlInput" class="form-input" placeholder="contoh: https://youtu.be/... atau https://www.youtube.com/live/..." required oninput="admin.previewYoutubeUrl(this.value)">
+            <small style="color: var(--text-muted); font-size: 0.72rem; margin-top: 4px; display: block;">
+              💡 <em>Mendukung link share HP (youtu.be), youtube.com/watch?v=..., maupun link youtube.com/live/...</em>
+            </small>
+          </div>
+
+          <!-- Video Preview Box -->
+          <div style="margin-bottom: 12px;">
+            <label class="form-label">Pratinjau Video YouTube:</label>
+            <div id="ytPreviewContainer" style="aspect-ratio: 16/9; background: #000; border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--border-color);">
+              <iframe id="ytPreviewFrame" src="" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: space-between;">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('youtubeLiveModal').classList.remove('active')">Batal</button>
+          <button type="submit" class="btn btn-primary">💾 Simpan & Siarkan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 5. MODAL ADMIN DASHBOARD (PENGATURAN & BACKUP) -->
   <div id="adminDashboardModal" class="modal-overlay">
     <div class="modal-box">
@@ -953,6 +1062,9 @@
           <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
             <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('adminDashboardModal').classList.remove('active'); admin.openMatchEditor();" style="background: linear-gradient(135deg, #10b981, #0284c7); font-weight: 700;">
               ⚙️ Atur Tim Lawan & Jadwal (Drawing Manual)
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('adminDashboardModal').classList.remove('active'); admin.openYoutubeLiveModal();" style="border-color: #ef4444; color: #ef4444; font-weight: 700;">
+              🔴 Ganti Siaran Langsung YouTube Live
             </button>
           </div>
           <h4 style="color: #00d2ff; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">⚡ Kelola Konten Visual Beranda</h4>
@@ -1575,9 +1687,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="js/data.js?v=2.7"></script>
-  <script src="js/app.js?v=2.7"></script>
-  <script src="js/admin.js?v=2.7"></script>
+  <script src="js/data.js?v=3.0"></script>
+  <script src="js/app.js?v=3.0"></script>
+  <script src="js/admin.js?v=3.0"></script>
 
   <!-- Service Worker for PWA -->
   <script>
