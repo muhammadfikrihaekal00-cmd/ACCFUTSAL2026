@@ -1,7 +1,7 @@
 // app.js - Main Tournament Logic & UI Rendering
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_maros";
     this.data = this.loadData();
     this.syncKnockoutFromStandings();
   }
@@ -16,8 +16,8 @@ class TournamentStore {
         console.error("Gagal memuat data dari localStorage, menggunakan default", e);
       }
     }
-    // Pastikan jika belum ada data atau data kurang dari 32 tim (16 SMP + 16 SD), muat ulang dari DEFAULT_DATA
-    if (!data || !data.teams || data.teams.length < 32) {
+    // Pastikan jika belum ada data, kurang dari 32 tim, atau masih data lama, muat ulang dari DEFAULT_DATA
+    if (!data || !data.teams || data.teams.length < 32 || data.teams[0].name !== "SMP 5 Mandai") {
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     }

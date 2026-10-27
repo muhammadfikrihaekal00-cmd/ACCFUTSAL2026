@@ -1,125 +1,125 @@
-// data.js - Initial Default Tournament Data (32 Teams: 16 SMP + 16 SD)
+// data.js - Turnamen ACC "Al-Fayyadh Champions Cup" 2026 (Maros & Makassar)
+// Kategori: 16 Tim SMP + 16 Tim SD (Total 32 Tim)
+// Pemain: Bintang Sepak Bola Eropa
+// Tanggal: 22 - 26 November 2026 (5 Hari, 1 Lapangan Utama)
+
 const DEFAULT_DATA = {
   config: {
     tournamentName: 'ACC "Al-Fayyadh Champions Cup" 2026',
-    subTitle: "Turnamen Futsal Antar-Sekolah & Pesantren • Ma'had Tahfizhul Qur'an Al Fayyadh",
-    edition: "ACC Edisi 2026",
-    venue: "GOR Futsal Ma'had Tahfizhul Qur'an Al Fayyadh",
+    subTitle: "Turnamen Futsal Antar-Sekolah & Pesantren se-Sulawesi Selatan • Ma'had Tahfizhul Qur'an Al Fayyadh Maros",
+    edition: "ACC Edisi 2026 (Makassar & Maros)",
+    venue: "GOR Futsal MTQ Al-Fayyadh Maros",
     pitch1Name: "Lapangan Utama (Vinyl)",
     pitch2Name: "Lapangan Utama (Vinyl)",
-    dates: "15 - 20 November 2026",
+    dates: "22 - 26 November 2026",
     adminPinHash: "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348",
-    runningAnnouncement: "🏆 Selamat Datang di ACC 'Al-Fayyadh Champions Cup' 2026 Ma'had Tahfizhul Qur'an Al Fayyadh! Total 32 Tim (16 SMP & 16 SD). Junjung tinggi sportivitas, ukhuwah Islamiyah, dan fair play. Registrasi line-up maksimal 30 menit sebelum kick-off.",
+    runningAnnouncement: "🏆 Selamat Datang di ACC 'Al-Fayyadh Champions Cup' 2026 Ma'had Tahfizhul Qur'an Al Fayyadh Maros! Total 32 Tim (16 SMP & 16 SD) se-Makassar, Maros, Pangkep, dan Luwu. 5 Hari Pertandingan (22-26 Nov 2026). Junjung tinggi sportivitas, ukhuwah Islamiyah, dan fair play!",
     contactCommittee: "0812-9876-5432 (Panitia ACC - Sie. Pertandingan)",
     heroBannerImage: "assets/hero_banner.jpg",
     rulesText: `
 ### 1. FORMAT & KATEGORI TURNAMEN
 - Turnamen diselenggarakan dalam 2 Kategori Resmi: **Kategori SMP (U-15)** dan **Kategori SD (U-12)**.
-- Setiap kategori diikuti oleh **16 Tim Sekolah/Pesantren** yang dibagi ke dalam 4 Grup (**Grup A, B, C, D**), masing-masing grup berisi 4 tim.
+- Setiap kategori diikuti oleh **16 Tim Sekolah & Pesantren** yang dibagi ke dalam 4 Grup (**Grup A, B, C, D**), masing-masing grup berisi 4 tim.
 - Babak Penyisihan menggunakan sistem setengah kompetisi (round-robin).
 - **Juara dan Runner-up** dari masing-masing grup (total 8 tim per kategori) melaju ke Babak 8 Besar (Perempat Final).
 - Babak Gugur (Perempat Final, Semifinal, Perebutan Juara 3, dan Grand Final) menggunakan sistem gugur tunggal (knockout).
 
-### 2. DURASI PERTANDINGAN & SISTEM POIN
+### 2. DURASI PERTANDINGAN & 1 LAPANGAN UTAMA
+- Turnamen berlangsung selama 5 Hari (22 - 26 November 2026) di **Lapangan Utama (Vinyl)**.
 - Fase Grup & Perempat Final: 2 x 15 Menit (Waktu Kotor), istirahat 3 menit.
 - Semifinal & Grand Final: 2 x 20 Menit (Waktu Kotor), istirahat 5 menit.
-- Poin Fase Grup: Menang = 3 Poin, Seri = 1 Poin, Kalah = 0 Poin.
-- Jika babak gugur berakhir imbang pada waktu normal, dilanjutkan adu tendangan penalti (3 penendang, lalu sudden death).
+- Sistem Poin Fase Grup: Menang = 3 Poin, Seri = 1 Poin, Kalah = 0 Poin.
+- Jika babak gugur berakhir imbang, dilanjutkan adu penalti (3 penendang, lalu sudden death).
 
 ### 3. PENENTUAN KLASEMEN GRUP (TIEBREAKER)
 1. Poin tertinggi
 2. Selisih Gol (SG) terbaik
 3. Jumlah Gol Memasukkan (GM) terbanyak
 4. Pertemuan Langsung (Head-to-head)
-5. Rekor Disiplin / Poin Fair Play (kartu paling sedikit)
+5. Poin Disiplin / Fair Play (kartu paling sedikit)
 6. Undian koin oleh Pengawas Pertandingan resmi
-
-### 4. REGULASI DISIPLIN & KARTU
-- 2 Kartu Kuning pada pertandingan berbeda mengakibatkan larangan bermain 1 pertandingan berikutnya.
-- 1 Kartu Merah Langsung mengakibatkan larangan bertanding 1 pertandingan berikutnya.
-- Pemutihan kartu kuning dilakukan saat memasuki babak Semifinal.
 `
   },
   homeData: {
     mvp: {
-      name: "Aiman Muzaffar",
-      number: 10,
-      team: "SD MTQ Al-Fayyadh",
-      teamShort: "AL-FAYYADH",
+      name: "Erling Haaland",
+      number: 9,
+      team: "SMP 5 Mandai",
+      teamShort: "SMP 5 MANDAI",
       position: "Pivot",
       photo: "assets/mvp_player.jpg",
       goals: 4,
-      assists: 3,
-      rating: "9.6",
+      assists: 2,
+      rating: "9.8",
       motmCount: 2,
-      quote: "Bermain bukan hanya sekadar mengejar piala, tetapi menjaga adab, ukhuwah, dan sportivitas santri di atas lapangan."
+      quote: "Bermain dengan disiplin tinggi, saling menghormati di atas lapangan, dan mempererat tali ukhuwah santri se-Sulawesi Selatan."
     },
     news: [
       {
         id: "N1",
         tag: "KILAS PEMBUKAAN",
         title: "Technical Meeting 32 Sekolah Peserta ACC 2026 Sukses Digelar",
-        desc: "Dihadiri official 16 tim SMP dan 16 tim SD se-wilayah Jabodetabek dan Jawa Barat. Komitmen fair play disepakati bersama.",
-        date: "14 November 2026",
+        desc: "Dihadiri official 16 tim SMP dan 16 tim SD dari Maros, Makassar, Pangkep, dan Luwu di GOR MTQ Al-Fayyadh. Kesepakatan fair play ditandatangani.",
+        date: "21 November 2026",
         badge: "Resmi"
       },
       {
         id: "N2",
         tag: "PERBURUAN TIKET 8 BESAR",
-        title: "Persaingan Sengit Menuju Babak Gugur di Kategori SMP & SD",
-        desc: "Masing-masing 4 grup di kategori SMP dan SD bersaing ketat memperebutkan 2 tiket teratas menuju perempat final.",
-        date: "16 November 2026",
+        title: "Persaingan Sengit Menuju Babak Gugur SMP & SD se-Sulsel",
+        desc: "Laga panas tersaji di Lapangan Utama GOR Al-Fayyadh Maros. Tim-tim unggulan saling berebut 2 tiket teratas menuju perempat final.",
+        date: "23 November 2026",
         badge: "Sorotan"
       },
       {
         id: "N3",
         tag: "AKHLAK & SPORTIVITAS",
-        title: "Himbauan Ketertiban Suporter & Waktu Shalat Berjamaah",
-        desc: "Panitia mengapresiasi antusiasme suporter sekolah luar dan mengingatkan jeda pertandingan saat kumandang adzan berkumandang.",
-        date: "16 November 2026",
+        title: "Ketertiban Suporter & Jeda Shalat Berjamaah Ditegakkan",
+        desc: "Panitia mengapresiasi kebersihan suporter tamu dan mengingatkan jeda laga setiap kali adzan berkumandang di komplek pesantren.",
+        date: "23 November 2026",
         badge: "Tata Tertib"
       }
     ],
     moments: [
       {
         id: "M1",
-        title: "Selebrasi Tiket Semifinal",
-        player: "Aiman Muzaffar (#10)",
-        team: "SD MTQ Al-Fayyadh",
+        title: "Selebrasi Kemenangan Menit Akhir",
+        player: "Erling Haaland (#9)",
+        team: "SMP 5 Mandai",
         tag: "NEW",
         badge: "🔥 MATCHDAY HIGHLIGHT",
         image: "assets/moment_celebration.jpg",
-        caption: "Selebrasi penuh emosi skuad Al-Fayyadh usai memastikan tiket babak gugur dengan kemenangan dramatis di menit akhir."
+        caption: "Selebrasi penuh semangat skuad SMP 5 Mandai usai memastikan kemenangan dramatis di hadapan ratusan suporter."
       },
       {
         id: "M2",
-        title: "Penyelamatan Heroik Menit 30'",
-        player: "Farhan Maulana (#1)",
-        team: "SMP Islam Al-Azhar",
+        title: "Penyelamatan Heroik Menit 29'",
+        player: "Gianluigi Donnarumma (#1)",
+        team: "SMP 5 Mandai",
         tag: "NEW",
         badge: "🧤 SAVE OF THE DAY",
         image: "assets/moment_gk_save.jpg",
-        caption: "Aksi terbang spektakuler menepis tembakan keras tepat di garis gawang demi mengamankan cleansheet pertandingan."
+        caption: "Aksi terbang spektakuler menepis tendangan bebas roket tepat di pojok atas gawang demi mengamankan poin penuh."
       },
       {
         id: "M3",
         title: "Tendangan Roket Voli Spektakuler",
-        player: "Athar Barra (#9)",
-        team: "SMP Islam Al-Azhar",
+        player: "Kylian Mbappe (#10)",
+        team: "SMP 16 Mandai",
         tag: "NEW",
         badge: "🚀 GOAL OF THE TOURNAMENT",
         image: "assets/moment_strike.jpg",
-        caption: "Sepakan first-time voli keras meluncur kencang merobek jala atas gawang dan disambut gemuruh suporter di GOR Futsal."
+        caption: "Sepakan first-time voli meluncur deras menghujam gawang lawan dan disambut gemuruh suporter di GOR MTQ Al-Fayyadh."
       },
       {
         id: "M4",
         title: "Momen Trofi Bergilir ACC 2026",
-        player: "Sang Juara Turnamen",
-        team: "Pondok Futsal Arena",
+        player: "Calon Juara Turnamen",
+        team: "Ma'had Al-Fayyadh Arena",
         tag: "HOT",
         badge: "🏆 CHAMPION MOMENT",
         image: "assets/moment_trophy.jpg",
-        caption: "Penyerahan piala bergilir ACC 2026 diiringi kilauan konfeti emas lambang supremasi olahraga santri se-wilayah."
+        caption: "Piala bergilir ACC 2026 dipamerkan di panggung kehormatan, menunggu sang juara sejati kompetisi futsal tahun ini."
       }
     ],
     sponsors: {
@@ -140,7 +140,7 @@ const DEFAULT_DATA = {
     }
   },
 
-  // 32 TEAMS: 16 SMP + 16 SD
+  // 32 TIM: 16 SMP + 16 SD (DENGAN NAMA PEMAIN BINTANG EROPA)
   teams: [
     // ==========================================
     // KATEGORI SMP (16 TIM: T01 - T16)
@@ -148,344 +148,344 @@ const DEFAULT_DATA = {
     // GRUP A SMP
     {
       id: "T01",
-      name: "SMP Islam Al-Azhar",
-      shortName: "AL-AZHAR",
+      name: "SMP 5 Mandai",
+      shortName: "SMP 5 MANDAI",
       category: "SMP",
       logo: "",
       group: "A",
-      badgeColor: "#10b981",
-      city: "Jakarta Timur",
-      official: { manager: "Ust. M. Ridwan, S.Pd", coach: "Coach Bayu Saputra", coachPhoto: "assets/coach_bayu.jpg", phone: "0812-1122-3344", jerseyHome: "Hijau - Putih", jerseyAway: "Hitam - Emas" },
+      badgeColor: "#0284c7",
+      city: "Maros",
+      official: { manager: "Ust. Syamsuddin, S.Pd", coach: "Coach Pep Guardiola", phone: "0812-4411-2233", jerseyHome: "Biru Langit - Putih", jerseyAway: "Hitam - Perak" },
       players: [
-        { no: 1, name: "Farhan Maulana", pos: "Kiper", goals: 0, yc: 0, rc: 0, photo: "assets/moment_gk_save.jpg" },
-        { no: 4, name: "Zaidan Al-Fatih", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
-        { no: 7, name: "Rizky Ramadhan (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
-        { no: 9, name: "Athar Barra", pos: "Pivot", goals: 2, yc: 0, rc: 0, photo: "assets/player_athar.jpg" },
-        { no: 10, name: "Ilyas Hakim", pos: "Flank", goals: 1, yc: 1, rc: 0 },
-        { no: 12, name: "Fathir Ar-Rasyid", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 14, name: "Dimas Anggara", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Naufal Hilmi", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Gianluigi Donnarumma", pos: "Kiper", goals: 0, yc: 0, rc: 0, photo: "assets/moment_gk_save.jpg" },
+        { no: 3, name: "Julian Ryerson", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 8, name: "Martin Odegaard", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 9, name: "Erling Haaland (C)", pos: "Pivot", goals: 4, yc: 0, rc: 0, photo: "assets/player_athar.jpg" },
+        { no: 11, name: "Alexander Sorloth", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Mike Maignan", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Leo Ostigard", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 10, name: "Oscar Bobb", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T02",
-      name: "MTs Darul Ulum",
-      shortName: "DARUL ULUM",
+      name: "SMP 16 Mandai",
+      shortName: "SMP 16 MANDAI",
       category: "SMP",
       logo: "",
       group: "A",
-      badgeColor: "#3b82f6",
-      city: "Bogor",
-      official: { manager: "Drs. H. Ahmad Fauzi", coach: "Coach Fajar Pratama", phone: "0813-2233-4455", jerseyHome: "Biru - Putih", jerseyAway: "Kuning - Biru" },
+      badgeColor: "#e11d48",
+      city: "Maros",
+      official: { manager: "Ust. Rahmat Hidayat", coach: "Coach Didier Deschamps", phone: "0813-5522-3344", jerseyHome: "Merah - Putih", jerseyAway: "Biru Navy" },
       players: [
-        { no: 1, name: "Habibi Rahman", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Syamil Basayev", pos: "Anchor", goals: 0, yc: 2, rc: 0 },
-        { no: 8, name: "Hamzah Fansuri (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 11, name: "Fadillah Akbar", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Azka Robbani", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 20, name: "Salman Al-Farisi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Taufiq Hidayat", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 19, name: "Rayhan Ghani", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Thibaut Courtois", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "William Saliba", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 7, name: "Antoine Griezmann", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 10, name: "Kylian Mbappe (C)", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
+        { no: 11, name: "Ousmane Dembele pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 13, name: "Yann Sommer", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Eduardo Camavinga", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 9, name: "Marcus Thuram", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T03",
-      name: "SMP Bina Taruna",
-      shortName: "BINA TARUNA",
+      name: "SMP Urwah",
+      shortName: "SMP URWAH",
       category: "SMP",
       logo: "",
       group: "A",
-      badgeColor: "#f59e0b",
-      city: "Bekasi",
-      official: { manager: "Bambang Sudibyo, S.T", coach: "Coach Hendra Wijaya", phone: "0856-3344-5566", jerseyHome: "Oranye - Hitam", jerseyAway: "Putih - Oranye" },
+      badgeColor: "#16a34a",
+      city: "Maros",
+      official: { manager: "Ust. Mansyur, M.Pd", coach: "Coach Gareth Southgate", phone: "0821-6633-4455", jerseyHome: "Hijau - Putih", jerseyAway: "Kuning - Hitam" },
       players: [
-        { no: 1, name: "Yusuf Habibie", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Deni Saputra", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 6, name: "Bagus Prasetyo", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 9, name: "Gilang Ramadhan (C)", pos: "Pivot", goals: 2, yc: 1, rc: 0 },
-        { no: 11, name: "Eko Wahyudi", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 13, name: "Andra Maulana", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Bima Arya", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 18, name: "Rendi Pangestu", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Jordan Pickford", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "John Stones", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 7, name: "Bukayo Saka", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 9, name: "Harry Kane (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 10, name: "Jude Bellingham", pos: "Flank", goals: 3, yc: 1, rc: 0 },
+        { no: 22, name: "David Raya", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Declan Rice", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 47, name: "Phil Foden", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T04",
-      name: "SMP Muhammadiyah 1",
-      shortName: "SMPM 1",
+      name: "IQIS",
+      shortName: "IQIS SMP",
       category: "SMP",
       logo: "",
       group: "A",
-      badgeColor: "#8b5cf6",
-      city: "Tangerang",
-      official: { manager: "H. Suryono, M.Pd", coach: "Coach Ardiansyah", phone: "0815-4455-6677", jerseyHome: "Ungu - Kuning", jerseyAway: "Abu-abu - Putih" },
+      badgeColor: "#d97706",
+      city: "Makassar",
+      official: { manager: "Ust. Fadhil Rahman", coach: "Coach Roberto Martinez", phone: "0852-7744-5566", jerseyHome: "Marun - Emas", jerseyAway: "Putih - Hijau" },
       players: [
-        { no: 1, name: "Gibran Rakabuming", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Arya Wirasena (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 7, name: "Khaidir Ali", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Zuhdi Alwan", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 14, name: "Haidar Musyaffa", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 12, name: "Alif Baihaqi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Rafi Shidqi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 21, name: "Wildan Mubarok", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Diogo Costa", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Ruben Dias", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 8, name: "Bruno Fernandes", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 7, name: "Cristiano Ronaldo (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 10, name: "Bernardo Silva", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Rui Patricio", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Joao Palhinha", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 17, name: "Rafael Leao", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
 
     // GRUP B SMP
     {
       id: "T05",
-      name: "SMP IT Asy-Syifa",
-      shortName: "ASY-SYIFA",
+      name: "AHIS",
+      shortName: "AHIS SMP",
       category: "SMP",
       logo: "",
       group: "B",
-      badgeColor: "#06b6d4",
-      city: "Subang",
-      official: { manager: "Ust. Deden Saepulloh", coach: "Coach Rudi Hartono", phone: "0812-5566-7788", jerseyHome: "Cyan - Hitam", jerseyAway: "Putih - Cyan" },
+      badgeColor: "#2563eb",
+      city: "Makassar",
+      official: { manager: "Ust. Irwan Saputra", coach: "Coach Zlatko Dalicc", phone: "0812-8855-6677", jerseyHome: "Kotak Merah-Putih", jerseyAway: "Hitam - Biru" },
       players: [
-        { no: 1, name: "Dzaky Fairuz", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Ammar Zoni", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
-        { no: 7, name: "Fathur Rahman (C)", pos: "Flank", goals: 4, yc: 0, rc: 0 },
-        { no: 9, name: "Tariq Ziyad", pos: "Pivot", goals: 3, yc: 1, rc: 0, photo: "assets/player_tariq.jpg" },
-        { no: 11, name: "Khalid Basalamah", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 13, name: "Raja Alamsyah", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Muzakki Adnan", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Izzatullah", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Dominik Livakovicc", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Josko Gvardiol", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 10, name: "Luka Modricc (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 9, name: "Andrej Kramaricc", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 8, name: "Mateo Kovacic", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Nediljko Labrovicc", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 11, name: "Marcelo Brozovicc", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 14, name: "Ivan Perisic", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T06",
-      name: "MTs Husnul Khotimah",
-      shortName: "HUSNUL KHOTIMAH",
+      name: "Al-Akhyar",
+      shortName: "AL-AKHYAR SMP",
       category: "SMP",
       logo: "",
       group: "B",
-      badgeColor: "#ec4899",
-      city: "Kuningan",
-      official: { manager: "Ust. M. Syukron", coach: "Coach Dedi Kusnandar", phone: "0813-6677-8899", jerseyHome: "Magenta - Hitam", jerseyAway: "Hitam - Perak" },
+      badgeColor: "#dc2626",
+      city: "Makassar",
+      official: { manager: "Ust. Burhanuddin", coach: "Coach Luis de la Fuente", phone: "0813-9966-7788", jerseyHome: "Merah - Emas", jerseyAway: "Kuning - Biru" },
       players: [
-        { no: 1, name: "Hilman Syah", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Rifky Al-Ghifari", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 8, name: "Al-Barra (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 10, name: "Ghazi Al-Ghazi", pos: "Pivot", goals: 2, yc: 0, rc: 0, photo: "assets/player_ghazi.jpg" },
-        { no: 12, name: "Fikri Haikal", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 20, name: "Ihsan Pratama", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Umar Faruq", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 14, name: "Zuhair Haris", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Unai Simon", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 2, name: "Dani Carvajal", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 16, name: "Rodri (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 19, name: "Lamine Yamal", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 7, name: "Alvaro Morata", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
+        { no: 13, name: "Alex Remiro", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 8, name: "Fabian Ruiz", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 11, name: "Nico Williams", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T07",
-      name: "SMPN 1 Pembangunan",
-      shortName: "SMPN 1 KOTA",
+      name: "SMPIT Al Madinah",
+      shortName: "AL-MADINAH SMP",
       category: "SMP",
       logo: "",
       group: "B",
-      badgeColor: "#14b8a6",
-      city: "Depok",
-      official: { manager: "Drs. Suherman", coach: "Coach Wahyu Hidayat", phone: "0857-7788-9900", jerseyHome: "Hijau Toska - Putih", jerseyAway: "Biru Dongker" },
+      badgeColor: "#059669",
+      city: "Maros",
+      official: { manager: "Ust. Zainuddin", coach: "Coach Domenico Tedesco", phone: "0822-1177-8899", jerseyHome: "Hijau Daun - Putih", jerseyAway: "Merah - Hitam" },
       players: [
-        { no: 1, name: "Rio Ferdian", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Satria Dewa (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 7, name: "Arif Kurniawan", pos: "Flank", goals: 1, yc: 1, rc: 0 },
-        { no: 9, name: "Yoga Pratama", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 11, name: "Wahyu Tri", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Rico Sanjaya", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Bintang Pratama", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Aldi Taher", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Koen Casteels", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Timothy Castagne", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 7, name: "Kevin De Bruyne (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 9, name: "Romelu Lukaku", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 11, name: "Jeremy Doku", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Thomas Kaminski", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Amadou Onana", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 19, name: "Leandro Trossard", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T08",
-      name: "SMP Al-Irsyad Al-Islamiyyah",
-      shortName: "AL-IRSYAD",
+      name: "SMPIT Al Hikmah",
+      shortName: "AL-HIKMAH SMP",
       category: "SMP",
       logo: "",
       group: "B",
-      badgeColor: "#eab308",
-      city: "Cirebon",
-      official: { manager: "Ust. Abdullah Ba'asyir", coach: "Coach Firman Utina", phone: "0819-8899-0011", jerseyHome: "Kuning - Hitam", jerseyAway: "Putih - Hijau" },
+      badgeColor: "#9333ea",
+      city: "Maros",
+      official: { manager: "Ust. Lukman Hakim", coach: "Coach Michal Probierz", phone: "0853-2288-9900", jerseyHome: "Putih - Merah", jerseyAway: "Ungu - Putih" },
       players: [
-        { no: 1, name: "Ali Ridho", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Fuad Hasan", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 6, name: "Thoriq Husein", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 10, name: "Husain Al-Kaff (C)", pos: "Pivot", goals: 2, yc: 1, rc: 0 },
-        { no: 14, name: "Nizar Al-Attas", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 12, name: "Sadam Husein", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Mahdi Al-Jufri", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Fawwaz Assegaf", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Wojciech Szczesny", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 14, name: "Jakub Kiwior", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 10, name: "Piotr Zielinski", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 9, name: "Robert Lewandowski (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 21, name: "Nicola Zalewski", pos: "Flank", goals: 0, yc: 0, rc: 0 },
+        { no: 12, name: "Lukasz Skorupski", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Jan Bednarek", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 20, name: "Sebastian Szymanski", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
 
     // GRUP C SMP
     {
       id: "T09",
-      name: "MTs Pondok Modern Darussalam",
-      shortName: "DARUSSALAM",
+      name: "SMPN 1 Maros",
+      shortName: "SMPN 1 MAROS",
       category: "SMP",
       logo: "",
       group: "C",
-      badgeColor: "#059669",
-      city: "Bogor",
-      official: { manager: "K.H. Lukman Hakim", coach: "Coach Anang Ma'ruf", phone: "0812-3344-5577", jerseyHome: "Hijau Tua - Emas", jerseyAway: "Putih - Hijau" },
+      badgeColor: "#0d9488",
+      city: "Maros",
+      official: { manager: "H. Sudirman, S.Pd", coach: "Coach Julian Nagelsmann", phone: "0812-3399-0011", jerseyHome: "Putih - Hitam", jerseyAway: "Pink - Ungu" },
       players: [
-        { no: 1, name: "Zaidan Nabil", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Izzan Al-Hafidz (C)", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
-        { no: 7, name: "Fawwaz Rabbani", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 9, name: "Habibi Robbani", pos: "Pivot", goals: 3, yc: 1, rc: 0 },
-        { no: 11, name: "M. Zaky Pratama", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 12, name: "Daffa Ramadhan", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 14, name: "Irfan Hakim", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 19, name: "Rayyan Al-Faris", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Manuel Neuer", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 2, name: "Antonio Rudiger", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Joshua Kimmich", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 10, name: "Jamal Musiala (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 17, name: "Florian Wirtz", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 22, name: "Oliver Baumann", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Jonathan Tah", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 7, name: "Kai Havertz", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T10",
-      name: "SMP IT Nurul Fikri",
-      shortName: "NURUL FIKRI",
+      name: "SMPN 2 Maros",
+      shortName: "SMPN 2 MAROS",
       category: "SMP",
       logo: "",
       group: "C",
-      badgeColor: "#6366f1",
-      city: "Depok",
-      official: { manager: "Ust. M. Syafei", coach: "Coach Eko Prasetyo", phone: "0813-4455-6688", jerseyHome: "Biru Indigo - Putih", jerseyAway: "Navy - Silver" },
+      badgeColor: "#ea580c",
+      city: "Maros",
+      official: { manager: "Drs. Bahtiar, M.M", coach: "Coach Ronald Koeman", phone: "0813-4400-1122", jerseyHome: "Oranye - Hitam", jerseyAway: "Biru - Putih" },
       players: [
-        { no: 1, name: "Fathir Arkan", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Haidar Ali (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 8, name: "Aflah Mubarak", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Fauzan Adzima", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
-        { no: 15, name: "Nabil Ghani", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 13, name: "Bagas Satria", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Raja Syahputra", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Ammar Faiz", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Bart Verbruggen", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Virgil van Dijk (C)", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
+        { no: 14, name: "Tijjani Reijnders", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 7, name: "Xavi Simons", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 11, name: "Cody Gakpo", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 13, name: "Mark Flekken", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Nathan Ake pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 9, name: "Memphis Depay", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T11",
-      name: "SMP Al-Bayan Islamic Boarding",
-      shortName: "AL-BAYAN",
+      name: "Pesantren Hj. Haniah Maros",
+      shortName: "PESANTREN HANIAH",
       category: "SMP",
       logo: "",
       group: "C",
-      badgeColor: "#d97706",
-      city: "Sukabumi",
-      official: { manager: "Drs. H. Mulyadi", coach: "Coach Zaenal Arif", phone: "0856-5566-7799", jerseyHome: "Amber Emas - Hitam", jerseyAway: "Putih - Amber" },
+      badgeColor: "#047857",
+      city: "Maros",
+      official: { manager: "Ust. H. Haniah, Lc", coach: "Coach Luciano Spalletti", phone: "0821-5511-2233", jerseyHome: "Biru Azzurri", jerseyAway: "Putih - Emas" },
       players: [
-        { no: 1, name: "Hilal Syahreza", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Wildan Nugraha (C)", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
-        { no: 5, name: "Bima Sakti", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 9, name: "Kresna Bayu", pos: "Pivot", goals: 1, yc: 1, rc: 0 },
-        { no: 11, name: "Danu Tirta", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 12, name: "Aldi Saputra", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 14, name: "Galih Rakasiwi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 18, name: "Tegar Maulana", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Guglielmo Vicario", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Alessandro Bastoni", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 18, name: "Nicolo Barella", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 7, name: "Federico Chiesa (C)", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 3, name: "Federico Dimarco", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Alex Meret", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 16, name: "Davide Frattesi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 9, name: "Gianluca Scamacca", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T12",
-      name: "MTsN 1 Insan Cendekia",
-      shortName: "INSAN CENDEKIA",
+      name: "Pesantren Shohwatul Is'ad Pangkep",
+      shortName: "SHOHWATUL IS'AD",
       category: "SMP",
       logo: "",
       group: "C",
-      badgeColor: "#2563eb",
-      city: "Jakarta Selatan",
-      official: { manager: "Hj. Ratna Sari, M.Pd", coach: "Coach Agus Yuwono", phone: "0818-6677-8800", jerseyHome: "Biru Royal - Putih", jerseyAway: "Merah - Putih" },
+      badgeColor: "#b91c1c",
+      city: "Pangkep",
+      official: { manager: "Ust. Masrur, S.Pd.I", coach: "Coach Murat Yakin", phone: "0852-6622-3344", jerseyHome: "Merah - Putih", jerseyAway: "Hitam - Merah" },
       players: [
-        { no: 1, name: "Rizky Dwi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Pratama Arhan (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 7, name: "Marselino Ferdinand", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 10, name: "Arkhan Fikri", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 14, name: "Zanadin Fariz", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Cahya Supriadi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Kakak Rudianto", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 20, name: "Hokky Caraka", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Gregor Kobel", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Manuel Akanji", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 10, name: "Granit Xhaka (C)", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 7, name: "Breel Embolo", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 19, name: "Dan Ndoye", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Yvon Mvogo", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Denis Zakaria", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 20, name: "Michel Aebischer", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
 
     // GRUP D SMP
     {
       id: "T13",
-      name: "SMP Pesantren Al-Fayyadh",
-      shortName: "AL-FAYYADH SMP",
+      name: "SMP Alfayyadh",
+      shortName: "SMP AL-FAYYADH",
       category: "SMP",
       logo: "",
       group: "D",
-      badgeColor: "#721c24",
-      city: "Jakarta",
-      official: { manager: "Ust. H. Ahmad Al-Fayyadh", coach: "Coach Syahril Ramadhan", phone: "0812-7788-9911", jerseyHome: "Maroon - Emas (ACC Official)", jerseyAway: "Putih - Emas" },
+      badgeColor: "#15803d",
+      city: "Maros",
+      official: { manager: "Ust. Muhammad Fikri Haekal", coach: "Coach Carlo Ancelotti", phone: "0812-9876-5432", jerseyHome: "Hijau Emerald - Emas", jerseyAway: "Putih - Hijau" },
       players: [
-        { no: 1, name: "Muh. Nur Ihsan", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Habibullah Al-Habsyi (C)", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
-        { no: 7, name: "Faiz Al-Baqir", pos: "Flank", goals: 3, yc: 1, rc: 0 },
-        { no: 9, name: "Bilal Habasyi", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
-        { no: 11, name: "Ziyad Rabbani", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 12, name: "Raudhah Maulana", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Haikal Firdaus", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 18, name: "Syamil Robbani", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Andriy Lunin", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "David Alaba", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 8, name: "Toni Kroos (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 13, name: "Thomas Muller", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 22, name: "Ilkay Gundogan", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 12, name: "Sven Ulreich", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Marcel Sabitzer", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 9, name: "Christoph Baumgartner", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T14",
-      name: "SMP Labschool Unggulan",
-      shortName: "LABSCHOOL",
+      name: "SMPIT QA",
+      shortName: "SMPIT QA",
       category: "SMP",
       logo: "",
       group: "D",
       badgeColor: "#4f46e5",
-      city: "Jakarta Timur",
-      official: { manager: "Drs. Budi Santoso", coach: "Coach Bambang Pamungkas", phone: "0811-8899-0022", jerseyHome: "Indigo - Putih", jerseyAway: "Hitam - Biru" },
+      city: "Makassar",
+      official: { manager: "Ust. Qasim Basalamah", coach: "Coach Kasper Hjulmand", phone: "0813-7733-4455", jerseyHome: "Merah - Putih", jerseyAway: "Biru - Putih" },
       players: [
-        { no: 1, name: "Nadeo Winata", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Hansamu Yama (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Evan Dimas", pos: "Flank", goals: 2, yc: 1, rc: 0 },
-        { no: 10, name: "Ilham Udin", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 14, name: "Septian David", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 13, name: "Ravi Murdianto", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Putu Gede", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 19, name: "Muchlis Hadi", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Kasper Schmeichel", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Andreas Christensen", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 10, name: "Christian Eriksen (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 9, name: "Rasmus Hojlund", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 14, name: "Mikkel Damsgaard", pos: "Flank", goals: 0, yc: 0, rc: 0 },
+        { no: 16, name: "Frederik Ronnow", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 23, name: "Pierre-Emile Hojbjerg", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 11, name: "Jonas Wind", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T15",
-      name: "MTs Al-Kahfi Islamic",
-      shortName: "AL-KAHFI",
+      name: "Mahad Imam Bukhari",
+      shortName: "IMAM BUKHARI",
       category: "SMP",
       logo: "",
       group: "D",
-      badgeColor: "#0284c7",
-      city: "Bogor",
-      official: { manager: "Ust. Zainuddin", coach: "Coach Arif Rahman", phone: "0813-9900-1133", jerseyHome: "Sky Blue - Putih", jerseyAway: "Hitam - Biru" },
+      badgeColor: "#c2410c",
+      city: "Maros",
+      official: { manager: "Ust. Bukhari Al-Atsari", coach: "Coach Willy Sagnol", phone: "0821-8844-5566", jerseyHome: "Marun - Putih", jerseyAway: "Hitam - Emas" },
       players: [
-        { no: 1, name: "Davi Ananda", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Rayyan Malik (C)", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
-        { no: 7, name: "Izzan Al-Ghifari", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Syauqi Rahman", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 12, name: "Rasyid Al-Bana", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Habib Munzir", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Ammar Yasir", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 18, name: "Zaki Mubarok", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Giorgi Mamardashvili", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Guram Kashia", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Giorgi Kochorashvili", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 7, name: "Khvicha Kvaratskhelia (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 22, name: "Georges Mikautadze", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 12, name: "Luka Gugeshashvili", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 2, name: "Otar Kakabadze", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 8, name: "Zuriko Davitashvili", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T16",
-      name: "SMP Darunnajah Islamic",
-      shortName: "DARUNNAJAH",
+      name: "SMP Habiburrahman Luwu",
+      shortName: "HABIBURRAHMAN",
       category: "SMP",
       logo: "",
       group: "D",
-      badgeColor: "#0d9488",
-      city: "Jakarta Selatan",
-      official: { manager: "Ust. H. Mustofa", coach: "Coach Danurwindo", phone: "0815-0011-2244", jerseyHome: "Teal Hijau - Hitam", jerseyAway: "Putih - Hijau" },
+      badgeColor: "#be123c",
+      city: "Luwu",
+      official: { manager: "Ust. Habiburrahman, Lc", coach: "Coach Vincenzo Montella", phone: "0852-9955-6677", jerseyHome: "Merah - Putih", jerseyAway: "Putih - Merah" },
       players: [
-        { no: 1, name: "Ali Murtadha", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Fadhil Muhammad (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 6, name: "Rizqullah", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 9, name: "Thoriq Ziyad", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
-        { no: 11, name: "M. Farhan", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Daffa Robbani", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Husni Mubarak", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Zaki Robbani", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Mert Gunok", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Merih Demiral", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 10, name: "Hakan Calhanoglu (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 8, name: "Arda Guler", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 19, name: "Kenan Yildiz", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Altay Bayindir", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Ferdi Kadioglu", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 21, name: "Baris Alper Yilmaz", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
 
@@ -495,376 +495,378 @@ const DEFAULT_DATA = {
     // GRUP A SD
     {
       id: "T17",
-      name: "SD MTQ Al-Fayyadh",
-      shortName: "AL-FAYYADH SD",
+      name: "IQIS MAKASSAR",
+      shortName: "IQIS SD",
       category: "SD",
       logo: "",
       group: "A",
-      badgeColor: "#721c24",
-      city: "Ma'had Al-Fayyadh",
-      official: { manager: "Ust. H. Ahmad Al-Fayyadh", coach: "Coach Syahril Ramadhan", phone: "0812-9900-1122", jerseyHome: "Maroon - Emas", jerseyAway: "Putih - Emas" },
+      badgeColor: "#0284c7",
+      city: "Makassar",
+      official: { manager: "Ust. Zulkifli, S.Pd", coach: "Coach Sir Alex Ferguson", phone: "0812-1001-2001", jerseyHome: "Biru - Emas", jerseyAway: "Putih - Biru" },
       players: [
-        { no: 1, name: "Muh. Nur Ihsan", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Habibullah Al-Habsyi (C)", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
-        { no: 7, name: "Faiz Al-Baqir", pos: "Flank", goals: 3, yc: 1, rc: 0 },
-        { no: 10, name: "Aiman Muzaffar", pos: "Pivot", goals: 4, yc: 0, rc: 0, photo: "assets/mvp_player.jpg" },
-        { no: 11, name: "Ziyad Rabbani", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 12, name: "Raudhah Maulana", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Haikal Firdaus", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 9, name: "Bilal Habasyi", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
+        { no: 1, name: "Joe Hart", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Rio Ferdinand", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 7, name: "David Beckham (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 10, name: "Wayne Rooney", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
+        { no: 8, name: "Steven Gerrard", pos: "Flank", goals: 2, yc: 1, rc: 0 },
+        { no: 13, name: "Ben Foster", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "John Terry", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 11, name: "Frank Lampard", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T18",
-      name: "SD Islam Nurul Fikri",
-      shortName: "NURUL FIKRI SD",
+      name: "AHIS MAKASSAR",
+      shortName: "AHIS SD",
       category: "SD",
       logo: "",
       group: "A",
-      badgeColor: "#6366f1",
-      city: "Serang",
-      official: { manager: "Ust. Rahmat Hidayatullah", coach: "Coach Indra Sjafriadi", phone: "0813-0011-2233", jerseyHome: "Navy - Merah", jerseyAway: "Abu-abu - Navy" },
+      badgeColor: "#2563eb",
+      city: "Makassar",
+      official: { manager: "Ust. Syarifuddin", coach: "Coach Arsene Wenger", phone: "0813-2002-3002", jerseyHome: "Biru Navy - Merah", jerseyAway: "Putih - Biru" },
       players: [
-        { no: 1, name: "Affan Ghaisan", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Dhafa Al-Ghazi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Faiq Al-Hafiz (C)", pos: "Flank", goals: 2, yc: 1, rc: 0 },
-        { no: 9, name: "Rakan Syakir", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 14, name: "M. Hanif", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 13, name: "Raja Syahputra", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Kinan Abyan", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Luqman Hakim", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Fabien Barthez", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Eric Abidal", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 10, name: "Zinedine Zidane (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 14, name: "Thierry Henry", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 7, name: "Franck Ribery", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 16, name: "Gregory Coupet", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Patrick Vieira", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 9, name: "Karim Benzema", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T19",
-      name: "MI Al-Kahfi Islamic School",
-      shortName: "AL-KAHFI SD",
+      name: "AL-AKHYAR MAKASSAR",
+      shortName: "AL-AKHYAR SD",
       category: "SD",
       logo: "",
       group: "A",
-      badgeColor: "#f97316",
-      city: "Bogor Selatan",
-      official: { manager: "Ust. Zainuddin", coach: "Coach Arif Rahman", phone: "0856-1122-3344", jerseyHome: "Oranye - Putih", jerseyAway: "Hitam - Oranye" },
+      badgeColor: "#dc2626",
+      city: "Makassar",
+      official: { manager: "Ust. Basri Kasim", coach: "Coach Vicente del Bosque", phone: "0821-3003-4003", jerseyHome: "Merah - Biru", jerseyAway: "Putih - Emas" },
       players: [
-        { no: 1, name: "Davi Ananda", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Rayyan Malik (C)", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
-        { no: 7, name: "Izzan Al-Ghifari", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Syauqi Rahman", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 12, name: "Rasyid Al-Bana", pos: "Flank", goals: 0, yc: 1, rc: 0 },
-        { no: 16, name: "Habib Munzir", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Ammar Yasir", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 18, name: "Zaki Mubarok", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Iker Casillas (C)", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Sergio Ramos", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
+        { no: 8, name: "Andres Iniesta", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 6, name: "Xavi Hernandez", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 9, name: "Fernando Torres", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 12, name: "Victor Valdes", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Carles Puyol", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 21, name: "David Silva", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T20",
-      name: "SD IT Global Cendekia",
-      shortName: "GLOBAL C. SD",
+      name: "QOF",
+      shortName: "QOF",
       category: "SD",
       logo: "",
       group: "A",
-      badgeColor: "#0ea5e9",
-      city: "Tangerang Selatan",
-      official: { manager: "Ir. Gunawan Wibisono", coach: "Coach Ronald", phone: "0818-2233-4455", jerseyHome: "Sky Blue - Hitam", jerseyAway: "Putih - Sky Blue" },
+      badgeColor: "#1e3a8a",
+      city: "Makassar",
+      official: { manager: "Ust. Qudamah Mansyur", coach: "Coach Marcello Lippi", phone: "0852-4004-5004", jerseyHome: "Biru Tua - Putih", jerseyAway: "Kuning - Hitam" },
       players: [
-        { no: 1, name: "Randi Pangalila", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Reza Rahardian", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Bintang Emon (C)", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 9, name: "Kevin Sanjaya", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 11, name: "Marcus Gideon", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Jonatan Christie", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Anthony Ginting", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Fajar Alfian", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Gianluigi Buffon (C)", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Paolo Maldini", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 21, name: "Andrea Pirlo", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 10, name: "Alessandro Del Piero", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 8, name: "Gennaro Gattuso", pos: "Flank", goals: 0, yc: 1, rc: 0 },
+        { no: 12, name: "Francesco Toldo", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Fabio Cannavaro", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 9, name: "Filippo Inzaghi", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
 
     // GRUP B SD
     {
       id: "T21",
-      name: "SD Bina Bangsa Mandiri",
-      shortName: "BINA BANGSA SD",
+      name: "SDIT QA",
+      shortName: "SDIT QA",
       category: "SD",
       logo: "",
       group: "B",
-      badgeColor: "#ef4444",
-      city: "Bekasi Timur",
-      official: { manager: "Drs. Joko Purwanto", coach: "Coach Danurwindo", phone: "0811-3344-5566", jerseyHome: "Merah - Putih", jerseyAway: "Hitam - Merah" },
+      badgeColor: "#ea580c",
+      city: "Makassar",
+      official: { manager: "Ust. Qashim Abdullah", coach: "Coach Louis van Gaal", phone: "0812-5005-6005", jerseyHome: "Oranye - Putih", jerseyAway: "Biru - Hitam" },
       players: [
-        { no: 1, name: "Nadeo Argawinata", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Fachruddin Aryanto (C)", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
-        { no: 7, name: "Witan Sulaeman", pos: "Flank", goals: 3, yc: 0, rc: 0 },
-        { no: 9, name: "Ramadhan Sananta", pos: "Pivot", goals: 3, yc: 1, rc: 0 },
-        { no: 10, name: "Egy Maulana", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 12, name: "Ernando Ari", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Rizky Ridho", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 14, name: "Asnawi Mangkualam", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Edwin van der Sar", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Jaap Stam", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 10, name: "Wesley Sneijder (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 9, name: "Robin van Persie", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
+        { no: 11, name: "Arjen Robben", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 12, name: "Maarten Stekelenburg", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 8, name: "Edgar Davids", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 19, name: "Ruud van Nistelrooy", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T22",
-      name: "MI Ar-Rahman Islamic",
-      shortName: "AR-RAHMAN SD",
+      name: "SDIT AL MADINAH",
+      shortName: "AL-MADINAH SD",
       category: "SD",
       logo: "",
       group: "B",
-      badgeColor: "#a855f7",
-      city: "Sukabumi",
-      official: { manager: "Ust. Fathurrahman", coach: "Coach Benny Dollo", phone: "0812-4455-6677", jerseyHome: "Ungu Muda - Putih", jerseyAway: "Kuning Kunyit" },
+      badgeColor: "#059669",
+      city: "Maros",
+      official: { manager: "Ust. Munir Syam", coach: "Coach Joachim Low", phone: "0813-6006-7006", jerseyHome: "Hijau Daun - Putih", jerseyAway: "Merah - Hitam" },
       players: [
-        { no: 1, name: "Hilal Syahbana", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Habibi Syafiq", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 8, name: "M. Fauzan (C)", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 11, name: "Alif Baihaqi", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 13, name: "Thoriqul Haq", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 22, name: "Daud Al-Kindi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Ihsanul Fikri", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Rafi Robbani", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Oliver Kahn", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 16, name: "Philipp Lahm (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 7, name: "Bastian Schweinsteiger", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 11, name: "Miroslav Klose", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 10, name: "Mesut Ozil", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Jens Lehmann", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Mats Hummels", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 19, name: "Mario Gotze", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T23",
-      name: "SD Insan Cendekia Madani",
-      shortName: "INSAN C. SD",
+      name: "SDIT AL HIKMAH",
+      shortName: "AL-HIKMAH SD",
       category: "SD",
       logo: "",
       group: "B",
-      badgeColor: "#10b981",
-      city: "Serpong",
-      official: { manager: "Dr. H. Sulaiman", coach: "Coach Rahmad Darmawan", phone: "0813-5566-7788", jerseyHome: "Hijau - Abu-abu", jerseyAway: "Putih - Hijau" },
+      badgeColor: "#7c3aed",
+      city: "Maros",
+      official: { manager: "Ust. Taufik Hidayat", coach: "Coach Roberto Martinez", phone: "0821-7007-8007", jerseyHome: "Ungu - Kuning", jerseyAway: "Putih - Ungu" },
       players: [
-        { no: 1, name: "Alvaro Maldini", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Bagas Kaffa (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Bagus Kahfi", pos: "Flank", goals: 2, yc: 1, rc: 0 },
-        { no: 10, name: "Beckham Putra", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 14, name: "Marselino Ferdinan", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 13, name: "Adi Satryo", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 7, name: "Pratama Arhan", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 18, name: "Hokky Caraka", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Thibaut Courtois", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Vincent Kompany (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 10, name: "Eden Hazard", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 8, name: "Marouane Fellaini", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 11, name: "Dries Mertens", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Simon Mignolet", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Jan Vertonghen", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 9, name: "Christian Benteke", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T24",
-      name: "SD Patriot Mandiri",
-      shortName: "PATRIOT SD",
+      name: "SDIT IBNU RAJAB",
+      shortName: "IBNU RAJAB",
       category: "SD",
       logo: "",
       group: "B",
-      badgeColor: "#f43f5e",
-      city: "Karawang",
-      official: { manager: "Drs. Hendro Siswanto", coach: "Coach Aji Santoso", phone: "0857-6677-8899", jerseyHome: "Merah Marun - Hitam", jerseyAway: "Putih - Merah" },
+      badgeColor: "#15803d",
+      city: "Maros",
+      official: { manager: "Ust. Rajab Al-Makassari", coach: "Coach Fernando Santos", phone: "0852-8008-9008", jerseyHome: "Hijau Lumut - Putih", jerseyAway: "Marun - Emas" },
       players: [
-        { no: 1, name: "Teja Paku Alam", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Achmad Jufriyanto (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 8, name: "Dedi Kusnandar", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 9, name: "David Da Silva", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
-        { no: 11, name: "Ciro Alves", pos: "Flank", goals: 1, yc: 1, rc: 0 },
-        { no: 12, name: "Fitrul Dwi Rustapa", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Kakang Rudianto", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Ferdiansyah", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Vitor Baia", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Ricardo Carvalho", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 7, name: "Luis Figo (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 10, name: "Rui Costa", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 20, name: "Deco", pos: "Flank", goals: 1, yc: 1, rc: 0 },
+        { no: 12, name: "Ricardo Pereira", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Pepe", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 17, name: "Nani", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
 
     // GRUP C SD
     {
       id: "T25",
-      name: "SD Islam Al-Azhar Pusat",
-      shortName: "AL-AZHAR SD",
+      name: "Kuttab Nurul wahyain",
+      shortName: "NURUL WAHYAIN",
       category: "SD",
       logo: "",
       group: "C",
-      badgeColor: "#10b981",
-      city: "Jakarta Selatan",
-      official: { manager: "Ust. Zulkifli, S.Pd", coach: "Coach Ridwan Kamil", phone: "0812-1234-5678", jerseyHome: "Hijau - Putih", jerseyAway: "Kuning - Hitam" },
+      badgeColor: "#b45309",
+      city: "Maros",
+      official: { manager: "Ust. Wahyuddin, S.Pd", coach: "Coach Ryan Giggs", phone: "0812-9009-0001", jerseyHome: "Cokelat Emas - Putih", jerseyAway: "Hitam - Merah" },
       players: [
-        { no: 1, name: "Zaidan Ilham", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Arkananta (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 7, name: "Fathir Muhammad", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 9, name: "Rizky Bilal", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
-        { no: 10, name: "Aflah Robbani", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 12, name: "Dhafin Al-Fatih", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Habibi Firdaus", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Ammar Syakir", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Wayne Hennessey", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Ashley Williams (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 10, name: "Aaron Ramsey", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 11, name: "Gareth Bale", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 7, name: "Daniel James", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 12, name: "Danny Ward", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Ben Davies", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 9, name: "Kieffer Moore", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T26",
-      name: "MI Darul Hikmah Boarding",
-      shortName: "DARUL HIKMAH",
+      name: "Amcis makassar",
+      shortName: "AMCIS",
       category: "SD",
       logo: "",
       group: "C",
-      badgeColor: "#3b82f6",
-      city: "Bogor",
-      official: { manager: "Ust. M. Syahrir", coach: "Coach Fajar Alamsyah", phone: "0813-2345-6789", jerseyHome: "Biru - Putih", jerseyAway: "Hitam - Biru" },
+      badgeColor: "#0284c7",
+      city: "Makassar",
+      official: { manager: "Ust. Amirullah", coach: "Coach Janne Andersson", phone: "0813-0010-1002", jerseyHome: "Kuning - Biru", jerseyAway: "Putih - Biru" },
       players: [
-        { no: 1, name: "Faiz Maulana", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Zuhdi Faruq (C)", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
-        { no: 8, name: "Rayyan Ghani", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 11, name: "Ilyas Mubarak", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 14, name: "Alif Hidayat", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 20, name: "Raja Alamsyah", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Salman Faris", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 18, name: "Taufiq Akbar", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Robin Olsen", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 3, name: "Victor Lindelof", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 10, name: "Emil Forsberg", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 11, name: "Zlatan Ibrahimovicc (C)", pos: "Pivot", goals: 4, yc: 1, rc: 0 },
+        { no: 7, name: "Henrik Larsson", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 12, name: "Andreas Isaksson", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 5, name: "Olof Mellberg", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 9, name: "Alexander Isak", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T27",
-      name: "SD IT Harapan Bangsa",
-      shortName: "HARAPAN BANGSA",
+      name: "UPTD SDN 103 Inpres Hasanuddin",
+      shortName: "SDN 103 HASANUDDIN",
       category: "SD",
       logo: "",
       group: "C",
-      badgeColor: "#f59e0b",
-      city: "Tangerang",
-      official: { manager: "H. Gunawan, S.T", coach: "Coach Bambang Suryo", phone: "0856-3456-7890", jerseyHome: "Kuning Oranye - Hitam", jerseyAway: "Putih - Oranye" },
+      badgeColor: "#047857",
+      city: "Maros",
+      official: { manager: "Hj. Fatimah, S.Pd", coach: "Coach Dragan Stojkovicc", phone: "0821-1121-2131", jerseyHome: "Hijau - Putih", jerseyAway: "Merah - Putih" },
       players: [
-        { no: 1, name: "Bima Arya", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Galang Pratama (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Rendi Wahyu", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 9, name: "Bagus Setiawan", pos: "Pivot", goals: 2, yc: 1, rc: 0 },
-        { no: 11, name: "Deni Saputra", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 13, name: "Andra Kurnia", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Eko Prasetyo", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Gilang Ramadhan", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Predrag Rajkovicc", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Nikola Milenkovicc", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 10, name: "Dusan Tadic (C)", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 9, name: "Aleksandar Mitrovicc", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 11, name: "Filip Kosticc", pos: "Flank", goals: 0, yc: 0, rc: 0 },
+        { no: 12, name: "Vanja Milinkovic-Savic", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 20, name: "Sergej Milinkovic-Savic", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
+        { no: 18, name: "Dusan Vlahovic", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T28",
-      name: "SD Muhammadiyah Plus",
-      shortName: "MUHAMMADIYAH SD",
+      name: "UPTD SDN 22 Maros",
+      shortName: "SDN 22 MAROS",
       category: "SD",
       logo: "",
       group: "C",
-      badgeColor: "#8b5cf6",
-      city: "Bekasi",
-      official: { manager: "H. Suryadi, M.Pd", coach: "Coach Ardiansyah", phone: "0815-4567-8901", jerseyHome: "Ungu Muda - Kuning", jerseyAway: "Abu-abu - Putih" },
+      badgeColor: "#b91c1c",
+      city: "Maros",
+      official: { manager: "H. Syamsir, S.Pd", coach: "Coach Marco Rossi", phone: "0852-2232-3242", jerseyHome: "Merah - Putih - Hijau", jerseyAway: "Putih - Merah" },
       players: [
-        { no: 1, name: "Khaidir Ali", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Zuhdi Alwan (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 7, name: "Arya Wirasena", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Gibran Rakabuming", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 14, name: "Haidar Musyaffa", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 12, name: "Alif Baihaqi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Rafi Shidqi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 21, name: "Wildan Mubarok", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Peter Gulacsi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Willi Orban", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 10, name: "Dominik Szoboszlai (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 20, name: "Roland Sallai", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
+        { no: 11, name: "Milos Kerkez", pos: "Flank", goals: 0, yc: 0, rc: 0 },
+        { no: 12, name: "Denes Dibusz", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Attila Szalai", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 19, name: "Barnabas Varga", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
 
     // GRUP D SD
     {
       id: "T29",
-      name: "SDIT Ummul Quro",
-      shortName: "UMMUL QURO",
+      name: "UPTD SDN 2 Maros",
+      shortName: "SDN 2 MAROS",
       category: "SD",
       logo: "",
       group: "D",
-      badgeColor: "#06b6d4",
-      city: "Bogor",
-      official: { manager: "Ust. M. Syukron", coach: "Coach Rudi Hartono", phone: "0812-5678-9012", jerseyHome: "Cyan Toska - Putih", jerseyAway: "Hitam - Cyan" },
+      badgeColor: "#0284c7",
+      city: "Maros",
+      official: { manager: "Hj. Hasnah, S.Pd", coach: "Coach Matjaz Kek", phone: "0812-3343-4353", jerseyHome: "Biru Langit - Putih", jerseyAway: "Hijau - Putih" },
       players: [
-        { no: 1, name: "Ammar Zoni", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Dzaky Fairuz (C)", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
-        { no: 7, name: "Fathur Rahman", pos: "Flank", goals: 2, yc: 0, rc: 0 },
-        { no: 9, name: "Tariq Ziyad", pos: "Pivot", goals: 2, yc: 1, rc: 0 },
-        { no: 11, name: "Khalid Basalamah", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 13, name: "Raja Alamsyah", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Muzakki Adnan", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Izzatullah", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Jan Oblak (C)", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Jaka Bijol", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 7, name: "Josip Ilicic", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 9, name: "Benjamin Sesko", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 10, name: "Miha Zajc", pos: "Flank", goals: 0, yc: 0, rc: 0 },
+        { no: 12, name: "Vid Belec", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 2, name: "Petar Stojanovicc", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 11, name: "Andraz Sporar", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T30",
-      name: "MI Miftahul Huda",
-      shortName: "MIFTAHUL HUDA",
+      name: "SDN 215 INPRES TAIPA",
+      shortName: "SDN 215 TAIPA",
       category: "SD",
       logo: "",
       group: "D",
-      badgeColor: "#ec4899",
-      city: "Depok",
-      official: { manager: "Ust. Dedi Supriyadi", coach: "Coach Hilman Syah", phone: "0813-6789-0123", jerseyHome: "Pink Magenta - Hitam", jerseyAway: "Hitam - Perak" },
+      badgeColor: "#4338ca",
+      city: "Maros",
+      official: { manager: "Drs. Sudirman Tahir", coach: "Coach Lee Carsley", phone: "0813-4454-5464", jerseyHome: "Biru Elektrik - Putih", jerseyAway: "Putih - Biru" },
       players: [
-        { no: 1, name: "Hilman Syah", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Rifky Al-Ghifari (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 8, name: "Al-Barra", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Ghazi Al-Ghazi", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
-        { no: 12, name: "Fikri Haikal", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 20, name: "Ihsan Pratama", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Umar Faruq", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 14, name: "Zuhair Haris", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Aaron Ramsdale", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Marc Guehihi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 20, name: "Cole Palmer (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 26, name: "Kobbie Mainoo", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
+        { no: 10, name: "Anthony Gordon", pos: "Flank", goals: 1, yc: 1, rc: 0 },
+        { no: 13, name: "Nick Pope", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Ezri Konsa", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 21, name: "Eberechi Eze", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T31",
-      name: "SD Cikal Harapan Islamic",
-      shortName: "CIKAL HARAPAN",
+      name: "SDN 30 Maros",
+      shortName: "SDN 30 MAROS",
       category: "SD",
       logo: "",
       group: "D",
-      badgeColor: "#14b8a6",
-      city: "Tangerang",
-      official: { manager: "Drs. Wahyu Hidayat", coach: "Coach Satria Dewa", phone: "0857-7890-1234", jerseyHome: "Toska Muda - Putih", jerseyAway: "Biru Gelap" },
+      badgeColor: "#0f766e",
+      city: "Maros",
+      official: { manager: "H. Arifin, S.Pd", coach: "Coach Thierry Henry", phone: "0821-5565-6575", jerseyHome: "Biru Teal - Putih", jerseyAway: "Hitam - Teal" },
       players: [
-        { no: 1, name: "Rio Ferdian", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Satria Dewa (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 7, name: "Arif Kurniawan", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 9, name: "Yoga Pratama", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 11, name: "Wahyu Tri", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 15, name: "Rico Sanjaya", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Bintang Pratama", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 17, name: "Aldi Taher", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Lucas Chevalier", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 4, name: "Castello Lukeba", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 7, name: "Bradley Barcola (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
+        { no: 11, name: "Michael Olise", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
+        { no: 10, name: "Rayan Cherki", pos: "Flank", goals: 0, yc: 0, rc: 0 },
+        { no: 16, name: "Guillaume Restes", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 8, name: "Warren Zaire-Emery", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
+        { no: 9, name: "Mathys Tel", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
     {
       id: "T32",
-      name: "SDIT Al-Kautsar Prestasi",
-      shortName: "AL-KAUTSAR",
+      name: "SD MTQ Al-Fayyadh",
+      shortName: "AL-FAYYADH SD",
       category: "SD",
       logo: "",
       group: "D",
-      badgeColor: "#eab308",
-      city: "Jakarta Timur",
-      official: { manager: "Ust. Abdullah Ba'asyir", coach: "Coach Firman Utina", phone: "0819-8901-2345", jerseyHome: "Kuning Terang - Hitam", jerseyAway: "Putih - Kuning" },
+      badgeColor: "#15803d",
+      city: "Maros",
+      official: { manager: "Ust. Fikri Haekal", coach: "Coach Xavi Hernandez", phone: "0812-9876-5432", jerseyHome: "Hijau Emerald - Emas", jerseyAway: "Putih - Emas" },
       players: [
-        { no: 1, name: "Ali Ridho", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Fuad Hasan (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
-        { no: 6, name: "Thoriq Husein", pos: "Flank", goals: 0, yc: 0, rc: 0 },
-        { no: 10, name: "Husain Al-Kaff", pos: "Pivot", goals: 2, yc: 1, rc: 0 },
-        { no: 14, name: "Nizar Al-Attas", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 12, name: "Sadam Husein", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Mahdi Al-Jufri", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
-        { no: 16, name: "Fawwaz Assegaf", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
+        { no: 1, name: "Joan Garcia", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 2, name: "Pau Cubarsi pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 16, name: "Fermin Lopez (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
+        { no: 9, name: "Samu Omorodion", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
+        { no: 10, name: "Bryan Zaragoza", pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 13, name: "Arnau Tenas", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
+        { no: 6, name: "Marc Casado", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 17, name: "Alex Baena", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     }
   ],
 
-  // MATCHES (Group Stage + Knockout)
+  // JADWAL PERTANDINGAN 5 HARI (22 - 26 NOVEMBER 2026) DI 1 LAPANGAN UTAMA
   matches: [
     // ==========================================
-    // KATEGORI SMP - MATCHDAY 1 (15 Nov 2026)
+    // HARI 1: MINGGU, 22 NOV 2026 (MATCHDAY 1)
     // ==========================================
+    // SMP MATCHDAY 1
     {
       id: "M01",
       category: "SMP",
       group: "A",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "08:00 - 08:45 WIB",
+      date: "22 Nov 2026",
+      time: "08:00 - 08:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T01",
       awayId: "T02",
       homeScore: 3,
-      awayScore: 1,
+      awayScore: 2,
       status: "finished",
       scorers: [
-        { team: "T01", player: "Rizky Ramadhan", minute: "4'" },
-        { team: "T01", player: "Athar Barra", minute: "12'" },
-        { team: "T02", player: "Hamzah Fansuri", minute: "18'" },
-        { team: "T01", player: "Zaidan Al-Fatih", minute: "27'" }
+        { team: "T01", player: "Erling Haaland", minute: "4'" },
+        { team: "T02", player: "Kylian Mbappe minute: "9'" },
+        { team: "T01", player: "Erling Haaland", minute: "17'" },
+        { team: "T02", player: "Antoine Griezmann", minute: "22'" },
+        { team: "T01", player: "Martin Odegaard", minute: "27'" }
       ],
       cards: [
-        { team: "T02", player: "Syamil Basayev", type: "yellow", minute: "14'" },
-        { team: "T01", player: "Zaidan Al-Fatih", type: "yellow", minute: "22'" }
+        { team: "T01", player: "Julian Ryerson", type: "yellow", minute: "14'" },
+        { team: "T02", player: "William Saliba", type: "yellow", minute: "25'" }
       ]
     },
     {
@@ -873,22 +875,22 @@ const DEFAULT_DATA = {
       group: "A",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "09:00 - 09:45 WIB",
+      date: "22 Nov 2026",
+      time: "08:45 - 09:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T03",
       awayId: "T04",
-      homeScore: 2,
+      homeScore: 3,
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T03", player: "Gilang Ramadhan", minute: "6'" },
-        { team: "T04", player: "Khaidir Ali", minute: "15'" },
-        { team: "T03", player: "Bagus Prasetyo", minute: "26'" }
+        { team: "T03", player: "Harry Kane", minute: "6'" },
+        { team: "T04", player: "Cristiano Ronaldo", minute: "12'" },
+        { team: "T03", player: "Jude Bellingham", minute: "19'" },
+        { team: "T03", player: "Bukayo Saka", minute: "26'" }
       ],
       cards: [
-        { team: "T04", player: "Arya Wirasena", type: "yellow", minute: "20'" },
-        { team: "T03", player: "Deni Saputra", type: "yellow", minute: "24'" }
+        { team: "T04", player: "Ruben Dias", type: "yellow", minute: "18'" }
       ]
     },
     {
@@ -897,24 +899,22 @@ const DEFAULT_DATA = {
       group: "B",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "10:00 - 10:45 WIB",
+      date: "22 Nov 2026",
+      time: "09:30 - 10:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T05",
       awayId: "T06",
-      homeScore: 4,
+      homeScore: 2,
       awayScore: 2,
       status: "finished",
       scorers: [
-        { team: "T05", player: "Fathur Rahman", minute: "3'" },
-        { team: "T05", player: "Tariq Ziyad", minute: "8'" },
-        { team: "T06", player: "Ghazi Al-Ghazi", minute: "14'" },
-        { team: "T05", player: "Fathur Rahman", minute: "19'" },
-        { team: "T06", player: "Al-Barra", minute: "23'" },
-        { team: "T05", player: "Ammar Zoni", minute: "28'" }
+        { team: "T05", player: "Luka Modricc", minute: "5'" },
+        { team: "T06", player: "Lamine Yamal", minute: "11'" },
+        { team: "T06", player: "Rodri", minute: "18'" },
+        { team: "T05", player: "Andrej Kramaricc", minute: "24'" }
       ],
       cards: [
-        { team: "T06", player: "Rifky Al-Ghifari", type: "yellow", minute: "11'" }
+        { team: "T06", player: "Dani Carvajal", type: "yellow", minute: "15'" }
       ]
     },
     {
@@ -923,20 +923,22 @@ const DEFAULT_DATA = {
       group: "B",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "11:00 - 11:45 WIB",
+      date: "22 Nov 2026",
+      time: "10:15 - 10:55 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T07",
       awayId: "T08",
-      homeScore: 1,
+      homeScore: 3,
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T07", player: "Arif Kurniawan", minute: "10'" },
-        { team: "T08", player: "Husain Al-Kaff", minute: "21'" }
+        { team: "T07", player: "Kevin De Bruyne", minute: "7'" },
+        { team: "T07", player: "Romelu Lukaku", minute: "14'" },
+        { team: "T08", player: "Robert Lewandowski", minute: "20'" },
+        { team: "T07", player: "Jeremy Doku", minute: "28'" }
       ],
       cards: [
-        { team: "T08", player: "Fuad Hasan", type: "yellow", minute: "19'" }
+        { team: "T08", player: "Jakub Kiwior", type: "yellow", minute: "12'" }
       ]
     },
     {
@@ -945,8 +947,8 @@ const DEFAULT_DATA = {
       group: "C",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "13:30 - 14:15 WIB",
+      date: "22 Nov 2026",
+      time: "11:00 - 11:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T09",
       awayId: "T10",
@@ -954,12 +956,14 @@ const DEFAULT_DATA = {
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T09", player: "Habibi Robbani", minute: "5'" },
-        { team: "T10", player: "Fauzan Adzima", minute: "14'" },
-        { team: "T09", player: "Fawwaz Rabbani", minute: "20'" },
-        { team: "T09", player: "Habibi Robbani", minute: "28'" }
+        { team: "T09", player: "Jamal Musiala", minute: "8'" },
+        { team: "T10", player: "Cody Gakpo", minute: "15'" },
+        { team: "T09", player: "Florian Wirtz", minute: "21'" },
+        { team: "T09", player: "Jamal Musiala", minute: "27'" }
       ],
-      cards: []
+      cards: [
+        { team: "T09", player: "Antonio Rudiger", type: "yellow", minute: "10'" }
+      ]
     },
     {
       id: "M06",
@@ -967,8 +971,8 @@ const DEFAULT_DATA = {
       group: "C",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "14:30 - 15:15 WIB",
+      date: "22 Nov 2026",
+      time: "13:00 - 13:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T11",
       awayId: "T12",
@@ -976,12 +980,12 @@ const DEFAULT_DATA = {
       awayScore: 2,
       status: "finished",
       scorers: [
-        { team: "T11", player: "Kresna Bayu", minute: "9'" },
-        { team: "T12", player: "Marselino Ferdinand", minute: "16'" },
-        { team: "T12", player: "Arkhan Fikri", minute: "25'" }
+        { team: "T11", player: "Federico Chiesa", minute: "9'" },
+        { team: "T12", player: "Breel Embolo", minute: "16'" },
+        { team: "T12", player: "Dan Ndoye", minute: "25'" }
       ],
       cards: [
-        { team: "T11", player: "Kresna Bayu", type: "yellow", minute: "18'" }
+        { team: "T11", player: "Alessandro Bastoni", type: "yellow", minute: "18'" }
       ]
     },
     {
@@ -990,22 +994,23 @@ const DEFAULT_DATA = {
       group: "D",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "15:30 - 16:15 WIB",
+      date: "22 Nov 2026",
+      time: "13:45 - 14:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T13",
       awayId: "T14",
       homeScore: 3,
-      awayScore: 2,
+      awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T13", player: "Faiz Al-Baqir", minute: "4'" },
-        { team: "T14", player: "Evan Dimas", minute: "11'" },
-        { team: "T13", player: "Bilal Habasyi", minute: "19'" },
-        { team: "T14", player: "Ilham Udin", minute: "24'" },
-        { team: "T13", player: "Ziyad Rabbani", minute: "29'" }
+        { team: "T13", player: "Toni Kroos", minute: "5'" },
+        { team: "T13", player: "Thomas Muller", minute: "13'" },
+        { team: "T14", player: "Rasmus Hojlund", minute: "20'" },
+        { team: "T13", player: "Ilkay Gundogan", minute: "26'" }
       ],
-      cards: []
+      cards: [
+        { team: "T14", player: "Andreas Christensen", type: "yellow", minute: "22'" }
+      ]
     },
     {
       id: "M08",
@@ -1013,35 +1018,33 @@ const DEFAULT_DATA = {
       group: "D",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "16:30 - 17:15 WIB",
+      date: "22 Nov 2026",
+      time: "14:30 - 15:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T15",
       awayId: "T16",
-      homeScore: 1,
+      homeScore: 2,
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T15", player: "Rayyan Malik", minute: "13'" },
-        { team: "T16", player: "Thoriq Ziyad", minute: "22'" }
+        { team: "T15", player: "Khvicha Kvaratskhelia", minute: "7'" },
+        { team: "T16", player: "Arda Guler", minute: "15'" },
+        { team: "T15", player: "Georges Mikautadze", minute: "24'" }
       ],
       cards: [
-        { team: "T15", player: "Rayyan Malik", type: "yellow", minute: "17'" },
-        { team: "T16", player: "Fadhil Muhammad", type: "yellow", minute: "26'" }
+        { team: "T16", player: "Merih Demiral", type: "yellow", minute: "19'" }
       ]
     },
 
-    // ==========================================
-    // KATEGORI SD - MATCHDAY 1 (15 Nov 2026)
-    // ==========================================
+    // SD MATCHDAY 1 (HARI 1 SORE)
     {
       id: "M09",
       category: "SD",
       group: "A",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "08:00 - 08:45 WIB",
+      date: "22 Nov 2026",
+      time: "15:15 - 15:55 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T17",
       awayId: "T18",
@@ -1049,15 +1052,14 @@ const DEFAULT_DATA = {
       awayScore: 2,
       status: "finished",
       scorers: [
-        { team: "T17", player: "Faiz Al-Baqir", minute: "5'" },
-        { team: "T18", player: "Faiq Al-Hafiz", minute: "9'" },
-        { team: "T17", player: "Aiman Muzaffar", minute: "16'" },
-        { team: "T18", player: "Rakan Syakir", minute: "22'" },
-        { team: "T17", player: "Ziyad Rabbani", minute: "29'" }
+        { team: "T17", player: "Wayne Rooney", minute: "4'" },
+        { team: "T18", player: "Zinedine Zidane", minute: "10'" },
+        { team: "T17", player: "David Beckham", minute: "18'" },
+        { team: "T18", player: "Thierry Henry", minute: "23'" },
+        { team: "T17", player: "Wayne Rooney", minute: "28'" }
       ],
       cards: [
-        { team: "T17", player: "Faiz Al-Baqir", type: "yellow", minute: "18'" },
-        { team: "T18", player: "Faiq Al-Hafiz", type: "yellow", minute: "25'" }
+        { team: "T17", player: "Steven Gerrard", type: "yellow", minute: "12'" }
       ]
     },
     {
@@ -1066,8 +1068,8 @@ const DEFAULT_DATA = {
       group: "A",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "09:00 - 09:45 WIB",
+      date: "22 Nov 2026",
+      time: "16:00 - 16:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T19",
       awayId: "T20",
@@ -1075,12 +1077,12 @@ const DEFAULT_DATA = {
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T19", player: "Rayyan Malik", minute: "7'" },
-        { team: "T20", player: "Kevin Sanjaya", minute: "14'" },
-        { team: "T19", player: "Syauqi Rahman", minute: "24'" }
+        { team: "T19", player: "Fernando Torres", minute: "8'" },
+        { team: "T20", player: "Alessandro Del Piero", minute: "16'" },
+        { team: "T19", player: "Andres Iniesta", minute: "25'" }
       ],
       cards: [
-        { team: "T19", player: "Rayyan Malik", type: "yellow", minute: "12'" }
+        { team: "T20", player: "Gennaro Gattuso", type: "yellow", minute: "21'" }
       ]
     },
     {
@@ -1089,23 +1091,23 @@ const DEFAULT_DATA = {
       group: "B",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "10:00 - 10:45 WIB",
+      date: "22 Nov 2026",
+      time: "16:45 - 17:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T21",
       awayId: "T22",
-      homeScore: 4,
-      awayScore: 1,
+      homeScore: 3,
+      awayScore: 2,
       status: "finished",
       scorers: [
-        { team: "T21", player: "Witan Sulaeman", minute: "3'" },
-        { team: "T21", player: "Ramadhan Sananta", minute: "11'" },
-        { team: "T22", player: "M. Fauzan", minute: "17'" },
-        { team: "T21", player: "Egy Maulana", minute: "21'" },
-        { team: "T21", player: "Fachruddin Aryanto", minute: "27'" }
+        { team: "T21", player: "Robin van Persie", minute: "6'" },
+        { team: "T22", player: "Miroslav Klose", minute: "12'" },
+        { team: "T21", player: "Arjen Robben", minute: "19'" },
+        { team: "T22", player: "Bastian Schweinsteiger", minute: "24'" },
+        { team: "T21", player: "Robin van Persie", minute: "27'" }
       ],
       cards: [
-        { team: "T22", player: "Habibi Syafiq", type: "yellow", minute: "15'" }
+        { team: "T21", player: "Jaap Stam", type: "yellow", minute: "15'" }
       ]
     },
     {
@@ -1114,46 +1116,51 @@ const DEFAULT_DATA = {
       group: "B",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "11:00 - 11:45 WIB",
+      date: "22 Nov 2026",
+      time: "17:30 - 18:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T23",
       awayId: "T24",
       homeScore: 2,
-      awayScore: 2,
+      awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T23", player: "Bagus Kahfi", minute: "8'" },
-        { team: "T24", player: "David Da Silva", minute: "13'" },
-        { team: "T23", player: "Marselino Ferdinan", minute: "20'" },
-        { team: "T24", player: "Ciro Alves", minute: "26'" }
+        { team: "T23", player: "Eden Hazard", minute: "9'" },
+        { team: "T24", player: "Luis Figo", minute: "17'" },
+        { team: "T23", player: "Marouane Fellaini", minute: "26'" }
       ],
       cards: [
-        { team: "T24", player: "Achmad Jufriyanto", type: "yellow", minute: "16'" },
-        { team: "T23", player: "Bagus Kahfi", type: "yellow", minute: "22'" }
+        { team: "T24", player: "Pepe", type: "yellow", minute: "22'" }
       ]
     },
+
+    // ==========================================
+    // HARI 2: SENIN, 23 NOV 2026 (MATCHDAY 1 LANJUTAN & MATCHDAY 2)
+    // ==========================================
     {
       id: "M13",
       category: "SD",
       group: "C",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "13:30 - 14:15 WIB",
+      date: "23 Nov 2026",
+      time: "08:00 - 08:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T25",
       awayId: "T26",
-      homeScore: 3,
-      awayScore: 1,
+      homeScore: 2,
+      awayScore: 3,
       status: "finished",
       scorers: [
-        { team: "T25", player: "Fathir Muhammad", minute: "6'" },
-        { team: "T26", player: "Zuhdi Faruq", minute: "15'" },
-        { team: "T25", player: "Rizky Bilal", minute: "21'" },
-        { team: "T25", player: "Aflah Robbani", minute: "27'" }
+        { team: "T25", player: "Gareth Bale", minute: "5'" },
+        { team: "T26", player: "Zlatan Ibrahimovicc", minute: "11'" },
+        { team: "T26", player: "Henrik Larsson", minute: "18'" },
+        { team: "T25", player: "Gareth Bale", minute: "22'" },
+        { team: "T26", player: "Zlatan Ibrahimovicc", minute: "27'" }
       ],
-      cards: []
+      cards: [
+        { team: "T26", player: "Zlatan Ibrahimovicc", type: "yellow", minute: "14'" }
+      ]
     },
     {
       id: "M14",
@@ -1161,8 +1168,8 @@ const DEFAULT_DATA = {
       group: "C",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "14:30 - 15:15 WIB",
+      date: "23 Nov 2026",
+      time: "08:45 - 09:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T27",
       awayId: "T28",
@@ -1170,11 +1177,13 @@ const DEFAULT_DATA = {
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T27", player: "Bagus Setiawan", minute: "8'" },
-        { team: "T28", player: "Gibran Rakabuming", minute: "17'" },
-        { team: "T27", player: "Rendi Wahyu", minute: "25'" }
+        { team: "T27", player: "Aleksandar Mitrovicc", minute: "8'" },
+        { team: "T28", player: "Dominik Szoboszlai", minute: "16'" },
+        { team: "T27", player: "Sergej Milinkovic-Savic", minute: "25'" }
       ],
-      cards: []
+      cards: [
+        { team: "T28", player: "Willi Orban", type: "yellow", minute: "19'" }
+      ]
     },
     {
       id: "M15",
@@ -1182,20 +1191,23 @@ const DEFAULT_DATA = {
       group: "D",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "15:30 - 16:15 WIB",
+      date: "23 Nov 2026",
+      time: "09:30 - 10:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T29",
       awayId: "T30",
       homeScore: 2,
-      awayScore: 1,
+      awayScore: 2,
       status: "finished",
       scorers: [
-        { team: "T29", player: "Fathur Rahman", minute: "7'" },
-        { team: "T30", player: "Ghazi Al-Ghazi", minute: "16'" },
-        { team: "T29", player: "Tariq Ziyad", minute: "26'" }
+        { team: "T29", player: "Benjamin Sesko", minute: "7'" },
+        { team: "T30", player: "Cole Palmer", minute: "13'" },
+        { team: "T29", player: "Benjamin Sesko", minute: "21'" },
+        { team: "T30", player: "Kobbie Mainoo", minute: "28'" }
       ],
-      cards: []
+      cards: [
+        { team: "T29", player: "Jaka Bijol", type: "yellow", minute: "17'" }
+      ]
     },
     {
       id: "M16",
@@ -1203,47 +1215,48 @@ const DEFAULT_DATA = {
       group: "D",
       stage: "group",
       matchday: 1,
-      date: "15 Nov 2026",
-      time: "16:30 - 17:15 WIB",
+      date: "23 Nov 2026",
+      time: "10:15 - 10:55 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T31",
       awayId: "T32",
       homeScore: 1,
-      awayScore: 2,
+      awayScore: 3,
       status: "finished",
       scorers: [
-        { team: "T31", player: "Yoga Pratama", minute: "10'" },
-        { team: "T32", player: "Husain Al-Kaff", minute: "18'" },
-        { team: "T32", player: "Nizar Al-Attas", minute: "24'" }
+        { team: "T32", player: "Fermin Lopez", minute: "6'" },
+        { team: "T31", player: "Bradley Barcola", minute: "14'" },
+        { team: "T32", player: "Samu Omorodion", minute: "20'" },
+        { team: "T32", player: "Fermin Lopez", minute: "26'" }
       ],
-      cards: []
+      cards: [
+        { team: "T31", player: "Warren Zaire-Emery", type: "yellow", minute: "18'" }
+      ]
     },
 
-    // ==========================================
-    // MATCHDAY 2 (16 Nov 2026) - SMP & SD
-    // ==========================================
+    // MATCHDAY 2 SMP
     {
       id: "M17",
       category: "SMP",
       group: "A",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "08:00 - 08:45 WIB",
+      date: "23 Nov 2026",
+      time: "11:00 - 11:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T01",
       awayId: "T03",
       homeScore: 2,
-      awayScore: 1,
+      awayScore: 2,
       status: "finished",
       scorers: [
-        { team: "T01", player: "Rizky Ramadhan", minute: "7'" },
-        { team: "T03", player: "Gilang Ramadhan", minute: "16'" },
-        { team: "T01", player: "Athar Barra", minute: "24'" }
+        { team: "T01", player: "Erling Haaland", minute: "6'" },
+        { team: "T03", player: "Harry Kane", minute: "12'" },
+        { team: "T03", player: "Jude Bellingham", minute: "19'" },
+        { team: "T01", player: "Erling Haaland", minute: "26'" }
       ],
       cards: [
-        { team: "T03", player: "Gilang Ramadhan", type: "yellow", minute: "18'" },
-        { team: "T01", player: "Ilyas Hakim", type: "yellow", minute: "25'" }
+        { team: "T03", player: "Jude Bellingham", type: "yellow", minute: "24'" }
       ]
     },
     {
@@ -1252,8 +1265,8 @@ const DEFAULT_DATA = {
       group: "A",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "09:00 - 09:45 WIB",
+      date: "23 Nov 2026",
+      time: "13:00 - 13:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T02",
       awayId: "T04",
@@ -1261,14 +1274,13 @@ const DEFAULT_DATA = {
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T02", player: "Fadillah Akbar", minute: "5'" },
-        { team: "T02", player: "Hamzah Fansuri", minute: "12'" },
-        { team: "T04", player: "Zuhdi Alwan", minute: "19'" },
-        { team: "T02", player: "Azka Robbani", minute: "27'" }
+        { team: "T02", player: "Kylian Mbappe minute: "5'" },
+        { team: "T02", player: "Kylian Mbappe minute: "14'" },
+        { team: "T04", player: "Cristiano Ronaldo", minute: "21'" },
+        { team: "T02", player: "Antoine Griezmann", minute: "27'" }
       ],
       cards: [
-        { team: "T02", player: "Syamil Basayev", type: "yellow", minute: "22'" },
-        { team: "T02", player: "Taufiq Hidayat", type: "yellow", minute: "26'" }
+        { team: "T04", player: "Joao Palhinha", type: "yellow", minute: "19'" }
       ]
     },
     {
@@ -1277,147 +1289,134 @@ const DEFAULT_DATA = {
       group: "B",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "10:00 - 10:45 WIB",
+      date: "23 Nov 2026",
+      time: "13:45 - 14:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T05",
       awayId: "T07",
-      homeScore: 3,
-      awayScore: 0,
+      homeScore: 2,
+      awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T05", player: "Fathur Rahman", minute: "6'" },
-        { team: "T05", player: "Tariq Ziyad", minute: "14'" },
-        { team: "T05", player: "Khalid Basalamah", minute: "22'" }
+        { team: "T05", player: "Luka Modricc", minute: "7'" },
+        { team: "T07", player: "Kevin De Bruyne", minute: "15'" },
+        { team: "T05", player: "Luka Modricc", minute: "23'" }
       ],
       cards: [
-        { team: "T07", player: "Arif Kurniawan", type: "yellow", minute: "19'" }
+        { team: "T07", player: "Amadou Onana", type: "yellow", minute: "20'" }
       ]
     },
+    // LAGA M20: SEDANG BERLANGSUNG (LIVE SKOR UNTUK BAHAN DEMO PRESENTASI!)
     {
       id: "M20",
       category: "SMP",
       group: "B",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "11:00 - 11:45 WIB",
+      date: "23 Nov 2026",
+      time: "14:30 - 15:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T06",
       awayId: "T08",
       homeScore: 2,
       awayScore: 2,
       status: "live",
-      liveMinute: "26'",
+      liveMinute: "24'",
       homeScoreLive: 2,
       awayScoreLive: 2,
       scorers: [
-        { team: "T06", player: "Ghazi Al-Ghazi", minute: "8'" },
-        { team: "T08", player: "Husain Al-Kaff", minute: "11'" },
-        { team: "T08", player: "Nizar Al-Attas", minute: "17'" },
-        { team: "T06", player: "Al-Barra", minute: "21'" }
+        { team: "T06", player: "Lamine Yamal", minute: "6'" },
+        { team: "T08", player: "Robert Lewandowski", minute: "12'" },
+        { team: "T06", player: "Lamine Yamal", minute: "17'" },
+        { team: "T08", player: "Robert Lewandowski", minute: "21'" }
       ],
       cards: [
-        { team: "T08", player: "Husain Al-Kaff", type: "yellow", minute: "15'" }
+        { team: "T08", player: "Jan Bednarek", type: "yellow", minute: "15'" }
       ]
     },
+
+    // SISA LAGA MATCHDAY 2 (HARI 2 SORE - STATUS UPCOMING)
     {
       id: "M21",
-      category: "SD",
-      group: "A",
+      category: "SMP",
+      group: "C",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "13:30 - 14:15 WIB",
+      date: "23 Nov 2026",
+      time: "15:15 - 15:55 WITA",
       pitch: "Lapangan Utama (Vinyl)",
-      homeId: "T17",
-      awayId: "T19",
-      homeScore: 2,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T17", player: "Aiman Muzaffar", minute: "8'" },
-        { team: "T19", player: "Rayyan Malik", minute: "17'" },
-        { team: "T17", player: "Aiman Muzaffar", minute: "25'" }
-      ],
+      homeId: "T09",
+      awayId: "T11",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
       cards: []
     },
     {
       id: "M22",
-      category: "SD",
-      group: "A",
+      category: "SMP",
+      group: "C",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "14:30 - 15:15 WIB",
+      date: "23 Nov 2026",
+      time: "16:00 - 16:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
-      homeId: "T18",
-      awayId: "T20",
-      homeScore: 2,
-      awayScore: 0,
-      status: "finished",
-      scorers: [
-        { team: "T18", player: "Faiq Al-Hafiz", minute: "12'" },
-        { team: "T18", player: "M. Hanif", minute: "21'" }
-      ],
+      homeId: "T10",
+      awayId: "T12",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
       cards: []
     },
     {
       id: "M23",
-      category: "SD",
-      group: "B",
+      category: "SMP",
+      group: "D",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "15:30 - 16:15 WIB",
+      date: "23 Nov 2026",
+      time: "16:45 - 17:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
-      homeId: "T21",
-      awayId: "T23",
-      homeScore: 3,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T21", player: "Ramadhan Sananta", minute: "6'" },
-        { team: "T23", player: "Beckham Putra", minute: "13'" },
-        { team: "T21", player: "Witan Sulaeman", minute: "19'" },
-        { team: "T23", player: "Bagus Kahfi", minute: "24'" },
-        { team: "T21", player: "Ramadhan Sananta", minute: "28'" }
-      ],
+      homeId: "T13",
+      awayId: "T15",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
       cards: []
     },
     {
       id: "M24",
-      category: "SD",
-      group: "B",
+      category: "SMP",
+      group: "D",
       stage: "group",
       matchday: 2,
-      date: "16 Nov 2026",
-      time: "16:30 - 17:15 WIB",
+      date: "23 Nov 2026",
+      time: "17:30 - 18:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
-      homeId: "T22",
-      awayId: "T24",
-      homeScore: 1,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T22", player: "Alif Baihaqi", minute: "11'" },
-        { team: "T24", player: "David Da Silva", minute: "19'" },
-        { team: "T24", player: "Ciro Alves", minute: "26'" }
-      ],
+      homeId: "T14",
+      awayId: "T16",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
       cards: []
     },
 
     // ==========================================
-    // MATCHDAY 3 (17 Nov 2026) - PENENTUAN GRUP
+    // HARI 3: SELASA, 24 NOV 2026 (PENENTUAN FASE GRUP)
     // ==========================================
+    // SMP PENENTUAN GRUP
     {
       id: "M25",
       category: "SMP",
       group: "A",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "08:00 - 08:45 WIB",
+      date: "24 Nov 2026",
+      time: "08:00 - 08:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T01",
       awayId: "T04",
@@ -1433,8 +1432,8 @@ const DEFAULT_DATA = {
       group: "A",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "09:00 - 09:45 WIB",
+      date: "24 Nov 2026",
+      time: "08:45 - 09:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T02",
       awayId: "T03",
@@ -1450,8 +1449,8 @@ const DEFAULT_DATA = {
       group: "B",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "10:00 - 10:45 WIB",
+      date: "24 Nov 2026",
+      time: "09:30 - 10:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T05",
       awayId: "T08",
@@ -1467,8 +1466,8 @@ const DEFAULT_DATA = {
       group: "B",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "11:00 - 11:45 WIB",
+      date: "24 Nov 2026",
+      time: "10:15 - 10:55 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T06",
       awayId: "T07",
@@ -1480,12 +1479,82 @@ const DEFAULT_DATA = {
     },
     {
       id: "M29",
+      category: "SMP",
+      group: "C",
+      stage: "group",
+      matchday: 3,
+      date: "24 Nov 2026",
+      time: "11:00 - 11:40 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homeId: "T09",
+      awayId: "T12",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+    {
+      id: "M30",
+      category: "SMP",
+      group: "C",
+      stage: "group",
+      matchday: 3,
+      date: "24 Nov 2026",
+      time: "13:00 - 13:40 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homeId: "T10",
+      awayId: "T11",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+    {
+      id: "M31",
+      category: "SMP",
+      group: "D",
+      stage: "group",
+      matchday: 3,
+      date: "24 Nov 2026",
+      time: "13:45 - 14:25 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homeId: "T13",
+      awayId: "T16",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+    {
+      id: "M32",
+      category: "SMP",
+      group: "D",
+      stage: "group",
+      matchday: 3,
+      date: "24 Nov 2026",
+      time: "14:30 - 15:10 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homeId: "T14",
+      awayId: "T15",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+
+    // SD PENENTUAN GRUP
+    {
+      id: "M33",
       category: "SD",
       group: "A",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "13:30 - 14:15 WIB",
+      date: "24 Nov 2026",
+      time: "15:15 - 15:55 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T17",
       awayId: "T20",
@@ -1496,13 +1565,13 @@ const DEFAULT_DATA = {
       cards: []
     },
     {
-      id: "M30",
+      id: "M34",
       category: "SD",
       group: "A",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "14:30 - 15:15 WIB",
+      date: "24 Nov 2026",
+      time: "16:00 - 16:40 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T18",
       awayId: "T19",
@@ -1513,13 +1582,13 @@ const DEFAULT_DATA = {
       cards: []
     },
     {
-      id: "M31",
+      id: "M35",
       category: "SD",
       group: "B",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "15:30 - 16:15 WIB",
+      date: "24 Nov 2026",
+      time: "16:45 - 17:25 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T21",
       awayId: "T24",
@@ -1530,13 +1599,13 @@ const DEFAULT_DATA = {
       cards: []
     },
     {
-      id: "M32",
+      id: "M36",
       category: "SD",
       group: "B",
       stage: "group",
       matchday: 3,
-      date: "17 Nov 2026",
-      time: "16:30 - 17:15 WIB",
+      date: "24 Nov 2026",
+      time: "17:30 - 18:10 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T22",
       awayId: "T23",
@@ -1548,15 +1617,16 @@ const DEFAULT_DATA = {
     },
 
     // ==========================================
-    // BABAK GUGUR (KNOCKOUT) KATEGORI SMP
+    // HARI 4: RABU, 25 NOV 2026 (BABAK 8 BESAR / PEREMPAT FINAL)
     // ==========================================
+    // SMP PEREMPAT FINAL
     {
       id: "QF1_SMP",
       category: "SMP",
       stage: "knockout",
       roundName: "Perempat Final 1 SMP",
-      date: "18 Nov 2026",
-      time: "08:30 WIB",
+      date: "25 Nov 2026",
+      time: "08:30 - 09:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup A (SMP)",
       awayPlaceholder: "Runner-up Grup B (SMP)",
@@ -1573,13 +1643,13 @@ const DEFAULT_DATA = {
       category: "SMP",
       stage: "knockout",
       roundName: "Perempat Final 2 SMP",
-      date: "18 Nov 2026",
-      time: "09:30 WIB",
+      date: "25 Nov 2026",
+      time: "09:30 - 10:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup C (SMP)",
       awayPlaceholder: "Runner-up Grup D (SMP)",
       homeId: "T09",
-      awayId: "T14",
+      awayId: "T15",
       homeScore: null,
       awayScore: null,
       status: "upcoming",
@@ -1591,8 +1661,8 @@ const DEFAULT_DATA = {
       category: "SMP",
       stage: "knockout",
       roundName: "Perempat Final 3 SMP",
-      date: "18 Nov 2026",
-      time: "10:30 WIB",
+      date: "25 Nov 2026",
+      time: "10:30 - 11:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup B (SMP)",
       awayPlaceholder: "Runner-up Grup A (SMP)",
@@ -1609,85 +1679,13 @@ const DEFAULT_DATA = {
       category: "SMP",
       stage: "knockout",
       roundName: "Perempat Final 4 SMP",
-      date: "18 Nov 2026",
-      time: "11:30 WIB",
+      date: "25 Nov 2026",
+      time: "11:30 - 12:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup D (SMP)",
       awayPlaceholder: "Runner-up Grup C (SMP)",
       homeId: "T13",
-      awayId: "T10",
-      homeScore: null,
-      awayScore: null,
-      status: "upcoming",
-      scorers: [],
-      cards: []
-    },
-    {
-      id: "SF1_SMP",
-      category: "SMP",
-      stage: "knockout",
-      roundName: "Semifinal 1 SMP",
-      date: "19 Nov 2026",
-      time: "08:30 WIB",
-      pitch: "Lapangan Utama (Vinyl)",
-      homePlaceholder: "Pemenang QF1 SMP",
-      awayPlaceholder: "Pemenang QF2 SMP",
-      homeId: null,
-      awayId: null,
-      homeScore: null,
-      awayScore: null,
-      status: "upcoming",
-      scorers: [],
-      cards: []
-    },
-    {
-      id: "SF2_SMP",
-      category: "SMP",
-      stage: "knockout",
-      roundName: "Semifinal 2 SMP",
-      date: "19 Nov 2026",
-      time: "09:45 WIB",
-      pitch: "Lapangan Utama (Vinyl)",
-      homePlaceholder: "Pemenang QF3 SMP",
-      awayPlaceholder: "Pemenang QF4 SMP",
-      homeId: null,
-      awayId: null,
-      homeScore: null,
-      awayScore: null,
-      status: "upcoming",
-      scorers: [],
-      cards: []
-    },
-    {
-      id: "3RD_SMP",
-      category: "SMP",
-      stage: "knockout",
-      roundName: "Juara 3 SMP",
-      date: "20 Nov 2026",
-      time: "08:30 WIB",
-      pitch: "Lapangan Utama (Vinyl)",
-      homePlaceholder: "Kalah Semifinal 1 SMP",
-      awayPlaceholder: "Kalah Semifinal 2 SMP",
-      homeId: null,
-      awayId: null,
-      homeScore: null,
-      awayScore: null,
-      status: "upcoming",
-      scorers: [],
-      cards: []
-    },
-    {
-      id: "FINAL_SMP",
-      category: "SMP",
-      stage: "knockout",
-      roundName: "Grand Final SMP",
-      date: "20 Nov 2026",
-      time: "10:00 WIB",
-      pitch: "Lapangan Utama (Vinyl)",
-      homePlaceholder: "Pemenang SF1 SMP",
-      awayPlaceholder: "Pemenang SF2 SMP",
-      homeId: null,
-      awayId: null,
+      awayId: "T12",
       homeScore: null,
       awayScore: null,
       status: "upcoming",
@@ -1695,16 +1693,14 @@ const DEFAULT_DATA = {
       cards: []
     },
 
-    // ==========================================
-    // BABAK GUGUR (KNOCKOUT) KATEGORI SD
-    // ==========================================
+    // SD PEREMPAT FINAL
     {
       id: "QF1_SD",
       category: "SD",
       stage: "knockout",
       roundName: "Perempat Final 1 SD",
-      date: "18 Nov 2026",
-      time: "13:30 WIB",
+      date: "25 Nov 2026",
+      time: "13:30 - 14:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup A (SD)",
       awayPlaceholder: "Runner-up Grup B (SD)",
@@ -1721,13 +1717,13 @@ const DEFAULT_DATA = {
       category: "SD",
       stage: "knockout",
       roundName: "Perempat Final 2 SD",
-      date: "18 Nov 2026",
-      time: "14:30 WIB",
+      date: "25 Nov 2026",
+      time: "14:30 - 15:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup C (SD)",
       awayPlaceholder: "Runner-up Grup D (SD)",
-      homeId: "T25",
-      awayId: "T30",
+      homeId: "T26",
+      awayId: "T29",
       homeScore: null,
       awayScore: null,
       status: "upcoming",
@@ -1739,13 +1735,13 @@ const DEFAULT_DATA = {
       category: "SD",
       stage: "knockout",
       roundName: "Perempat Final 3 SD",
-      date: "18 Nov 2026",
-      time: "15:30 WIB",
+      date: "25 Nov 2026",
+      time: "15:30 - 16:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup B (SD)",
       awayPlaceholder: "Runner-up Grup A (SD)",
       homeId: "T21",
-      awayId: "T18",
+      awayId: "T19",
       homeScore: null,
       awayScore: null,
       status: "upcoming",
@@ -1757,13 +1753,36 @@ const DEFAULT_DATA = {
       category: "SD",
       stage: "knockout",
       roundName: "Perempat Final 4 SD",
-      date: "18 Nov 2026",
-      time: "16:30 WIB",
+      date: "25 Nov 2026",
+      time: "16:30 - 17:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Juara Grup D (SD)",
       awayPlaceholder: "Runner-up Grup C (SD)",
-      homeId: "T29",
-      awayId: "T26",
+      homeId: "T32",
+      awayId: "T27",
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+
+    // ==========================================
+    // HARI 5: KAMIS, 26 NOV 2026 (SEMIFINAL, FINAL & SEREMONI)
+    // ==========================================
+    // SEMIFINAL SMP
+    {
+      id: "SF1_SMP",
+      category: "SMP",
+      stage: "knockout",
+      roundName: "Semifinal 1 SMP",
+      date: "26 Nov 2026",
+      time: "08:30 - 09:20 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homePlaceholder: "Pemenang QF1 SMP",
+      awayPlaceholder: "Pemenang QF2 SMP",
+      homeId: null,
+      awayId: null,
       homeScore: null,
       awayScore: null,
       status: "upcoming",
@@ -1771,12 +1790,32 @@ const DEFAULT_DATA = {
       cards: []
     },
     {
+      id: "SF2_SMP",
+      category: "SMP",
+      stage: "knockout",
+      roundName: "Semifinal 2 SMP",
+      date: "26 Nov 2026",
+      time: "09:30 - 10:20 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homePlaceholder: "Pemenang QF3 SMP",
+      awayPlaceholder: "Pemenang QF4 SMP",
+      homeId: null,
+      awayId: null,
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+
+    // SEMIFINAL SD
+    {
       id: "SF1_SD",
       category: "SD",
       stage: "knockout",
       roundName: "Semifinal 1 SD",
-      date: "19 Nov 2026",
-      time: "13:30 WIB",
+      date: "26 Nov 2026",
+      time: "10:30 - 11:20 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Pemenang QF1 SD",
       awayPlaceholder: "Pemenang QF2 SD",
@@ -1793,8 +1832,8 @@ const DEFAULT_DATA = {
       category: "SD",
       stage: "knockout",
       roundName: "Semifinal 2 SD",
-      date: "19 Nov 2026",
-      time: "14:45 WIB",
+      date: "26 Nov 2026",
+      time: "11:30 - 12:20 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Pemenang QF3 SD",
       awayPlaceholder: "Pemenang QF4 SD",
@@ -1806,13 +1845,15 @@ const DEFAULT_DATA = {
       scorers: [],
       cards: []
     },
+
+    // PEREBUTAN JUARA 3
     {
       id: "3RD_SD",
       category: "SD",
       stage: "knockout",
       roundName: "Juara 3 SD",
-      date: "20 Nov 2026",
-      time: "13:30 WIB",
+      date: "26 Nov 2026",
+      time: "13:30 - 14:15 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Kalah Semifinal 1 SD",
       awayPlaceholder: "Kalah Semifinal 2 SD",
@@ -1825,15 +1866,53 @@ const DEFAULT_DATA = {
       cards: []
     },
     {
+      id: "3RD_SMP",
+      category: "SMP",
+      stage: "knockout",
+      roundName: "Juara 3 SMP",
+      date: "26 Nov 2026",
+      time: "14:15 - 15:00 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homePlaceholder: "Kalah Semifinal 1 SMP",
+      awayPlaceholder: "Kalah Semifinal 2 SMP",
+      homeId: null,
+      awayId: null,
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+
+    // GRAND FINAL
+    {
       id: "FINAL_SD",
       category: "SD",
       stage: "knockout",
       roundName: "Grand Final SD",
-      date: "20 Nov 2026",
-      time: "15:00 WIB",
+      date: "26 Nov 2026",
+      time: "15:00 - 16:00 WITA",
       pitch: "Lapangan Utama (Vinyl)",
       homePlaceholder: "Pemenang SF1 SD",
       awayPlaceholder: "Pemenang SF2 SD",
+      homeId: null,
+      awayId: null,
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
+    },
+    {
+      id: "FINAL_SMP",
+      category: "SMP",
+      stage: "knockout",
+      roundName: "Grand Final SMP",
+      date: "26 Nov 2026",
+      time: "16:00 - 17:00 WITA",
+      pitch: "Lapangan Utama (Vinyl)",
+      homePlaceholder: "Pemenang SF1 SMP",
+      awayPlaceholder: "Pemenang SF2 SMP",
       homeId: null,
       awayId: null,
       homeScore: null,

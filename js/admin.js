@@ -1677,6 +1677,174 @@ const admin = {
         </div>
       </div>
     `).join("");
+  // ==========================================
+  // DEMO SIMULATION & RESET (PRESENTASI YAYASAN & PANITIA)
+  // ==========================================
+  resetAllData() {
+    this.resetDemo();
+  },
+
+  resetDemo() {
+    if (confirm("Reset seluruh data turnamen ke kondisi awal siap presentasi?")) {
+      app.store.resetData();
+      app.renderHeader();
+      app.renderCurrentView();
+      app.showToast("🔄 Data turnamen berhasil di-reset ke kondisi awal demo!");
+      const modal = document.getElementById("adminDashboardModal");
+      if (modal) modal.classList.remove("active");
+    }
+  },
+
+  runDemoSimulation(scenario) {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+
+    if (scenario === 'live') {
+      // Set Match M20 to LIVE
+      const m20 = app.store.data.matches.find(m => m.id === "M20");
+      if (m20) {
+        m20.status = "live";
+        m20.liveMinute = "24'";
+        m20.homeScoreLive = 2;
+        m20.awayScoreLive = 2;
+      }
+      app.store.saveData();
+      app.renderCurrentView();
+      app.switchTab("matches");
+      const modal = document.getElementById("adminDashboardModal");
+      if (modal) modal.classList.remove("active");
+      app.showToast("🔴 Mode Live Match Aktif: Laga M20 sedang berjalan 2-2 di menit 24'!");
+      return;
+    }
+
+    if (scenario === 'finish_groups') {
+      // 1. Finish M20
+      const m20 = app.store.data.matches.find(m => m.id === "M20");
+      if (m20) {
+        m20.status = "finished";
+        m20.homeScore = 3;
+        m20.awayScore = 2;
+        delete m20.homeScoreLive;
+        delete m20.awayScoreLive;
+      }
+
+      // 2. Finish all upcoming group stage matches
+      const groupMatches = app.store.data.matches.filter(m => m.stage === "group" && m.status !== "finished");
+      const sampleScores = [
+        { h: 3, a: 1 }, { h: 2, a: 0 }, { h: 4, a: 2 }, { h: 1, a: 1 },
+        { h: 2, a: 3 }, { h: 3, a: 2 }, { h: 0, a: 2 }, { h: 4, a: 1 },
+        { h: 2, a: 2 }, { h: 3, a: 0 }, { h: 1, a: 2 }, { h: 2, a: 1 }
+      ];
+
+      groupMatches.forEach((m, idx) => {
+        const sc = sampleScores[idx % sampleScores.length];
+        m.status = "finished";
+        m.homeScore = sc.h;
+        m.awayScore = sc.a;
+        delete m.homeScoreLive;
+        delete m.awayScoreLive;
+        if (!m.scorers || m.scorers.length === 0) {
+          const homeTeam = app.store.getTeam(m.homeId);
+          const awayTeam = app.store.getTeam(m.awayId);
+          m.scorers = [];
+          if (homeTeam && homeTeam.players && homeTeam.players.length > 3) {
+            for (let g = 0; g < sc.h; g++) {
+              const p = homeTeam.players[(g + 2) % homeTeam.players.length];
+              m.scorers.push({ team: m.homeId, player: p.name, minute: `${(g + 1) * 7}'` });
+              p.goals = (p.goals || 0) + 1;
+            }
+          }
+          if (awayTeam && awayTeam.players && awayTeam.players.length > 3) {
+            for (let g = 0; g < sc.a; g++) {
+              const p = awayTeam.players[(g + 3) % awayTeam.players.length];
+              m.scorers.push({ team: m.awayId, player: p.name, minute: `${(g + 1) * 9}'` });
+              p.goals = (p.goals || 0) + 1;
+            }
+          }
+        }
+      });
+
+      app.store.saveData();
+      app.store.syncKnockoutFromStandings();
+      app.renderCurrentView();
+      app.switchTab("standings");
+      const modal = document.getElementById("adminDashboardModal");
+      if (modal) modal.classList.remove("active");
+      app.showToast("⚡ Seluruh Laga Grup Tuntas! Bagan 8 Besar Otomatis Terisi Lengkap.");
+      return;
+    }
+
+    if (scenario === 'finish_knockout') {
+      // First ensure group stage is finished
+      this.runDemoSimulation('finish_groups');
+
+      // Helper to finish match with score
+      const finishMatch = (mId, hScore, aScore, defaultHome, defaultAway) => {
+        const m = app.store.data.matches.find(x => x.id === mId);
+        if (!m) return;
+        if (!m.homeId && defaultHome) m.homeId = defaultHome;
+        if (!m.awayId && defaultAway) m.awayId = defaultAway;
+        m.status = "finished";
+        m.homeScore = hScore;
+        m.awayScore = aScore;
+        const homeTeam = app.store.getTeam(m.homeId);
+        const awayTeam = app.store.getTeam(m.awayId);
+        m.scorers = [];
+        if (homeTeam && homeTeam.players) {
+          for (let g = 0; g < hScore; g++) {
+            const p = homeTeam.players[(g + 2) % homeTeam.players.length];
+            m.scorers.push({ team: m.homeId, player: p.name, minute: `${(g + 1) * 8}'` });
+            p.goals = (p.goals || 0) + 1;
+          }
+        }
+        if (awayTeam && awayTeam.players) {
+          for (let g = 0; g < aScore; g++) {
+            const p = awayTeam.players[(g + 3) % awayTeam.players.length];
+            m.scorers.push({ team: m.awayId, player: p.name, minute: `${(g + 1) * 11}'` });
+            p.goals = (p.goals || 0) + 1;
+          }
+        }
+      };
+
+      // 1. Finish QF SMP & SD
+      finishMatch("QF1_SMP", 3, 2, "T01", "T06");
+      finishMatch("QF2_SMP", 4, 1, "T09", "T14");
+      finishMatch("QF3_SMP", 2, 3, "T05", "T02");
+      finishMatch("QF4_SMP", 3, 1, "T13", "T10");
+
+      finishMatch("QF1_SD", 3, 1, "T17", "T22");
+      finishMatch("QF2_SD", 2, 0, "T25", "T30");
+      finishMatch("QF3_SD", 1, 2, "T21", "T18");
+      finishMatch("QF4_SD", 4, 2, "T32", "T26");
+
+      app.store.syncKnockoutFromStandings();
+
+      // 2. Finish SF SMP & SD
+      finishMatch("SF1_SMP", 3, 2, "T01", "T09");
+      finishMatch("SF2_SMP", 1, 3, "T02", "T13");
+
+      finishMatch("SF1_SD", 4, 3, "T17", "T25");
+      finishMatch("SF2_SD", 2, 4, "T18", "T32");
+
+      app.store.syncKnockoutFromStandings();
+
+      // 3. Finish 3RD & FINAL
+      finishMatch("3RD_SMP", 3, 1, "T09", "T02");
+      finishMatch("FINAL_SMP", 2, 3, "T01", "T13");
+
+      finishMatch("3RD_SD", 2, 0, "T25", "T18");
+      finishMatch("FINAL_SD", 3, 4, "T17", "T32");
+
+      app.store.saveData();
+      app.store.syncKnockoutFromStandings();
+      app.renderCurrentView();
+      app.switchTab("bracket");
+      const modal = document.getElementById("adminDashboardModal");
+      if (modal) modal.classList.remove("active");
+      app.showToast("🏆 Turnamen Tuntas! Juara 1, 2, 3 & Top Skor Telah Ditetapkan.");
+    }
   },
 
   logout() {

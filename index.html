@@ -83,8 +83,8 @@
             Turnamen Futsal Antar-Sekolah & Pesantren • Ma'had Tahfizhul Qur'an Al Fayyadh
           </p>
           <div class="hero-meta">
-            <span>📍 <strong id="heroVenue">GOR Futsal Ma'had Tahfizhul Qur'an Al Fayyadh</strong></span>
-            <span>📅 <strong id="heroDates">15 - 20 November 2026</strong></span>
+            <span>📍 <strong id="heroVenue">GOR Futsal MTQ Al-Fayyadh Maros</strong></span>
+            <span>📅 <strong id="heroDates">22 - 26 November 2026</strong></span>
           </div>
         </div>
       </div>
@@ -830,6 +830,35 @@
             💾 Simpan Seluruh Pengaturan Turnamen
           </button>
         </form>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 14px 0 10px 0;">
+
+        <!-- SIMULASI PRESENTASI KHUSUS HARI KAMIS (YAYASAN & PANITIA) -->
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.12)); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <h4 style="color: #10b981; font-size: 0.92rem; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>🎮</span> Simulasi Demo Presentasi (Kamis)
+            </h4>
+            <span style="font-size: 0.7rem; background: rgba(16, 185, 129, 0.25); color: #10b981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">1-KLIK CEPAT</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+            Gunakan tombol simulasi otomatis ini saat presentasi di depan Yayasan & Panitia. Anda tidak perlu repot mengetik skor puluhan laga satu per satu.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="admin.runDemoSimulation('live')" style="background: #e11d48; border-color: #e11d48;">
+              🔴 1. Demo Laga LIVE (Menit 24')
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="admin.runDemoSimulation('finish_groups')" style="background: #0284c7; border-color: #0284c7;">
+              ⚡ 2. Tuntaskan Semua Laga Grup & Buka 8 Besar
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="admin.runDemoSimulation('finish_knockout')" style="background: #8b5cf6; border-color: #8b5cf6;">
+              🏆 3. Tuntaskan Babak Gugur Sampai Juara
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="admin.resetDemo()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
+              🔄 Reset Demo ke Kondisi Awal
+            </button>
+          </div>
+        </div>
 
         <!-- Quick Panitia Tools -->
         <div>
