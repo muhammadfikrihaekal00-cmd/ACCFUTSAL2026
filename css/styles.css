@@ -3249,17 +3249,23 @@ body.dark-theme .player-rating-pill.rating-great {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-color);
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)) 4px;
+  padding: 6px 2px calc(6px + env(safe-area-inset-bottom, 0px)) 2px;
   z-index: 999;
   justify-content: space-around;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mobile-nav::-webkit-scrollbar {
+  display: none;
 }
 body.dark-theme .mobile-nav {
-  background: rgba(8, 14, 28, 0.95);
+  background: rgba(8, 14, 28, 0.96);
   border-top-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.45);
 }
@@ -3269,11 +3275,11 @@ body.dark-theme .mobile-nav {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 auto;
+  min-width: 44px;
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.65rem;
+  font-size: 0.60rem;
   font-weight: 700;
   background: transparent;
   border: none;
@@ -3284,8 +3290,8 @@ body.dark-theme .mobile-nav {
   user-select: none;
 }
 .mobile-nav-item svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
   stroke-width: 2.2;
   transition: transform 0.2s ease, stroke 0.2s ease;
 }

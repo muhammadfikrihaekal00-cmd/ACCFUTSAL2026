@@ -1,7 +1,7 @@
 // app.js - Main Tournament Logic & UI Rendering
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026_maros";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_clean_zero_v5";
     this.data = this.loadData();
     this.syncKnockoutFromStandings();
   }
@@ -546,12 +546,7 @@ const app = {
         progressBar.style.width = "100%";
       }, 50);
     }
-
-    // Auto dismiss after 3 seconds
-    if (this.splashTimeout) clearTimeout(this.splashTimeout);
-    this.splashTimeout = setTimeout(() => {
-      this.dismissSplashScreen();
-    }, 3200);
+    // TIDAK ADA AUTO-DISMISS: Tetap di layar opening sampai user klik tombol untuk masuk
   },
 
   dismissSplashScreen() {
@@ -978,9 +973,51 @@ const app = {
         window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
       });
     }
+
+    // Mobile swipe-back gesture & browser history management (HP Friendly)
+    try {
+      history.replaceState({ tab: "home" }, "");
+    } catch (e) {}
+
+    window.addEventListener("popstate", (e) => {
+      // 1. Jika ada popup modal aktif, tutup modal (jangan keluar aplikasi)
+      const activeModal = document.querySelector(".modal-overlay.active");
+      if (activeModal) {
+        activeModal.classList.remove("active");
+        try {
+          history.pushState({ tab: this.currentTab }, "");
+        } catch (err) {}
+        return;
+      }
+
+      // 2. Jika splash screen masih aktif, sembunyikan splash screen
+      const splash = document.getElementById("appSplashScreen");
+      if (splash && !splash.classList.contains("splash-fade-out") && splash.style.display !== "none") {
+        this.dismissSplashScreen();
+        try {
+          history.pushState({ tab: this.currentTab }, "");
+        } catch (err) {}
+        return;
+      }
+
+      // 3. Jika sedang berada di tab selain Beranda, kembali ke Beranda (Menu Awal)
+      if (this.currentTab !== "home") {
+        this.switchTab("home", false);
+        return;
+      }
+
+      if (e.state && e.state.tab) {
+        this.switchTab(e.state.tab, false);
+      }
+    });
   },
 
-  switchTab(tabId) {
+  switchTab(tabId, pushHistory = true) {
+    if (pushHistory && tabId !== this.currentTab) {
+      try {
+        history.pushState({ tab: tabId }, "");
+      } catch (err) {}
+    }
     this.currentTab = tabId;
 
     // Update Desktop Tabs

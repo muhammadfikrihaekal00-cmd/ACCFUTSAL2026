@@ -856,20 +856,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T01",
       awayId: "T02",
-      homeScore: 3,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T01", player: "Erling Haaland", minute: "4'" },
-        { team: "T02", player: "Kylian Mbappe", minute: "9'" },
-        { team: "T01", player: "Erling Haaland", minute: "17'" },
-        { team: "T02", player: "Antoine Griezmann", minute: "22'" },
-        { team: "T01", player: "Martin Odegaard", minute: "27'" }
-      ],
-      cards: [
-        { team: "T01", player: "Julian Ryerson", type: "yellow", minute: "14'" },
-        { team: "T02", player: "William Saliba", type: "yellow", minute: "25'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M02",
@@ -882,18 +873,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T03",
       awayId: "T04",
-      homeScore: 3,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T03", player: "Harry Kane", minute: "6'" },
-        { team: "T04", player: "Cristiano Ronaldo", minute: "12'" },
-        { team: "T03", player: "Jude Bellingham", minute: "19'" },
-        { team: "T03", player: "Bukayo Saka", minute: "26'" }
-      ],
-      cards: [
-        { team: "T04", player: "Ruben Dias", type: "yellow", minute: "18'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M03",
@@ -906,18 +890,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T05",
       awayId: "T06",
-      homeScore: 2,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T05", player: "Luka Modricc", minute: "5'" },
-        { team: "T06", player: "Lamine Yamal", minute: "11'" },
-        { team: "T06", player: "Rodri", minute: "18'" },
-        { team: "T05", player: "Andrej Kramaricc", minute: "24'" }
-      ],
-      cards: [
-        { team: "T06", player: "Dani Carvajal", type: "yellow", minute: "15'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M04",
@@ -930,18 +907,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T07",
       awayId: "T08",
-      homeScore: 3,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T07", player: "Kevin De Bruyne", minute: "7'" },
-        { team: "T07", player: "Romelu Lukaku", minute: "14'" },
-        { team: "T08", player: "Robert Lewandowski", minute: "20'" },
-        { team: "T07", player: "Jeremy Doku", minute: "28'" }
-      ],
-      cards: [
-        { team: "T08", player: "Jakub Kiwior", type: "yellow", minute: "12'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M05",
@@ -954,18 +924,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T09",
       awayId: "T10",
-      homeScore: 3,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T09", player: "Jamal Musiala", minute: "8'" },
-        { team: "T10", player: "Cody Gakpo", minute: "15'" },
-        { team: "T09", player: "Florian Wirtz", minute: "21'" },
-        { team: "T09", player: "Jamal Musiala", minute: "27'" }
-      ],
-      cards: [
-        { team: "T09", player: "Antonio Rudiger", type: "yellow", minute: "10'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M06",
@@ -978,17 +941,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T11",
       awayId: "T12",
-      homeScore: 1,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T11", player: "Federico Chiesa", minute: "9'" },
-        { team: "T12", player: "Breel Embolo", minute: "16'" },
-        { team: "T12", player: "Dan Ndoye", minute: "25'" }
-      ],
-      cards: [
-        { team: "T11", player: "Alessandro Bastoni", type: "yellow", minute: "18'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M07",
@@ -1001,18 +958,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T13",
       awayId: "T14",
-      homeScore: 3,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T13", player: "Toni Kroos", minute: "5'" },
-        { team: "T13", player: "Thomas Muller", minute: "13'" },
-        { team: "T14", player: "Rasmus Hojlund", minute: "20'" },
-        { team: "T13", player: "Ilkay Gundogan", minute: "26'" }
-      ],
-      cards: [
-        { team: "T14", player: "Andreas Christensen", type: "yellow", minute: "22'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M08",
@@ -1025,17 +975,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T15",
       awayId: "T16",
-      homeScore: 2,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T15", player: "Khvicha Kvaratskhelia", minute: "7'" },
-        { team: "T16", player: "Arda Guler", minute: "15'" },
-        { team: "T15", player: "Georges Mikautadze", minute: "24'" }
-      ],
-      cards: [
-        { team: "T16", player: "Merih Demiral", type: "yellow", minute: "19'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
 
     // SD MATCHDAY 1 (HARI 1 SORE)
@@ -1050,19 +994,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T17",
       awayId: "T18",
-      homeScore: 3,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T17", player: "Wayne Rooney", minute: "4'" },
-        { team: "T18", player: "Zinedine Zidane", minute: "10'" },
-        { team: "T17", player: "David Beckham", minute: "18'" },
-        { team: "T18", player: "Thierry Henry", minute: "23'" },
-        { team: "T17", player: "Wayne Rooney", minute: "28'" }
-      ],
-      cards: [
-        { team: "T17", player: "Steven Gerrard", type: "yellow", minute: "12'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M10",
@@ -1075,17 +1011,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T19",
       awayId: "T20",
-      homeScore: 2,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T19", player: "Fernando Torres", minute: "8'" },
-        { team: "T20", player: "Alessandro Del Piero", minute: "16'" },
-        { team: "T19", player: "Andres Iniesta", minute: "25'" }
-      ],
-      cards: [
-        { team: "T20", player: "Gennaro Gattuso", type: "yellow", minute: "21'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M11",
@@ -1098,19 +1028,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T21",
       awayId: "T22",
-      homeScore: 3,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T21", player: "Robin van Persie", minute: "6'" },
-        { team: "T22", player: "Miroslav Klose", minute: "12'" },
-        { team: "T21", player: "Arjen Robben", minute: "19'" },
-        { team: "T22", player: "Bastian Schweinsteiger", minute: "24'" },
-        { team: "T21", player: "Robin van Persie", minute: "27'" }
-      ],
-      cards: [
-        { team: "T21", player: "Jaap Stam", type: "yellow", minute: "15'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M12",
@@ -1123,17 +1045,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T23",
       awayId: "T24",
-      homeScore: 2,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T23", player: "Eden Hazard", minute: "9'" },
-        { team: "T24", player: "Luis Figo", minute: "17'" },
-        { team: "T23", player: "Marouane Fellaini", minute: "26'" }
-      ],
-      cards: [
-        { team: "T24", player: "Pepe", type: "yellow", minute: "22'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
 
     // ==========================================
@@ -1150,19 +1066,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T25",
       awayId: "T26",
-      homeScore: 2,
-      awayScore: 3,
-      status: "finished",
-      scorers: [
-        { team: "T25", player: "Gareth Bale", minute: "5'" },
-        { team: "T26", player: "Zlatan Ibrahimovicc", minute: "11'" },
-        { team: "T26", player: "Henrik Larsson", minute: "18'" },
-        { team: "T25", player: "Gareth Bale", minute: "22'" },
-        { team: "T26", player: "Zlatan Ibrahimovicc", minute: "27'" }
-      ],
-      cards: [
-        { team: "T26", player: "Zlatan Ibrahimovicc", type: "yellow", minute: "14'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M14",
@@ -1175,17 +1083,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T27",
       awayId: "T28",
-      homeScore: 2,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T27", player: "Aleksandar Mitrovicc", minute: "8'" },
-        { team: "T28", player: "Dominik Szoboszlai", minute: "16'" },
-        { team: "T27", player: "Sergej Milinkovic-Savic", minute: "25'" }
-      ],
-      cards: [
-        { team: "T28", player: "Willi Orban", type: "yellow", minute: "19'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M15",
@@ -1198,18 +1100,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T29",
       awayId: "T30",
-      homeScore: 2,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T29", player: "Benjamin Sesko", minute: "7'" },
-        { team: "T30", player: "Cole Palmer", minute: "13'" },
-        { team: "T29", player: "Benjamin Sesko", minute: "21'" },
-        { team: "T30", player: "Kobbie Mainoo", minute: "28'" }
-      ],
-      cards: [
-        { team: "T29", player: "Jaka Bijol", type: "yellow", minute: "17'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M16",
@@ -1222,18 +1117,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T31",
       awayId: "T32",
-      homeScore: 1,
-      awayScore: 3,
-      status: "finished",
-      scorers: [
-        { team: "T32", player: "Fermin Lopez", minute: "6'" },
-        { team: "T31", player: "Bradley Barcola", minute: "14'" },
-        { team: "T32", player: "Samu Omorodion", minute: "20'" },
-        { team: "T32", player: "Fermin Lopez", minute: "26'" }
-      ],
-      cards: [
-        { team: "T31", player: "Warren Zaire-Emery", type: "yellow", minute: "18'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
 
     // MATCHDAY 2 SMP
@@ -1248,18 +1136,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T01",
       awayId: "T03",
-      homeScore: 2,
-      awayScore: 2,
-      status: "finished",
-      scorers: [
-        { team: "T01", player: "Erling Haaland", minute: "6'" },
-        { team: "T03", player: "Harry Kane", minute: "12'" },
-        { team: "T03", player: "Jude Bellingham", minute: "19'" },
-        { team: "T01", player: "Erling Haaland", minute: "26'" }
-      ],
-      cards: [
-        { team: "T03", player: "Jude Bellingham", type: "yellow", minute: "24'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M18",
@@ -1272,18 +1153,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T02",
       awayId: "T04",
-      homeScore: 3,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T02", player: "Kylian Mbappe", minute: "5'" },
-        { team: "T02", player: "Kylian Mbappe", minute: "14'" },
-        { team: "T04", player: "Cristiano Ronaldo", minute: "21'" },
-        { team: "T02", player: "Antoine Griezmann", minute: "27'" }
-      ],
-      cards: [
-        { team: "T04", player: "Joao Palhinha", type: "yellow", minute: "19'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     {
       id: "M19",
@@ -1296,17 +1170,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T05",
       awayId: "T07",
-      homeScore: 2,
-      awayScore: 1,
-      status: "finished",
-      scorers: [
-        { team: "T05", player: "Luka Modricc", minute: "7'" },
-        { team: "T07", player: "Kevin De Bruyne", minute: "15'" },
-        { team: "T05", player: "Luka Modricc", minute: "23'" }
-      ],
-      cards: [
-        { team: "T07", player: "Amadou Onana", type: "yellow", minute: "20'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
     // LAGA M20: SEDANG BERLANGSUNG (LIVE SKOR UNTUK BAHAN DEMO PRESENTASI!)
     {
@@ -1320,21 +1188,11 @@ const DEFAULT_DATA = {
       pitch: "Lapangan Utama (Vinyl)",
       homeId: "T06",
       awayId: "T08",
-      homeScore: 2,
-      awayScore: 2,
-      status: "live",
-      liveMinute: "24'",
-      homeScoreLive: 2,
-      awayScoreLive: 2,
-      scorers: [
-        { team: "T06", player: "Lamine Yamal", minute: "6'" },
-        { team: "T08", player: "Robert Lewandowski", minute: "12'" },
-        { team: "T06", player: "Lamine Yamal", minute: "17'" },
-        { team: "T08", player: "Robert Lewandowski", minute: "21'" }
-      ],
-      cards: [
-        { team: "T08", player: "Jan Bednarek", type: "yellow", minute: "15'" }
-      ]
+      homeScore: null,
+      awayScore: null,
+      status: "upcoming",
+      scorers: [],
+      cards: []
     },
 
     // SISA LAGA MATCHDAY 2 (HARI 2 SORE - STATUS UPCOMING)
