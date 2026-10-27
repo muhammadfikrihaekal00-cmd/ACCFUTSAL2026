@@ -1677,6 +1677,8 @@ const admin = {
         </div>
       </div>
     `).join("");
+  },
+
   // ==========================================
   // DEMO SIMULATION & RESET (PRESENTASI YAYASAN & PANITIA)
   // ==========================================
