@@ -182,7 +182,7 @@ const DEFAULT_DATA = {
         { no: 4, name: "William Saliba", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
         { no: 7, name: "Antoine Griezmann", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 10, name: "Kylian Mbappe (C)", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
-        { no: 11, name: "Ousmane Dembele pos: "Flank", goals: 1, yc: 0, rc: 0 },
+        { no: 11, name: "Ousmane Dembele", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 13, name: "Yann Sommer", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 6, name: "Eduardo Camavinga", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
         { no: 9, name: "Marcus Thuram", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
@@ -356,7 +356,7 @@ const DEFAULT_DATA = {
         { no: 7, name: "Xavi Simons", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 11, name: "Cody Gakpo", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 13, name: "Mark Flekken", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Nathan Ake pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 5, name: "Nathan Ake", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
         { no: 9, name: "Memphis Depay", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -826,7 +826,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Fikri Haekal", coach: "Coach Xavi Hernandez", phone: "0812-9876-5432", jerseyHome: "Hijau Emerald - Emas", jerseyAway: "Putih - Emas" },
       players: [
         { no: 1, name: "Joan Garcia", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Pau Cubarsi pos: "Anchor", goals: 0, yc: 0, rc: 0 },
+        { no: 2, name: "Pau Cubarsi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 16, name: "Fermin Lopez (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
         { no: 9, name: "Samu Omorodion", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 10, name: "Bryan Zaragoza", pos: "Flank", goals: 1, yc: 0, rc: 0 },
@@ -859,7 +859,7 @@ const DEFAULT_DATA = {
       status: "finished",
       scorers: [
         { team: "T01", player: "Erling Haaland", minute: "4'" },
-        { team: "T02", player: "Kylian Mbappe minute: "9'" },
+        { team: "T02", player: "Kylian Mbappe", minute: "9'" },
         { team: "T01", player: "Erling Haaland", minute: "17'" },
         { team: "T02", player: "Antoine Griezmann", minute: "22'" },
         { team: "T01", player: "Martin Odegaard", minute: "27'" }
@@ -1274,8 +1274,8 @@ const DEFAULT_DATA = {
       awayScore: 1,
       status: "finished",
       scorers: [
-        { team: "T02", player: "Kylian Mbappe minute: "5'" },
-        { team: "T02", player: "Kylian Mbappe minute: "14'" },
+        { team: "T02", player: "Kylian Mbappe", minute: "5'" },
+        { team: "T02", player: "Kylian Mbappe", minute: "14'" },
         { team: "T04", player: "Cristiano Ronaldo", minute: "21'" },
         { team: "T02", player: "Antoine Griezmann", minute: "27'" }
       ],
