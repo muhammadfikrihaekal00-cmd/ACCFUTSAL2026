@@ -259,6 +259,28 @@
       }
     }
 
+    // Push Config Data
+    async syncConfig(config) {
+      if (!this.client || !this.isConfigured) return false;
+      try {
+        const { error } = await this.client.from('tournament_config').upsert({
+          id: 'config_main',
+          tournament_name: config.tournamentName || "ACC 2026",
+          sub_title: config.subTitle || "",
+          venue: config.venue || "",
+          dates: config.dates || "",
+          youtube_live_url: config.youtubeLiveUrl || "",
+          youtube_live_title: config.youtubeLiveTitle || "",
+          running_announcement: config.runningAnnouncement || "",
+          hero_banner_image: config.heroBannerImage || "",
+          updated_at: new Date().toISOString()
+        });
+        return !error;
+      } catch (e) {
+        return false;
+      }
+    }
+
     // Push Team Data
     async syncTeam(team) {
       if (!this.client || !this.isConfigured) return false;
@@ -281,9 +303,96 @@
           players: team.players || [],
           updated_at: new Date().toISOString()
         });
+        if (error) {
+          console.warn("Supabase syncTeam notice:", error.message);
+          this.lastError = error.message;
+        }
         return !error;
       } catch (e) {
         return false;
+      }
+    }
+
+    // Push Entire Tournament Dataset to Supabase
+    async syncAllData(data) {
+      if (!this.client || !this.isConfigured) {
+        return { ok: false, message: "Klien Supabase belum terkonfigurasi." };
+      }
+      try {
+        // 1. Teams
+        if (data.teams && Array.isArray(data.teams)) {
+          const teamsPayload = data.teams.map(t => ({
+            id: t.id,
+            name: t.name,
+            short_name: t.shortName,
+            badge_color: t.badgeColor,
+            city: t.city,
+            group_letter: t.group,
+            official_coach: t.official ? t.official.coach : '',
+            official_manager: t.official ? t.official.manager : '',
+            official_medic: t.official ? t.official.medic : '',
+            official_phone: t.official ? t.official.phone : '',
+            official_jersey_home: t.official ? t.official.jerseyHome : '',
+            official_jersey_away: t.official ? t.official.jerseyAway : '',
+            coach_photo: t.official ? t.official.coachPhoto : '',
+            manager_photo: t.official ? t.official.managerPhoto : '',
+            players: t.players || [],
+            updated_at: new Date().toISOString()
+          }));
+
+          const { error: teamErr } = await this.client.from('teams').upsert(teamsPayload);
+          if (teamErr) {
+            const isRls = teamErr.code === '42501' || (teamErr.message && teamErr.message.includes('row-level security'));
+            return { ok: false, message: teamErr.message, isRls: isRls, table: 'teams' };
+          }
+        }
+
+        // 2. Matches
+        if (data.matches && Array.isArray(data.matches)) {
+          const matchesPayload = data.matches.map(m => ({
+            id: m.id,
+            home_id: m.homeId,
+            away_id: m.awayId,
+            home_score: m.homeScore !== undefined ? m.homeScore : 0,
+            away_score: m.awayScore !== undefined ? m.awayScore : 0,
+            home_score_live: m.homeScoreLive !== undefined ? m.homeScoreLive : null,
+            away_score_live: m.awayScoreLive !== undefined ? m.awayScoreLive : null,
+            status: m.status || 'scheduled',
+            scorers: m.scorers || [],
+            cards: m.cards || [],
+            updated_at: new Date().toISOString()
+          }));
+
+          const { error: matchErr } = await this.client.from('matches').upsert(matchesPayload);
+          if (matchErr) {
+            const isRls = matchErr.code === '42501' || (matchErr.message && matchErr.message.includes('row-level security'));
+            return { ok: false, message: matchErr.message, isRls: isRls, table: 'matches' };
+          }
+        }
+
+        // 3. Config
+        if (data.config) {
+          const { error: cfgErr } = await this.client.from('tournament_config').upsert({
+            id: 'config_main',
+            tournament_name: data.config.tournamentName || "ACC 2026",
+            sub_title: data.config.subTitle || "",
+            venue: data.config.venue || "",
+            dates: data.config.dates || "",
+            youtube_live_url: data.config.youtubeLiveUrl || "",
+            youtube_live_title: data.config.youtubeLiveTitle || "",
+            running_announcement: data.config.runningAnnouncement || "",
+            hero_banner_image: data.config.heroBannerImage || "",
+            updated_at: new Date().toISOString()
+          });
+          if (cfgErr) {
+            const isRls = cfgErr.code === '42501' || (cfgErr.message && cfgErr.message.includes('row-level security'));
+            return { ok: false, message: cfgErr.message, isRls: isRls, table: 'tournament_config' };
+          }
+        }
+
+        return { ok: true, message: "Berhasil menyinkronkan seluruh data ke Supabase Cloud!" };
+      } catch (err) {
+        return { ok: false, message: err.message || err.toString() };
       }
     }
 

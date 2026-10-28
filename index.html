@@ -99,6 +99,10 @@
         <span class="header-v-divider"></span>
 
         <!-- Panitia / Admin Access Button -->
+        <button id="btnHeaderSync" class="header-icon-btn" onclick="if(window.admin){admin.openDeviceSyncModal();}else{alert('Fitur sinkronisasi siap');}" title="📲 Sinkronkan HP ↔ Laptop (Transfer Data Tim/Skor)" aria-label="Sinkronkan HP ke Laptop" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #10b981;">
+          <span>📲</span>
+        </button>
+
         <button id="btnOpenAdmin" class="btn-admin-header" onclick="if(window.admin){if(admin.isAuthenticated){admin.openAdminDashboard();}else{admin.openLoginModal();}}" title="Login Khusus Panitia / Input Skor" aria-label="Mode Panitia">
           <span id="adminHeaderIcon">🔒</span>
           <span id="adminHeaderLabel">Mode Panitia</span>
@@ -1078,6 +1082,27 @@
           </div>
         </div>
 
+        <!-- SINKRONISASI DATA HP ↔ LAPTOP (SOLUSI BEDA PERANGKAT) -->
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(2, 132, 199, 0.16)); border: 1.5px solid rgba(16, 185, 129, 0.45); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <h4 style="color: #10b981; font-size: 0.92rem; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>📲</span> Sinkronkan HP ↔ Laptop
+            </h4>
+            <span style="font-size: 0.7rem; background: rgba(16, 185, 129, 0.25); color: #10b981; padding: 2px 8px; border-radius: 4px; font-weight: 700;">SOLUSI 1-KLIK</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+            Baru saja mengedit tim (misal <strong>SMP ALFAYYADH</strong>) atau skor di HP dan ingin langsung muncul di Laptop?
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="admin.openDeviceSyncModal('export')" style="background: #10b981; border-color: #10b981; font-weight: 700;">
+              📤 Di HP: Salin Data HP
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="admin.openDeviceSyncModal('import')" style="background: #0284c7; border-color: #0284c7; font-weight: 700;">
+              📥 Di Laptop: Tempel & Terapkan
+            </button>
+          </div>
+        </div>
+
         <!-- Quick Panitia Tools -->
         <div>
           <h4 style="color: #10b981; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">⚽ Kelola Pertandingan & Hasil Undian</h4>
@@ -1670,6 +1695,158 @@
     </div>
   </div>
 
+  <!-- MODAL SINKRONISASI ANTAR-PERANGKAT (HP ↔ LAPTOP) -->
+  <div id="deviceSyncModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📲 Sinkronkan HP ↔ Laptop</h3>
+        <button class="modal-close" onclick="document.getElementById('deviceSyncModal').classList.remove('active');">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        
+        <!-- Tab Navigation -->
+        <div style="display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+          <button type="button" id="tabBtnSyncExport" class="btn btn-sm btn-primary" onclick="admin.switchSyncTab('export')" style="flex: 1; font-weight: 700;">
+            📤 Kirim dari HP
+          </button>
+          <button type="button" id="tabBtnSyncImport" class="btn btn-sm btn-outline" onclick="admin.switchSyncTab('import')" style="flex: 1; font-weight: 700;">
+            📥 Terima di Laptop
+          </button>
+          <button type="button" id="tabBtnSyncCloud" class="btn btn-sm btn-outline" onclick="admin.switchSyncTab('cloud')" style="flex: 1; font-weight: 700;">
+            ☁️ Cloud (Supabase)
+          </button>
+        </div>
+
+        <!-- TAB 1: KIRIM DARI HP -->
+        <div id="syncTabExport" class="sync-tab-pane">
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
+            <div style="font-weight: 700; color: #10b981; font-size: 0.88rem; margin-bottom: 4px;">
+              📱 Anda sedang membuka ini di HP?
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+              Seluruh perubahan yang baru Anda simpan di HP (termasuk <strong>Tim SMP ALFAYYADH</strong>, pemain, official, skor) tersimpan aman di HP ini. Gunakan tombol di bawah untuk mentransfernya ke Laptop:
+            </p>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+              Opsi 1: Salin Kode Data (Paling Praktis)
+            </label>
+            <textarea id="deviceSyncExportCode" readonly class="form-input" style="font-family: monospace; font-size: 0.72rem; height: 75px; resize: none; background: rgba(0,0,0,0.2);" onclick="this.select();"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="admin.copySyncCode()" style="background: #10b981; border-color: #10b981; font-weight: 700;">
+                📋 1-Klik Salin Kode Data
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.shareSyncWhatsApp()" style="color: #25d366; border-color: #25d366; font-weight: 700;">
+                💬 Bagikan ke WhatsApp
+              </button>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.73rem; display: block; margin-top: 5px;">
+              💡 <em>Langkah:</em> Klik "Salin Kode Data", kirim ke chat WA sendiri / panitia, lalu buka WA Web di laptop dan tempel di tab "Terima di Laptop".
+            </small>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
+
+          <div>
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+              Opsi 2: Download File Cadangan (.json)
+            </label>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
+              Unduh file backup lengkap data turnamen, kirim via email/drive/WA dokumen, lalu upload di laptop.
+            </p>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.exportData()">
+              📥 Download File Backup (.json)
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 2: TERIMA DI LAPTOP -->
+        <div id="syncTabImport" class="sync-tab-pane" style="display: none;">
+          <div style="background: rgba(2, 132, 199, 0.1); border: 1px solid rgba(2, 132, 199, 0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
+            <div style="font-weight: 700; color: #0284c7; font-size: 0.88rem; margin-bottom: 4px;">
+              💻 Anda sedang membuka ini di Laptop?
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+              Tempel kode yang tadi Anda salin dari HP ke kotak di bawah ini, lalu klik "Sinkronkan Sekarang". Data laptop akan langsung terupdate 100%!
+            </p>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+              Tempel Kode Sinkronisasi dari HP:
+            </label>
+            <textarea id="deviceSyncInputCode" class="form-input" placeholder="Tempel kode sinkronisasi atau JSON dari HP di sini..." style="font-family: monospace; font-size: 0.75rem; height: 110px;"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary" onclick="admin.applySyncCode()" style="background: #0284c7; border-color: #0284c7; font-weight: 700; padding: 8px 18px;">
+                ⚡ Sinkronkan Sekarang ke Laptop
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.pasteFromClipboardToInput()">
+                📋 Tempel dari Clipboard
+              </button>
+            </div>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
+
+          <div>
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+              Atau Upload File Backup (.json):
+            </label>
+            <label class="btn btn-outline btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+              📁 Pilih File Backup .json
+              <input type="file" accept=".json" onchange="admin.importData(event); document.getElementById('deviceSyncModal').classList.remove('active');" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- TAB 3: CLOUD SYNC (SUPABASE) -->
+        <div id="syncTabCloud" class="sync-tab-pane" style="display: none;">
+          <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
+            <div style="font-weight: 700; color: #8b5cf6; font-size: 0.88rem; margin-bottom: 4px;">
+              ☁️ Sinkronisasi Otomatis Antar-Semua Perangkat (Supabase)
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+              Ingin setiap kali panitia mengedit di HP langsung OTOMATIS tampil di laptop dan HP penonton tanpa perlu salin kode manual?
+            </p>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="admin.pushAllToSupabase()" style="background: #10b981; border-color: #10b981; font-weight: 700;">
+                ☁️ Unggah Semua Data ke Supabase Cloud
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.pullAllFromSupabase()" style="color: #0284c7; border-color: #0284c7; font-weight: 700;">
+                🔄 Tarik Data Terbaru dari Supabase Cloud
+              </button>
+            </div>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 4px;">
+              ⚠️ Jika Muncul Pesan "Unauthorized / RLS Violation":
+            </div>
+            <p style="font-size: 0.73rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.35;">
+              Supabase database memerlukan izin akses tulis publik (nonaktifkan RLS). Salin script 5-baris ini dan jalankan di menu <strong>SQL Editor</strong> di dashboard Supabase Anda:
+            </p>
+            <pre style="background: #0f172a; padding: 8px; border-radius: 4px; font-size: 0.7rem; color: #38bdf8; overflow-x: auto; margin-bottom: 8px;"><code>ALTER TABLE public.teams DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.matches DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tournament_config DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.moments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.copySupabaseSqlScript()" style="font-size: 0.72rem; padding: 3px 8px;">
+              📋 Salin Script SQL Supabase
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline btn-modal-close" onclick="document.getElementById('deviceSyncModal').classList.remove('active');">Tutup</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MOBILE BOTTOM NAVIGATION (RAMAH HP & PRAKTIS) -->
   <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi Bawah Khusus HP">
     <button class="mobile-nav-item active" data-tab="home" aria-label="Beranda">
@@ -1711,11 +1888,11 @@
 
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/security.js"></script>
-  <script src="js/supabase-client.js"></script>
-  <script src="js/data.js?v=3.7"></script>
-  <script src="js/app.js?v=3.7"></script>
-  <script src="js/admin.js?v=3.7"></script>
+  <script src="js/security.js?v=3.9"></script>
+  <script src="js/supabase-client.js?v=3.9"></script>
+  <script src="js/data.js?v=3.9"></script>
+  <script src="js/app.js?v=3.9"></script>
+  <script src="js/admin.js?v=3.9"></script>
 
   <!-- Service Worker for PWA -->
   <script>

@@ -1072,7 +1072,228 @@ const admin = {
   },
 
   // ==========================================
-  // HERO BANNER MANAGEMENT (GAMBAR BERANDA)
+  // DEVICE SYNC (HP ↔ LAPTOP) SUITE
+  // ==========================================
+  openDeviceSyncModal(tab = 'export') {
+    const modal = document.getElementById("deviceSyncModal");
+    if (!modal) return;
+    this.switchSyncTab(tab);
+
+    // Generate fresh export code
+    const exportTextarea = document.getElementById("deviceSyncExportCode");
+    if (exportTextarea && window.app && app.store && app.store.data) {
+      exportTextarea.value = JSON.stringify(app.store.data);
+    }
+
+    modal.classList.add("active");
+  },
+
+  switchSyncTab(tab) {
+    const tabExport = document.getElementById("syncTabExport");
+    const tabImport = document.getElementById("syncTabImport");
+    const tabCloud = document.getElementById("syncTabCloud");
+    const btnExport = document.getElementById("tabBtnSyncExport");
+    const btnImport = document.getElementById("tabBtnSyncImport");
+    const btnCloud = document.getElementById("tabBtnSyncCloud");
+
+    if (tab === 'import') {
+      if (tabExport) tabExport.style.display = "none";
+      if (tabImport) tabImport.style.display = "block";
+      if (tabCloud) tabCloud.style.display = "none";
+
+      if (btnExport) { btnExport.className = "btn btn-sm btn-outline"; }
+      if (btnImport) { btnImport.className = "btn btn-sm btn-primary"; }
+      if (btnCloud) { btnCloud.className = "btn btn-sm btn-outline"; }
+    } else if (tab === 'cloud') {
+      if (tabExport) tabExport.style.display = "none";
+      if (tabImport) tabImport.style.display = "none";
+      if (tabCloud) tabCloud.style.display = "block";
+
+      if (btnExport) { btnExport.className = "btn btn-sm btn-outline"; }
+      if (btnImport) { btnImport.className = "btn btn-sm btn-outline"; }
+      if (btnCloud) { btnCloud.className = "btn btn-sm btn-primary"; }
+    } else {
+      if (tabExport) tabExport.style.display = "block";
+      if (tabImport) tabImport.style.display = "none";
+      if (tabCloud) tabCloud.style.display = "none";
+
+      if (btnExport) { btnExport.className = "btn btn-sm btn-primary"; }
+      if (btnImport) { btnImport.className = "btn btn-sm btn-outline"; }
+      if (btnCloud) { btnCloud.className = "btn btn-sm btn-outline"; }
+    }
+  },
+
+  async copySyncCode() {
+    const exportTextarea = document.getElementById("deviceSyncExportCode");
+    if (!exportTextarea || !exportTextarea.value) {
+      if (window.app && app.store && app.store.data) {
+        exportTextarea.value = JSON.stringify(app.store.data);
+      }
+    }
+    const code = (exportTextarea && exportTextarea.value) || "";
+    if (!code) {
+      alert("Belum ada data untuk disalin.");
+      return;
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(code);
+      } else {
+        exportTextarea.select();
+        document.execCommand('copy');
+      }
+      app.showToast("📋 Kode data berhasil disalin! Buka laptop dan tempel di tab 'Terima di Laptop'");
+    } catch (e) {
+      exportTextarea.select();
+      document.execCommand('copy');
+      app.showToast("📋 Kode data tersalin ke clipboard!");
+    }
+  },
+
+  shareSyncWhatsApp() {
+    this.copySyncCode();
+    const text = `*SYNC DATA ACC FUTSAL 2026*\n\nData turnamen terbaru dari HP siap disinkronkan ke Laptop.\nBuka tautan website di Laptop:\nhttps://accfutsal2026.vercel.app\n\nKlik tombol 📲 Sinkron HP ↔ Laptop, lalu tempel kode data backup.`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  },
+
+  async pasteFromClipboardToInput() {
+    const input = document.getElementById("deviceSyncInputCode");
+    if (!input) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          input.value = text;
+          app.showToast("Kode berhasil ditempel dari clipboard!");
+          return;
+        }
+      }
+    } catch (err) {}
+    input.focus();
+    app.showToast("Silakan klik kanan / tahan di kotak lalu pilih Tempel (Paste).");
+  },
+
+  applySyncCode() {
+    const input = document.getElementById("deviceSyncInputCode");
+    if (!input || !input.value.trim()) {
+      alert("Harap masukkan atau tempel kode data sinkronisasi terlebih dahulu!");
+      return;
+    }
+    const raw = input.value.trim();
+    let parsed = null;
+
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e1) {
+      try {
+        parsed = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      } catch (e2) {
+        alert("Format kode tidak valid. Pastikan Anda menyalin seluruh teks kode tanpa terpotong.");
+        return;
+      }
+    }
+
+    if (!parsed) {
+      alert("Data tidak dapat dibaca.");
+      return;
+    }
+
+    // Kasus 1: Full tournament data (teams & matches)
+    if (parsed.teams && parsed.matches) {
+      app.store.data = parsed;
+      app.store.saveData();
+      app.store.syncKnockoutFromStandings();
+      if (typeof app.renderHeader === 'function') app.renderHeader();
+      if (typeof app.renderCurrentView === 'function') app.renderCurrentView();
+      if (typeof app.renderTeams === 'function') app.renderTeams();
+      if (typeof app.renderStandings === 'function') app.renderStandings();
+
+      const modal = document.getElementById("deviceSyncModal");
+      if (modal) modal.classList.remove("active");
+      app.showToast("🎉 Sinkronisasi Berhasil! Seluruh data dari HP telah masuk ke Laptop!");
+      return;
+    }
+
+    // Kasus 2: Single Team object (misal editan SMP Alfayyadh)
+    if (parsed.id && parsed.name && app.store && app.store.data && app.store.data.teams) {
+      const idx = app.store.data.teams.findIndex(t => t.id === parsed.id || t.name.toLowerCase() === parsed.name.toLowerCase());
+      if (idx !== -1) {
+        app.store.data.teams[idx] = { ...app.store.data.teams[idx], ...parsed };
+      } else {
+        app.store.data.teams.push(parsed);
+      }
+      app.store.saveData();
+      if (typeof app.renderTeams === 'function') app.renderTeams();
+      if (typeof app.renderCurrentView === 'function') app.renderCurrentView();
+
+      const modal = document.getElementById("deviceSyncModal");
+      if (modal) modal.classList.remove("active");
+      app.showToast(`🎉 Berhasil sinkronisasi Tim ${parsed.name} ke Laptop!`);
+      return;
+    }
+
+    alert("Struktur data tidak dikenali. Harap gunakan kode backup resmi.");
+  },
+
+  async pushAllToSupabase() {
+    if (!window.SupabaseService) {
+      alert("Supabase client belum tersedia.");
+      return;
+    }
+    app.showToast("☁️ Sedang mengunggah data ke Supabase Cloud...");
+    const res = await window.SupabaseService.syncAllData(app.store.data);
+    if (res.ok) {
+      app.showToast("✅ Berhasil! Semua data turnamen tersimpan di Supabase Cloud!");
+    } else {
+      if (res.isRls) {
+        alert("Pemberitahuan Supabase RLS:\nSupabase menolak pengunggahan karena proteksi Row-Level Security (RLS) masih aktif.\n\nSilakan jalankan script SQL yang ada di tab Supabase Cloud pada SQL Editor di dashboard Supabase Anda.");
+      } else {
+        alert("Gagal unggah ke Supabase: " + (res.message || "Periksa koneksi"));
+      }
+    }
+  },
+
+  async pullAllFromSupabase() {
+    if (!window.SupabaseService) {
+      alert("Supabase client belum tersedia.");
+      return;
+    }
+    app.showToast("☁️ Mengunduh data terbaru dari Supabase...");
+    const data = await window.SupabaseService.fetchAllData();
+    if (data && (data.matches || data.teams)) {
+      if (data.matches && data.matches.length > 0) app.store.data.matches = data.matches;
+      if (data.teams && data.teams.length > 0) app.store.data.teams = data.teams;
+      if (data.config) Object.assign(app.store.data.config, data.config);
+      app.store.saveData();
+      app.store.syncKnockoutFromStandings();
+      if (typeof app.renderHeader === 'function') app.renderHeader();
+      if (typeof app.renderCurrentView === 'function') app.renderCurrentView();
+      app.showToast("🎉 Data terbaru dari Cloud Supabase berhasil diterapkan!");
+      const modal = document.getElementById("deviceSyncModal");
+      if (modal) modal.classList.remove("active");
+    } else {
+      alert("Belum ada data turnamen yang tersimpan di database Supabase Cloud.");
+    }
+  },
+
+  async copySupabaseSqlScript() {
+    const sql = `ALTER TABLE public.teams DISABLE ROW LEVEL SECURITY;\nALTER TABLE public.matches DISABLE ROW LEVEL SECURITY;\nALTER TABLE public.tournament_config DISABLE ROW LEVEL SECURITY;\nALTER TABLE public.moments DISABLE ROW LEVEL SECURITY;\nALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;`;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(sql);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = sql;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      app.showToast("📋 Script SQL Supabase berhasil disalin!");
+    } catch (e) {
+      app.showToast("Gagal salin otomatis. Silakan salin teks manual.");
+    }
+  },
   // ==========================================
   openHeroBannerModal() {
     if (!this.isAuthenticated) {
