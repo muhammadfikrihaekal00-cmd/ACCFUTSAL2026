@@ -679,7 +679,7 @@ const app = {
               <span class="live-blink-circle"></span>
               <span>LIVE BROADCAST</span>
             </div>
-            <h3 class="live-stream-title">${title}</h3>
+            <h2 class="live-stream-title">${title}</h2>
           </div>
           <div class="live-stream-header-right">
             <button class="btn btn-outline btn-sm btn-edit-stream" onclick="admin.openYoutubeLiveModal()" title="Ubah Link Siaran Langsung YouTube (Panitia)">

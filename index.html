@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="Portal Resmi Pemantauan Pertandingan, Skor Langsung, Klasemen, Bagan Gugur, dan Disiplin Kartu ACC Al-Fayyadh Champions Cup 2026 - Ma'had Tahfizhul Qur'an Al Fayyadh.">
   <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
@@ -12,8 +12,13 @@
   <link rel="icon" type="image/png" href="assets/acc_logo.png">
   <link rel="apple-touch-icon" href="assets/acc_logo.png">
 
-  <!-- Fonts & Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=3.7">
+  <!-- Google Fonts Preconnect & Optimized Loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css?v=4.2">
 </head>
 <body>
 
@@ -24,7 +29,7 @@
       <div class="splash-logo-container">
         <div class="splash-logo-pulse-ring"></div>
         <div class="splash-logo-pulse-ring delay"></div>
-        <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img">
+        <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img" width="160" height="227" fetchpriority="high">
       </div>
 
       <div class="splash-badge-edition">
@@ -114,7 +119,7 @@
     <!-- HERO SECTION / BANNER RAMAH DENGAN BANYAK WHITE SPACE -->
     <div class="hero-card">
       <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
-        <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge">
+        <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="80" height="113" loading="lazy">
         <div class="hero-details">
           <div class="hero-badge-live">
             <span class="pulse-dot"></span>
@@ -1884,11 +1889,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/security.js?v=4.1"></script>
-  <script src="js/supabase-client.js?v=4.1"></script>
-  <script src="js/data.js?v=4.1"></script>
-  <script src="js/app.js?v=4.1"></script>
-  <script src="js/admin.js?v=4.1"></script>
+  <script src="js/security.js?v=4.2"></script>
+  <script src="js/supabase-client.js?v=4.2"></script>
+  <script src="js/data.js?v=4.2"></script>
+  <script src="js/app.js?v=4.2"></script>
+  <script src="js/admin.js?v=4.2"></script>
 
   <!-- Service Worker for PWA -->
   <script>
