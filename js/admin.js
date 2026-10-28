@@ -223,10 +223,16 @@ const admin = {
     const away = app.store.getTeam(match.awayId) || { name: match.awayPlaceholder || "TBD", shortName: "TBD" };
 
     const modal = document.getElementById("quickScoreModal");
-    document.getElementById("quickScoreMatchTitle").textContent = `${match.id}: ${home.shortName} vs ${away.shortName}`;
+    const cleanH = (home.shortName || home.name).replace(/\s*SMP\s*/gi, "").replace(/\s*SD\s*/gi, "").trim() || home.shortName;
+    const cleanA = (away.shortName || away.name).replace(/\s*SMP\s*/gi, "").replace(/\s*SD\s*/gi, "").trim() || away.shortName;
 
-    document.getElementById("homeTeamLabel").textContent = home.name;
-    document.getElementById("awayTeamLabel").textContent = away.name;
+    const badgeEl = document.getElementById("quickScoreMatchBadge");
+    if (badgeEl) badgeEl.textContent = match.id;
+    const titleEl = document.getElementById("quickScoreMatchTitle");
+    if (titleEl) titleEl.textContent = `${cleanH} vs ${cleanA}`;
+
+    document.getElementById("homeTeamLabel").textContent = home.shortName || home.name;
+    document.getElementById("awayTeamLabel").textContent = away.shortName || away.name;
 
     const homeScoreVal = match.status === 'live' ? (match.homeScoreLive || 0) : (match.homeScore || 0);
     const awayScoreVal = match.status === 'live' ? (match.awayScoreLive || 0) : (match.awayScore || 0);
@@ -235,7 +241,8 @@ const admin = {
     document.getElementById("awayScoreDisplay").textContent = awayScoreVal;
     
     const statusSelect = document.getElementById("matchStatusSelect");
-    statusSelect.value = match.status;
+    if (statusSelect) statusSelect.value = match.status;
+    this.updateStatusPills(match.status);
 
     // Hentikan timer sebelumnya jika masih aktif
     this.stopLiveTimer();
@@ -269,20 +276,23 @@ const admin = {
       }
     }
 
-    statusSelect.onchange = () => {
-      if (statusSelect.value === "live") {
-        if (!matchMinInput.value || matchMinInput.value === "0'") {
-          matchMinInput.value = "1'";
-          this.syncEventMinute("1");
+    if (statusSelect) {
+      statusSelect.onchange = () => {
+        this.updateStatusPills(statusSelect.value);
+        if (statusSelect.value === "live") {
+          if (!matchMinInput.value || matchMinInput.value === "0'") {
+            matchMinInput.value = "1'";
+            this.syncEventMinute("1");
+          }
+        } else {
+          this.stopLiveTimer();
         }
-      } else {
-        this.stopLiveTimer();
-      }
-    };
+      };
+    }
 
     const btnTimer = document.getElementById("btnLiveTimerToggle");
     if (btnTimer) {
-      btnTimer.innerHTML = "⏱️ Stopwatch";
+      btnTimer.innerHTML = "⏱️";
       btnTimer.classList.remove("active");
     }
 
@@ -290,6 +300,50 @@ const admin = {
     this.populateEventTeamSelectors(match);
 
     modal.classList.add("active");
+    document.body.classList.add("modal-open");
+  },
+
+  setStatus(status) {
+    const statusSelect = document.getElementById("matchStatusSelect");
+    if (statusSelect) statusSelect.value = status;
+    this.updateStatusPills(status);
+
+    const minInput = document.getElementById("matchMinuteInput");
+    if (status === "live") {
+      if (!minInput.value || minInput.value === "0'") {
+        minInput.value = "1'";
+        this.syncEventMinute("1");
+      }
+    } else {
+      this.stopLiveTimer();
+    }
+  },
+
+  updateStatusPills(status) {
+    document.querySelectorAll(".status-pill-btn").forEach(btn => {
+      const bStatus = btn.dataset.status;
+      btn.classList.remove("active", "active-upcoming", "active-live", "active-finished");
+      if (bStatus === status) {
+        btn.classList.add("active", `active-${status}`);
+      }
+    });
+  },
+
+  finishMatchDirectly() {
+    const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
+    if (!match) return;
+
+    const hScore = document.getElementById("homeScoreDisplay").textContent || "0";
+    const aScore = document.getElementById("awayScoreDisplay").textContent || "0";
+    const home = app.store.getTeam(match.homeId);
+    const away = app.store.getTeam(match.awayId);
+    const hName = home ? (home.shortName || home.name) : "Home";
+    const aName = away ? (away.shortName || away.name) : "Away";
+
+    if (confirm(`Akhiri & Selesaikan Pertandingan Ini?\n\nSkor Akhir: ${hName} ${hScore} - ${aScore} ${aName}\n\nStatus akan langsung disimpan sebagai SELESAI (Finished) dan klasemen akan langsung terupdate.`)) {
+      this.setStatus("finished");
+      this.saveQuickScore("finished");
+    }
   },
 
   // Stopwatch & Sinkronisasi Menit Laga
@@ -302,9 +356,10 @@ const admin = {
     }
     const btn = document.getElementById("btnLiveTimerToggle");
     if (btn) {
-      btn.innerHTML = "⏱️ Stopwatch";
+      btn.innerHTML = "⏱️";
       btn.classList.remove("active");
     }
+    document.body.classList.remove("modal-open");
   },
 
   toggleLiveTimer() {
@@ -319,7 +374,7 @@ const admin = {
     }
 
     if (statusSelect && statusSelect.value !== "live") {
-      statusSelect.value = "live";
+      this.setStatus("live");
     }
 
     let cur = parseInt((input?.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
@@ -328,7 +383,7 @@ const admin = {
     this.syncEventMinute(cur);
 
     if (btn) {
-      btn.innerHTML = `⏸️ ${cur}' (Jalan)`;
+      btn.innerHTML = `⏸️ ${cur}'`;
       btn.classList.add("active");
     }
 
@@ -337,10 +392,10 @@ const admin = {
       nowMin += 1;
       if (input) input.value = `${nowMin}'`;
       this.syncEventMinute(nowMin);
-      if (btn) btn.innerHTML = `⏸️ ${nowMin}' (Jalan)`;
+      if (btn) btn.innerHTML = `⏸️ ${nowMin}'`;
     }, 60000);
 
-    app.showToast(`⏱️ Stopwatch dimulai dari menit ${cur}'`);
+    app.showToast(`⏱️ Stopwatch menit ${cur}' dimulai`);
   },
 
   stepMatchMinute(delta) {
@@ -550,7 +605,7 @@ const admin = {
     this.renderAdminEventsList(match);
   },
 
-  saveQuickScore() {
+  saveQuickScore(overrideStatus = null) {
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
     if (!match) return;
 
@@ -558,7 +613,7 @@ const admin = {
 
     const hScore = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
     const aScore = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
-    const status = document.getElementById("matchStatusSelect").value;
+    const status = overrideStatus || document.getElementById("matchStatusSelect").value;
     
     let minute = document.getElementById("matchMinuteInput").value.trim();
     if (minute) {
@@ -593,7 +648,8 @@ const admin = {
     }
 
     document.getElementById("quickScoreModal").classList.remove("active");
-    app.showToast("Skor dan data pertandingan berhasil disimpan!");
+    document.body.classList.remove("modal-open");
+    app.showToast(status === 'finished' ? "🏁 Pertandingan selesai & hasil resmi disimpan!" : "💾 Skor pertandingan berhasil disimpan!");
     app.renderCurrentView();
   },
 

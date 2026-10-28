@@ -958,6 +958,7 @@ const app = {
     document.querySelectorAll(".modal-close, .btn-modal-close").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("active"));
+        document.body.classList.remove("modal-open");
       });
     });
 

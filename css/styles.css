@@ -2246,15 +2246,64 @@ body.dark-theme .player-rating-pill.rating-great {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
-  z-index: 200;
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
   align-items: center;
   justify-content: center;
   padding: 16px;
 }
 .modal-overlay.active {
   display: flex;
+}
+body.modal-open .mobile-nav,
+body:has(.modal-overlay.active) .mobile-nav {
+  display: none !important;
+}
+
+/* Status Pill Selector */
+.status-pill-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+  background: var(--bg-surface-elevated);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+.status-pill-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+.status-pill-btn:hover {
+  color: var(--text-main);
+}
+.status-pill-btn.active-upcoming {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.status-pill-btn.active-live {
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+}
+.status-pill-btn.active-finished {
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
 }
 .modal-box {
   background: var(--bg-surface);
@@ -3496,30 +3545,54 @@ body.dark-theme .mobile-nav-item.active {
   .modal-overlay {
     align-items: flex-end !important;
     padding: 0 !important;
+    z-index: 2000 !important;
   }
   .modal-box {
     width: 100% !important;
     max-width: 100% !important;
-    max-height: 88vh !important;
+    max-height: 94vh !important;
+    height: auto !important;
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     border-top-left-radius: 20px !important;
     border-top-right-radius: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  .modal-box > form {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
   }
   .modal-header {
-    padding: 14px 16px !important;
-    position: sticky;
+    padding: 10px 14px !important;
+    position: sticky !important;
     top: 0;
     z-index: 10;
-    background: var(--bg-card);
+    background: var(--bg-surface) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    flex-shrink: 0 !important;
   }
   .modal-body {
-    padding: 14px 16px !important;
+    padding: 12px 14px !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    gap: 12px !important;
   }
   .modal-footer {
-    padding: 12px 16px !important;
+    padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px)) 14px !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 30 !important;
+    background: var(--bg-surface) !important;
+    border-top: 1px solid var(--border-color) !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12) !important;
+    flex-shrink: 0 !important;
   }
 
   /* Coach / Manager Unified Card on Mobile */

@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="assets/acc_logo.png">
 
   <!-- Fonts & Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=3.5">
+  <link rel="stylesheet" href="css/styles.css?v=3.7">
 </head>
 <body>
 
@@ -739,21 +739,24 @@
   <div id="quickScoreModal" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 class="modal-title" id="quickScoreMatchTitle">✏️ Input Skor Laga</h3>
-        <button class="modal-close" onclick="admin.stopLiveTimer()">&times;</button>
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; min-width: 0;">
+            <span id="quickScoreMatchBadge" style="background: var(--primary); color: #fff; font-size: 0.72rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; flex-shrink: 0;">M20</span>
+            <h3 class="modal-title" id="quickScoreMatchTitle" style="font-size: 0.95rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;">AL-AKHYAR vs AL-HIKMAH</h3>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openMatchEditor(admin.activeMatchId)" style="font-size: 0.72rem; padding: 4px 8px;" title="Ubah Pasangan Tim">⚙️ Lawan</button>
+            <button type="button" class="modal-close" onclick="admin.stopLiveTimer()" style="font-size: 1.5rem; padding: 0 4px; line-height: 1;">&times;</button>
+          </div>
+        </div>
       </div>
       <form id="quickScoreForm">
         <div class="modal-body">
-          <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openMatchEditor(admin.activeMatchId)" style="font-size: 0.74rem;">
-              ⚙️ Ubah Pasangan Tim Lawan Laga Ini
-            </button>
-          </div>
           <!-- Counter Score Tap -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: var(--bg-surface-elevated); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-surface-elevated); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
             <div style="text-align: center;">
-              <strong id="homeTeamLabel" style="font-size: 0.9rem; color: var(--text-main);">Tim Home</strong>
-              <div class="tap-counter-wrap" style="margin-top: 10px;">
+              <strong id="homeTeamLabel" style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Home</strong>
+              <div class="tap-counter-wrap" style="margin-top: 6px;">
                 <button type="button" class="btn-tap" onclick="admin.adjustScore('home', -1)">-</button>
                 <div class="score-val-display" id="homeScoreDisplay">0</div>
                 <button type="button" class="btn-tap" onclick="admin.adjustScore('home', 1)">+</button>
@@ -761,8 +764,8 @@
             </div>
 
             <div style="text-align: center;">
-              <strong id="awayTeamLabel" style="font-size: 0.9rem; color: var(--text-main);">Tim Away</strong>
-              <div class="tap-counter-wrap" style="margin-top: 10px;">
+              <strong id="awayTeamLabel" style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Away</strong>
+              <div class="tap-counter-wrap" style="margin-top: 6px;">
                 <button type="button" class="btn-tap" onclick="admin.adjustScore('away', -1)">-</button>
                 <div class="score-val-display" id="awayScoreDisplay">0</div>
                 <button type="button" class="btn-tap" onclick="admin.adjustScore('away', 1)">+</button>
@@ -770,72 +773,78 @@
             </div>
           </div>
 
-          <!-- Status & Live Minute -->
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Status Pertandingan</label>
-              <select id="matchStatusSelect" class="form-select">
-                <option value="upcoming">Belum Dimulai (Upcoming)</option>
-                <option value="live">🔴 Sedang Berlangsung (LIVE)</option>
-                <option value="finished">✅ Selesai (Finished)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <label class="form-label" style="margin-bottom: 0;">Menit Laga (Jika Live)</label>
-                <div style="display: inline-flex; gap: 4px;">
-                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(-1)" style="font-size: 0.68rem; padding: 1px 6px;" title="Kurangi 1 Menit">-1'</button>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(1)" style="font-size: 0.68rem; padding: 1px 6px;" title="Tambah 1 Menit">+1'</button>
-                  <button type="button" id="btnLiveTimerToggle" class="btn btn-outline btn-sm" onclick="admin.toggleLiveTimer()" style="font-size: 0.68rem; padding: 1px 6px;" title="Mulai / Jeda Stopwatch Otomatis">⏱️ Stopwatch</button>
-                </div>
+          <!-- Status & Menit Laga -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label" style="margin: 0; font-size: 0.78rem;">Status Pertandingan</label>
+              <div style="display: inline-flex; align-items: center; gap: 4px;">
+                <span class="form-label" style="margin: 0; font-size: 0.76rem;">Menit:</span>
+                <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(-1)" style="font-size: 0.68rem; padding: 2px 6px;" title="Kurangi 1 Menit">-1'</button>
+                <input type="text" id="matchMinuteInput" class="form-input" style="width: 58px; text-align: center; font-weight: 800; padding: 4px 4px; font-size: 0.85rem;" placeholder="12'" oninput="admin.syncEventMinute(this.value)">
+                <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(1)" style="font-size: 0.68rem; padding: 2px 6px;" title="Tambah 1 Menit">+1'</button>
+                <button type="button" id="btnLiveTimerToggle" class="btn btn-outline btn-sm" onclick="admin.toggleLiveTimer()" style="font-size: 0.68rem; padding: 2px 6px;" title="Mulai / Jeda Stopwatch">⏱️</button>
               </div>
-              <input type="text" id="matchMinuteInput" class="form-input" placeholder="contoh: 12'" oninput="admin.syncEventMinute(this.value)">
             </div>
+            
+            <!-- 1-Tap Status Selector Pills -->
+            <div class="status-pill-group">
+              <button type="button" class="status-pill-btn" data-status="upcoming" onclick="admin.setStatus('upcoming')">⚪ Belum Mulai</button>
+              <button type="button" class="status-pill-btn active-live" data-status="live" onclick="admin.setStatus('live')">🔴 LIVE</button>
+              <button type="button" class="status-pill-btn" data-status="finished" onclick="admin.setStatus('finished')">🏁 Selesai (FT)</button>
+            </div>
+            <select id="matchStatusSelect" style="display: none;">
+              <option value="upcoming">Belum Dimulai</option>
+              <option value="live">Sedang Berlangsung</option>
+              <option value="finished">Selesai</option>
+            </select>
           </div>
 
           <!-- Add Match Event (Goal & Card) -->
-          <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+          <div style="border-top: 1px solid var(--border-color); padding-top: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" style="color: var(--primary); margin-bottom: 0;">+ Tambah Kejadian Gol / Kartu</label>
-              <span id="eventSyncNotice" style="font-size: 0.7rem; color: var(--text-subtle);">Sinkron ke Menit Laga</span>
+              <label class="form-label" style="color: var(--primary); margin: 0; font-size: 0.78rem;">⚽ Catat Gol & Kartu</label>
+              <span id="eventSyncNotice" style="font-size: 0.68rem; color: var(--primary);">Sinkron: 24'</span>
             </div>
-            <div class="form-row" style="margin-top: 8px;">
-              <select id="eventTeamSelect" class="form-select">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <select id="eventTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.8rem;">
                 <option value="">Pilih Tim</option>
               </select>
-              <select id="eventPlayerSelect" class="form-select">
+              <select id="eventPlayerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.8rem;">
                 <option value="">Pilih Pemain</option>
               </select>
             </div>
-            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
-              <input type="text" id="eventMinuteInput" class="form-input" style="width: 105px;" placeholder="Menit (12')" oninput="admin.onEventMinuteChange(this)">
-              <button type="button" class="btn btn-outline btn-sm" onclick="admin.useCurrentLiveMinute()" style="font-size: 0.72rem; padding: 4px 8px; border-style: dashed; color: var(--text-subtle);" title="Samakan otomatis dengan Menit Laga di atas">
-                ⏱️ Samakan Menit
+            <div style="display: flex; gap: 4px; margin-top: 6px; align-items: center;">
+              <input type="text" id="eventMinuteInput" class="form-input" style="width: 52px; text-align: center; font-weight: 800; padding: 5px 2px; font-size: 0.82rem;" placeholder="12'" oninput="admin.onEventMinuteChange(this)">
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.useCurrentLiveMinute()" style="font-size: 0.7rem; padding: 5px 6px;" title="Samakan dengan menit laga">⏱️</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="admin.addGoalEvent()" style="flex: 1; padding: 6px 4px; font-size: 0.76rem; font-weight: 800; justify-content: center;">
+                ⚽ Gol
               </button>
-              <button type="button" class="btn btn-outline btn-sm" onclick="admin.addGoalEvent()">
-                ⚽ Catat Gol
+              <button type="button" class="btn btn-outline btn-sm" style="flex: 1; padding: 6px 4px; font-size: 0.76rem; font-weight: 700; color: var(--card-yellow); border-color: rgba(202,138,4,0.4); justify-content: center;" onclick="admin.addCardEvent('yellow')">
+                🟨 Kuning
               </button>
-              <button type="button" class="btn btn-outline btn-sm" style="color: var(--card-yellow); border-color: rgba(202,138,4,0.4);" onclick="admin.addCardEvent('yellow')">
-                🟨 Kartu Kuning
-              </button>
-              <button type="button" class="btn btn-outline btn-sm" style="color: var(--card-red); border-color: rgba(220,38,38,0.4);" onclick="admin.addCardEvent('red')">
-                🟥 Kartu Merah
+              <button type="button" class="btn btn-outline btn-sm" style="flex: 1; padding: 6px 4px; font-size: 0.76rem; font-weight: 700; color: var(--card-red); border-color: rgba(220,38,38,0.4); justify-content: center;" onclick="admin.addCardEvent('red')">
+                🟥 Merah
               </button>
             </div>
           </div>
 
           <!-- Event Log List -->
-          <div class="form-group">
-            <label class="form-label">Daftar Kejadian Pertandingan Ini</label>
-            <div id="adminEventsList" style="display: flex; flex-direction: column; gap: 6px; max-height: 130px; overflow-y: auto;">
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 4px;">Kejadian Laga</label>
+            <div id="adminEventsList" style="display: flex; flex-direction: column; gap: 4px; max-height: 95px; overflow-y: auto;">
               <!-- Rendered by admin.renderAdminEventsList -->
             </div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline btn-modal-close" onclick="admin.stopLiveTimer()">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan Hasil Pertandingan</button>
+        <div class="modal-footer quick-score-footer" style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="btn btn-outline btn-sm btn-modal-close" onclick="admin.stopLiveTimer()" style="padding: 9px 12px; font-size: 0.82rem;">Batal</button>
+          <button type="submit" class="btn btn-primary btn-sm" style="flex: 1; padding: 9px 12px; font-size: 0.85rem; font-weight: 800; justify-content: center;">
+            💾 Simpan Skor
+          </button>
+          <button type="button" class="btn btn-sm" onclick="admin.finishMatchDirectly()" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; font-weight: 800; border: none; padding: 9px 14px; font-size: 0.85rem; white-space: nowrap; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);">
+            🏁 Selesai (FT)
+          </button>
         </div>
       </form>
     </div>
@@ -1704,9 +1713,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="js/data.js?v=3.6"></script>
-  <script src="js/app.js?v=3.6"></script>
-  <script src="js/admin.js?v=3.6"></script>
+  <script src="js/data.js?v=3.7"></script>
+  <script src="js/app.js?v=3.7"></script>
+  <script src="js/admin.js?v=3.7"></script>
 
   <!-- Service Worker for PWA -->
   <script>
