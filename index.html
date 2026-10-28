@@ -99,10 +99,6 @@
         <span class="header-v-divider"></span>
 
         <!-- Panitia / Admin Access Button -->
-        <button id="btnHeaderSync" class="header-icon-btn" onclick="if(window.admin){admin.openDeviceSyncModal();}else{alert('Fitur sinkronisasi siap');}" title="📲 Sinkronkan HP ↔ Laptop (Transfer Data Tim/Skor)" aria-label="Sinkronkan HP ke Laptop" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #10b981;">
-          <span>📲</span>
-        </button>
-
         <button id="btnOpenAdmin" class="btn-admin-header" onclick="if(window.admin){if(admin.isAuthenticated){admin.openAdminDashboard();}else{admin.openLoginModal();}}" title="Login Khusus Panitia / Input Skor" aria-label="Mode Panitia">
           <span id="adminHeaderIcon">🔒</span>
           <span id="adminHeaderLabel">Mode Panitia</span>
@@ -1888,11 +1884,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/security.js?v=3.9"></script>
-  <script src="js/supabase-client.js?v=3.9"></script>
-  <script src="js/data.js?v=3.9"></script>
-  <script src="js/app.js?v=3.9"></script>
-  <script src="js/admin.js?v=3.9"></script>
+  <script src="js/security.js?v=4.0"></script>
+  <script src="js/supabase-client.js?v=4.0"></script>
+  <script src="js/data.js?v=4.0"></script>
+  <script src="js/app.js?v=4.0"></script>
+  <script src="js/admin.js?v=4.0"></script>
 
   <!-- Service Worker for PWA -->
   <script>

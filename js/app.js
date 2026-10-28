@@ -734,6 +734,15 @@ const app = {
 
     // Initial silent load from Supabase if configured
     window.SupabaseService.fetchAllData().then(data => {
+      if (!data || !data.teams || data.teams.length < 10) {
+        // Cloud has empty/few records, auto-sync local dataset to cloud if local is ready
+        if (this.store && this.store.data && this.store.data.teams && this.store.data.teams.length >= 30) {
+          if (window.SupabaseService && window.SupabaseService.syncAllData) {
+            window.SupabaseService.syncAllData(this.store.data);
+          }
+        }
+      }
+
       if (data && (data.matches || data.teams)) {
         if (data.config) {
           if (data.config.runningAnnouncement && (data.config.runningAnnouncement.includes("ð") || data.config.runningAnnouncement.includes("†"))) {
@@ -745,8 +754,64 @@ const app = {
           Object.assign(this.store.data.config, data.config);
           this.renderHeader();
         }
-        if (data.matches && data.matches.length > 0) this.store.data.matches = data.matches;
-        if (data.teams && data.teams.length > 0) this.store.data.teams = data.teams;
+
+        if (data.matches && data.matches.length > 0) {
+          data.matches.forEach(remoteMatch => {
+            const idx = this.store.data.matches.findIndex(m => m.id === remoteMatch.id);
+            if (idx !== -1) {
+              const mapped = {};
+              if (remoteMatch.home_score !== undefined || remoteMatch.homeScore !== undefined) {
+                mapped.homeScore = remoteMatch.home_score !== undefined ? remoteMatch.home_score : remoteMatch.homeScore;
+              }
+              if (remoteMatch.away_score !== undefined || remoteMatch.awayScore !== undefined) {
+                mapped.awayScore = remoteMatch.away_score !== undefined ? remoteMatch.away_score : remoteMatch.awayScore;
+              }
+              if (remoteMatch.home_score_live !== undefined || remoteMatch.homeScoreLive !== undefined) {
+                mapped.homeScoreLive = remoteMatch.home_score_live !== undefined ? remoteMatch.home_score_live : remoteMatch.homeScoreLive;
+              }
+              if (remoteMatch.away_score_live !== undefined || remoteMatch.awayScoreLive !== undefined) {
+                mapped.awayScoreLive = remoteMatch.away_score_live !== undefined ? remoteMatch.away_score_live : remoteMatch.awayScoreLive;
+              }
+              if (remoteMatch.status) mapped.status = remoteMatch.status;
+              if (remoteMatch.scorers) mapped.scorers = remoteMatch.scorers;
+              if (remoteMatch.cards) mapped.cards = remoteMatch.cards;
+              Object.assign(this.store.data.matches[idx], mapped);
+            }
+          });
+        }
+
+        if (data.teams && data.teams.length > 0) {
+          data.teams.forEach(remoteTeam => {
+            const idx = this.store.data.teams.findIndex(t => t.id === remoteTeam.id);
+            if (idx !== -1) {
+              const mapped = {
+                name: remoteTeam.name || this.store.data.teams[idx].name,
+                shortName: remoteTeam.short_name || remoteTeam.shortName || this.store.data.teams[idx].shortName,
+                badgeColor: remoteTeam.badge_color || remoteTeam.badgeColor || this.store.data.teams[idx].badgeColor,
+                city: remoteTeam.city !== undefined ? remoteTeam.city : this.store.data.teams[idx].city,
+                group: remoteTeam.group_letter || remoteTeam.group || this.store.data.teams[idx].group
+              };
+              if (remoteTeam.players && Array.isArray(remoteTeam.players) && remoteTeam.players.length > 0) {
+                mapped.players = remoteTeam.players;
+              }
+              if (remoteTeam.official_coach || remoteTeam.official_manager || remoteTeam.official) {
+                mapped.official = {
+                  ...this.store.data.teams[idx].official,
+                  coach: remoteTeam.official_coach || (remoteTeam.official && remoteTeam.official.coach) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coach) || '',
+                  manager: remoteTeam.official_manager || (remoteTeam.official && remoteTeam.official.manager) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.manager) || '',
+                  medic: remoteTeam.official_medic || (remoteTeam.official && remoteTeam.official.medic) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.medic) || '',
+                  phone: remoteTeam.official_phone || (remoteTeam.official && remoteTeam.official.phone) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.phone) || '',
+                  jerseyHome: remoteTeam.official_jersey_home || (remoteTeam.official && remoteTeam.official.jerseyHome) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyHome) || '',
+                  jerseyAway: remoteTeam.official_jersey_away || (remoteTeam.official && remoteTeam.official.jerseyAway) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyAway) || '',
+                  coachPhoto: remoteTeam.coach_photo || (remoteTeam.official && remoteTeam.official.coachPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coachPhoto) || '',
+                  managerPhoto: remoteTeam.manager_photo || (remoteTeam.official && remoteTeam.official.managerPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.managerPhoto) || ''
+                };
+              }
+              Object.assign(this.store.data.teams[idx], mapped);
+            }
+          });
+        }
+
         if (data.moments && data.moments.length > 0) this.store.data.moments = data.moments;
         if (data.sponsors && data.sponsors.length > 0) this.store.data.sponsors = data.sponsors;
         this.store.saveData();
@@ -763,7 +828,23 @@ const app = {
     if (table === 'matches') {
       const idx = this.store.data.matches.findIndex(m => m.id === payload.id);
       if (idx !== -1) {
-        Object.assign(this.store.data.matches[idx], payload);
+        const mapped = {};
+        if (payload.home_score !== undefined || payload.homeScore !== undefined) {
+          mapped.homeScore = payload.home_score !== undefined ? payload.home_score : payload.homeScore;
+        }
+        if (payload.away_score !== undefined || payload.awayScore !== undefined) {
+          mapped.awayScore = payload.away_score !== undefined ? payload.away_score : payload.awayScore;
+        }
+        if (payload.home_score_live !== undefined || payload.homeScoreLive !== undefined) {
+          mapped.homeScoreLive = payload.home_score_live !== undefined ? payload.home_score_live : payload.homeScoreLive;
+        }
+        if (payload.away_score_live !== undefined || payload.awayScoreLive !== undefined) {
+          mapped.awayScoreLive = payload.away_score_live !== undefined ? payload.away_score_live : payload.awayScoreLive;
+        }
+        if (payload.status) mapped.status = payload.status;
+        if (payload.scorers) mapped.scorers = payload.scorers;
+        if (payload.cards) mapped.cards = payload.cards;
+        Object.assign(this.store.data.matches[idx], mapped);
         this.store.saveData();
         this.store.syncKnockoutFromStandings();
         this.renderMatches();
@@ -773,7 +854,30 @@ const app = {
     } else if (table === 'teams') {
       const idx = this.store.data.teams.findIndex(t => t.id === payload.id);
       if (idx !== -1) {
-        Object.assign(this.store.data.teams[idx], payload);
+        const mapped = {
+          name: payload.name || this.store.data.teams[idx].name,
+          shortName: payload.short_name || payload.shortName || this.store.data.teams[idx].shortName,
+          badgeColor: payload.badge_color || payload.badgeColor || this.store.data.teams[idx].badgeColor,
+          city: payload.city !== undefined ? payload.city : this.store.data.teams[idx].city,
+          group: payload.group_letter || payload.group || this.store.data.teams[idx].group
+        };
+        if (payload.players && Array.isArray(payload.players)) {
+          mapped.players = payload.players;
+        }
+        if (payload.official_coach || payload.official_manager || payload.official) {
+          mapped.official = {
+            ...this.store.data.teams[idx].official,
+            coach: payload.official_coach || (payload.official && payload.official.coach) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coach) || '',
+            manager: payload.official_manager || (payload.official && payload.official.manager) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.manager) || '',
+            medic: payload.official_medic || (payload.official && payload.official.medic) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.medic) || '',
+            phone: payload.official_phone || (payload.official && payload.official.phone) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.phone) || '',
+            jerseyHome: payload.official_jersey_home || (payload.official && payload.official.jerseyHome) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyHome) || '',
+            jerseyAway: payload.official_jersey_away || (payload.official && payload.official.jerseyAway) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyAway) || '',
+            coachPhoto: payload.coach_photo || (payload.official && payload.official.coachPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coachPhoto) || '',
+            managerPhoto: payload.manager_photo || (payload.official && payload.official.managerPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.managerPhoto) || ''
+          };
+        }
+        Object.assign(this.store.data.teams[idx], mapped);
       } else {
         this.store.data.teams.push(payload);
       }
