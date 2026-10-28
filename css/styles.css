@@ -3285,7 +3285,7 @@ body.dark-theme .news-tag {
 
 /* General utility helpers */
 .col-secondary {
-  /* Visible by default on PC & Tablet */
+  display: table-cell;
 }
 .top-scorer-mobile-team,
 .discipline-mobile-team {
