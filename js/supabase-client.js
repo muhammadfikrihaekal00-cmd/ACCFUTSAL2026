@@ -19,6 +19,13 @@
       this.init();
     }
 
+    isReady() {
+      if ((!this.isConfigured || !this.client) && window.supabase) {
+        this.init();
+      }
+      return !!this.isConfigured && !!this.client;
+    }
+
     cleanUrl(rawUrl) {
       if (!rawUrl) return "";
       let url = rawUrl.trim();
@@ -191,6 +198,9 @@
 
     // Fetch complete tournament dataset from Supabase if online & configured
     async fetchAllData() {
+      if (!this.client || !this.isConfigured) {
+        if (window.supabase) this.init();
+      }
       if (!this.client || !this.isConfigured) return null;
 
       try {

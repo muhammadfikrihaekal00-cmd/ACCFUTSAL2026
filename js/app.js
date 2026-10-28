@@ -734,10 +734,21 @@ const app = {
 
     // Helper to apply full remote dataset
     const syncFromRemote = () => {
-      if (!window.SupabaseService || !window.SupabaseService.isConfigured()) return;
+      if (!window.SupabaseService) return;
+      const isReady = typeof window.SupabaseService.isReady === 'function'
+        ? window.SupabaseService.isReady()
+        : Boolean(window.SupabaseService.isConfigured);
+      if (!isReady && typeof window.SupabaseService.init === 'function') {
+        window.SupabaseService.init();
+      }
       window.SupabaseService.fetchAllData().then(data => {
-        this.applyRemoteData(data);
-      }).catch(() => {});
+        if (data) {
+          console.log("☁️ Supabase Cloud data successfully fetched & applied!");
+          this.applyRemoteData(data);
+        }
+      }).catch(err => {
+        console.warn("Supabase sync error:", err);
+      });
     };
 
     // Initial silent load from Supabase if configured
@@ -750,12 +761,12 @@ const app = {
       }
     });
 
-    // Gentle polling fallback (every 20s) in case mobile browser puts WebSocket to sleep
+    // Gentle polling fallback (every 15s) in case mobile browser puts WebSocket to sleep
     setInterval(() => {
       if (document.visibilityState === "visible") {
         syncFromRemote();
       }
-    }, 20000);
+    }, 15000);
   },
 
   applyRemoteData(data) {
@@ -859,6 +870,11 @@ const app = {
       this.store.saveData();
       this.store.syncKnockoutFromStandings();
       this.renderCurrentView();
+      this.renderMatches();
+      this.renderStandings();
+      this.renderBracket();
+      this.renderHeader();
+      this.renderLiveStreamHero();
     }
   },
 
@@ -933,7 +949,7 @@ const app = {
       }
       this.store.saveData();
       this.renderMoments();
-    } else if (table === 'tournament_config') {
+    } else if (table === 'tournament_config' || table === 'config') {
       if (!this.store.data.config) this.store.data.config = {};
       if (payload.youtube_live_url !== undefined) {
         this.store.data.config.youtubeLiveUrl = payload.youtube_live_url;
