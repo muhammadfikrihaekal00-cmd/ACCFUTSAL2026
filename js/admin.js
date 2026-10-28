@@ -201,6 +201,24 @@ const admin = {
     const match = app.store.data.matches.find(m => m.id === matchId);
     if (!match) return;
 
+    // Bersihkan menit lama jika ada karakter petik ganda
+    if (match.scorers) {
+      match.scorers.forEach(s => {
+        if (s.minute) {
+          const d = s.minute.toString().replace(/[^0-9]/g, "");
+          s.minute = (d || "1") + "'";
+        }
+      });
+    }
+    if (match.cards) {
+      match.cards.forEach(c => {
+        if (c.minute) {
+          const d = c.minute.toString().replace(/[^0-9]/g, "");
+          c.minute = (d || "1") + "'";
+        }
+      });
+    }
+
     const home = app.store.getTeam(match.homeId) || { name: match.homePlaceholder || "TBD", shortName: "TBD" };
     const away = app.store.getTeam(match.awayId) || { name: match.awayPlaceholder || "TBD", shortName: "TBD" };
 
@@ -215,13 +233,185 @@ const admin = {
 
     document.getElementById("homeScoreDisplay").textContent = homeScoreVal;
     document.getElementById("awayScoreDisplay").textContent = awayScoreVal;
-    document.getElementById("matchStatusSelect").value = match.status;
-    document.getElementById("matchMinuteInput").value = match.liveMinute || "15'";
+    
+    const statusSelect = document.getElementById("matchStatusSelect");
+    statusSelect.value = match.status;
+
+    // Hentikan timer sebelumnya jika masih aktif
+    this.stopLiveTimer();
+
+    // Dapatkan menit awal (bersihkan petik)
+    let initialMinute = "";
+    if (match.liveMinute) {
+      initialMinute = match.liveMinute.toString().replace(/[^0-9]/g, "");
+    } else if (match.status === "live") {
+      initialMinute = "1";
+    }
+
+    const matchMinInput = document.getElementById("matchMinuteInput");
+    matchMinInput.value = initialMinute ? `${initialMinute}'` : "";
+
+    const eventMinInput = document.getElementById("eventMinuteInput");
+    if (eventMinInput) {
+      eventMinInput.dataset.manualEdit = "false";
+      eventMinInput.value = initialMinute || "";
+      eventMinInput.placeholder = initialMinute ? `Menit (${initialMinute}')` : "Menit (12')";
+    }
+
+    const syncNotice = document.getElementById("eventSyncNotice");
+    if (syncNotice) {
+      if (initialMinute) {
+        syncNotice.textContent = `Sinkron: ${initialMinute}'`;
+        syncNotice.style.color = "var(--primary)";
+      } else {
+        syncNotice.textContent = "Sinkron ke Menit Laga";
+        syncNotice.style.color = "var(--text-subtle)";
+      }
+    }
+
+    statusSelect.onchange = () => {
+      if (statusSelect.value === "live") {
+        if (!matchMinInput.value || matchMinInput.value === "0'") {
+          matchMinInput.value = "1'";
+          this.syncEventMinute("1");
+        }
+      } else {
+        this.stopLiveTimer();
+      }
+    };
+
+    const btnTimer = document.getElementById("btnLiveTimerToggle");
+    if (btnTimer) {
+      btnTimer.innerHTML = "⏱️ Stopwatch";
+      btnTimer.classList.remove("active");
+    }
 
     this.renderAdminEventsList(match);
     this.populateEventTeamSelectors(match);
 
     modal.classList.add("active");
+  },
+
+  // Stopwatch & Sinkronisasi Menit Laga
+  liveTimerInterval: null,
+
+  stopLiveTimer() {
+    if (this.liveTimerInterval) {
+      clearInterval(this.liveTimerInterval);
+      this.liveTimerInterval = null;
+    }
+    const btn = document.getElementById("btnLiveTimerToggle");
+    if (btn) {
+      btn.innerHTML = "⏱️ Stopwatch";
+      btn.classList.remove("active");
+    }
+  },
+
+  toggleLiveTimer() {
+    const btn = document.getElementById("btnLiveTimerToggle");
+    const input = document.getElementById("matchMinuteInput");
+    const statusSelect = document.getElementById("matchStatusSelect");
+
+    if (this.liveTimerInterval) {
+      this.stopLiveTimer();
+      app.showToast("Stopwatch live dijeda");
+      return;
+    }
+
+    if (statusSelect && statusSelect.value !== "live") {
+      statusSelect.value = "live";
+    }
+
+    let cur = parseInt((input?.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
+    if (cur === 0) cur = 1;
+    if (input) input.value = `${cur}'`;
+    this.syncEventMinute(cur);
+
+    if (btn) {
+      btn.innerHTML = `⏸️ ${cur}' (Jalan)`;
+      btn.classList.add("active");
+    }
+
+    this.liveTimerInterval = setInterval(() => {
+      let nowMin = parseInt((input?.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
+      nowMin += 1;
+      if (input) input.value = `${nowMin}'`;
+      this.syncEventMinute(nowMin);
+      if (btn) btn.innerHTML = `⏸️ ${nowMin}' (Jalan)`;
+    }, 60000);
+
+    app.showToast(`⏱️ Stopwatch dimulai dari menit ${cur}'`);
+  },
+
+  stepMatchMinute(delta) {
+    const input = document.getElementById("matchMinuteInput");
+    if (!input) return;
+    let cur = parseInt((input.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
+    cur = Math.max(0, cur + delta);
+    input.value = cur > 0 ? `${cur}'` : "0'";
+    this.syncEventMinute(cur);
+  },
+
+  syncEventMinute(val) {
+    const clean = (val || "").toString().replace(/[^0-9]/g, "");
+    const eventInput = document.getElementById("eventMinuteInput");
+    const syncNotice = document.getElementById("eventSyncNotice");
+    if (eventInput) {
+      eventInput.placeholder = clean ? `Menit (${clean}')` : "Menit (12')";
+      // Hanya timpa otomatis jika pengguna belum mengetik menit manual untuk kejadian tersebut
+      if (!eventInput.dataset.manualEdit || eventInput.dataset.manualEdit === "false") {
+        eventInput.value = clean;
+      }
+    }
+    if (syncNotice) {
+      if (clean) {
+        syncNotice.textContent = `Sinkron: ${clean}'`;
+        syncNotice.style.color = "var(--primary)";
+      } else {
+        syncNotice.textContent = "Sinkron ke Menit Laga";
+        syncNotice.style.color = "var(--text-subtle)";
+      }
+    }
+  },
+
+  onEventMinuteChange(el) {
+    const syncNotice = document.getElementById("eventSyncNotice");
+    if (el && el.value.trim() !== "") {
+      el.dataset.manualEdit = "true";
+      if (syncNotice) {
+        syncNotice.textContent = `Manual: ${el.value.trim()}'`;
+        syncNotice.style.color = "var(--card-yellow)";
+      }
+    } else if (el) {
+      el.dataset.manualEdit = "false";
+      const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
+      this.syncEventMinute(matchMin);
+    }
+  },
+
+  useCurrentLiveMinute() {
+    const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
+    const eventInput = document.getElementById("eventMinuteInput");
+    if (eventInput) {
+      eventInput.value = matchMin || "1";
+      eventInput.dataset.manualEdit = "false";
+      eventInput.focus();
+      this.syncEventMinute(matchMin || "1");
+      app.showToast(`⏱️ Menit kejadian disamakan ke ${eventInput.value}'`);
+    }
+  },
+
+  getFormattedEventMinute() {
+    const eventInput = document.getElementById("eventMinuteInput");
+    const matchMinInput = document.getElementById("matchMinuteInput");
+
+    let raw = (eventInput?.value || "").trim();
+    // Jika kolom kejadian kosong, otomatis ambil dari Menit Laga di atas
+    if (!raw) {
+      raw = (matchMinInput?.value || "").trim();
+    }
+    const digits = raw.replace(/[^0-9]/g, "");
+    return (digits || "1") + "'";
   },
 
   // Increment / Decrement score helpers
@@ -265,7 +455,7 @@ const admin = {
 
     const teamId = document.getElementById("eventTeamSelect").value;
     const player = document.getElementById("eventPlayerSelect").value;
-    const minute = document.getElementById("eventMinuteInput").value.trim() || "10'";
+    const minute = this.getFormattedEventMinute();
 
     if (!teamId || !player) {
       alert("Harap pilih tim dan pemain yang mencetak gol!");
@@ -273,7 +463,7 @@ const admin = {
     }
 
     if (!match.scorers) match.scorers = [];
-    match.scorers.push({ team: teamId, player: player, minute: minute + "'" });
+    match.scorers.push({ team: teamId, player: player, minute: minute });
 
     // Update player's stats
     const team = app.store.getTeam(teamId);
@@ -288,7 +478,7 @@ const admin = {
     }
 
     this.renderAdminEventsList(match);
-    app.showToast(`Gol tercatat: ${player} (${minute}')`);
+    app.showToast(`⚽ Gol dicatat: ${player} (${minute})`);
   },
 
   addCardEvent(type) {
@@ -297,7 +487,7 @@ const admin = {
 
     const teamId = document.getElementById("eventTeamSelect").value;
     const player = document.getElementById("eventPlayerSelect").value;
-    const minute = document.getElementById("eventMinuteInput").value.trim() || "15'";
+    const minute = this.getFormattedEventMinute();
 
     if (!teamId || !player) {
       alert("Harap pilih tim dan pemain penerima kartu!");
@@ -305,7 +495,7 @@ const admin = {
     }
 
     if (!match.cards) match.cards = [];
-    match.cards.push({ team: teamId, player: player, type: type, minute: minute + "'" });
+    match.cards.push({ team: teamId, player: player, type: type, minute: minute });
 
     // Update player's stats
     const team = app.store.getTeam(teamId);
@@ -316,7 +506,13 @@ const admin = {
     }
 
     this.renderAdminEventsList(match);
-    app.showToast(`Kartu ${type === 'yellow' ? 'Kuning' : 'Merah'} dicatat: ${player}`);
+    app.showToast(`Kartu ${type === 'yellow' ? 'Kuning 🟨' : 'Merah 🟥'} dicatat: ${player} (${minute})`);
+  },
+
+  cleanMinuteDisplay(min) {
+    if (!min) return "";
+    const d = min.toString().replace(/[^0-9]/g, "");
+    return d ? `${d}'` : min.toString().replace(/["']/g, "") + "'";
   },
 
   renderAdminEventsList(match) {
@@ -325,14 +521,14 @@ const admin = {
 
     const scorers = (match.scorers || []).map((s, idx) => `
       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px; font-size:0.75rem;">
-        <span>⚽ <strong>${s.player}</strong> (${s.minute}) - ${app.store.getTeam(s.team)?.shortName}</span>
+        <span>⚽ <strong>${s.player}</strong> (${this.cleanMinuteDisplay(s.minute)}) - ${app.store.getTeam(s.team)?.shortName || s.team}</span>
         <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeScorer(${idx})" style="padding:2px 6px; color:#ef4444;">Hapus</button>
       </div>
     `).join("");
 
     const cards = (match.cards || []).map((c, idx) => `
       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px; font-size:0.75rem;">
-        <span><span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span> <strong>${c.player}</strong> (${c.minute}) - ${app.store.getTeam(c.team)?.shortName}</span>
+        <span><span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span> <strong>${c.player}</strong> (${this.cleanMinuteDisplay(c.minute)}) - ${app.store.getTeam(c.team)?.shortName || c.team}</span>
         <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeCard(${idx})" style="padding:2px 6px; color:#ef4444;">Hapus</button>
       </div>
     `).join("");
@@ -358,13 +554,20 @@ const admin = {
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
     if (!match) return;
 
+    this.stopLiveTimer();
+
     const hScore = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
     const aScore = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
     const status = document.getElementById("matchStatusSelect").value;
-    const minute = document.getElementById("matchMinuteInput").value.trim();
+    
+    let minute = document.getElementById("matchMinuteInput").value.trim();
+    if (minute) {
+      const cleanMin = minute.replace(/[^0-9]/g, "");
+      minute = cleanMin ? `${cleanMin}'` : minute;
+    }
 
     match.status = status;
-    match.liveMinute = minute;
+    match.liveMinute = status === 'live' ? (minute || "1'") : minute;
 
     if (status === "live") {
       match.homeScoreLive = hScore;

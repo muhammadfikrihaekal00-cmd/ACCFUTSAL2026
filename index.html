@@ -740,7 +740,7 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 class="modal-title" id="quickScoreMatchTitle">✏️ Input Skor Laga</h3>
-        <button class="modal-close">&times;</button>
+        <button class="modal-close" onclick="admin.stopLiveTimer()">&times;</button>
       </div>
       <form id="quickScoreForm">
         <div class="modal-body">
@@ -781,14 +781,24 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Menit Laga (Jika Live)</label>
-              <input type="text" id="matchMinuteInput" class="form-input" placeholder="contoh: 18'">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label class="form-label" style="margin-bottom: 0;">Menit Laga (Jika Live)</label>
+                <div style="display: inline-flex; gap: 4px;">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(-1)" style="font-size: 0.68rem; padding: 1px 6px;" title="Kurangi 1 Menit">-1'</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(1)" style="font-size: 0.68rem; padding: 1px 6px;" title="Tambah 1 Menit">+1'</button>
+                  <button type="button" id="btnLiveTimerToggle" class="btn btn-outline btn-sm" onclick="admin.toggleLiveTimer()" style="font-size: 0.68rem; padding: 1px 6px;" title="Mulai / Jeda Stopwatch Otomatis">⏱️ Stopwatch</button>
+                </div>
+              </div>
+              <input type="text" id="matchMinuteInput" class="form-input" placeholder="contoh: 12'" oninput="admin.syncEventMinute(this.value)">
             </div>
           </div>
 
           <!-- Add Match Event (Goal & Card) -->
           <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
-            <label class="form-label" style="color: var(--primary);">+ Tambah Kejadian Gol / Kartu</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" style="color: var(--primary); margin-bottom: 0;">+ Tambah Kejadian Gol / Kartu</label>
+              <span id="eventSyncNotice" style="font-size: 0.7rem; color: var(--text-subtle);">Sinkron ke Menit Laga</span>
+            </div>
             <div class="form-row" style="margin-top: 8px;">
               <select id="eventTeamSelect" class="form-select">
                 <option value="">Pilih Tim</option>
@@ -797,8 +807,11 @@
                 <option value="">Pilih Pemain</option>
               </select>
             </div>
-            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-              <input type="text" id="eventMinuteInput" class="form-input" style="width: 100px;" placeholder="Menit (12')">
+            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
+              <input type="text" id="eventMinuteInput" class="form-input" style="width: 105px;" placeholder="Menit (12')" oninput="admin.onEventMinuteChange(this)">
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.useCurrentLiveMinute()" style="font-size: 0.72rem; padding: 4px 8px; border-style: dashed; color: var(--text-subtle);" title="Samakan otomatis dengan Menit Laga di atas">
+                ⏱️ Samakan Menit
+              </button>
               <button type="button" class="btn btn-outline btn-sm" onclick="admin.addGoalEvent()">
                 ⚽ Catat Gol
               </button>
@@ -821,7 +834,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
+          <button type="button" class="btn btn-outline btn-modal-close" onclick="admin.stopLiveTimer()">Batal</button>
           <button type="submit" class="btn btn-primary">Simpan Hasil Pertandingan</button>
         </div>
       </form>
@@ -1691,9 +1704,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="js/data.js?v=3.5"></script>
-  <script src="js/app.js?v=3.5"></script>
-  <script src="js/admin.js?v=3.5"></script>
+  <script src="js/data.js?v=3.6"></script>
+  <script src="js/app.js?v=3.6"></script>
+  <script src="js/admin.js?v=3.6"></script>
 
   <!-- Service Worker for PWA -->
   <script>

@@ -636,7 +636,7 @@ const app = {
       liveTickerHtml = `
         <div class="live-stream-match-ticker live">
           <div class="ticker-left">
-            <span class="pulse-live-badge">🔴 LIVE • Menit ${lm.liveMinute || "18'"}</span>
+            <span class="pulse-live-badge">🔴 LIVE${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
             <span class="ticker-match-title">${catBadge} [${stageName}]</span>
             <strong class="ticker-score-teams">${hTeam.name} <span class="score-highlight">${hScore} - ${aScore}</span> ${aTeam.name}</strong>
           </div>
@@ -1377,7 +1377,7 @@ const app = {
           <div class="match-status-bar bar-live">
             <div class="bar-left">
               <span class="pulse-dot"></span>
-              <strong>SEDANG BERLANGSUNG (LIVE) • Menit ${m.liveMinute || "18'"}</strong>
+              <strong>SEDANG BERLANGSUNG (LIVE)${m.liveMinute ? ` • Menit ${m.liveMinute}` : ''}</strong>
             </div>
             <div class="bar-right">
               <span>🏟️ ${m.pitch || 'Lapangan Utama'}</span>
@@ -2263,6 +2263,12 @@ const app = {
     const hScore = match.status === 'finished' ? match.homeScore : (match.status === 'live' ? match.homeScoreLive : '-');
     const aScore = match.status === 'finished' ? match.awayScore : (match.status === 'live' ? match.awayScoreLive : '-');
 
+    const cleanMin = (m) => {
+      if (!m) return "";
+      const d = m.toString().replace(/[^0-9]/g, "");
+      return d ? `${d}'` : m.toString().replace(/["']/g, "") + "'";
+    };
+
     const homeScorers = (match.scorers || []).filter(s => s.team === match.homeId);
     const awayScorers = (match.scorers || []).filter(s => s.team === match.awayId);
     const homeCards = (match.cards || []).filter(c => c.team === match.homeId);
@@ -2291,13 +2297,13 @@ const app = {
               ${homeScorers.map(s => `
                 <div class="event-item-badge scorer">
                   <span>⚽</span>
-                  <span><strong>${s.player}</strong> (${s.minute})</span>
+                  <span><strong>${s.player}</strong> (${cleanMin(s.minute)})</span>
                 </div>
               `).join("")}
               ${homeCards.map(c => `
                 <div class="event-item-badge">
                   <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
-                  <span>${c.player} (${c.minute})</span>
+                  <span>${c.player} (${cleanMin(c.minute)})</span>
                 </div>
               `).join("")}
               ${homeScorers.length === 0 && homeCards.length === 0 ? `<span style="font-size: 0.72rem; color: var(--text-subtle);">- Tidak ada gol/kartu -</span>` : ''}
@@ -2330,13 +2336,13 @@ const app = {
               <div style="font-size: 0.7rem; font-weight: 800; color: var(--primary); margin-bottom: 3px;">⚽ GOL & KARTU:</div>
               ${awayScorers.map(s => `
                 <div class="event-item-badge away scorer">
-                  <span>(<strong>${s.minute}</strong>) ${s.player}</span>
+                  <span>(<strong>${cleanMin(s.minute)}</strong>) ${s.player}</span>
                   <span>⚽</span>
                 </div>
               `).join("")}
               ${awayCards.map(c => `
                 <div class="event-item-badge away">
-                  <span>(${c.minute}) ${c.player}</span>
+                  <span>(${cleanMin(c.minute)}) ${c.player}</span>
                   <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
                 </div>
               `).join("")}
