@@ -734,7 +734,7 @@ const app = {
 
     // Initial silent load from Supabase if configured
     window.SupabaseService.fetchAllData().then(data => {
-      if (!data || !data.teams || data.teams.length < 10) {
+      if (!data || !data.teams || data.teams.length < 10 || !data.matches || data.matches.length < 10) {
         // Cloud has empty/few records, auto-sync local dataset to cloud if local is ready
         if (this.store && this.store.data && this.store.data.teams && this.store.data.teams.length >= 30) {
           if (window.SupabaseService && window.SupabaseService.syncAllData) {
