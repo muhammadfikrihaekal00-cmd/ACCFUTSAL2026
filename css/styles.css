@@ -269,8 +269,10 @@ body.dark-theme .ticker-content {
 }
 body.dark-theme .brand-text h1 {
   background: linear-gradient(135deg, #ffffff 40%, #00d2ff 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 .brand-text p {
   font-size: 0.75rem;
@@ -4197,9 +4199,11 @@ body.dark-theme .fixture-team-row:hover {
 .splash-title-highlight {
   display: inline-block;
   background: linear-gradient(135deg, #10b981 0%, #38ef7d 50%, #fbbf24 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  color: transparent;
+  filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.3));
 }
 
 .splash-subtitle {
