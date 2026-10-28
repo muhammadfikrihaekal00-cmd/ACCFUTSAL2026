@@ -777,8 +777,24 @@ const app = {
         if (data.config.subTitle && (data.config.subTitle.includes("â") || data.config.subTitle.includes("€"))) {
           data.config.subTitle = DEFAULT_DATA.config.subTitle;
         }
+        if (data.config.running_announcement && !data.config.running_announcement.includes("ð")) {
+          this.store.data.config.runningAnnouncement = data.config.running_announcement;
+        }
+        if (data.config.sub_title && !data.config.sub_title.includes("â")) {
+          this.store.data.config.subTitle = data.config.sub_title;
+        }
+        if (data.config.youtube_live_url || data.config.youtubeLiveUrl) {
+          this.store.data.config.youtubeLiveUrl = data.config.youtube_live_url || data.config.youtubeLiveUrl;
+        }
+        if (data.config.youtube_live_title || data.config.youtubeLiveTitle) {
+          this.store.data.config.youtubeLiveTitle = data.config.youtube_live_title || data.config.youtubeLiveTitle;
+        }
+        if (data.config.hero_banner_image || data.config.heroBannerImage) {
+          this.store.data.config.heroBannerImage = data.config.hero_banner_image || data.config.heroBannerImage;
+        }
         Object.assign(this.store.data.config, data.config);
         this.renderHeader();
+        this.renderLiveStreamHero();
       }
 
       if (data.matches && data.matches.length > 0) {
@@ -917,6 +933,26 @@ const app = {
       }
       this.store.saveData();
       this.renderMoments();
+    } else if (table === 'tournament_config') {
+      if (!this.store.data.config) this.store.data.config = {};
+      if (payload.youtube_live_url !== undefined) {
+        this.store.data.config.youtubeLiveUrl = payload.youtube_live_url;
+      }
+      if (payload.youtube_live_title !== undefined) {
+        this.store.data.config.youtubeLiveTitle = payload.youtube_live_title;
+      }
+      if (payload.running_announcement && !payload.running_announcement.includes("ð")) {
+        this.store.data.config.runningAnnouncement = payload.running_announcement;
+      }
+      if (payload.sub_title && !payload.sub_title.includes("â")) {
+        this.store.data.config.subTitle = payload.sub_title;
+      }
+      if (payload.hero_banner_image) {
+        this.store.data.config.heroBannerImage = payload.hero_banner_image;
+      }
+      this.store.saveData();
+      this.renderHeader();
+      this.renderLiveStreamHero();
     }
   },
 

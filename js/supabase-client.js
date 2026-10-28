@@ -270,7 +270,7 @@
     async syncConfig(config) {
       if (!this.client || !this.isConfigured) return false;
       try {
-        const { error } = await this.client.from('tournament_config').upsert({
+        const payload = {
           id: 'config_main',
           tournament_name: config.tournamentName || "ACC 2026",
           sub_title: config.subTitle || "",
@@ -279,8 +279,18 @@
           running_announcement: config.runningAnnouncement || "",
           hero_banner_image: config.heroBannerImage || "",
           rules_text: config.rulesText || "",
+          youtube_live_url: config.youtubeLiveUrl || "",
+          youtube_live_title: config.youtubeLiveTitle || "",
           updated_at: new Date().toISOString()
-        });
+        };
+        const { error } = await this.client.from('tournament_config').upsert(payload);
+        if (error && (error.code === '42703' || (error.message && error.message.includes('youtube_live')))) {
+          // Column doesn't exist in Supabase yet, fallback gracefully
+          delete payload.youtube_live_url;
+          delete payload.youtube_live_title;
+          const { error: retryErr } = await this.client.from('tournament_config').upsert(payload);
+          return !retryErr;
+        }
         return !error;
       } catch (e) {
         return false;
@@ -396,6 +406,8 @@
             running_announcement: data.config.runningAnnouncement || "",
             hero_banner_image: data.config.heroBannerImage || "",
             rules_text: data.config.rulesText || "",
+            youtube_live_url: data.config.youtubeLiveUrl || "",
+            youtube_live_title: data.config.youtubeLiveTitle || "",
             updated_at: new Date().toISOString()
           });
           if (cfgErr) {

@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS public.tournament_config (
   venue TEXT DEFAULT 'GOR Futsal Ma''had Tahfizhul Qur''an Al Fayyadh',
   dates TEXT DEFAULT '15 - 20 November 2026',
   hero_banner_image TEXT DEFAULT 'assets/hero_banner.jpg',
+  youtube_live_url TEXT DEFAULT 'https://www.youtube.com/embed/5qap5aO4i9A',
+  youtube_live_title TEXT DEFAULT '🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros',
   rules_text TEXT DEFAULT '',
   running_announcement TEXT DEFAULT '🏆 Selamat Datang di Turnamen Futsal Resmi ACC 2026! Junjung tinggi sportivitas & ukhuwah Islamiyah.',
   admin_pin_hash TEXT NOT NULL DEFAULT '327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348', -- Salted SHA-256
