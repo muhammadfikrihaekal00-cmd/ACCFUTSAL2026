@@ -2029,7 +2029,7 @@ const admin = {
     if (fileInput) fileInput.value = "";
   },
 
-  saveSponsor() {
+  async saveSponsor() {
     const id = document.getElementById("editSponsorId").value.trim();
     const name = document.getElementById("sponsorNameInput").value.trim();
     const tier = document.getElementById("sponsorTierSelect").value;
@@ -2045,9 +2045,18 @@ const admin = {
     if (!app.store.data.sponsors) {
       app.store.data.sponsors = { platinum: [], gold: [], media: [] };
     }
-    if (!app.store.data.sponsors[tier]) {
+    if (!Array.isArray(app.store.data.sponsors[tier])) {
       app.store.data.sponsors[tier] = [];
     }
+
+    const sponsorObj = {
+      id: id || ("sp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5)),
+      name,
+      type: role,
+      role,
+      icon,
+      image
+    };
 
     if (id) {
       // Find and update across tiers (in case tier was changed)
@@ -2058,33 +2067,33 @@ const admin = {
           arr.splice(idx, 1);
         }
       });
-
-      app.store.data.sponsors[tier].push({
-        id: id,
-        name,
-        type: role,
-        role,
-        icon,
-        image
-      });
+      app.store.data.sponsors[tier].push(sponsorObj);
     } else {
-      // Add new
-      const newId = "sp_" + Date.now();
-      app.store.data.sponsors[tier].push({
-        id: newId,
-        name,
-        type: role,
-        role,
-        icon,
-        image
-      });
+      // Add new sponsor (unlimited count)
+      app.store.data.sponsors[tier].push(sponsorObj);
     }
 
     app.store.saveData();
     app.renderSponsors();
     this.renderSponsorsList();
     this.resetSponsorForm();
-    app.showToast(`Sponsor "${name}" berhasil disimpan!`);
+
+    // Sinkronisasi ke Supabase Cloud (jika terhubung) agar HP & laptop sama-sama terupdate
+    if (window.SupabaseService && window.SupabaseService.isConfigured) {
+      try {
+        await window.SupabaseService.syncSponsor(sponsorObj, tier);
+      } catch (err) {
+        console.warn("Supabase syncSponsor notice:", err);
+      }
+    }
+
+    app.showToast(`✅ Sponsor "${name}" tersimpan! Silakan input sponsor berikutnya.`);
+
+    // Auto-focus ke input nama agar panitia bisa langsung mengetik sponsor selanjutnya tanpa jeda
+    setTimeout(() => {
+      const nameInp = document.getElementById("sponsorNameInput");
+      if (nameInp) nameInp.focus();
+    }, 120);
   },
 
   editSponsor(tier, idOrName) {
@@ -2120,22 +2129,50 @@ const admin = {
     document.getElementById("btnCancelEditSponsor").style.display = "inline-flex";
   },
 
-  deleteSponsor(tier, idOrName) {
+  async deleteSponsor(tier, idOrName) {
     if (!this.isAuthenticated) {
       this.openLoginModal();
       return;
     }
 
     if (confirm(`Hapus data sponsor ini?`)) {
+      let deletedId = idOrName;
       if (app.store.data.sponsors && app.store.data.sponsors[tier]) {
+        const item = app.store.data.sponsors[tier].find(s => (s.id ? s.id === idOrName : s.name === idOrName));
+        if (item && item.id) deletedId = item.id;
+
         app.store.data.sponsors[tier] = app.store.data.sponsors[tier].filter(
           s => (s.id ? s.id !== idOrName : s.name !== idOrName)
         );
         app.store.saveData();
         app.renderSponsors();
         this.renderSponsorsList();
+
+        // Hapus juga di Supabase jika terhubung
+        if (window.SupabaseService && window.SupabaseService.isConfigured) {
+          try {
+            await window.SupabaseService.deleteSponsor(deletedId);
+          } catch (e) {}
+        }
+
         app.showToast("Sponsor telah dihapus.");
       }
+    }
+  },
+
+  confirmClearAllSponsors() {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+
+    if (confirm("Yakin ingin mengosongkan semua data sponsor? Tindakan ini menghapus seluruh daftar sponsor yang ada agar panitia bisa menginput sponsor resmi dari awal.")) {
+      app.store.data.sponsors = { platinum: [], gold: [], media: [] };
+      app.store.saveData();
+      app.renderSponsors();
+      this.renderSponsorsList();
+      this.resetSponsorForm();
+      app.showToast("Semua data sponsor telah dikosongkan. Silakan input sponsor baru!");
     }
   },
 
@@ -2143,9 +2180,16 @@ const admin = {
     const container = document.getElementById("adminSponsorsList");
     if (!container) return;
 
-    const sponsors = app.store.data.sponsors || {};
-    const primaryItems = sponsors.platinum || [];
-    const secondaryItems = [...(sponsors.gold || []), ...(sponsors.media || [])];
+    let sponsors = app.store.data.sponsors || {};
+    if (Array.isArray(sponsors) && typeof app.formatSponsorsFromDb === 'function') {
+      sponsors = app.formatSponsorsFromDb(sponsors);
+      app.store.data.sponsors = sponsors;
+    }
+    const primaryItems = Array.isArray(sponsors.platinum) ? sponsors.platinum : [];
+    const secondaryItems = [
+      ...(Array.isArray(sponsors.gold) ? sponsors.gold : []),
+      ...(Array.isArray(sponsors.media) ? sponsors.media : [])
+    ];
 
     let html = "";
 

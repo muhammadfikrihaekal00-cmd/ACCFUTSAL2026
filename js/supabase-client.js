@@ -1,4 +1,4 @@
-// js/supabase-client.js - Seamless, Silent, Real-Time Supabase Synchronization
+﻿// js/supabase-client.js - Seamless, Silent, Real-Time Supabase Synchronization
 (function(window) {
   'use strict';
 
@@ -448,6 +448,36 @@
           sort_order: moment.sortOrder || 0,
           created_at: new Date().toISOString()
         });
+        return !error;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Push Sponsor Data (Utama / Normal)
+    async syncSponsor(sponsor, tier = 'platinum') {
+      if (!this.client || !this.isConfigured) return false;
+      try {
+        const { error } = await this.client.from('sponsors').upsert({
+          id: sponsor.id,
+          tier: tier,
+          name: sponsor.name,
+          subtitle: sponsor.role || sponsor.type || '',
+          logo_url: sponsor.image || '',
+          sort_order: Date.now() % 1000000,
+          created_at: new Date().toISOString()
+        });
+        return !error;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Delete Sponsor from Supabase
+    async deleteSponsor(sponsorId) {
+      if (!this.client || !this.isConfigured) return false;
+      try {
+        const { error } = await this.client.from('sponsors').delete().eq('id', sponsorId);
         return !error;
       } catch (e) {
         return false;

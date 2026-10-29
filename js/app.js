@@ -866,7 +866,9 @@ const app = {
       }
 
       if (data.moments && data.moments.length > 0) this.store.data.moments = data.moments;
-      if (data.sponsors && data.sponsors.length > 0) this.store.data.sponsors = data.sponsors;
+      if (data.sponsors && (Array.isArray(data.sponsors) ? data.sponsors.length > 0 : true)) {
+        this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
+      }
       this.store.saveData();
       this.store.syncKnockoutFromStandings();
       this.renderCurrentView();
@@ -969,7 +971,39 @@ const app = {
       this.store.saveData();
       this.renderHeader();
       this.renderLiveStreamHero();
+    } else if (table === 'sponsors') {
+      if (window.SupabaseService && typeof window.SupabaseService.fetchTournamentData === 'function') {
+        window.SupabaseService.fetchTournamentData().then(data => {
+          if (data && data.sponsors) {
+            this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
+            this.store.saveData();
+            this.renderSponsors();
+          }
+        });
+      }
     }
+  },
+
+  formatSponsorsFromDb(sponsorsData) {
+    if (!sponsorsData) return { platinum: [], gold: [], media: [] };
+    if (!Array.isArray(sponsorsData)) return sponsorsData;
+    const result = { platinum: [], gold: [], media: [] };
+    sponsorsData.forEach(s => {
+      const item = {
+        id: s.id,
+        name: s.name,
+        role: s.subtitle || '',
+        type: s.subtitle || '',
+        image: s.logo_url || s.image || '',
+        icon: s.icon || (s.tier === 'platinum' ? '🏦' : '⚽')
+      };
+      if (s.tier === 'platinum' || s.tier === 'primary' || s.tier === 'utama') {
+        result.platinum.push(item);
+      } else {
+        result.gold.push(item);
+      }
+    });
+    return result;
   },
 
   initThemeAndViewMode() {
@@ -1443,8 +1477,13 @@ const app = {
 
   // RENDER SPONSORSHIP (FOKUS LOGO FOTO SPONSOR, UKURAN BESAR & NORMAL TANPA TEKS KETERANGAN)
   renderSponsors() {
-    const sponsors = this.store.data.sponsors;
+    let sponsors = this.store.data.sponsors;
     if (!sponsors) return;
+
+    if (Array.isArray(sponsors)) {
+      sponsors = this.formatSponsorsFromDb(sponsors);
+      this.store.data.sponsors = sponsors;
+    }
 
     const isPanitia = admin.isAuthenticated === true;
 

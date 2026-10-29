@@ -1375,6 +1375,17 @@
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- Callout Info: Bebas Tambah Banyak Sponsor -->
+        <div class="callout callout-info" style="margin-bottom: 14px; font-size: 0.8rem; padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: var(--radius-sm);">
+          <span style="font-size: 1.2rem;">💡</span>
+          <div>
+            <strong style="color: #60a5fa;">Bebas Tambah Banyak Sponsor:</strong>
+            <span style="color: var(--text-muted); display: block; margin-top: 2px;">
+              Panitia dapat menambahkan sponsor sebanyak-banyaknya tanpa batasan kuota untuk sponsor utama (baris atas) maupun sponsor normal (baris bawah).
+            </span>
+          </div>
+        </div>
+
         <!-- Form Tambah / Edit Sponsor -->
         <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
           <h4 style="color: var(--accent-gold); font-size: 0.88rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
@@ -1434,15 +1445,20 @@
               <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeSponsorLogo()" style="color: #ef4444; padding: 2px 6px; font-size: 0.7rem;">Hapus Foto</button>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-sm" style="margin-top: 4px;">
-              💾 Simpan Data Sponsor
+            <button type="submit" id="btnSaveSponsor" class="btn btn-primary btn-sm" style="margin-top: 4px; display: inline-flex; align-items: center; gap: 6px;">
+              💾 Simpan & Tambah Sponsor Lainnya
             </button>
           </form>
         </div>
 
         <!-- Daftar Sponsor Terdaftar -->
-        <h4 style="color: var(--text-main); font-size: 0.85rem; margin-bottom: 8px;">Daftar Sponsor ACC 2026 Saat Ini:</h4>
-        <div id="adminSponsorsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <h4 style="color: var(--text-main); font-size: 0.85rem; margin: 0;">Daftar Sponsor Terdaftar:</h4>
+          <button type="button" class="btn btn-outline btn-sm" onclick="admin.confirmClearAllSponsors()" style="color: #ef4444; border-color: rgba(239,68,68,0.3); font-size: 0.7rem; padding: 2px 8px;">
+            🗑️ Kosongkan Semua
+          </button>
+        </div>
+        <div id="adminSponsorsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; padding-right: 4px;">
           <!-- Injected dynamically by admin.renderSponsorsList() -->
         </div>
       </div>
@@ -1886,10 +1902,10 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js?v=4.8"></script>
-  <script src="js/supabase-client.js?v=4.8"></script>
-  <script src="js/data.js?v=4.8"></script>
-  <script src="js/app.js?v=4.9"></script>
-  <script src="js/admin.js?v=4.9"></script>
+  <script src="js/supabase-client.js?v=5.0"></script>
+  <script src="js/data.js?v=5.0"></script>
+  <script src="js/app.js?v=5.0"></script>
+  <script src="js/admin.js?v=5.0"></script>
 
   <!-- Service Worker for PWA -->
   <script>
