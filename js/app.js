@@ -190,10 +190,11 @@ class TournamentStore {
         });
 
         p.goals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
-        p.yc = Math.max(parseInt(p.yc, 10) || 0, matchYc);
-        p.rc = Math.max(parseInt(p.rc, 10) || 0, matchRc);
+        p.yc = matchYc;
+        p.rc = matchRc;
       });
     });
+    this.saveData();
   }
 
   getTeam(id) {
@@ -495,17 +496,6 @@ class TournamentStore {
           }
         });
       }
-    });
-
-    // Pastikan kartu yang tersimpan di data pemain juga ikut tersinkron
-    teams.forEach(t => {
-      t.players.forEach(p => {
-        const key = `${t.id}-${p.name}`;
-        if (playerStats[key]) {
-          playerStats[key].yellowCount = Math.max(playerStats[key].yellowCount, parseInt(p.yc, 10) || 0);
-          playerStats[key].redCount = Math.max(playerStats[key].redCount, parseInt(p.rc, 10) || 0);
-        }
-      });
     });
 
     return Object.values(playerStats)
@@ -2586,8 +2576,8 @@ const app = {
                   }
                 });
 
-                const totalYc = Math.max(parseInt(p.yc, 10) || 0, matchYc);
-                const totalRc = Math.max(parseInt(p.rc, 10) || 0, matchRc);
+                const totalYc = matchYc;
+                const totalRc = matchRc;
                 const totalGoals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
 
                 p.yc = totalYc;

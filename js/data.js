@@ -160,7 +160,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Syamsuddin, S.Pd", coach: "Coach Pep Guardiola", phone: "0812-4411-2233", jerseyHome: "Biru Langit - Putih", jerseyAway: "Hitam - Perak" },
       players: [
         { no: 1, name: "Gianluigi Donnarumma", pos: "Kiper", goals: 0, yc: 0, rc: 0, photo: "assets/moment_gk_save.jpg" },
-        { no: 3, name: "Julian Ryerson", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 3, name: "Julian Ryerson", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 8, name: "Martin Odegaard", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 9, name: "Erling Haaland (C)", pos: "Pivot", goals: 4, yc: 0, rc: 0, photo: "assets/player_athar.jpg" },
         { no: 11, name: "Alexander Sorloth", pos: "Flank", goals: 1, yc: 0, rc: 0 },
@@ -181,12 +181,12 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Rahmat Hidayat", coach: "Coach Didier Deschamps", phone: "0813-5522-3344", jerseyHome: "Merah - Putih", jerseyAway: "Biru Navy" },
       players: [
         { no: 1, name: "Thibaut Courtois", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "William Saliba", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 4, name: "William Saliba", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 7, name: "Antoine Griezmann", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 10, name: "Kylian Mbappe (C)", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
         { no: 11, name: "Ousmane Dembele", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 13, name: "Yann Sommer", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Eduardo Camavinga", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Eduardo Camavinga", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 9, name: "Marcus Thuram", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -205,7 +205,7 @@ const DEFAULT_DATA = {
         { no: 5, name: "John Stones", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 7, name: "Bukayo Saka", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 9, name: "Harry Kane (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
-        { no: 10, name: "Jude Bellingham", pos: "Flank", goals: 3, yc: 1, rc: 0 },
+        { no: 10, name: "Jude Bellingham", pos: "Flank", goals: 3, yc: 0, rc: 0 },
         { no: 22, name: "David Raya", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 4, name: "Declan Rice", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 47, name: "Phil Foden", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
@@ -223,12 +223,12 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Fadhil Rahman", coach: "Coach Roberto Martinez", phone: "0852-7744-5566", jerseyHome: "Marun - Emas", jerseyAway: "Putih - Hijau" },
       players: [
         { no: 1, name: "Diogo Costa", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Ruben Dias", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 3, name: "Ruben Dias", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 8, name: "Bruno Fernandes", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 7, name: "Cristiano Ronaldo (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 10, name: "Bernardo Silva", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 12, name: "Rui Patricio", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Joao Palhinha", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Joao Palhinha", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 17, name: "Rafael Leao", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
@@ -251,7 +251,7 @@ const DEFAULT_DATA = {
         { no: 9, name: "Andrej Kramaricc", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 8, name: "Mateo Kovacic", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 12, name: "Nediljko Labrovicc", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 11, name: "Marcelo Brozovicc", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 11, name: "Marcelo Brozovicc", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 14, name: "Ivan Perisic", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -267,7 +267,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Burhanuddin", coach: "Coach Luis de la Fuente", phone: "0813-9966-7788", jerseyHome: "Merah - Emas", jerseyAway: "Kuning - Biru" },
       players: [
         { no: 1, name: "Unai Simon", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Dani Carvajal", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 2, name: "Dani Carvajal", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 16, name: "Rodri (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 19, name: "Lamine Yamal", pos: "Flank", goals: 3, yc: 0, rc: 0 },
         { no: 7, name: "Alvaro Morata", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
@@ -293,7 +293,7 @@ const DEFAULT_DATA = {
         { no: 9, name: "Romelu Lukaku", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 11, name: "Jeremy Doku", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 12, name: "Thomas Kaminski", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Amadou Onana", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Amadou Onana", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 19, name: "Leandro Trossard", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -309,12 +309,12 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Lukman Hakim", coach: "Coach Michal Probierz", phone: "0853-2288-9900", jerseyHome: "Putih - Merah", jerseyAway: "Ungu - Putih" },
       players: [
         { no: 1, name: "Wojciech Szczesny", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 14, name: "Jakub Kiwior", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 14, name: "Jakub Kiwior", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Piotr Zielinski", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 9, name: "Robert Lewandowski (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 21, name: "Nicola Zalewski", pos: "Flank", goals: 0, yc: 0, rc: 0 },
         { no: 12, name: "Lukasz Skorupski", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Jan Bednarek", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 5, name: "Jan Bednarek", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 20, name: "Sebastian Szymanski", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -332,7 +332,7 @@ const DEFAULT_DATA = {
       official: { manager: "H. Sudirman, S.Pd", coach: "Coach Julian Nagelsmann", phone: "0812-3399-0011", jerseyHome: "Putih - Hitam", jerseyAway: "Pink - Ungu" },
       players: [
         { no: 1, name: "Manuel Neuer", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 2, name: "Antonio Rudiger", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 2, name: "Antonio Rudiger", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 6, name: "Joshua Kimmich", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 10, name: "Jamal Musiala (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 17, name: "Florian Wirtz", pos: "Flank", goals: 2, yc: 0, rc: 0 },
@@ -358,7 +358,7 @@ const DEFAULT_DATA = {
         { no: 7, name: "Xavi Simons", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 11, name: "Cody Gakpo", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 13, name: "Mark Flekken", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Nathan Ake", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 5, name: "Nathan Ake", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 9, name: "Memphis Depay", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -374,7 +374,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. H. Haniah, Lc", coach: "Coach Luciano Spalletti", phone: "0821-5511-2233", jerseyHome: "Biru Azzurri", jerseyAway: "Putih - Emas" },
       players: [
         { no: 1, name: "Guglielmo Vicario", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Alessandro Bastoni", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 5, name: "Alessandro Bastoni", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 18, name: "Nicolo Barella", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 7, name: "Federico Chiesa (C)", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 3, name: "Federico Dimarco", pos: "Flank", goals: 1, yc: 0, rc: 0 },
@@ -395,7 +395,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Masrur, S.Pd.I", coach: "Coach Murat Yakin", phone: "0852-6622-3344", jerseyHome: "Merah - Putih", jerseyAway: "Hitam - Merah" },
       players: [
         { no: 1, name: "Gregor Kobel", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Manuel Akanji", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 5, name: "Manuel Akanji", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Granit Xhaka (C)", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 7, name: "Breel Embolo", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 19, name: "Dan Ndoye", pos: "Flank", goals: 1, yc: 0, rc: 0 },
@@ -423,7 +423,7 @@ const DEFAULT_DATA = {
         { no: 13, name: "Thomas Muller", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 22, name: "Ilkay Gundogan", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 12, name: "Sven Ulreich", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Marcel Sabitzer", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Marcel Sabitzer", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 9, name: "Christoph Baumgartner", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
@@ -439,12 +439,12 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Qasim Basalamah", coach: "Coach Kasper Hjulmand", phone: "0813-7733-4455", jerseyHome: "Merah - Putih", jerseyAway: "Biru - Putih" },
       players: [
         { no: 1, name: "Kasper Schmeichel", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Andreas Christensen", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Andreas Christensen", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Christian Eriksen (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 9, name: "Rasmus Hojlund", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 14, name: "Mikkel Damsgaard", pos: "Flank", goals: 0, yc: 0, rc: 0 },
         { no: 16, name: "Frederik Ronnow", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 23, name: "Pierre-Emile Hojbjerg", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 23, name: "Pierre-Emile Hojbjerg", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 11, name: "Jonas Wind", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -460,7 +460,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Bukhari Al-Atsari", coach: "Coach Willy Sagnol", phone: "0821-8844-5566", jerseyHome: "Marun - Putih", jerseyAway: "Hitam - Emas" },
       players: [
         { no: 1, name: "Giorgi Mamardashvili", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Guram Kashia", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 4, name: "Guram Kashia", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 6, name: "Giorgi Kochorashvili", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 7, name: "Khvicha Kvaratskhelia (C)", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 22, name: "Georges Mikautadze", pos: "Flank", goals: 2, yc: 0, rc: 0 },
@@ -481,7 +481,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Habiburrahman, Lc", coach: "Coach Vincenzo Montella", phone: "0852-9955-6677", jerseyHome: "Merah - Putih", jerseyAway: "Putih - Merah" },
       players: [
         { no: 1, name: "Mert Gunok", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Merih Demiral", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 3, name: "Merih Demiral", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Hakan Calhanoglu (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 8, name: "Arda Guler", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 19, name: "Kenan Yildiz", pos: "Flank", goals: 1, yc: 0, rc: 0 },
@@ -510,7 +510,7 @@ const DEFAULT_DATA = {
         { no: 5, name: "Rio Ferdinand", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 7, name: "David Beckham (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
         { no: 10, name: "Wayne Rooney", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
-        { no: 8, name: "Steven Gerrard", pos: "Flank", goals: 2, yc: 1, rc: 0 },
+        { no: 8, name: "Steven Gerrard", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 13, name: "Ben Foster", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 6, name: "John Terry", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 11, name: "Frank Lampard", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
@@ -533,7 +533,7 @@ const DEFAULT_DATA = {
         { no: 14, name: "Thierry Henry", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 7, name: "Franck Ribery", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 16, name: "Gregory Coupet", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Patrick Vieira", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 4, name: "Patrick Vieira", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 9, name: "Karim Benzema", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
@@ -549,7 +549,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Basri Kasim", coach: "Coach Vicente del Bosque", phone: "0821-3003-4003", jerseyHome: "Merah - Biru", jerseyAway: "Putih - Emas" },
       players: [
         { no: 1, name: "Iker Casillas (C)", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Sergio Ramos", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
+        { no: 4, name: "Sergio Ramos", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
         { no: 8, name: "Andres Iniesta", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 6, name: "Xavi Hernandez", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 9, name: "Fernando Torres", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
@@ -573,7 +573,7 @@ const DEFAULT_DATA = {
         { no: 3, name: "Paolo Maldini", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 21, name: "Andrea Pirlo", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 10, name: "Alessandro Del Piero", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
-        { no: 8, name: "Gennaro Gattuso", pos: "Flank", goals: 0, yc: 1, rc: 0 },
+        { no: 8, name: "Gennaro Gattuso", pos: "Flank", goals: 0, yc: 0, rc: 0 },
         { no: 12, name: "Francesco Toldo", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 5, name: "Fabio Cannavaro", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 9, name: "Filippo Inzaghi", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
@@ -593,12 +593,12 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Qashim Abdullah", coach: "Coach Louis van Gaal", phone: "0812-5005-6005", jerseyHome: "Oranye - Putih", jerseyAway: "Biru - Hitam" },
       players: [
         { no: 1, name: "Edwin van der Sar", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Jaap Stam", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 3, name: "Jaap Stam", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Wesley Sneijder (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 9, name: "Robin van Persie", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
         { no: 11, name: "Arjen Robben", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 12, name: "Maarten Stekelenburg", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Edgar Davids", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 8, name: "Edgar Davids", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 19, name: "Ruud van Nistelrooy", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     },
@@ -619,7 +619,7 @@ const DEFAULT_DATA = {
         { no: 11, name: "Miroslav Klose", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 10, name: "Mesut Ozil", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 12, name: "Jens Lehmann", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 5, name: "Mats Hummels", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 5, name: "Mats Hummels", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 19, name: "Mario Gotze", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -635,7 +635,7 @@ const DEFAULT_DATA = {
       official: { manager: "Ust. Taufik Hidayat", coach: "Coach Roberto Martinez", phone: "0821-7007-8007", jerseyHome: "Ungu - Kuning", jerseyAway: "Putih - Ungu" },
       players: [
         { no: 1, name: "Thibaut Courtois", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Vincent Kompany (C)", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 4, name: "Vincent Kompany (C)", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Eden Hazard", pos: "Flank", goals: 3, yc: 0, rc: 0 },
         { no: 8, name: "Marouane Fellaini", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 11, name: "Dries Mertens", pos: "Flank", goals: 1, yc: 0, rc: 0 },
@@ -659,9 +659,9 @@ const DEFAULT_DATA = {
         { no: 6, name: "Ricardo Carvalho", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 7, name: "Luis Figo (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 10, name: "Rui Costa", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
-        { no: 20, name: "Deco", pos: "Flank", goals: 1, yc: 1, rc: 0 },
+        { no: 20, name: "Deco", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 12, name: "Ricardo Pereira", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 3, name: "Pepe", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 3, name: "Pepe", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 17, name: "Nani", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -684,7 +684,7 @@ const DEFAULT_DATA = {
         { no: 11, name: "Gareth Bale", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 7, name: "Daniel James", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 12, name: "Danny Ward", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 4, name: "Ben Davies", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 4, name: "Ben Davies", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 9, name: "Kieffer Moore", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -702,7 +702,7 @@ const DEFAULT_DATA = {
         { no: 1, name: "Robin Olsen", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 3, name: "Victor Lindelof", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Emil Forsberg", pos: "Flank", goals: 1, yc: 0, rc: 0 },
-        { no: 11, name: "Zlatan Ibrahimovicc (C)", pos: "Pivot", goals: 4, yc: 1, rc: 0 },
+        { no: 11, name: "Zlatan Ibrahimovicc (C)", pos: "Pivot", goals: 4, yc: 0, rc: 0 },
         { no: 7, name: "Henrik Larsson", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 12, name: "Andreas Isaksson", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 5, name: "Olof Mellberg", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
@@ -726,7 +726,7 @@ const DEFAULT_DATA = {
         { no: 9, name: "Aleksandar Mitrovicc", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 11, name: "Filip Kosticc", pos: "Flank", goals: 0, yc: 0, rc: 0 },
         { no: 12, name: "Vanja Milinkovic-Savic", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 20, name: "Sergej Milinkovic-Savic", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
+        { no: 20, name: "Sergej Milinkovic-Savic", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
         { no: 18, name: "Dusan Vlahovic", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -742,7 +742,7 @@ const DEFAULT_DATA = {
       official: { manager: "H. Syamsir, S.Pd", coach: "Coach Marco Rossi", phone: "0852-2232-3242", jerseyHome: "Merah - Putih - Hijau", jerseyAway: "Putih - Merah" },
       players: [
         { no: 1, name: "Peter Gulacsi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Willi Orban", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Willi Orban", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 10, name: "Dominik Szoboszlai (C)", pos: "Flank", goals: 2, yc: 0, rc: 0 },
         { no: 20, name: "Roland Sallai", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
         { no: 11, name: "Milos Kerkez", pos: "Flank", goals: 0, yc: 0, rc: 0 },
@@ -765,7 +765,7 @@ const DEFAULT_DATA = {
       official: { manager: "Hj. Hasnah, S.Pd", coach: "Coach Matjaz Kek", phone: "0812-3343-4353", jerseyHome: "Biru Langit - Putih", jerseyAway: "Hijau - Putih" },
       players: [
         { no: 1, name: "Jan Oblak (C)", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Jaka Bijol", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Jaka Bijol", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 7, name: "Josip Ilicic", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 9, name: "Benjamin Sesko", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 10, name: "Miha Zajc", pos: "Flank", goals: 0, yc: 0, rc: 0 },
@@ -789,7 +789,7 @@ const DEFAULT_DATA = {
         { no: 6, name: "Marc Guehihi", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 20, name: "Cole Palmer (C)", pos: "Flank", goals: 3, yc: 0, rc: 0 },
         { no: 26, name: "Kobbie Mainoo", pos: "Pivot", goals: 1, yc: 0, rc: 0 },
-        { no: 10, name: "Anthony Gordon", pos: "Flank", goals: 1, yc: 1, rc: 0 },
+        { no: 10, name: "Anthony Gordon", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 13, name: "Nick Pope", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 4, name: "Ezri Konsa", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 21, name: "Eberechi Eze", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
@@ -812,7 +812,7 @@ const DEFAULT_DATA = {
         { no: 11, name: "Michael Olise", pos: "Pivot", goals: 2, yc: 0, rc: 0 },
         { no: 10, name: "Rayan Cherki", pos: "Flank", goals: 0, yc: 0, rc: 0 },
         { no: 16, name: "Guillaume Restes", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 8, name: "Warren Zaire-Emery", pos: "Anchor", goals: 1, yc: 1, rc: 0 },
+        { no: 8, name: "Warren Zaire-Emery", pos: "Anchor", goals: 1, yc: 0, rc: 0 },
         { no: 9, name: "Mathys Tel", pos: "Pivot", goals: 0, yc: 0, rc: 0 }
       ]
     },
@@ -833,7 +833,7 @@ const DEFAULT_DATA = {
         { no: 9, name: "Samu Omorodion", pos: "Pivot", goals: 3, yc: 0, rc: 0 },
         { no: 10, name: "Bryan Zaragoza", pos: "Flank", goals: 1, yc: 0, rc: 0 },
         { no: 13, name: "Arnau Tenas", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
-        { no: 6, name: "Marc Casado", pos: "Anchor", goals: 0, yc: 1, rc: 0 },
+        { no: 6, name: "Marc Casado", pos: "Anchor", goals: 0, yc: 0, rc: 0 },
         { no: 17, name: "Alex Baena", pos: "Pivot", goals: 1, yc: 0, rc: 0 }
       ]
     }
