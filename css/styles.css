@@ -3500,7 +3500,11 @@ body.dark-theme .mobile-nav-item.active {
     line-height: 1.2 !important;
   }
   #heroSub {
-    display: none !important;
+    display: block !important;
+    font-size: 0.82rem !important;
+    line-height: 1.35 !important;
+    color: var(--text-muted) !important;
+    margin-top: 2px !important;
   }
   .hero-meta {
     flex-direction: column !important;
