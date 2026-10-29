@@ -234,8 +234,20 @@ const admin = {
     document.getElementById("homeTeamLabel").textContent = home.shortName || home.name;
     document.getElementById("awayTeamLabel").textContent = away.shortName || away.name;
 
-    const homeScoreVal = match.status === 'live' ? (match.homeScoreLive || 0) : (match.homeScore || 0);
-    const awayScoreVal = match.status === 'live' ? (match.awayScoreLive || 0) : (match.awayScore || 0);
+    let homeScoreVal = match.status === 'live' 
+      ? (match.homeScoreLive !== undefined && match.homeScoreLive !== null ? match.homeScoreLive : (match.homeScore || 0)) 
+      : (match.homeScore !== undefined && match.homeScore !== null ? match.homeScore : (match.homeScoreLive || 0));
+    let awayScoreVal = match.status === 'live' 
+      ? (match.awayScoreLive !== undefined && match.awayScoreLive !== null ? match.awayScoreLive : (match.awayScore || 0)) 
+      : (match.awayScore !== undefined && match.awayScore !== null ? match.awayScore : (match.awayScoreLive || 0));
+
+    // Sinkronkan selalu dengan catatan pencetak gol jika ada
+    if (match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0) {
+      const hCount = match.scorers.filter(s => s.team === match.homeId).length;
+      const aCount = match.scorers.filter(s => s.team === match.awayId).length;
+      homeScoreVal = Math.max(parseInt(homeScoreVal, 10) || 0, hCount);
+      awayScoreVal = Math.max(parseInt(awayScoreVal, 10) || 0, aCount);
+    }
 
     document.getElementById("homeScoreDisplay").textContent = homeScoreVal;
     document.getElementById("awayScoreDisplay").textContent = awayScoreVal;
@@ -333,8 +345,14 @@ const admin = {
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
     if (!match) return;
 
-    const hScore = document.getElementById("homeScoreDisplay").textContent || "0";
-    const aScore = document.getElementById("awayScoreDisplay").textContent || "0";
+    let hScore = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
+    let aScore = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
+    if (match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0) {
+      const hCount = match.scorers.filter(s => s.team === match.homeId).length;
+      const aCount = match.scorers.filter(s => s.team === match.awayId).length;
+      hScore = Math.max(hScore, hCount);
+      aScore = Math.max(aScore, aCount);
+    }
     const home = app.store.getTeam(match.homeId);
     const away = app.store.getTeam(match.awayId);
     const hName = home ? (home.shortName || home.name) : "Home";
@@ -526,11 +544,12 @@ const admin = {
     if (p) p.goals = (p.goals || 0) + 1;
 
     // Auto increment score display
-    if (teamId === match.homeId) {
-      this.adjustScore('home', 1);
-    } else {
-      this.adjustScore('away', 1);
-    }
+    const hCount = match.scorers.filter(s => s.team === match.homeId).length;
+    const aCount = match.scorers.filter(s => s.team === match.awayId).length;
+    const curH = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
+    const curA = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
+    document.getElementById("homeScoreDisplay").textContent = Math.max(curH, hCount);
+    document.getElementById("awayScoreDisplay").textContent = Math.max(curA, aCount);
 
     this.renderAdminEventsList(match);
     app.showToast(`⚽ Gol dicatat: ${player} (${minute})`);
@@ -593,16 +612,39 @@ const admin = {
 
   removeScorer(index) {
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
-    if (!match || !match.scorers) return;
+    if (!match || !match.scorers || !match.scorers[index]) return;
+    const removed = match.scorers[index];
     match.scorers.splice(index, 1);
+
+    const team = app.store.getTeam(removed.team);
+    const p = team?.players.find(x => x.name === removed.player);
+    if (p && p.goals > 0) p.goals -= 1;
+
+    // Recalculate score display from remaining scorers
+    const hCount = match.scorers.filter(s => s.team === match.homeId).length;
+    const aCount = match.scorers.filter(s => s.team === match.awayId).length;
+    document.getElementById("homeScoreDisplay").textContent = hCount;
+    document.getElementById("awayScoreDisplay").textContent = aCount;
+
     this.renderAdminEventsList(match);
+    app.showToast(`Gol ${removed.player} dihapus`);
   },
 
   removeCard(index) {
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
-    if (!match || !match.cards) return;
+    if (!match || !match.cards || !match.cards[index]) return;
+    const removed = match.cards[index];
     match.cards.splice(index, 1);
+
+    const team = app.store.getTeam(removed.team);
+    const p = team?.players.find(x => x.name === removed.player);
+    if (p) {
+      if (removed.type === 'yellow' && p.yc > 0) p.yc -= 1;
+      if (removed.type === 'red' && p.rc > 0) p.rc -= 1;
+    }
+
     this.renderAdminEventsList(match);
+    app.showToast(`Kartu ${removed.type === 'yellow' ? 'Kuning' : 'Merah'} ${removed.player} dihapus`);
   },
 
   saveQuickScore(overrideStatus = null) {
@@ -611,9 +653,17 @@ const admin = {
 
     this.stopLiveTimer();
 
-    const hScore = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
-    const aScore = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
+    let hScore = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
+    let aScore = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
     const status = overrideStatus || document.getElementById("matchStatusSelect").value;
+
+    // Sinkronkan selalu dengan catatan gol jika ada pencetak gol resmi yang dicatat
+    if (match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0) {
+      const hCount = match.scorers.filter(s => s.team === match.homeId).length;
+      const aCount = match.scorers.filter(s => s.team === match.awayId).length;
+      hScore = Math.max(hScore, hCount);
+      aScore = Math.max(aScore, aCount);
+    }
     
     let minute = document.getElementById("matchMinuteInput").value.trim();
     if (minute) {
@@ -624,19 +674,16 @@ const admin = {
     match.status = status;
     match.liveMinute = status === 'live' ? (minute || "1'") : minute;
 
-    if (status === "live") {
-      match.homeScoreLive = hScore;
-      match.awayScoreLive = aScore;
-    } else if (status === "finished") {
+    if (status === "live" || status === "finished") {
       match.homeScore = hScore;
       match.awayScore = aScore;
-      delete match.homeScoreLive;
-      delete match.awayScoreLive;
+      match.homeScoreLive = hScore;
+      match.awayScoreLive = aScore;
     } else {
       match.homeScore = null;
       match.awayScore = null;
-      delete match.homeScoreLive;
-      delete match.awayScoreLive;
+      match.homeScoreLive = null;
+      match.awayScoreLive = null;
     }
 
     if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
@@ -2524,6 +2571,8 @@ const admin = {
       if (m20) {
         m20.status = "live";
         m20.liveMinute = "24'";
+        m20.homeScore = 2;
+        m20.awayScore = 2;
         m20.homeScoreLive = 2;
         m20.awayScoreLive = 2;
       }

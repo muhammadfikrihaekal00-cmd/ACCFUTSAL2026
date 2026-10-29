@@ -194,6 +194,19 @@ class TournamentStore {
         p.rc = matchRc;
       });
     });
+
+    // Auto-heal & Sinkronisasi: Pastikan skor pertandingan selalu konsisten dengan catatan gol m.scorers
+    this.data.matches.forEach(m => {
+      if ((m.status === 'live' || m.status === 'finished') && m.scorers && Array.isArray(m.scorers) && m.scorers.length > 0) {
+        const hGoals = m.scorers.filter(s => s.team === m.homeId).length;
+        const aGoals = m.scorers.filter(s => s.team === m.awayId).length;
+        m.homeScore = Math.max(parseInt(m.homeScore, 10) || 0, hGoals);
+        m.awayScore = Math.max(parseInt(m.awayScore, 10) || 0, aGoals);
+        m.homeScoreLive = m.homeScore;
+        m.awayScoreLive = m.awayScore;
+      }
+    });
+
     this.saveData();
   }
 
@@ -231,8 +244,8 @@ class TournamentStore {
     );
 
     groupMatches.forEach(m => {
-      const hScore = m.status === "live" ? (m.homeScoreLive || 0) : (m.homeScore || 0);
-      const aScore = m.status === "live" ? (m.awayScoreLive || 0) : (m.awayScore || 0);
+      const hScore = m.status === "live" ? (m.homeScoreLive ?? m.homeScore ?? 0) : (m.homeScore ?? m.homeScoreLive ?? 0);
+      const aScore = m.status === "live" ? (m.awayScoreLive ?? m.awayScore ?? 0) : (m.awayScore ?? m.awayScoreLive ?? 0);
 
       const h = stats[m.homeId];
       const a = stats[m.awayId];
@@ -879,21 +892,37 @@ const app = {
           const idx = this.store.data.matches.findIndex(m => m.id === remoteMatch.id);
           if (idx !== -1) {
             const mapped = {};
-            if (remoteMatch.home_score !== undefined || remoteMatch.homeScore !== undefined) {
-              mapped.homeScore = remoteMatch.home_score !== undefined ? remoteMatch.home_score : remoteMatch.homeScore;
-            }
-            if (remoteMatch.away_score !== undefined || remoteMatch.awayScore !== undefined) {
-              mapped.awayScore = remoteMatch.away_score !== undefined ? remoteMatch.away_score : remoteMatch.awayScore;
-            }
-            if (remoteMatch.home_score_live !== undefined || remoteMatch.homeScoreLive !== undefined) {
-              mapped.homeScoreLive = remoteMatch.home_score_live !== undefined ? remoteMatch.home_score_live : remoteMatch.homeScoreLive;
-            }
-            if (remoteMatch.away_score_live !== undefined || remoteMatch.awayScoreLive !== undefined) {
-              mapped.awayScoreLive = remoteMatch.away_score_live !== undefined ? remoteMatch.away_score_live : remoteMatch.awayScoreLive;
-            }
+            const curMatch = this.store.data.matches[idx];
             if (remoteMatch.status) mapped.status = remoteMatch.status;
             if (remoteMatch.scorers) mapped.scorers = remoteMatch.scorers;
             if (remoteMatch.cards) mapped.cards = remoteMatch.cards;
+            if (remoteMatch.minute_live) mapped.liveMinute = `${remoteMatch.minute_live}'`;
+
+            const rHome = remoteMatch.home_score !== undefined ? remoteMatch.home_score : remoteMatch.homeScore;
+            const rAway = remoteMatch.away_score !== undefined ? remoteMatch.away_score : remoteMatch.awayScore;
+            const rHomeLive = remoteMatch.home_score_live !== undefined ? remoteMatch.home_score_live : remoteMatch.homeScoreLive;
+            const rAwayLive = remoteMatch.away_score_live !== undefined ? remoteMatch.away_score_live : remoteMatch.awayScoreLive;
+
+            const finalHome = (rHome !== undefined && rHome !== null) ? rHome : ((rHomeLive !== undefined && rHomeLive !== null) ? rHomeLive : curMatch.homeScore);
+            const finalAway = (rAway !== undefined && rAway !== null) ? rAway : ((rAwayLive !== undefined && rAwayLive !== null) ? rAwayLive : curMatch.awayScore);
+
+            mapped.homeScore = finalHome;
+            mapped.awayScore = finalAway;
+            mapped.homeScoreLive = finalHome;
+            mapped.awayScoreLive = finalAway;
+
+            // Auto-sync jika scorers ada
+            const activeScorers = mapped.scorers || curMatch.scorers;
+            const isLiveOrFinished = (mapped.status || curMatch.status) === 'live' || (mapped.status || curMatch.status) === 'finished';
+            if (activeScorers && Array.isArray(activeScorers) && activeScorers.length > 0 && isLiveOrFinished) {
+              const hCount = activeScorers.filter(s => s.team === curMatch.homeId).length;
+              const aCount = activeScorers.filter(s => s.team === curMatch.awayId).length;
+              mapped.homeScore = Math.max(parseInt(mapped.homeScore, 10) || 0, hCount);
+              mapped.awayScore = Math.max(parseInt(mapped.awayScore, 10) || 0, aCount);
+              mapped.homeScoreLive = mapped.homeScore;
+              mapped.awayScoreLive = mapped.awayScore;
+            }
+
             Object.assign(this.store.data.matches[idx], mapped);
           }
         });
@@ -953,21 +982,37 @@ const app = {
       const idx = this.store.data.matches.findIndex(m => m.id === payload.id);
       if (idx !== -1) {
         const mapped = {};
-        if (payload.home_score !== undefined || payload.homeScore !== undefined) {
-          mapped.homeScore = payload.home_score !== undefined ? payload.home_score : payload.homeScore;
-        }
-        if (payload.away_score !== undefined || payload.awayScore !== undefined) {
-          mapped.awayScore = payload.away_score !== undefined ? payload.away_score : payload.awayScore;
-        }
-        if (payload.home_score_live !== undefined || payload.homeScoreLive !== undefined) {
-          mapped.homeScoreLive = payload.home_score_live !== undefined ? payload.home_score_live : payload.homeScoreLive;
-        }
-        if (payload.away_score_live !== undefined || payload.awayScoreLive !== undefined) {
-          mapped.awayScoreLive = payload.away_score_live !== undefined ? payload.away_score_live : payload.awayScoreLive;
-        }
+        const curMatch = this.store.data.matches[idx];
         if (payload.status) mapped.status = payload.status;
         if (payload.scorers) mapped.scorers = payload.scorers;
         if (payload.cards) mapped.cards = payload.cards;
+        if (payload.minute_live) mapped.liveMinute = `${payload.minute_live}'`;
+
+        const rHome = payload.home_score !== undefined ? payload.home_score : payload.homeScore;
+        const rAway = payload.away_score !== undefined ? payload.away_score : payload.awayScore;
+        const rHomeLive = payload.home_score_live !== undefined ? payload.home_score_live : payload.homeScoreLive;
+        const rAwayLive = payload.away_score_live !== undefined ? payload.away_score_live : payload.awayScoreLive;
+
+        const finalHome = (rHome !== undefined && rHome !== null) ? rHome : ((rHomeLive !== undefined && rHomeLive !== null) ? rHomeLive : curMatch.homeScore);
+        const finalAway = (rAway !== undefined && rAway !== null) ? rAway : ((rAwayLive !== undefined && rAwayLive !== null) ? rAwayLive : curMatch.awayScore);
+
+        mapped.homeScore = finalHome;
+        mapped.awayScore = finalAway;
+        mapped.homeScoreLive = finalHome;
+        mapped.awayScoreLive = finalAway;
+
+        // Auto-sync jika scorers ada
+        const activeScorers = mapped.scorers || curMatch.scorers;
+        const isLiveOrFinished = (mapped.status || curMatch.status) === 'live' || (mapped.status || curMatch.status) === 'finished';
+        if (activeScorers && Array.isArray(activeScorers) && activeScorers.length > 0 && isLiveOrFinished) {
+          const hCount = activeScorers.filter(s => s.team === curMatch.homeId).length;
+          const aCount = activeScorers.filter(s => s.team === curMatch.awayId).length;
+          mapped.homeScore = Math.max(parseInt(mapped.homeScore, 10) || 0, hCount);
+          mapped.awayScore = Math.max(parseInt(mapped.awayScore, 10) || 0, aCount);
+          mapped.homeScoreLive = mapped.homeScore;
+          mapped.awayScoreLive = mapped.awayScore;
+        }
+
         Object.assign(this.store.data.matches[idx], mapped);
         this.store.syncPlayerStatsFromMatches();
         this.store.saveData();
@@ -1775,14 +1820,23 @@ const app = {
         `;
       }
 
-      const homeScore = isLive ? (m.homeScoreLive ?? 0) : (isFinished ? m.homeScore : "-");
-      const awayScore = isLive ? (m.awayScoreLive ?? 0) : (isFinished ? m.awayScore : "-");
-
       // Split scorers & cards per team
       const homeScorers = (m.scorers || []).filter(s => s.team === m.homeId);
       const awayScorers = (m.scorers || []).filter(s => s.team === m.awayId);
       const homeCards = (m.cards || []).filter(c => c.team === m.homeId);
       const awayCards = (m.cards || []).filter(c => c.team === m.awayId);
+
+      let homeScore = (isLive || isFinished) ? (m.homeScore ?? m.homeScoreLive ?? 0) : "-";
+      let awayScore = (isLive || isFinished) ? (m.awayScore ?? m.awayScoreLive ?? 0) : "-";
+
+      if (isLive || isFinished) {
+        if (homeScorers.length > 0) {
+          homeScore = Math.max(parseInt(homeScore, 10) || 0, homeScorers.length);
+        }
+        if (awayScorers.length > 0) {
+          awayScore = Math.max(parseInt(awayScore, 10) || 0, awayScorers.length);
+        }
+      }
 
       const catBadge = (m.category || "SMP") === "SD" ?
         `<span class="match-category-tag cat-sd">🎒 SD (U-12)</span>` :

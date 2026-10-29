@@ -1,4 +1,4 @@
-﻿// js/supabase-client.js - Seamless, Silent, Real-Time Supabase Synchronization
+// js/supabase-client.js - Seamless, Silent, Real-Time Supabase Synchronization
 (function(window) {
   'use strict';
 
@@ -233,11 +233,18 @@
       if (!this.client || !this.isConfigured) return false;
 
       try {
+        const hScoreNum = (match.status === 'live' || match.status === 'finished')
+          ? (match.homeScore !== undefined && match.homeScore !== null ? parseInt(match.homeScore, 10) : (parseInt(match.homeScoreLive, 10) || 0))
+          : 0;
+        const aScoreNum = (match.status === 'live' || match.status === 'finished')
+          ? (match.awayScore !== undefined && match.awayScore !== null ? parseInt(match.awayScore, 10) : (parseInt(match.awayScoreLive, 10) || 0))
+          : 0;
+
         // Try calling the security definer RPC function first
         const { data, error } = await this.client.rpc('secure_update_match', {
           p_match_id: match.id,
-          p_home_score: match.homeScore !== undefined ? parseInt(match.homeScore, 10) : 0,
-          p_away_score: match.awayScore !== undefined ? parseInt(match.awayScore, 10) : 0,
+          p_home_score: hScoreNum,
+          p_away_score: aScoreNum,
           p_status: match.status,
           p_scorers: match.scorers || [],
           p_cards: match.cards || [],
@@ -259,10 +266,10 @@
             stage: match.stage || "group",
             group_letter: match.group || null,
             round_name: match.roundName || "",
-            home_score: match.homeScore !== undefined ? match.homeScore : 0,
-            away_score: match.awayScore !== undefined ? match.awayScore : 0,
-            home_score_live: match.homeScoreLive !== undefined ? match.homeScoreLive : 0,
-            away_score_live: match.awayScoreLive !== undefined ? match.awayScoreLive : 0,
+            home_score: hScoreNum,
+            away_score: aScoreNum,
+            home_score_live: hScoreNum,
+            away_score_live: aScoreNum,
             minute_live: parseInt((match.liveMinute || "0").replace(/\D/g, ''), 10) || 0,
             status: match.status || 'scheduled',
             scorers: match.scorers || [],
