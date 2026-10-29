@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=4.4">
+  <link rel="stylesheet" href="css/styles.css?v=4.5">
 </head>
 <body>
 
@@ -26,41 +26,32 @@
   <div id="appSplashScreen" class="app-splash-screen" onclick="app.dismissSplashScreen()">
     <div class="splash-backdrop-glow"></div>
     <div class="splash-content" onclick="event.stopPropagation()">
+      <!-- SISI KIRI: LOGO BESAR (TENGAH VERTIKAL) -->
       <div class="splash-logo-container">
         <div class="splash-logo-pulse-ring"></div>
         <div class="splash-logo-pulse-ring delay"></div>
-        <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img" width="160" height="227" fetchpriority="high">
+        <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img" width="220" height="312" fetchpriority="high">
       </div>
 
-      <div class="splash-badge-edition">
-        <span>👑 RESMI • TURNAMEN FUTSAL 2026</span>
+      <!-- SISI KANAN: TULISAN SELAMAT DATANG 2 BARIS & TOMBOL LOG IN (MASUK) -->
+      <div class="splash-right-col">
+        <h1 class="splash-title">
+          <span class="splash-title-sub">Selamat Datang di</span>
+          <span class="splash-title-highlight">Al-Fayyadh Champions Cup</span>
+        </h1>
+
+        <button type="button" class="btn-splash-enter" id="btnSplashEnter" onclick="event.stopPropagation(); app.dismissSplashScreen();" aria-label="Masuk ke Aplikasi">
+          <span class="btn-splash-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+          </span>
+          <span class="btn-splash-text">Masuk / Log In</span>
+          <span class="btn-splash-arrow">➔</span>
+        </button>
       </div>
-
-      <h1 class="splash-title">
-        Selamat Datang di<br>
-        <span class="splash-title-highlight">Al-Fayyadh Champions Cup</span>
-      </h1>
-
-      <p class="splash-subtitle">
-        Turnamen Futsal Prestasi & Ukhuwah Antar Sekolah & Pesantren se-Sulawesi Selatan
-      </p>
-
-      <div class="splash-meta-chips">
-        <span class="splash-chip">📅 22 - 26 November 2026</span>
-        <span class="splash-chip">📍 GOR Futsal MTQ Al-Fayyadh Maros</span>
-        <span class="splash-chip">⚽ 32 Tim (16 SMP & 16 SD)</span>
-      </div>
-
-      <div class="splash-loader-bar-wrap">
-        <div class="splash-loader-bar" id="splashLoaderBar"></div>
-      </div>
-
-      <button type="button" class="btn-splash-enter" id="btnSplashEnter" onclick="event.stopPropagation(); app.dismissSplashScreen();">
-        <span>⚽ Masuk ke Aplikasi Turnamen</span>
-        <span>➔</span>
-      </button>
-
-      <span class="splash-skip-hint">Ketuk di mana saja untuk langsung masuk</span>
     </div>
   </div>
 
@@ -1899,7 +1890,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=24')
+        navigator.serviceWorker.register('sw.js?v=25')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
