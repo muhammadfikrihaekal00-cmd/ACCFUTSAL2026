@@ -1902,16 +1902,16 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js?v=4.8"></script>
-  <script src="js/supabase-client.js?v=5.0"></script>
-  <script src="js/data.js?v=5.0"></script>
-  <script src="js/app.js?v=5.0"></script>
-  <script src="js/admin.js?v=5.0"></script>
+  <script src="js/supabase-client.js?v=5.1"></script>
+  <script src="js/data.js?v=5.1"></script>
+  <script src="js/app.js?v=5.1"></script>
+  <script src="js/admin.js?v=5.1"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=27')
+        navigator.serviceWorker.register('sw.js?v=30')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

@@ -3,6 +3,7 @@ class TournamentStore {
   constructor() {
     this.STORAGE_KEY = "acc_futsal_tournament_2026_clean_zero_v5";
     this.data = this.loadData();
+    this.syncPlayerStatsFromMatches();
     this.syncKnockoutFromStandings();
   }
 
@@ -141,6 +142,58 @@ class TournamentStore {
     this.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
     this.saveData();
     this.syncKnockoutFromStandings();
+  }
+
+  syncPlayerStatsFromMatches() {
+    if (!this.data || !this.data.teams || !this.data.matches) return;
+
+    this.data.teams.forEach(t => {
+      if (!t.players || !Array.isArray(t.players)) return;
+
+      t.players.forEach(p => {
+        let matchGoals = 0;
+        let matchYc = 0;
+        let matchRc = 0;
+        const cleanPName = (p.name || '').toLowerCase().trim();
+
+        this.data.matches.forEach(m => {
+          if (m.scorers && Array.isArray(m.scorers)) {
+            m.scorers.forEach(s => {
+              const isTeam = !s.team || s.team === t.id || s.team === t.name || s.team === t.shortName;
+              const scorerName = (s.player || '').toLowerCase().trim();
+              const isPlayer = scorerName === cleanPName || 
+                               scorerName === `${cleanPName} (#${p.no})` ||
+                               (p.no && scorerName.includes(`#${p.no}`)) ||
+                               scorerName.includes(cleanPName) || 
+                               cleanPName.includes(scorerName);
+              if (isTeam && isPlayer) {
+                matchGoals += 1;
+              }
+            });
+          }
+
+          if (m.cards && Array.isArray(m.cards)) {
+            m.cards.forEach(c => {
+              const isTeam = !c.team || c.team === t.id || c.team === t.name || c.team === t.shortName;
+              const cardPlayer = (c.player || '').toLowerCase().trim();
+              const isPlayer = cardPlayer === cleanPName || 
+                               cardPlayer === `${cleanPName} (#${p.no})` ||
+                               (p.no && cardPlayer.includes(`#${p.no}`)) ||
+                               cardPlayer.includes(cleanPName) || 
+                               cleanPName.includes(cardPlayer);
+              if (isTeam && isPlayer) {
+                if (c.type === 'yellow') matchYc += 1;
+                if (c.type === 'red') matchRc += 1;
+              }
+            });
+          }
+        });
+
+        p.goals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
+        p.yc = Math.max(parseInt(p.yc, 10) || 0, matchYc);
+        p.rc = Math.max(parseInt(p.rc, 10) || 0, matchRc);
+      });
+    });
   }
 
   getTeam(id) {
@@ -416,14 +469,25 @@ class TournamentStore {
     this.data.matches.forEach(m => {
       if (m.cards && m.cards.length > 0) {
         m.cards.forEach(c => {
-          const key = `${c.team}-${c.player}`;
-          if (playerStats[key]) {
+          let target = playerStats[`${c.team}-${c.player}`];
+          if (!target) {
+            const cardName = (c.player || '').toLowerCase().trim();
+            const foundKey = Object.keys(playerStats).find(k => {
+              const stat = playerStats[k];
+              const isTeam = !c.team || c.team === stat.teamId || c.team === stat.teamName;
+              const pName = (stat.playerName || '').toLowerCase().trim();
+              return isTeam && (cardName === pName || cardName === `${pName} (#${stat.playerNo})` || (stat.playerNo && cardName.includes(`#${stat.playerNo}`)) || cardName.includes(pName) || pName.includes(cardName));
+            });
+            if (foundKey) target = playerStats[foundKey];
+          }
+
+          if (target) {
             if (c.type === "yellow") {
-              playerStats[key].yellowCount += 1;
+              target.yellowCount += 1;
             } else if (c.type === "red") {
-              playerStats[key].redCount += 1;
+              target.redCount += 1;
             }
-            playerStats[key].cardsHistory.push({
+            target.cardsHistory.push({
               matchId: m.id,
               type: c.type,
               minute: c.minute
@@ -431,6 +495,17 @@ class TournamentStore {
           }
         });
       }
+    });
+
+    // Pastikan kartu yang tersimpan di data pemain juga ikut tersinkron
+    teams.forEach(t => {
+      t.players.forEach(p => {
+        const key = `${t.id}-${p.name}`;
+        if (playerStats[key]) {
+          playerStats[key].yellowCount = Math.max(playerStats[key].yellowCount, parseInt(p.yc, 10) || 0);
+          playerStats[key].redCount = Math.max(playerStats[key].redCount, parseInt(p.rc, 10) || 0);
+        }
+      });
     });
 
     return Object.values(playerStats)
@@ -869,6 +944,7 @@ const app = {
       if (data.sponsors && (Array.isArray(data.sponsors) ? data.sponsors.length > 0 : true)) {
         this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
       }
+      this.store.syncPlayerStatsFromMatches();
       this.store.saveData();
       this.store.syncKnockoutFromStandings();
       this.renderCurrentView();
@@ -902,6 +978,7 @@ const app = {
         if (payload.scorers) mapped.scorers = payload.scorers;
         if (payload.cards) mapped.cards = payload.cards;
         Object.assign(this.store.data.matches[idx], mapped);
+        this.store.syncPlayerStatsFromMatches();
         this.store.saveData();
         this.store.syncKnockoutFromStandings();
         this.renderMatches();
@@ -2397,6 +2474,9 @@ const app = {
 
   // MODAL: Show Team Details & Full Roster
   openTeamModal(teamId) {
+    if (this.store && typeof this.store.syncPlayerStatsFromMatches === 'function') {
+      this.store.syncPlayerStatsFromMatches();
+    }
     const team = this.store.getTeam(teamId);
     if (!team) return;
 
@@ -2468,6 +2548,52 @@ const app = {
             </thead>
             <tbody>
               ${team.players.map(p => {
+                // Sinkronkan akumulasi kartu & gol aktual dari rekaman pertandingan
+                let matchYc = 0;
+                let matchRc = 0;
+                let matchGoals = 0;
+                const cleanPName = (p.name || '').toLowerCase().trim();
+
+                (this.store.data.matches || []).forEach(m => {
+                  if (m.cards && Array.isArray(m.cards)) {
+                    m.cards.forEach(c => {
+                      const isTeam = !c.team || c.team === team.id || c.team === team.name || c.team === team.shortName;
+                      const cardPName = (c.player || '').toLowerCase().trim();
+                      const isPlayer = cardPName === cleanPName || 
+                                       cardPName === `${cleanPName} (#${p.no})` ||
+                                       (p.no && cardPName.includes(`#${p.no}`)) ||
+                                       cardPName.includes(cleanPName) || 
+                                       cleanPName.includes(cardPName);
+                      if (isTeam && isPlayer) {
+                        if (c.type === 'yellow') matchYc += 1;
+                        if (c.type === 'red') matchRc += 1;
+                      }
+                    });
+                  }
+                  if (m.scorers && Array.isArray(m.scorers)) {
+                    m.scorers.forEach(s => {
+                      const isTeam = !s.team || s.team === team.id || s.team === team.name || s.team === team.shortName;
+                      const scorerPName = (s.player || '').toLowerCase().trim();
+                      const isPlayer = scorerPName === cleanPName || 
+                                       scorerPName === `${cleanPName} (#${p.no})` ||
+                                       (p.no && scorerPName.includes(`#${p.no}`)) ||
+                                       scorerPName.includes(cleanPName) || 
+                                       cleanPName.includes(scorerPName);
+                      if (isTeam && isPlayer) {
+                        matchGoals += 1;
+                      }
+                    });
+                  }
+                });
+
+                const totalYc = Math.max(parseInt(p.yc, 10) || 0, matchYc);
+                const totalRc = Math.max(parseInt(p.rc, 10) || 0, matchRc);
+                const totalGoals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
+
+                p.yc = totalYc;
+                p.rc = totalRc;
+                p.goals = totalGoals;
+
                 const rating = this.calculatePlayerRating(p);
                 return `
                 <tr>
@@ -2482,11 +2608,11 @@ const app = {
                       ⭐ ${rating}
                     </span>
                   </td>
-                  <td style="font-weight: 700; color: var(--primary); text-align: center;">${p.goals}</td>
+                  <td style="font-weight: 700; color: var(--primary); text-align: center;">${totalGoals}</td>
                   <td style="text-align: center;">
-                    ${p.yc > 0 ? `<span class="card-icon-y" title="${p.yc} Kartu Kuning"></span> ${p.yc}` : ''}
-                    ${p.rc > 0 ? `<span class="card-icon-r" title="${p.rc} Kartu Merah"></span> ${p.rc}` : ''}
-                    ${p.yc === 0 && p.rc === 0 ? '<span style="color:var(--text-subtle);">-</span>' : ''}
+                    ${totalYc > 0 ? `<span class="card-icon-y" title="${totalYc} Kartu Kuning"></span> ${totalYc}` : ''}
+                    ${totalRc > 0 ? `<span class="card-icon-r" title="${totalRc} Kartu Merah"></span> ${totalRc}` : ''}
+                    ${totalYc === 0 && totalRc === 0 ? '<span style="color:var(--text-subtle);">-</span>' : ''}
                   </td>
                 </tr>
               `;

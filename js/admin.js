@@ -639,6 +639,9 @@ const admin = {
       delete match.awayScoreLive;
     }
 
+    if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
+      app.store.syncPlayerStatsFromMatches();
+    }
     app.store.saveData();
     app.store.syncKnockoutFromStandings();
 
@@ -801,6 +804,9 @@ const admin = {
     const pitchInput = document.getElementById("editMatchPitchInput");
     if (pitchInput && pitchInput.value.trim()) match.pitch = pitchInput.value.trim();
 
+    if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
+      app.store.syncPlayerStatsFromMatches();
+    }
     app.store.saveData();
     app.store.syncKnockoutFromStandings();
 
@@ -1776,6 +1782,9 @@ const admin = {
       app.store.data.teams.push(teamPayload);
     }
 
+    if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
+      app.store.syncPlayerStatsFromMatches();
+    }
     app.store.saveData();
     app.store.syncKnockoutFromStandings();
 
