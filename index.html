@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=4.5">
+  <link rel="stylesheet" href="css/styles.css?v=4.6">
 </head>
 <body>
 
@@ -33,11 +33,12 @@
         <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img" width="220" height="312" fetchpriority="high">
       </div>
 
-      <!-- SISI KANAN: TULISAN SELAMAT DATANG 2 BARIS & TOMBOL LOG IN (MASUK) -->
+      <!-- SISI KANAN: TULISAN SELAMAT DATANG & TOMBOL LOG IN (MASUK) -->
       <div class="splash-right-col">
         <h1 class="splash-title">
           <span class="splash-title-sub">Selamat Datang di</span>
-          <span class="splash-title-highlight">Al-Fayyadh Champions Cup</span>
+          <span class="splash-title-brand">AL-FAYYADH</span>
+          <span class="splash-title-cup">CHAMPIONS CUP</span>
         </h1>
 
         <button type="button" class="btn-splash-enter" id="btnSplashEnter" onclick="event.stopPropagation(); app.dismissSplashScreen();" aria-label="Masuk ke Aplikasi">
@@ -1890,7 +1891,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=25')
+        navigator.serviceWorker.register('sw.js?v=26')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
