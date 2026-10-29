@@ -1,5 +1,5 @@
 // Service Worker for Pondok Futsal Cup Offline PWA Support
-const CACHE_NAME = 'acc-al-fayyadh-futsal-v31';
+const CACHE_NAME = 'acc-al-fayyadh-futsal-v32';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

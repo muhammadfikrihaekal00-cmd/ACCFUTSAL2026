@@ -456,10 +456,31 @@ body.dark-theme .brand-text h1 {
   text-transform: uppercase;
   background: var(--accent-red-light);
   color: var(--accent-red);
-  border: 1px solid rgba(225, 29, 72, 0.2);
+  border: 1px solid rgba(225, 29, 72, 0.25);
   padding: 4px 10px;
   border-radius: var(--radius-full);
   width: fit-content;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.hero-badge-live:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+  background: rgba(225, 29, 72, 0.16);
+  border-color: rgba(225, 29, 72, 0.45);
+}
+.hero-badge-live:active {
+  transform: translateY(0) scale(0.98);
+}
+@keyframes live-highlight-glow {
+  0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.6); }
+  50% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+}
+.live-stream-card.highlight-pulse {
+  animation: live-highlight-glow 1.5s ease-out;
+  border-color: var(--accent-red) !important;
 }
 .pulse-dot {
   width: 8px;

@@ -654,6 +654,9 @@ const admin = {
     document.body.classList.remove("modal-open");
     app.showToast(status === 'finished' ? "🏁 Pertandingan selesai & hasil resmi disimpan!" : "💾 Skor pertandingan berhasil disimpan!");
     app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
   },
 
   // ==========================================
@@ -822,6 +825,9 @@ const admin = {
 
     app.showToast(`✅ Lawan laga ${match.id} berhasil disimpan: ${hName} vs ${aName}!`);
     app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
 
     if (andNext) {
       // Cari index laga berikutnya
@@ -1065,6 +1071,9 @@ const admin = {
           app.store.syncKnockoutFromStandings();
           app.renderHeader();
           app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
           app.showToast("Data turnamen berhasil di-import!");
           document.getElementById("adminDashboardModal").classList.remove("active");
         } else {
@@ -1949,6 +1958,9 @@ const admin = {
     app.store.saveData();
     app.renderHeroBanner();
     app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
 
     document.getElementById("mediaHubModal")?.classList.remove("active");
     app.showToast("🎉 Foto berhasil disimpan!");
@@ -2491,6 +2503,9 @@ const admin = {
       app.store.resetData();
       app.renderHeader();
       app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
       app.showToast("🔄 Data turnamen berhasil di-reset ke kondisi awal demo!");
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");
@@ -2514,6 +2529,9 @@ const admin = {
       }
       app.store.saveData();
       app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
       app.switchTab("matches");
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");
@@ -2571,6 +2589,9 @@ const admin = {
       app.store.saveData();
       app.store.syncKnockoutFromStandings();
       app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
       app.switchTab("standings");
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");
@@ -2642,6 +2663,9 @@ const admin = {
       app.store.saveData();
       app.store.syncKnockoutFromStandings();
       app.renderCurrentView();
+    if (app && typeof app.updateHeroLiveBadge === 'function') {
+      app.updateHeroLiveBadge();
+    }
       app.switchTab("bracket");
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");

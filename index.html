@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=4.9">
+  <link rel="stylesheet" href="css/styles.css?v=5.3">
 </head>
 <body>
 
@@ -113,7 +113,7 @@
       <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
         <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="80" height="113" loading="lazy">
         <div class="hero-details">
-          <div class="hero-badge-live">
+          <div class="hero-badge-live" id="heroLiveBadge" onclick="app.scrollToLiveStream()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.scrollToLiveStream();}" role="button" tabindex="0" title="Klik untuk menuju siaran langsung YouTube Live" style="display: none;">
             <span class="pulse-dot"></span>
             <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
           </div>
@@ -1902,16 +1902,16 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js?v=4.8"></script>
-  <script src="js/supabase-client.js?v=5.2"></script>
-  <script src="js/data.js?v=5.2"></script>
-  <script src="js/app.js?v=5.2"></script>
-  <script src="js/admin.js?v=5.2"></script>
+  <script src="js/supabase-client.js?v=5.3"></script>
+  <script src="js/data.js?v=5.3"></script>
+  <script src="js/app.js?v=5.3"></script>
+  <script src="js/admin.js?v=5.3"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=31')
+        navigator.serviceWorker.register('sw.js?v=32')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

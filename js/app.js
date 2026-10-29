@@ -675,6 +675,7 @@ const app = {
   },
 
   renderLiveStreamHero() {
+    this.updateHeroLiveBadge();
     const container = document.getElementById("liveStreamHero");
     if (!container) return;
 
@@ -974,6 +975,8 @@ const app = {
         this.renderMatches();
         this.renderStandings();
         this.renderBracket();
+        this.updateHeroLiveBadge();
+        this.renderLiveStreamHero();
       }
     } else if (table === 'teams') {
       const idx = this.store.data.teams.findIndex(t => t.id === payload.id);
@@ -1190,6 +1193,45 @@ const app = {
     }
     document.getElementById("tickerText").textContent = cleanTicker;
     this.renderHeroBanner();
+    this.updateHeroLiveBadge();
+  },
+
+  updateHeroLiveBadge() {
+    const badgeEl = document.getElementById("heroLiveBadge");
+    if (!badgeEl) return;
+
+    const matches = (this.store && this.store.data && this.store.data.matches) || [];
+    const liveMatches = matches.filter(m => m.status === "live");
+    const hasLiveMatch = liveMatches.length > 0;
+
+    if (hasLiveMatch) {
+      badgeEl.style.display = "inline-flex";
+      badgeEl.style.cursor = "pointer";
+      badgeEl.title = "🔴 Pertandingan sedang LIVE! Klik untuk langsung menuju siaran langsung";
+      badgeEl.innerHTML = `
+        <span class="pulse-dot"></span>
+        <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
+      `;
+    } else {
+      badgeEl.style.display = "none";
+    }
+  },
+
+  scrollToLiveStream() {
+    if (this.currentTab !== "home") {
+      this.switchTab("home");
+    }
+    setTimeout(() => {
+      const liveSection = document.getElementById("liveStreamHero");
+      if (liveSection) {
+        liveSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        const card = liveSection.querySelector(".live-stream-card");
+        if (card) {
+          card.classList.add("highlight-pulse");
+          setTimeout(() => card.classList.remove("highlight-pulse"), 2000);
+        }
+      }
+    }, 120);
   },
 
   bindEvents() {
@@ -1325,6 +1367,7 @@ const app = {
   },
 
   renderCurrentView() {
+    this.updateHeroLiveBadge();
     switch (this.currentTab) {
       case "home":
         this.renderHome();
