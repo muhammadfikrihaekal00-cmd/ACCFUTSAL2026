@@ -4083,11 +4083,11 @@ body.dark-theme .fixture-team-row:hover {
   position: fixed;
   inset: 0;
   z-index: 999999;
-  background: radial-gradient(circle at 45% 35%, #ffffff 0%, #f8fafc 55%, #e2e8f0 100%);
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 55%, #e2e8f0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px;
+  padding: 20px;
   overflow: hidden;
   transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
 }
@@ -4103,8 +4103,8 @@ body.dark-theme .fixture-team-row:hover {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 520px;
-  height: 520px;
+  width: 540px;
+  height: 540px;
   background: radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, rgba(245, 158, 11, 0.1) 50%, transparent 75%);
   filter: blur(55px);
   pointer-events: none;
@@ -4116,7 +4116,7 @@ body.dark-theme .fixture-team-row:hover {
   50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
 }
 
-/* Dua Kolom: Logo di Kiri Bagian Tengah, Tulisan & Tombol di Kanan */
+/* Dua Kolom: Logo di Kiri Bagian Tengah, Tulisan & Tombol di Kanan (Presisi Ditengah Layar) */
 .splash-content {
   position: relative;
   z-index: 2;
@@ -4124,9 +4124,10 @@ body.dark-theme .fixture-team-row:hover {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 48px;
-  max-width: 960px;
-  width: 100%;
+  gap: 36px;
+  width: fit-content;
+  max-width: 90vw;
+  margin: 0 auto;
 }
 
 /* Sisi Kiri: Logo Besar di Bagian Tengah Vertikal (Plat Putih Halo Kontras) */
@@ -4183,7 +4184,8 @@ body.dark-theme .fixture-team-row:hover {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  flex: 1;
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .splash-title {
