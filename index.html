@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=4.7">
+  <link rel="stylesheet" href="css/styles.css?v=4.9">
 </head>
 <body>
 
@@ -337,61 +337,27 @@
         <!-- Rendered by app.renderHome() -->
       </div>
 
-      <!-- 4. SPONSORSHIP & MITRA PENDUKUNG (SHOWCASE BAR KHUSUS, MENARIK & BESAR) -->
+      <!-- 4. SPONSORSHIP & MITRA PENDUKUNG -->
       <div class="sponsors-showcase-bar" id="sponsorsShowcaseBar">
-        <div class="sponsors-bar-ribbon">
-          <span>✨ OFFICIAL TOURNAMENT PARTNERS & SPONSORS ✨</span>
-        </div>
-
-        <div class="section-header sponsors-header-row">
+        <div class="section-header sponsors-header-row" style="margin-bottom: 16px;">
           <div>
-            <h2 class="section-title sponsors-main-title">
-              <span>🤝</span> Sponsor Resmi & Mitra Pendukung ACC 2026
+            <h2 class="section-title sponsors-main-title" style="margin: 0;">
+              <span>🤝</span> Sponsor & Mitra Resmi Turnamen
             </h2>
-            <span class="sponsors-sub-title">
-              Dukungan penuh mitra kebaikan demi kemajuan ukhuwah & olahraga santri
-            </span>
           </div>
           <button id="btnManageSponsors" class="btn btn-primary btn-sm btn-manage-sponsors" onclick="admin.openSponsorEditorModal()" style="display: none;">
             ⚙️ Kelola / Tambah Sponsor (Panitia)
           </button>
         </div>
 
-        <!-- Tier 1: Platinum Sponsor (Sponsor Utama - Kartu Lebih Besar & Menonjol) -->
-        <div class="sponsor-tier-header tier-platinum">
-          <span>👑 SPONSOR UTAMA (PLATINUM PARTNERS)</span>
-        </div>
-        <div class="sponsors-grid-platinum" id="sponsorsPlatinumGrid">
+        <!-- Baris 1: Logo Besar (Utama) - Tanpa Keterangan Teks 'Utama' -->
+        <div class="sponsors-grid-primary" id="sponsorsPrimaryGrid">
           <!-- Rendered dynamically by app.renderSponsors() -->
         </div>
 
-        <!-- Tier 2: Official Partners -->
-        <div class="sponsor-tier-header tier-gold">
-          <span>⚽ MITRA PENDUKUNG RESMI (OFFICIAL PARTNERS)</span>
-        </div>
-        <div class="sponsors-grid" id="sponsorsGoldGrid">
+        <!-- Baris 2: Logo Normal (Lebih Kecil) - Tanpa Keterangan Teks 'Normal' -->
+        <div class="sponsors-grid-secondary" id="sponsorsSecondaryGrid">
           <!-- Rendered dynamically by app.renderSponsors() -->
-        </div>
-
-        <!-- Tier 3: Media Partners -->
-        <div class="sponsor-tier-header tier-media">
-          <span>📡 MEDIA PARTNER & LIPUTAN RESMI</span>
-        </div>
-        <div class="sponsors-grid" id="sponsorsMediaGrid">
-          <!-- Rendered dynamically by app.renderSponsors() -->
-        </div>
-
-        <!-- Callout Ingin Menjadi Sponsor -->
-        <div class="sponsor-cta-banner">
-          <div>
-            <strong style="color: var(--accent-gold); font-size: 0.95rem;">Tertarik Menjadi Sponsor / Mitra ACC 2026?</strong>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-              Dukung kemajuan olahraga santri dan dapatkan penempatan logo di jersey, backdrop panggung, dan aplikasi resmi.
-            </p>
-          </div>
-          <a href="https://wa.me/6281298765432?text=Halo%20Panitia%20ACC%202026%2C%20kami%20tertarik%20bekerjasama%20sebagai%20Sponsor%2FPartner" target="_blank" class="btn btn-primary btn-sm">
-            💬 Hubungi Panitia Sponsorship
-          </a>
         </div>
       </div>
 
@@ -1426,18 +1392,17 @@
                 <input type="text" id="sponsorNameInput" class="form-input" placeholder="contoh: Bank Syariah Al-Barakah" required>
               </div>
               <div class="form-group" style="flex: 1.5;">
-                <label class="form-label">Kategori / Tier Sponsor <span style="color:#ef4444;">*</span></label>
+                <label class="form-label">Pilihan Ukuran Sponsor <span style="color:#ef4444;">*</span></label>
                 <select id="sponsorTierSelect" class="form-select" required>
-                  <option value="platinum">👑 Sponsor Utama (Platinum - Tampilan Besar)</option>
-                  <option value="gold">⚽ Mitra Pendukung Resmi (Gold Partner)</option>
-                  <option value="media">📡 Media Partner & Liputan Resmi</option>
+                  <option value="platinum">⭐ Ukuran Besar (Baris Atas)</option>
+                  <option value="gold">🔹 Ukuran Normal (Baris Bawah)</option>
                 </select>
               </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Peran / Keterangan Kemitraan <span style="color:#ef4444;">*</span></label>
-              <input type="text" id="sponsorRoleInput" class="form-input" placeholder="contoh: Official Banking & Financial Partner" required>
+              <label class="form-label">Keterangan / Subtitle <span style="color: var(--text-muted); font-size: 0.75rem;">(Opsional)</span></label>
+              <input type="text" id="sponsorRoleInput" class="form-input" placeholder="contoh: Official Banking Partner / Mitra Kebaikan">
             </div>
 
             <div class="form-row">
@@ -1516,6 +1481,45 @@
       <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between;">
         <button type="button" class="btn btn-outline btn-sm" onclick="app.shareMoment()" style="color: #00d2ff; border-color: rgba(0,210,255,0.4); background: rgba(0,210,255,0.08);">
           📤 Bagikan Momen
+        </button>
+        <button type="button" class="btn btn-primary btn-sm btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL BACA INFORMASI & KILAS TURNAMEN                     -->
+  <!-- ========================================================= -->
+  <div id="newsModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>📰</span> Detail Informasi Turnamen
+        </h3>
+        <button class="modal-close btn-modal-close">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 18px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+          <span id="newsModalTag" class="news-tag" style="font-size: 0.75rem; padding: 4px 10px;"></span>
+          <span id="newsModalDate" style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600;"></span>
+        </div>
+        
+        <h2 id="newsModalTitle" style="color: var(--text-main); font-size: 1.22rem; font-weight: 800; line-height: 1.4; margin-bottom: 14px;"></h2>
+
+        <div id="newsModalImgContainer" style="display: none; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 14px; box-shadow: 0 6px 18px rgba(0,0,0,0.15);">
+          <img id="newsModalImg" src="" alt="Foto Berita" style="width: 100%; max-height: 280px; object-fit: cover; display: block;">
+        </div>
+
+        <div id="newsModalContent" style="color: var(--text-main); font-size: 0.92rem; line-height: 1.7; white-space: pre-line; background: var(--bg-surface-elevated); padding: 14px 16px; border-radius: var(--radius-md); border-left: 4px solid var(--primary);"></div>
+
+        <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; color: var(--accent-gold); font-weight: 700;">
+          <span>📢 ACC Newsroom • Publikasi Resmi Panitia</span>
+          <span id="newsModalBadge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px;">Resmi</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="app.shareActiveNews()">
+          📤 Bagikan Berita
         </button>
         <button type="button" class="btn btn-primary btn-sm btn-modal-close">Tutup</button>
       </div>
@@ -1884,8 +1888,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script src="js/security.js?v=4.8"></script>
   <script src="js/supabase-client.js?v=4.8"></script>
   <script src="js/data.js?v=4.8"></script>
-  <script src="js/app.js?v=4.8"></script>
-  <script src="js/admin.js?v=4.8"></script>
+  <script src="js/app.js?v=4.9"></script>
+  <script src="js/admin.js?v=4.9"></script>
 
   <!-- Service Worker for PWA -->
   <script>

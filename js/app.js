@@ -1293,7 +1293,7 @@ const app = {
     const newsContainer = document.getElementById("homeNewsContainer");
     if (newsContainer && homeData.news) {
       newsContainer.innerHTML = homeData.news.map(n => `
-        <div class="news-card">
+        <div class="news-card" onclick="app.openNewsModal('${n.id}')" style="cursor: pointer;" title="Klik untuk membaca selengkapnya">
           <div class="news-header-meta">
             <span class="news-tag">${n.tag}</span>
             <span class="news-date">📅 ${n.date}</span>
@@ -1302,7 +1302,7 @@ const app = {
           <div class="news-desc">${n.desc}</div>
           <div style="margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
             <span style="font-size: 0.72rem; color: var(--accent-gold); font-weight: 700;">ACC Newsroom</span>
-            <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700; cursor: pointer;" onclick="app.showToast('Memuat rincian berita...')">Baca Selengkapnya ➔</span>
+            <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700; cursor: pointer;">Baca Selengkapnya ➔</span>
           </div>
         </div>
       `).join("");
@@ -1388,98 +1388,134 @@ const app = {
     window.open(waUrl, "_blank");
   },
 
-  // RENDER SPONSORS DYNAMICALLY (Sponsor Utama Lebih Besar & Menonjol)
+  // MODAL BACA INFORMASI & KILAS TURNAMEN
+  openNewsModal(id) {
+    const homeData = this.store.data.homeData || (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.homeData) || {};
+    const newsList = homeData.news || ((typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.homeData && DEFAULT_DATA.homeData.news) ? DEFAULT_DATA.homeData.news : []);
+    const newsItem = newsList.find(n => n.id === id);
+    if (!newsItem) {
+      this.showToast("Rincian informasi tidak ditemukan.");
+      return;
+    }
+
+    this.activeNews = newsItem;
+
+    const modal = document.getElementById("newsModal");
+    const tagEl = document.getElementById("newsModalTag");
+    const dateEl = document.getElementById("newsModalDate");
+    const titleEl = document.getElementById("newsModalTitle");
+    const contentEl = document.getElementById("newsModalContent");
+    const badgeEl = document.getElementById("newsModalBadge");
+    const imgContainer = document.getElementById("newsModalImgContainer");
+    const imgEl = document.getElementById("newsModalImg");
+
+    if (tagEl) tagEl.textContent = newsItem.tag || "INFORMASI RESMI";
+    if (dateEl) dateEl.textContent = newsItem.date ? `📅 ${newsItem.date}` : "";
+    if (titleEl) titleEl.textContent = newsItem.title || "";
+    if (badgeEl) badgeEl.textContent = newsItem.badge || "Resmi";
+
+    if (contentEl) {
+      contentEl.textContent = newsItem.content || newsItem.desc || "Informasi resmi terkait jalannya turnamen futsal ACC 2026.";
+    }
+
+    if (imgContainer && imgEl) {
+      if (newsItem.image) {
+        imgEl.src = newsItem.image;
+        imgContainer.style.display = "block";
+      } else {
+        imgContainer.style.display = "none";
+      }
+    }
+
+    if (modal) {
+      modal.classList.add("active");
+      document.body.classList.add("modal-open");
+    }
+  },
+
+  shareActiveNews() {
+    if (!this.activeNews) return;
+    const n = this.activeNews;
+    const shareText = `*${n.title}*\n📅 ${n.date || 'ACC 2026'}\n\n${n.desc || ''}\n\n🏆 Selengkapnya di Website Resmi ACC 2026: ${window.location.href}`;
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+    window.open(waUrl, "_blank");
+  },
+
+  // RENDER SPONSORSHIP (FOKUS LOGO FOTO SPONSOR, UKURAN BESAR & NORMAL TANPA TEKS KETERANGAN)
   renderSponsors() {
     const sponsors = this.store.data.sponsors;
     if (!sponsors) return;
 
     const isPanitia = admin.isAuthenticated === true;
 
-    // 1. Platinum (Sponsor Utama - Kartu Lebih Besar & Menonjol)
-    const platContainer = document.getElementById("sponsorsPlatinumGrid");
-    if (platContainer && sponsors.platinum) {
-      platContainer.innerHTML = sponsors.platinum.map(s => {
-        const logoHtml = s.image ?
-          `<img src="${s.image}" alt="${s.name}" class="sponsor-logo-img">` :
-          `<span style="font-size: 2.2rem;">${s.icon || '🏦'}</span>`;
-
-        return `
-          <div class="sponsor-card-platinum">
-            <div class="sponsor-icon-circle-lg">
-              ${logoHtml}
-            </div>
-            <div class="sponsor-info" style="flex: 1;">
-              <div class="sponsor-name">${s.name}</div>
-              <div class="sponsor-role">${s.type || s.role || 'Official Partner'}</div>
-              <div>
-                <span class="badge-platinum-vip">👑 SPONSOR UTAMA (PLATINUM)</span>
-              </div>
-            </div>
-            ${isPanitia ? `
-              <div style="display: flex; flex-direction: column; gap: 4px; z-index: 2;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.editSponsor('platinum', '${s.id || s.name}')" title="Edit Sponsor" style="font-size: 0.72rem; padding: 2px 7px; background: rgba(0,0,0,0.5); color: #fff;">✏️</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteSponsor('platinum', '${s.id || s.name}')" title="Hapus Sponsor" style="font-size: 0.72rem; padding: 2px 7px; background: rgba(0,0,0,0.5); color: #ef4444;">🗑️</button>
-              </div>
-            ` : ''}
+    // 1. Primary Grid: Sponsor Ukuran Besar (Baris Atas) - Tanpa tulisan 'Utama'
+    const primaryContainer = document.getElementById("sponsorsPrimaryGrid");
+    if (primaryContainer) {
+      const primaryList = sponsors.platinum || [];
+      if (primaryList.length === 0) {
+        primaryContainer.innerHTML = isPanitia ? `
+          <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; width: 100%; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border: 1px dashed rgba(255,255,255,0.15);">
+            Belum ada sponsor di baris atas. Klik tombol "Kelola / Tambah Sponsor" untuk menambah sponsor.
           </div>
-        `;
-      }).join("");
+        ` : '';
+      } else {
+        primaryContainer.innerHTML = primaryList.map(s => {
+          const logoHtml = s.image ?
+            `<img src="${s.image}" alt="${s.name}" class="sponsor-logo-img-lg">` :
+            `<span class="sponsor-emoji-lg">${s.icon || '🏦'}</span>`;
+
+          return `
+            <div class="sponsor-card-primary">
+              ${isPanitia ? `
+                <div class="sponsor-admin-actions">
+                  <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('platinum', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
+                  <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('platinum', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
+                </div>
+              ` : ''}
+              <div class="sponsor-logo-box-lg">
+                ${logoHtml}
+              </div>
+              <div class="sponsor-name-lg">${s.name}</div>
+              ${(s.role || s.type) ? `<div class="sponsor-sub-text">${s.role || s.type}</div>` : ''}
+            </div>
+          `;
+        }).join("");
+      }
     }
 
-    // 2. Gold (Mitra Pendukung Resmi)
-    const goldContainer = document.getElementById("sponsorsGoldGrid");
-    if (goldContainer && sponsors.gold) {
-      goldContainer.innerHTML = sponsors.gold.map(s => {
-        const logoHtml = s.image ?
-          `<img src="${s.image}" alt="${s.name}" class="sponsor-logo-img">` :
-          `<span style="font-size: 1.4rem;">${s.icon || '⚽'}</span>`;
-
-        return `
-          <div class="sponsor-card">
-            <div class="sponsor-icon-circle">
-              ${logoHtml}
-            </div>
-            <div class="sponsor-info" style="flex: 1;">
-              <div class="sponsor-name">${s.name}</div>
-              <div class="sponsor-role">${s.type || s.role || 'Official Partner'}</div>
-            </div>
-            ${isPanitia ? `
-              <div style="display: flex; gap: 4px;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.editSponsor('gold', '${s.id || s.name}')" title="Edit Sponsor" style="font-size: 0.72rem; padding: 2px 7px;">✏️</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteSponsor('gold', '${s.id || s.name}')" title="Hapus Sponsor" style="font-size: 0.72rem; padding: 2px 7px; color: #ef4444;">🗑️</button>
-              </div>
-            ` : ''}
+    // 2. Secondary Grid: Sponsor Ukuran Normal (Baris Bawah) - Tanpa tulisan 'Normal'
+    const secondaryContainer = document.getElementById("sponsorsSecondaryGrid");
+    if (secondaryContainer) {
+      const secondaryList = [...(sponsors.gold || []), ...(sponsors.media || [])];
+      if (secondaryList.length === 0) {
+        secondaryContainer.innerHTML = isPanitia ? `
+          <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; width: 100%; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border: 1px dashed rgba(255,255,255,0.15);">
+            Belum ada sponsor di baris bawah.
           </div>
-        `;
-      }).join("");
-    }
+        ` : '';
+      } else {
+        secondaryContainer.innerHTML = secondaryList.map(s => {
+          const tierKey = (sponsors.gold && sponsors.gold.some(g => (g.id && g.id === s.id) || g.name === s.name)) ? 'gold' : 'media';
+          const logoHtml = s.image ?
+            `<img src="${s.image}" alt="${s.name}" class="sponsor-logo-img-sm">` :
+            `<span class="sponsor-emoji-sm">${s.icon || '⚽'}</span>`;
 
-    // 3. Media Partners
-    const mediaContainer = document.getElementById("sponsorsMediaGrid");
-    if (mediaContainer && sponsors.media) {
-      mediaContainer.innerHTML = sponsors.media.map(s => {
-        const logoHtml = s.image ?
-          `<img src="${s.image}" alt="${s.name}" class="sponsor-logo-img">` :
-          `<span style="font-size: 1.4rem;">${s.icon || '📡'}</span>`;
-
-        return `
-          <div class="sponsor-card">
-            <div class="sponsor-icon-circle">
-              ${logoHtml}
-            </div>
-            <div class="sponsor-info" style="flex: 1;">
-              <div class="sponsor-name">${s.name}</div>
-              <div class="sponsor-role">${s.type || s.role || 'Media Partner'}</div>
-            </div>
-            ${isPanitia ? `
-              <div style="display: flex; gap: 4px;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.editSponsor('media', '${s.id || s.name}')" title="Edit Sponsor" style="font-size: 0.72rem; padding: 2px 7px;">✏️</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteSponsor('media', '${s.id || s.name}')" title="Hapus Sponsor" style="font-size: 0.72rem; padding: 2px 7px; color: #ef4444;">🗑️</button>
+          return `
+            <div class="sponsor-card-secondary">
+              ${isPanitia ? `
+                <div class="sponsor-admin-actions">
+                  <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
+                  <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
+                </div>
+              ` : ''}
+              <div class="sponsor-logo-box-sm">
+                ${logoHtml}
               </div>
-            ` : ''}
-          </div>
-        `;
-      }).join("");
+              <div class="sponsor-name-sm">${s.name}</div>
+            </div>
+          `;
+        }).join("");
+      }
     }
   },
 

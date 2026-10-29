@@ -2102,7 +2102,7 @@ const admin = {
 
     document.getElementById("editSponsorId").value = item.id || item.name;
     document.getElementById("sponsorNameInput").value = item.name;
-    document.getElementById("sponsorTierSelect").value = tier;
+    document.getElementById("sponsorTierSelect").value = (tier === 'platinum') ? 'platinum' : 'gold';
     document.getElementById("sponsorRoleInput").value = item.type || item.role || "";
     document.getElementById("sponsorIconSelect").value = item.icon || "🏦";
     document.getElementById("editSponsorImage").value = item.image || "";
@@ -2126,7 +2126,7 @@ const admin = {
       return;
     }
 
-    if (confirm(`Hapus sponsor ini dari kategori ${tier.toUpperCase()}?`)) {
+    if (confirm(`Hapus data sponsor ini?`)) {
       if (app.store.data.sponsors && app.store.data.sponsors[tier]) {
         app.store.data.sponsors[tier] = app.store.data.sponsors[tier].filter(
           s => (s.id ? s.id !== idOrName : s.name !== idOrName)
@@ -2144,44 +2144,73 @@ const admin = {
     if (!container) return;
 
     const sponsors = app.store.data.sponsors || {};
-    const tiers = [
-      { key: "platinum", label: "👑 Sponsor Utama (Platinum)", color: "#fbbf24" },
-      { key: "gold", label: "⚽ Mitra Pendukung (Gold)", color: "#60a5fa" },
-      { key: "media", label: "📡 Media Partner", color: "#a78bfa" }
-    ];
+    const primaryItems = sponsors.platinum || [];
+    const secondaryItems = [...(sponsors.gold || []), ...(sponsors.media || [])];
 
     let html = "";
-    tiers.forEach(t => {
-      const items = sponsors[t.key] || [];
-      html += `
-        <div style="font-size: 0.75rem; font-weight: 800; color: ${t.color}; text-transform: uppercase; margin-top: 6px;">
-          ${t.label} (${items.length})
-        </div>
-      `;
 
-      if (items.length === 0) {
-        html += `<div style="font-size: 0.72rem; color: var(--text-muted); padding: 4px;">Belum ada sponsor di tier ini.</div>`;
-      } else {
-        items.forEach(s => {
-          const idVal = s.id || s.name;
-          html += `
-            <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 6px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span>${s.icon || '🏦'}</span>
-                <div>
-                  <strong style="font-size: 0.85rem; color: var(--text-main);">${s.name}</strong>
-                  <div style="font-size: 0.72rem; color: var(--text-muted);">${s.type || s.role}</div>
-                </div>
-              </div>
-              <div style="display: flex; gap: 6px;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.editSponsor('${t.key}', '${idVal}')" style="font-size: 0.7rem; padding: 2px 6px;">Edit</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteSponsor('${t.key}', '${idVal}')" style="color: #ef4444; font-size: 0.7rem; padding: 2px 6px;">Hapus</button>
+    // 1. Baris Atas (Ukuran Besar)
+    html += `
+      <div style="font-size: 0.78rem; font-weight: 800; color: #fbbf24; margin-top: 4px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+        <span>⭐ Baris Atas (Ukuran Besar)</span>
+        <span style="font-size: 0.7rem; opacity: 0.8;">${primaryItems.length} Sponsor</span>
+      </div>
+    `;
+
+    if (primaryItems.length === 0) {
+      html += `<div style="font-size: 0.72rem; color: var(--text-muted); padding: 4px; margin-bottom: 8px;">Belum ada sponsor di baris atas.</div>`;
+    } else {
+      primaryItems.forEach(s => {
+        const idVal = s.id || s.name;
+        html += `
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              ${s.image ? `<img src="${s.image}" style="max-height: 28px; max-width: 50px; object-fit: contain; background: #fff; padding: 2px; border-radius: 4px;">` : `<span style="font-size: 1.2rem;">${s.icon || '🏦'}</span>`}
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-main);">${s.name}</strong>
+                ${s.role || s.type ? `<div style="font-size: 0.72rem; color: var(--text-muted);">${s.role || s.type}</div>` : ''}
               </div>
             </div>
-          `;
-        });
-      }
-    });
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.editSponsor('platinum', '${idVal}')" style="font-size: 0.7rem; padding: 2px 8px;">Edit</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteSponsor('platinum', '${idVal}')" style="color: #ef4444; font-size: 0.7rem; padding: 2px 8px;">Hapus</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // 2. Baris Bawah (Ukuran Normal)
+    html += `
+      <div style="font-size: 0.78rem; font-weight: 800; color: #60a5fa; margin-top: 10px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🔹 Baris Bawah (Ukuran Normal)</span>
+        <span style="font-size: 0.7rem; opacity: 0.8;">${secondaryItems.length} Sponsor</span>
+      </div>
+    `;
+
+    if (secondaryItems.length === 0) {
+      html += `<div style="font-size: 0.72rem; color: var(--text-muted); padding: 4px;">Belum ada sponsor di baris bawah.</div>`;
+    } else {
+      secondaryItems.forEach(s => {
+        const idVal = s.id || s.name;
+        const tierKey = (sponsors.gold && sponsors.gold.some(g => (g.id && g.id === s.id) || g.name === s.name)) ? 'gold' : 'media';
+        html += `
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              ${s.image ? `<img src="${s.image}" style="max-height: 24px; max-width: 44px; object-fit: contain; background: #fff; padding: 2px; border-radius: 4px;">` : `<span style="font-size: 1.1rem;">${s.icon || '⚽'}</span>`}
+              <div>
+                <strong style="font-size: 0.85rem; color: var(--text-main);">${s.name}</strong>
+                ${s.role || s.type ? `<div style="font-size: 0.72rem; color: var(--text-muted);">${s.role || s.type}</div>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.editSponsor('${tierKey}', '${idVal}')" style="font-size: 0.7rem; padding: 2px 8px;">Edit</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteSponsor('${tierKey}', '${idVal}')" style="color: #ef4444; font-size: 0.7rem; padding: 2px 8px;">Hapus</button>
+            </div>
+          </div>
+        `;
+      });
+    }
 
     container.innerHTML = html;
   },
