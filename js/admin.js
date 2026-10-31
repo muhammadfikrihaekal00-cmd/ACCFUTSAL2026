@@ -435,9 +435,13 @@ const admin = {
     const minInput = document.getElementById("matchMinuteInput");
     const match = app.store.getMatch(this.activeMatchId);
 
+    if (match) {
+      match.status = status;
+    }
+
     if (status === "live") {
-      // Jika baru dimulai live dari status upcoming, selalu mulai dari menit 1
-      if (!match || match.status !== "live") {
+      // Jika baru dimulai live atau belum ada timer berjalan, mulai dari menit 1
+      if (!match || !match.liveStartedAt) {
         minInput.value = "1'";
         this.syncEventMinute("1");
         if (match) {
@@ -449,10 +453,25 @@ const admin = {
         minInput.value = `${cur}'`;
         this.syncEventMinute(cur);
       }
+      if (match) {
+        app.store.saveData();
+        if (window.SupabaseService && window.SupabaseService.syncMatch) {
+          window.SupabaseService.syncMatch(match);
+        }
+      }
     } else {
       this.stopLiveTimer();
       if (match) {
         delete match.liveStartedAt;
+        if (status === "upcoming") {
+          match.liveMinute = "";
+          if (minInput) minInput.value = "";
+          this.syncEventMinute("");
+        }
+        app.store.saveData();
+        if (window.SupabaseService && window.SupabaseService.syncMatch) {
+          window.SupabaseService.syncMatch(match);
+        }
       }
     }
     if (match) this.checkPenaltySectionVisibility(match);

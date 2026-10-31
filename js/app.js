@@ -812,14 +812,13 @@ const app = {
     const splash = document.getElementById("appSplashScreen");
     if (!splash) return;
 
-    const progressBar = document.getElementById("splashLoaderBar");
-    if (progressBar) {
-      progressBar.style.width = "0%";
-      setTimeout(() => {
-        progressBar.style.width = "100%";
-      }, 50);
+    if (this.splashTimeout) {
+      clearTimeout(this.splashTimeout);
     }
-    // TIDAK ADA AUTO-DISMISS: Tetap di layar opening sampai user klik tombol untuk masuk
+    // Auto-dismiss lembut setelah 3.5 detik agar pengguna mobile langsung masuk bila tidak menekan tombol
+    this.splashTimeout = setTimeout(() => {
+      this.dismissSplashScreen();
+    }, 3500);
   },
 
   // =========================================================
@@ -1193,13 +1192,17 @@ const app = {
             if (remoteMatch.minute_live !== undefined && remoteMatch.minute_live !== null) {
               const remoteMinNum = parseInt(remoteMatch.minute_live, 10) || 0;
               const curMinNum = parseInt((curMatch.liveMinute || "0").replace(/\D/g, ''), 10) || 0;
-              const isMatchLive = (remoteMatch.status || curMatch.status) === 'live';
+              const finalStatus = remoteMatch.status || curMatch.status;
+              const isMatchLive = finalStatus === 'live';
+              const isActiveInAdminModal = Boolean(window.admin && (admin.activeMatchId === remoteMatch.id || admin.activeQuickMatchId === remoteMatch.id));
               if (isMatchLive) {
-                if (remoteMinNum >= curMinNum || curMatch.status !== 'live' || (window.admin && admin.isAuthenticated)) {
-                  mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
+                if (!isActiveInAdminModal) {
+                  if (remoteMinNum >= curMinNum || curMatch.status !== 'live') {
+                    mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
+                  }
                 }
               } else {
-                mapped.liveMinute = remoteMinNum > 0 ? `${remoteMinNum}'` : "";
+                mapped.liveMinute = "";
               }
             }
             if (remoteMatch.penalty_home_score !== undefined) mapped.penaltyHomeScore = remoteMatch.penalty_home_score;
@@ -1318,13 +1321,17 @@ const app = {
         if (payload.minute_live !== undefined && payload.minute_live !== null) {
           const remoteMinNum = parseInt(payload.minute_live, 10) || 0;
           const curMinNum = parseInt((curMatch.liveMinute || "0").replace(/\D/g, ''), 10) || 0;
-          const isMatchLive = (payload.status || curMatch.status) === 'live';
+          const finalStatus = payload.status || curMatch.status;
+          const isMatchLive = finalStatus === 'live';
+          const isActiveInAdminModal = Boolean(window.admin && (admin.activeMatchId === payload.id || admin.activeQuickMatchId === payload.id));
           if (isMatchLive) {
-            if (remoteMinNum >= curMinNum || curMatch.status !== 'live' || (window.admin && admin.isAuthenticated)) {
-              mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
+            if (!isActiveInAdminModal) {
+              if (remoteMinNum >= curMinNum || curMatch.status !== 'live') {
+                mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
+              }
             }
           } else {
-            mapped.liveMinute = remoteMinNum > 0 ? `${remoteMinNum}'` : "";
+            mapped.liveMinute = "";
           }
         }
         if (payload.penalty_home_score !== undefined) mapped.penaltyHomeScore = payload.penalty_home_score;
@@ -3443,9 +3450,13 @@ const app = {
   }
 };
 
-// Initialize when DOM ready
-document.addEventListener("DOMContentLoaded", () => {
+// Initialize when DOM ready (supports already-loaded state on mobile/PWA cache)
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    app.init();
+  });
+} else {
   app.init();
-});
+}
 
 window.app = app;
