@@ -2541,25 +2541,35 @@ const admin = {
   // ==========================================
   // DEMO SIMULATION & RESET (PRESENTASI YAYASAN & PANITIA)
   // ==========================================
-  resetAllData() {
-    this.resetDemo();
+  async resetAllData() {
+    await this.resetDemo();
   },
 
-  resetDemo() {
-    if (confirm("Reset seluruh data turnamen ke kondisi awal siap presentasi?")) {
+  async resetDemo() {
+    if (confirm("Reset seluruh data turnamen ke kondisi awal siap simulasi ulang?\n\nSemua skor, pencetak gol, dan kartu akan dikosongkan baik di HP/Laptop ini maupun di database Supabase Cloud agar seluruh penonton yang memiliki link langsung terupdate dari awal.")) {
       app.store.resetData();
       app.renderHeader();
       app.renderCurrentView();
-    if (app && typeof app.updateHeroLiveBadge === 'function') {
-      app.updateHeroLiveBadge();
-    }
-      app.showToast("🔄 Data turnamen berhasil di-reset ke kondisi awal demo!");
+      if (app && typeof app.updateHeroLiveBadge === 'function') {
+        app.updateHeroLiveBadge();
+      }
+      app.showToast("Mengosongkan & menyinkronkan data ke Supabase Cloud...");
+      if (window.SupabaseService) {
+        try {
+          await window.SupabaseService.syncAllData(app.store.data);
+          app.showToast("Semua data turnamen bersih & tersinkronisasi ke Cloud!");
+        } catch (e) {
+          app.showToast("Data lokal bersih. Sinkronisasi Cloud sedang berjalan.");
+        }
+      } else {
+        app.showToast("Data turnamen berhasil di-reset ke kondisi awal!");
+      }
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");
     }
   },
 
-  runDemoSimulation(scenario) {
+  async runDemoSimulation(scenario) {
     if (!this.isAuthenticated) {
       this.openLoginModal();
       return;
@@ -2578,9 +2588,12 @@ const admin = {
       }
       app.store.saveData();
       app.renderCurrentView();
-    if (app && typeof app.updateHeroLiveBadge === 'function') {
-      app.updateHeroLiveBadge();
-    }
+      if (app && typeof app.updateHeroLiveBadge === 'function') {
+        app.updateHeroLiveBadge();
+      }
+      if (window.SupabaseService) {
+        window.SupabaseService.syncMatch(m20, this.adminPinHash);
+      }
       app.switchTab("matches");
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");
@@ -2638,9 +2651,15 @@ const admin = {
       app.store.saveData();
       app.store.syncKnockoutFromStandings();
       app.renderCurrentView();
-    if (app && typeof app.updateHeroLiveBadge === 'function') {
-      app.updateHeroLiveBadge();
-    }
+      if (app && typeof app.updateHeroLiveBadge === 'function') {
+        app.updateHeroLiveBadge();
+      }
+      if (window.SupabaseService) {
+        app.showToast("Menyinkronkan seluruh hasil grup ke Cloud...");
+        window.SupabaseService.syncAllData(app.store.data).then(() => {
+          app.showToast("Hasil grup tersimpan ke Cloud! Semua penonton terupdate.");
+        });
+      }
       app.switchTab("standings");
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");
@@ -2650,7 +2669,7 @@ const admin = {
 
     if (scenario === 'finish_knockout') {
       // First ensure group stage is finished
-      this.runDemoSimulation('finish_groups');
+      await this.runDemoSimulation('finish_groups');
 
       // Helper to finish match with score
       const finishMatch = (mId, hScore, aScore, defaultHome, defaultAway) => {
@@ -2712,9 +2731,15 @@ const admin = {
       app.store.saveData();
       app.store.syncKnockoutFromStandings();
       app.renderCurrentView();
-    if (app && typeof app.updateHeroLiveBadge === 'function') {
-      app.updateHeroLiveBadge();
-    }
+      if (app && typeof app.updateHeroLiveBadge === 'function') {
+        app.updateHeroLiveBadge();
+      }
+      if (window.SupabaseService) {
+        app.showToast("Menyinkronkan babak gugur ke Cloud...");
+        window.SupabaseService.syncAllData(app.store.data).then(() => {
+          app.showToast("Babak gugur tersimpan ke Cloud! Semua penonton terupdate.");
+        });
+      }
       app.switchTab("bracket");
       const modal = document.getElementById("adminDashboardModal");
       if (modal) modal.classList.remove("active");

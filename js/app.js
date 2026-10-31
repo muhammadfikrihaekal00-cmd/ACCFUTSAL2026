@@ -844,6 +844,35 @@ const app = {
       });
     };
 
+    // Fresh tournament reset requested by user for clean re-simulation
+    const RESET_KEY = "acc_fresh_simulation_ready_v1";
+    if (!localStorage.getItem(RESET_KEY)) {
+      console.log("🧹 Mengosongkan seluruh data turnamen untuk simulasi baru...");
+      this.store.resetData();
+      localStorage.setItem(RESET_KEY, "true");
+
+      if (window.SupabaseService) {
+        const isReady = typeof window.SupabaseService.isReady === 'function'
+          ? window.SupabaseService.isReady()
+          : Boolean(window.SupabaseService.isConfigured);
+        if (!isReady && typeof window.SupabaseService.init === 'function') {
+          window.SupabaseService.init();
+        }
+        if (window.SupabaseService.syncAllData) {
+          window.SupabaseService.syncAllData(this.store.data).then(() => {
+            console.log("✅ Seluruh data turnamen di Supabase Cloud berhasil dikosongkan & siap untuk simulasi baru!");
+            this.renderMatches();
+            this.renderStandings();
+            this.renderBracket();
+            this.renderHeader();
+            this.renderLiveStreamHero();
+          }).catch(err => {
+            console.warn("Supabase reset notice:", err);
+          });
+        }
+      }
+    }
+
     // Initial silent load from Supabase if configured
     syncFromRemote();
 
@@ -937,7 +966,23 @@ const app = {
               mapped.awayScoreLive = mapped.awayScore;
             }
 
-            Object.assign(this.store.data.matches[idx], mapped);
+            if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
+              mapped.homeScore = null;
+              mapped.awayScore = null;
+              mapped.homeScoreLive = null;
+              mapped.awayScoreLive = null;
+              mapped.liveMinute = "";
+            }
+
+            if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
+          mapped.homeScore = null;
+          mapped.awayScore = null;
+          mapped.homeScoreLive = null;
+          mapped.awayScoreLive = null;
+          mapped.liveMinute = "";
+        }
+
+        Object.assign(this.store.data.matches[idx], mapped);
           }
         });
       }
@@ -1025,6 +1070,14 @@ const app = {
           mapped.awayScore = Math.max(parseInt(mapped.awayScore, 10) || 0, aCount);
           mapped.homeScoreLive = mapped.homeScore;
           mapped.awayScoreLive = mapped.awayScore;
+        }
+
+        if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
+          mapped.homeScore = null;
+          mapped.awayScore = null;
+          mapped.homeScoreLive = null;
+          mapped.awayScoreLive = null;
+          mapped.liveMinute = "";
         }
 
         Object.assign(this.store.data.matches[idx], mapped);
