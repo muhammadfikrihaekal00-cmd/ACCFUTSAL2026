@@ -749,12 +749,16 @@ body.dark-theme .brand-text h1 {
 /* ========================================================= */
 .matches-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* Desktop: SELALU DIBAGI 2 KOLOM (KIRI & KANAN) */
+  gap: 22px;
 }
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .matches-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Mobile: 1 Kolom Rapi */
+    gap: 24px;                  /* Space Lega & Terpisah Antar Bar Jadwal */
+  }
+  .match-card {
+    margin-bottom: 8px;         /* Buffer Jarak Lega Ekstra agar Bar Jadwal Tidak Menyambung */
   }
 }
 .match-card {
@@ -3933,6 +3937,16 @@ body.dark-theme .mobile-nav-item.active {
     min-width: 120px !important;
     font-size: 0.76rem !important;
     padding: 6px 10px !important;
+  }
+
+  /* Matches Grid & Match Cards on Mobile (Space Lega & Tidak Berdempetan) */
+  .matches-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    padding-bottom: 20px !important;
+  }
+  .match-card {
+    margin-bottom: 8px !important;
   }
 
   /* Standings Tables */
