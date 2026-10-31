@@ -177,6 +177,11 @@
       if (!this.client) return;
 
       try {
+        if (this.channel) {
+          try {
+            this.client.removeChannel(this.channel);
+          } catch (e) {}
+        }
         this.channel = this.client.channel('tournament_live_channel')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => {
             this.notifyListeners('matches', payload.new || payload.old);
@@ -190,9 +195,21 @@
           .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_config' }, payload => {
             this.notifyListeners('config', payload.new || payload.old);
           })
-          .subscribe();
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'sponsors' }, payload => {
+            this.notifyListeners('sponsors', payload.new || payload.old);
+          })
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log("🟢 Realtime channel Supabase aktif terhubung!");
+            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+              console.warn("⚠️ Realtime channel terputus, menghubungkan ulang...");
+              setTimeout(() => {
+                if (navigator.onLine) this.setupRealtimeSubscriptions();
+              }, 3000);
+            }
+          });
       } catch (e) {
-        // Silently continue
+        console.warn("Realtime subscription fallback error:", e);
       }
     }
 

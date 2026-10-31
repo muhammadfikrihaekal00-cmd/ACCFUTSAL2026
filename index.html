@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=6.2">
+  <link rel="stylesheet" href="css/styles.css?v=6.3">
 </head>
 <body>
 
@@ -656,16 +656,16 @@
 
   <!-- 2. MODAL DETAIL PERTANDINGAN -->
   <div id="matchDetailModal" class="modal-overlay">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width: 520px;">
       <div class="modal-header">
         <h3 class="modal-title" id="matchDetailTitle">Detail Pertandingan</h3>
-        <button class="modal-close">&times;</button>
+        <button type="button" class="modal-close" onclick="document.getElementById('matchDetailModal').classList.remove('active')">&times;</button>
       </div>
-      <div class="modal-body" id="matchDetailBody">
+      <div class="modal-body" id="matchDetailBody" style="padding: 14px;">
         <!-- Rendered by app.showMatchDetail -->
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline btn-modal-close">Tutup</button>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-outline btn-modal-close" onclick="document.getElementById('matchDetailModal').classList.remove('active')">Tutup</button>
       </div>
     </div>
   </div>
@@ -1985,17 +1985,17 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/security.js?v=6.2"></script>
-  <script src="js/supabase-client.js?v=6.2"></script>
-  <script src="js/data.js?v=6.2"></script>
-  <script src="js/app.js?v=6.2"></script>
-  <script src="js/admin.js?v=6.2"></script>
+  <script src="js/security.js?v=6.3"></script>
+  <script src="js/supabase-client.js?v=6.3"></script>
+  <script src="js/data.js?v=6.3"></script>
+  <script src="js/app.js?v=6.3"></script>
+  <script src="js/admin.js?v=6.3"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=41')
+        navigator.serviceWorker.register('sw.js?v=42')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

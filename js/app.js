@@ -819,7 +819,7 @@ const app = {
 
   // =========================================================
   // GLOBAL BACKGROUND TIMER UNTUK PERTANDINGAN LIVE
-  // Otomatis menambah menit setiap 60 detik meskipun modal ditutup
+  // Otomatis menambah menit secara presisi & disinkronkan ke Supabase
   // =========================================================
   initGlobalLiveMatchTimer() {
     if (this._globalLiveTimerInterval) {
@@ -836,18 +836,26 @@ const app = {
       const now = Date.now();
       let hasChange = false;
 
+      // HANYA PANITIA RESMI yang berhak memajukan timer secara otomatis dan menyinkronkannya ke Supabase
+      // Penonton dan perangkat mobile hanya menerima data resmi dari Supabase agar tidak bentrok atau berkurang
+      const isOfficial = Boolean(window.admin && admin.isAuthenticated);
+
       liveMatches.forEach(m => {
         let curMin = parseInt((m.liveMinute || "1'").toString().replace(/\D/g, ""), 10) || 1;
         if (!m.liveStartedAt) {
           m.liveStartedAt = now - ((curMin - 1) * 60000);
         }
-        const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
-        const newMin = Math.min(50, Math.max(1, elapsed));
-        const newMinStr = `${newMin}'`;
 
-        if (m.liveMinute !== newMinStr) {
-          m.liveMinute = newMinStr;
-          hasChange = true;
+        if (isOfficial) {
+          const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
+          // Strictly monotonic (menit hanya boleh bertambah, tidak pernah berkurang)
+          const newMin = Math.min(50, Math.max(curMin, elapsed));
+          const newMinStr = `${newMin}'`;
+
+          if (m.liveMinute !== newMinStr) {
+            m.liveMinute = newMinStr;
+            hasChange = true;
+          }
         }
       });
 
@@ -860,6 +868,8 @@ const app = {
         if (this.currentView === "bracket") {
           this.renderBracket();
         }
+        this.updateFloatingLiveNotice();
+        this.refreshActiveMatchDetail();
 
         // Jika modal admin sedang terbuka untuk pertandingan ini, update input menit
         if (window.admin && admin.activeQuickMatchId) {
@@ -870,14 +880,14 @@ const app = {
           }
         }
 
-        // Sinkronkan menit terbaru ke Supabase Cloud
-        if (window.SupabaseService && window.SupabaseService.syncMatch) {
+        // Sinkronkan menit terbaru ke Supabase Cloud (Hanya oleh panitia resmi)
+        if (isOfficial && window.SupabaseService && window.SupabaseService.syncMatch) {
           liveMatches.forEach(m => {
             window.SupabaseService.syncMatch(m);
           });
         }
       }
-    }, 5000);
+    }, 4000);
   },
 
   dismissSplashScreen() {
@@ -1079,9 +1089,11 @@ const app = {
       }
       window.SupabaseService.fetchAllData().then(data => {
         if (data) {
-          // Generate lightweight signature to verify whether data actually changed
-          const signature = (data.matches ? data.matches.map(m => `${m.id}:${m.status}:${m.home_score ?? m.homeScore}:${m.away_score ?? m.awayScore}:${m.updated_at}`).join("|") : "") +
-            "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "");
+          // Generate signature dari seluruh field penting: skor, menit, kartu, pencetak gol, status
+          const signature = (data.matches ? data.matches.map(m => 
+            `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers||[]).length}:${(m.cards||[]).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
+          ).join("|") : "") +
+          "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "");
 
           if (isInitialLoad || signature !== lastDataSignature) {
             lastDataSignature = signature;
@@ -1099,51 +1111,28 @@ const app = {
       });
     };
 
-    // Fresh tournament reset requested by user for clean re-simulation
-    const RESET_KEY = "acc_fresh_simulation_ready_v1";
-    if (!localStorage.getItem(RESET_KEY)) {
-      console.log("🧹 Mengosongkan seluruh data turnamen untuk simulasi baru...");
-      this.store.resetData();
-      localStorage.setItem(RESET_KEY, "true");
-
-      if (window.SupabaseService) {
-        const isReady = typeof window.SupabaseService.isReady === 'function'
-          ? window.SupabaseService.isReady()
-          : Boolean(window.SupabaseService.isConfigured);
-        if (!isReady && typeof window.SupabaseService.init === 'function') {
-          window.SupabaseService.init();
-        }
-        if (window.SupabaseService.syncAllData) {
-          window.SupabaseService.syncAllData(this.store.data).then(() => {
-            console.log("✅ Seluruh data turnamen di Supabase Cloud berhasil dikosongkan & siap untuk simulasi baru!");
-            this.renderMatches();
-            this.renderStandings();
-            this.renderBracket();
-            this.renderHeader();
-            this.renderLiveStreamHero();
-          }).catch(err => {
-            console.warn("Supabase reset notice:", err);
-          });
-        }
-      }
-    }
-
-    // Initial silent load from Supabase if configured
+    // Initial silent load from Supabase
     syncFromRemote();
 
-    // Auto-refresh when user switches back to tab or unlocks mobile phone
+    // Auto-refresh instan saat pengguna kembali ke aplikasi / unlock HP
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         syncFromRemote();
       }
     });
+    window.addEventListener("focus", () => {
+      syncFromRemote();
+    });
+    window.addEventListener("online", () => {
+      syncFromRemote();
+    });
 
-    // Gentle polling fallback (every 15s) in case mobile browser puts WebSocket to sleep
+    // Fast polling fallback (setiap 3.5 detik) agar HP penonton otomatis ter-update cepat meskipun WebSocket tidur
     setInterval(() => {
       if (document.visibilityState === "visible") {
         syncFromRemote();
       }
-    }, 15000);
+    }, 3500);
   },
 
   applyRemoteData(data) {
@@ -1197,7 +1186,18 @@ const app = {
             if (remoteMatch.status) mapped.status = remoteMatch.status;
             if (remoteMatch.scorers) mapped.scorers = remoteMatch.scorers;
             if (remoteMatch.cards) mapped.cards = remoteMatch.cards;
-            if (remoteMatch.minute_live) mapped.liveMinute = `${remoteMatch.minute_live}'`;
+            if (remoteMatch.minute_live !== undefined && remoteMatch.minute_live !== null) {
+              const remoteMinNum = parseInt(remoteMatch.minute_live, 10) || 0;
+              const curMinNum = parseInt((curMatch.liveMinute || "0").replace(/\D/g, ''), 10) || 0;
+              const isMatchLive = (remoteMatch.status || curMatch.status) === 'live';
+              if (isMatchLive) {
+                if (remoteMinNum >= curMinNum || curMatch.status !== 'live' || (window.admin && admin.isAuthenticated)) {
+                  mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
+                }
+              } else {
+                mapped.liveMinute = remoteMinNum > 0 ? `${remoteMinNum}'` : "";
+              }
+            }
             if (remoteMatch.penalty_home_score !== undefined) mapped.penaltyHomeScore = remoteMatch.penalty_home_score;
             if (remoteMatch.penalty_away_score !== undefined) mapped.penaltyAwayScore = remoteMatch.penalty_away_score;
             if (remoteMatch.penalty_winner !== undefined) mapped.penaltyWinner = remoteMatch.penalty_winner;
@@ -1291,8 +1291,13 @@ const app = {
       this.renderMatches();
       this.renderStandings();
       this.renderBracket();
+      if (typeof this.renderTopScorer === "function") this.renderTopScorer();
+      if (typeof this.renderDisciplinary === "function") this.renderDisciplinary();
+      this.updateHeroLiveBadge();
+      this.updateFloatingLiveNotice();
       this.renderHeader();
       this.renderLiveStreamHero();
+      this.refreshActiveMatchDetail();
     }
   },
 
@@ -1306,7 +1311,18 @@ const app = {
         if (payload.status) mapped.status = payload.status;
         if (payload.scorers) mapped.scorers = payload.scorers;
         if (payload.cards) mapped.cards = payload.cards;
-        if (payload.minute_live) mapped.liveMinute = `${payload.minute_live}'`;
+        if (payload.minute_live !== undefined && payload.minute_live !== null) {
+          const remoteMinNum = parseInt(payload.minute_live, 10) || 0;
+          const curMinNum = parseInt((curMatch.liveMinute || "0").replace(/\D/g, ''), 10) || 0;
+          const isMatchLive = (payload.status || curMatch.status) === 'live';
+          if (isMatchLive) {
+            if (remoteMinNum >= curMinNum || curMatch.status !== 'live' || (window.admin && admin.isAuthenticated)) {
+              mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
+            }
+          } else {
+            mapped.liveMinute = remoteMinNum > 0 ? `${remoteMinNum}'` : "";
+          }
+        }
         if (payload.penalty_home_score !== undefined) mapped.penaltyHomeScore = payload.penalty_home_score;
         if (payload.penalty_away_score !== undefined) mapped.penaltyAwayScore = payload.penalty_away_score;
         if (payload.penalty_winner !== undefined) mapped.penaltyWinner = payload.penalty_winner;
@@ -1356,11 +1372,16 @@ const app = {
         this.store.syncPlayerStatsFromMatches();
         this.store.saveData();
         this.store.syncKnockoutFromStandings();
+        this.renderCurrentView();
         this.renderMatches();
         this.renderStandings();
         this.renderBracket();
+        if (typeof this.renderTopScorer === "function") this.renderTopScorer();
+        if (typeof this.renderDisciplinary === "function") this.renderDisciplinary();
         this.updateHeroLiveBadge();
+        this.updateFloatingLiveNotice();
         this.renderLiveStreamHero();
+        this.refreshActiveMatchDetail();
       }
     } else if (table === 'teams') {
       const idx = this.store.data.teams.findIndex(t => t.id === payload.id);
@@ -3220,115 +3241,148 @@ const app = {
     modal.classList.add("active");
   },
 
-  // MODAL: Match Details (Split Under Respective Teams)
+  refreshActiveMatchDetail() {
+    const modal = document.getElementById("matchDetailModal");
+    if (modal && modal.classList.contains("active") && this.activeDetailMatchId) {
+      this.showMatchDetail(this.activeDetailMatchId);
+    }
+  },
+
+  // MODAL: Match Details (Modern, Bersih, Presisi & Ramah HP)
   showMatchDetail(matchId) {
     const match = this.store.data.matches.find(m => m.id === matchId);
     if (!match) return;
 
-    const home = this.store.getTeam(match.homeId) || { name: match.homePlaceholder || "TBD", shortName: "TBD", badgeColor: "#64748b" };
-    const away = this.store.getTeam(match.awayId) || { name: match.awayPlaceholder || "TBD", shortName: "TBD", badgeColor: "#64748b" };
+    this.activeDetailMatchId = matchId;
+
+    const home = this.store.getTeam(match.homeId) || { name: match.homePlaceholder || "TBD", shortName: "TBD", badgeColor: "#10b981", city: "-" };
+    const away = this.store.getTeam(match.awayId) || { name: match.awayPlaceholder || "TBD", shortName: "TBD", badgeColor: "#3b82f6", city: "-" };
 
     const modal = document.getElementById("matchDetailModal");
     const title = document.getElementById("matchDetailTitle");
     const body = document.getElementById("matchDetailBody");
 
-    const catBadge = (match.category || "SMP") === "SD" ? "🎒 Kategori SD (U-12)" : "🏆 Kategori SMP (U-15)";
-    title.innerHTML = `Detail Laga: ${match.id} • ${catBadge} (${match.stage === 'group' ? 'Grup ' + match.group : match.roundName})`;
+    const isLive = match.status === 'live';
+    const isFinished = match.status === 'finished';
 
-    const hScore = match.status === 'finished' ? match.homeScore : (match.status === 'live' ? match.homeScoreLive : '-');
-    const aScore = match.status === 'finished' ? match.awayScore : (match.status === 'live' ? match.awayScoreLive : '-');
+    if (title) {
+      title.textContent = `Detail Laga #${match.id}`;
+    }
 
-    const cleanMin = (m) => {
-      if (!m) return "";
-      const d = m.toString().replace(/[^0-9]/g, "");
-      return d ? `${d}'` : m.toString().replace(/["']/g, "") + "'";
-    };
+    let hScore = "-";
+    let aScore = "-";
+    if (isLive || isFinished) {
+      hScore = match.homeScore ?? match.homeScoreLive ?? 0;
+      aScore = match.awayScore ?? match.awayScoreLive ?? 0;
+    }
 
     const homeScorers = (match.scorers || []).filter(s => s.team === match.homeId);
     const awayScorers = (match.scorers || []).filter(s => s.team === match.awayId);
     const homeCards = (match.cards || []).filter(c => c.team === match.homeId);
     const awayCards = (match.cards || []).filter(c => c.team === match.awayId);
 
+    if (isLive || isFinished) {
+      if (homeScorers.length > 0) hScore = Math.max(Number(hScore) || 0, homeScorers.length);
+      if (awayScorers.length > 0) aScore = Math.max(Number(aScore) || 0, awayScorers.length);
+    }
+
+    const hasPenalties = isFinished && (match.penaltyHomeScore !== null && match.penaltyAwayScore !== null && match.penaltyHomeScore !== undefined && match.penaltyAwayScore !== undefined);
+
+    const cleanMin = (m) => {
+      if (!m) return "";
+      const d = m.toString().replace(/[^0-9]/g, "");
+      return d ? `${d}'` : `${m}'`;
+    };
+
+    // Gabungkan & urutkan kronologi gol & kartu sesuai menit pertandingan
+    const allEvents = [
+      ...homeScorers.map(s => ({ side: 'home', type: 'goal', player: s.player, min: parseInt((s.minute || '0').replace(/\D/g, ''), 10) || 0, minStr: cleanMin(s.minute) })),
+      ...awayScorers.map(s => ({ side: 'away', type: 'goal', player: s.player, min: parseInt((s.minute || '0').replace(/\D/g, ''), 10) || 0, minStr: cleanMin(s.minute) })),
+      ...homeCards.map(c => ({ side: 'home', type: c.type === 'yellow' ? 'yellow' : 'red', player: c.player, min: parseInt((c.minute || '0').replace(/\D/g, ''), 10) || 0, minStr: cleanMin(c.minute) })),
+      ...awayCards.map(c => ({ side: 'away', type: c.type === 'yellow' ? 'yellow' : 'red', player: c.player, min: parseInt((c.minute || '0').replace(/\D/g, ''), 10) || 0, minStr: cleanMin(c.minute) }))
+    ].sort((a, b) => a.min - b.min);
+
+    let statusText = "Akan Datang";
+    let statusClass = "upcoming";
+    if (isLive) {
+      statusText = `LIVE ${match.liveMinute || ''}`.trim();
+      statusClass = "live";
+    } else if (isFinished) {
+      statusText = "Selesai (FT)";
+      statusClass = "finished";
+    }
+
     body.innerHTML = `
-      <div class="match-detail-scoreboard">
-        <div class="match-detail-meta">
-          <span class="match-category-tag ${match.category === 'SD' ? 'cat-sd' : 'cat-smp'}">${match.category === 'SD' ? 'SD / U-12' : 'SMP / U-15'}</span>
-          📍 ${match.pitch} • 📅 ${match.date} (${match.time})
+      <div class="md-scoreboard-card">
+        <!-- META BAR -->
+        <div class="md-meta-bar">
+          <span class="match-category-tag ${match.category === 'SD' ? 'cat-sd' : 'cat-smp'}">${match.category === 'SD' ? 'SD (U-12)' : 'SMP (U-15)'}</span>
+          <span class="fixture-group-pill">${match.stage === 'knockout' ? (match.roundName || 'Babak Gugur') : 'Grup ' + match.group}</span>
+          <span class="fixture-pitch-pill">${match.pitch || 'Lapangan Utama'}</span>
+          <span>📅 ${match.date} • ⏰ ${match.time}</span>
         </div>
 
-        <div class="match-detail-teams-row" style="align-items: flex-start;">
-          <!-- TIM HOME & GOL DI BAWAHNYA -->
-          <div class="match-detail-team-col" style="text-align: left;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${home.badgeColor || '#10b981'}, #0f172a); width: 38px; height: 38px; font-size: 0.85rem; flex-shrink: 0;">
-                ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : home.shortName.substring(0, 3)}
-              </div>
-              <div class="match-detail-team-name">${home.name}</div>
+        <!-- MAIN TEAMS & SCORE GRID -->
+        <div class="md-teams-grid">
+          <!-- HOME TEAM -->
+          <div class="md-team-box">
+            <div class="md-team-logo" style="background: ${home.badgeColor || '#10b981'};">
+              ${home.logo ? `<img src="${home.logo}" alt="${home.name}">` : (home.shortName || 'TBD').substring(0, 3)}
             </div>
-
-            <!-- GOL TIM HOME DI BAWAH NAMA TIM HOME -->
-            <div class="team-events-box home" style="margin-top: 10px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 6px;">
-              <div style="font-size: 0.7rem; font-weight: 800; color: var(--primary); margin-bottom: 3px;">⚽ GOL & KARTU:</div>
-              ${homeScorers.map(s => `
-                <div class="event-item-badge scorer">
-                  <span>⚽</span>
-                  <span><strong>${s.player}</strong> (${cleanMin(s.minute)})</span>
-                </div>
-              `).join("")}
-              ${homeCards.map(c => `
-                <div class="event-item-badge">
-                  <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
-                  <span>${c.player} (${cleanMin(c.minute)})</span>
-                </div>
-              `).join("")}
-              ${homeScorers.length === 0 && homeCards.length === 0 ? `<span style="font-size: 0.72rem; color: var(--text-subtle);">- Tidak ada gol/kartu -</span>` : ''}
-            </div>
+            <div class="md-team-title">${home.name}</div>
+            <div class="md-team-city">📍 ${home.city || '-'}</div>
           </div>
 
-          <!-- SKOR TENGAH -->
-          <div class="score-col-centered" style="padding: 0 10px;">
-            <div class="score-box-prominent ${match.status === 'live' ? 'live' : ''}" style="font-size: 2.6rem;">
+          <!-- CENTER SCORE -->
+          <div class="md-score-center">
+            <div class="md-score-numbers ${isLive ? 'is-live' : ''}">
               <span>${hScore}</span>
-              <span class="score-divider">:</span>
+              <span>-</span>
               <span>${aScore}</span>
             </div>
-            <div class="match-detail-status ${match.status}" style="margin-top: 6px;">
-              ${match.status === 'live' ? '🔴 Sedang Berlangsung' : (match.status === 'finished' ? 'Selesai' : 'Belum Mulai')}
+            <div class="md-score-status-badge ${statusClass}">
+              ${isLive ? '<span class="pulse-dot"></span>' : ''}
+              <span>${statusText}</span>
             </div>
-            ${(match.penaltyHomeScore !== null && match.penaltyAwayScore !== null && match.penaltyHomeScore !== undefined && match.penaltyAwayScore !== undefined) ? `
-              <div style="margin-top: 6px; padding: 4px 8px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 6px; color: #ca8a04; font-size: 0.76rem; font-weight: 800; white-space: nowrap;">
+            ${hasPenalties ? `
+              <div class="md-penalty-banner">
                 🎯 Adu Penalti: ${match.penaltyHomeScore} - ${match.penaltyAwayScore}
               </div>
             ` : ''}
           </div>
 
-          <!-- TIM AWAY & GOL DI BAWAHNYA -->
-          <div class="match-detail-team-col" style="text-align: right;">
-            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-              <div class="match-detail-team-name">${away.name}</div>
-              <div class="team-badge-circle" style="background: linear-gradient(135deg, ${away.badgeColor || '#3b82f6'}, #0f172a); width: 38px; height: 38px; font-size: 0.85rem; flex-shrink: 0;">
-                ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : away.shortName.substring(0, 3)}
-              </div>
+          <!-- AWAY TEAM -->
+          <div class="md-team-box">
+            <div class="md-team-logo" style="background: ${away.badgeColor || '#3b82f6'};">
+              ${away.logo ? `<img src="${away.logo}" alt="${away.name}">` : (away.shortName || 'TBD').substring(0, 3)}
             </div>
-
-            <!-- GOL TIM AWAY DI BAWAH NAMA TIM AWAY -->
-            <div class="team-events-box away" style="margin-top: 10px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 6px;">
-              <div style="font-size: 0.7rem; font-weight: 800; color: var(--primary); margin-bottom: 3px;">⚽ GOL & KARTU:</div>
-              ${awayScorers.map(s => `
-                <div class="event-item-badge away scorer">
-                  <span>(<strong>${cleanMin(s.minute)}</strong>) ${s.player}</span>
-                  <span>⚽</span>
-                </div>
-              `).join("")}
-              ${awayCards.map(c => `
-                <div class="event-item-badge away">
-                  <span>(${cleanMin(c.minute)}) ${c.player}</span>
-                  <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
-                </div>
-              `).join("")}
-              ${awayScorers.length === 0 && awayCards.length === 0 ? `<span style="font-size: 0.72rem; color: var(--text-subtle);">- Tidak ada gol/kartu -</span>` : ''}
-            </div>
+            <div class="md-team-title">${away.name}</div>
+            <div class="md-team-city">📍 ${away.city || '-'}</div>
           </div>
+        </div>
+
+        <!-- TIMELINE STATISTIK GOL & KARTU (BERSIH & PRESISI) -->
+        <div class="md-events-section">
+          <div class="md-events-header">Statistik Pertandingan</div>
+          ${allEvents.length === 0 ? `
+            <div class="md-event-empty">Belum ada catatan gol atau kartu pada laga ini.</div>
+          ` : `
+            <div class="md-events-timeline">
+              ${allEvents.map(e => `
+                <div class="md-event-row">
+                  <div class="md-event-side home">
+                    ${e.side === 'home' ? `<strong>${e.player}</strong> <span class="md-event-min">${e.minStr}</span>` : ''}
+                  </div>
+                  <div class="md-event-icon">
+                    ${e.type === 'goal' ? '⚽' : (e.type === 'yellow' ? '<span class="card-icon-y"></span>' : '<span class="card-icon-r"></span>')}
+                  </div>
+                  <div class="md-event-side away">
+                    ${e.side === 'away' ? `<span class="md-event-min">${e.minStr}</span> <strong>${e.player}</strong>` : ''}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `}
         </div>
       </div>
     `;
