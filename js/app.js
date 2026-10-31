@@ -811,7 +811,9 @@ const app = {
       this.handleRemoteSync(table, payload);
     });
 
-    // Helper to apply full remote dataset
+    // Helper to apply full remote dataset with change detection
+    let lastDataSignature = "";
+    let isInitialLoad = true;
     const syncFromRemote = () => {
       if (!window.SupabaseService) return;
       const isReady = typeof window.SupabaseService.isReady === 'function'
@@ -822,11 +824,23 @@ const app = {
       }
       window.SupabaseService.fetchAllData().then(data => {
         if (data) {
-          console.log("☁️ Supabase Cloud data successfully fetched & applied!");
-          this.applyRemoteData(data);
+          // Generate lightweight signature to verify whether data actually changed
+          const signature = (data.matches ? data.matches.map(m => `${m.id}:${m.status}:${m.home_score ?? m.homeScore}:${m.away_score ?? m.awayScore}:${m.updated_at}`).join("|") : "") +
+            "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "");
+
+          if (isInitialLoad || signature !== lastDataSignature) {
+            lastDataSignature = signature;
+            if (isInitialLoad) {
+              console.log("☁️ Supabase Cloud data successfully fetched & applied!");
+              isInitialLoad = false;
+            } else {
+              console.log("☁️ Supabase Cloud data updated:", new Date().toLocaleTimeString());
+            }
+            this.applyRemoteData(data);
+          }
         }
       }).catch(err => {
-        console.warn("Supabase sync error:", err);
+        console.warn("Supabase sync notice:", err);
       });
     };
 
@@ -2843,10 +2857,10 @@ const app = {
   // PWA Support
   initPwa() {
     window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      window.deferredPrompt = e;
       const btnInstall = document.getElementById("btnInstallPwa");
       if (btnInstall) {
+        e.preventDefault();
+        window.deferredPrompt = e;
         btnInstall.style.display = "inline-flex";
         btnInstall.addEventListener("click", () => {
           if (window.deferredPrompt) {
