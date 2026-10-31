@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=5.9">
+  <link rel="stylesheet" href="css/styles.css?v=6.2">
 </head>
 <body>
 
@@ -78,10 +78,9 @@
       </div>
 
       <div class="header-actions">
-        <!-- Cloud Sync / Network Status Pill -->
-        <div id="cloudStatusBadge" class="cloud-status-badge" title="Status Sinkronisasi Cloud Supabase (Klik untuk cek)" onclick="app.checkCloudConnection(true)">
+        <!-- Cloud Sync / Network Status Dot (Hanya warna lampu saja) -->
+        <div id="cloudStatusBadge" class="cloud-status-badge" title="Indikator Koneksi Cloud: Hijau = Online, Kuning = Offline (Klik untuk tes)" onclick="app.checkCloudConnection(true)">
           <span id="cloudStatusDot" class="status-indicator-dot"></span>
-          <span id="cloudStatusText" class="cloud-status-text">Cloud Aktif</span>
         </div>
 
         <!-- Quick Media & Photo Upload Button -->
@@ -110,6 +109,17 @@
       </div>
     </div>
   </header>
+
+  <!-- FLOATING LIVE MATCH NOTIFICATION (AUTO-POPUP WHEN MATCH IS LIVE) -->
+  <div id="floatingLiveNotice" class="floating-live-bar" style="display: none;" onclick="app.jumpToLiveMatch()" role="button" tabindex="0" title="Ada laga yang sedang berlangsung! Klik untuk langsung menuju papan skor">
+    <div class="floating-live-inner">
+      <span class="floating-pulse-badge">
+        <span class="floating-pulse-dot"></span> LIVE
+      </span>
+      <span id="floatingLiveText" class="floating-live-text">Pertandingan Sedang Berlangsung...</span>
+      <span class="floating-live-action">Lihat Skor ➔</span>
+    </div>
+  </div>
 
   <!-- MAIN CONTENT CONTAINER (WHITE SPACE & USER FRIENDLY) -->
   <main class="container" style="padding-top: 14px;">
@@ -233,7 +243,7 @@
       </div>
 
       <!-- 2. ACC 2026 MOMENTS™ SHOWCASE BAR (INSPIRED BY FIFA WORLD CUP MOMENTS) -->
-      <section class="acc-moments-section" id="accMomentsContainer">
+      <section class="acc-moments-section scroll-reveal" id="accMomentsContainer">
         <div class="moments-header-row">
           <div class="moments-title-wrap">
             <h2 class="moments-main-title">
@@ -273,7 +283,7 @@
         </span>
       </div>
 
-      <div class="mvp-spotlight-card">
+      <div class="mvp-spotlight-card scroll-reveal reveal-right">
         <div class="mvp-photo-wrapper">
           <img src="assets/mvp_player.jpg" alt="Foto MVP Pemain Bintang ACC" class="mvp-photo-img" id="mvpPhoto">
           <div class="mvp-badge-overlay">
@@ -344,7 +354,7 @@
       </div>
 
       <!-- 4. SPONSORSHIP & MITRA PENDUKUNG -->
-      <div class="sponsors-showcase-bar" id="sponsorsShowcaseBar">
+      <div class="sponsors-showcase-bar scroll-reveal reveal-right" id="sponsorsShowcaseBar">
         <div class="section-header sponsors-header-row" style="margin-bottom: 16px;">
           <div>
             <h2 class="section-title sponsors-main-title" style="margin: 0;">
@@ -422,8 +432,8 @@
         <button class="status-pill pill-finished" data-status="finished" onclick="app.setStatusFilter('finished')">
           ✅ Telah Selesai (<span id="countFinishedMatches">0</span>)
         </button>
-        <button type="button" class="status-pill pill-share-recap" onclick="app.copyDailyMatchRecap()" style="background: rgba(37, 211, 102, 0.12); color: #16a34a; border: 1px solid rgba(37, 211, 102, 0.4); font-weight: 700; margin-left: auto;" title="Salin rekap hasil pertandingan format WhatsApp">
-          📋 Salin Hasil (WA)
+        <button type="button" class="status-pill pill-share-recap" onclick="app.copyDailyMatchRecap()" style="background: rgba(37, 211, 102, 0.12); color: #16a34a; border: 1px solid rgba(37, 211, 102, 0.4); font-weight: 700; margin-left: auto; padding: 6px 12px; font-size: 0.95rem;" title="Salin rekap hasil laga ke WhatsApp" aria-label="Salin rekap hasil laga">
+          📋
         </button>
       </div>
 
@@ -1053,10 +1063,23 @@
             <button type="button" class="btn btn-sm btn-primary" onclick="admin.runDemoSimulation('finish_knockout')" style="background: #8b5cf6; border-color: #8b5cf6;">
               🏆 3. Tuntaskan Babak Gugur Sampai Juara
             </button>
-            <button type="button" class="btn btn-sm btn-outline" onclick="admin.resetDemo()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
-              🔄 Reset Demo ke Kondisi Awal
-            </button>
           </div>
+        </div>
+
+        <!-- ZONA HAPUS & RESET TOTAL PERTANDINGAN DENGAN SANDI KHUSUS -->
+        <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <h4 style="color: #ef4444; font-size: 0.92rem; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>🗑️</span> Hapus & Reset Seluruh Pertandingan
+            </h4>
+            <span style="font-size: 0.7rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-weight: 700;">SANDI KHUSUS</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+            Ingin mengulang simulasi dari nol? Tools ini akan mengosongkan seluruh skor, kartu pelanggaran, dan pencetak gol menjadi 0 kembali pada seluruh 64 laga dan menyinkronkannya langsung ke Supabase Cloud. Dilindungi sandi reset khusus agar tidak bisa disalahgunakan.
+          </p>
+          <button type="button" class="btn btn-sm btn-outline" onclick="admin.openMasterResetModal()" style="border-color: #ef4444; color: #ef4444; font-weight: 800; background: rgba(239, 68, 68, 0.08); padding: 8px 14px;">
+            🗑️ Buka Tools Hapus & Reset Total (Kunci Sandi)
+          </button>
         </div>
 
         <!-- SINKRONISASI DATA HP ↔ LAPTOP (SOLUSI BEDA PERANGKAT) -->
@@ -1162,6 +1185,46 @@
           Keluar (Logout Panitia)
         </button>
         <button type="button" class="btn btn-outline btn-modal-close">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MASTER RESET DATA PERTANDINGAN (PROTEKSI SANDI KHUSUS) -->
+  <div id="masterResetModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px; border-top: 4px solid #ef4444;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #ef4444; display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> Hapus & Reset Total Pertandingan
+        </h3>
+        <button class="modal-close" onclick="document.getElementById('masterResetModal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; padding: 10px 12px; border-radius: 4px; margin-bottom: 14px; font-size: 0.8rem; color: var(--text-main); line-height: 1.5;">
+          <strong>PERINGATAN PENGHAPUSAN SIMULASI:</strong><br>
+          Semua skor laga, status live, daftar pencetak gol, dan kartu disiplin akan <strong>dikosongkan menjadi 0 kembali</strong> di semua HP penonton & database Supabase Cloud.
+        </div>
+        
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+          Fitur ini dilindungi <strong>Sandi Khusus Reset Data</strong> (berbeda dengan PIN Panitia) agar tidak bisa disalahgunakan oleh pihak luar.
+        </p>
+
+        <form id="masterResetForm" onsubmit="event.preventDefault(); admin.executeMasterReset();">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" style="font-weight: 700; color: #ef4444; font-size: 0.82rem;">Masukkan Sandi Khusus Hapus Data:</label>
+            <input type="password" id="masterResetPinInput" class="form-input" placeholder="Masukkan Sandi Reset (Default: 9999)" autocomplete="off" required style="font-size: 1rem; letter-spacing: 2px; text-align: center; border-color: rgba(239, 68, 68, 0.5);">
+            <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px; text-align: center;">
+              🔒 Sandi Khusus Reset: <strong>9999</strong>
+            </span>
+          </div>
+          <div id="masterResetError" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 700; margin-bottom: 10px; text-align: center;"></div>
+          
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('masterResetModal').classList.remove('active')">Batal</button>
+            <button type="submit" class="btn btn-sm" style="background: #ef4444; color: #fff; font-weight: 800; border: none; padding: 8px 16px;">
+              Ya, Hapus Semua Data Sekarang
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -1922,17 +1985,17 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/security.js?v=5.0"></script>
-  <script src="js/supabase-client.js?v=6.0"></script>
-  <script src="js/data.js?v=6.0"></script>
-  <script src="js/app.js?v=6.0"></script>
-  <script src="js/admin.js?v=6.0"></script>
+  <script src="js/security.js?v=6.2"></script>
+  <script src="js/supabase-client.js?v=6.2"></script>
+  <script src="js/data.js?v=6.2"></script>
+  <script src="js/app.js?v=6.2"></script>
+  <script src="js/admin.js?v=6.2"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=39')
+        navigator.serviceWorker.register('sw.js?v=41')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

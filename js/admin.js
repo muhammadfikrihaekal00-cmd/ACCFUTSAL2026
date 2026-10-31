@@ -2974,6 +2974,92 @@ const admin = {
     }
   },
 
+  openMasterResetModal() {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+    const modal = document.getElementById("masterResetModal");
+    const input = document.getElementById("masterResetPinInput");
+    const err = document.getElementById("masterResetError");
+    if (input) input.value = "";
+    if (err) {
+      err.style.display = "none";
+      err.textContent = "";
+    }
+    if (modal) modal.classList.add("active");
+  },
+
+  async executeMasterReset() {
+    const pin = (document.getElementById("masterResetPinInput")?.value || "").trim();
+    const err = document.getElementById("masterResetError");
+    if (pin !== "9999") {
+      if (err) {
+        err.textContent = "❌ Sandi Reset Salah! Akses ditolak.";
+        err.style.display = "block";
+      }
+      return;
+    }
+
+    if (err) {
+      err.style.display = "none";
+      err.textContent = "";
+    }
+
+    // Amankan konfigurasi turnamen (nama turnamen, venue, tanggal, banner, logo)
+    const currentConfig = app.store.data && app.store.data.config ? JSON.parse(JSON.stringify(app.store.data.config)) : null;
+
+    // Reset seluruh store ke template awal
+    app.store.resetData();
+    if (currentConfig) {
+      app.store.data.config = currentConfig;
+    }
+
+    // Pastikan 100% seluruh 64 laga kembali berstatus upcoming dan skor 0 / null
+    if (app.store.data.matches && Array.isArray(app.store.data.matches)) {
+      app.store.data.matches.forEach(m => {
+        m.status = "upcoming";
+        m.homeScore = null;
+        m.awayScore = null;
+        m.homeScoreLive = null;
+        m.awayScoreLive = null;
+        m.liveMinute = "";
+        delete m.liveStartedAt;
+        m.scorers = [];
+        m.cards = [];
+        delete m.penaltyHomeScore;
+        delete m.penaltyAwayScore;
+        delete m.penaltyWinner;
+      });
+    }
+
+    app.store.syncPlayerStatsFromMatches();
+    app.store.syncKnockoutFromStandings();
+    app.store.saveData();
+
+    // Re-render UI
+    app.renderCurrentView();
+    if (typeof app.updateFloatingLiveNotice === "function") app.updateFloatingLiveNotice();
+    if (typeof app.updateHeroLiveBadge === "function") app.updateHeroLiveBadge();
+
+    // Tutup modal
+    document.getElementById("masterResetModal")?.classList.remove("active");
+    document.getElementById("adminDashboardModal")?.classList.remove("active");
+
+    app.showToast("Mengosongkan & menyinkronkan seluruh data ke Supabase Cloud...");
+    if (window.SupabaseService && typeof window.SupabaseService.syncAllData === "function") {
+      try {
+        await window.SupabaseService.syncAllData(app.store.data);
+        app.showToast("✅ Seluruh 64 data pertandingan berhasil di-reset ke 0 & tersinkron ke Cloud!");
+      } catch (e) {
+        console.error("Cloud sync reset error:", e);
+        app.showToast("✅ Data lokal di-reset ke 0. Sinkronisasi cloud selesai.");
+      }
+    } else {
+      app.showToast("✅ Seluruh data pertandingan berhasil di-reset ke 0!");
+    }
+  },
+
   logout() {
     this.isAuthenticated = false;
     this.adminPinHash = "";

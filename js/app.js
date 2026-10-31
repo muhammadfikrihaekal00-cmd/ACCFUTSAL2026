@@ -622,6 +622,8 @@ const app = {
     this.initSupabaseSync();
     this.initGlobalLiveMatchTimer();
     this.initNetworkStatusListeners();
+    this.initScrollReveal();
+    this.updateFloatingLiveNotice();
 
     // DOM-level guarantee
     const tickerEl = document.getElementById("tickerText");
@@ -657,20 +659,28 @@ const app = {
       const badge = document.getElementById("cloudStatusBadge");
       const dot = document.getElementById("cloudStatusDot");
       const text = document.getElementById("cloudStatusText");
-      if (!badge || !dot || !text) return;
+      if (!badge && !dot) return;
 
       if (isOnline) {
-        badge.classList.remove("offline");
-        badge.title = "Terhubung ke Supabase Cloud • Realtime Aktif (Klik untuk cek)";
-        text.textContent = customMsg || "Cloud Aktif";
-        dot.style.background = "#10b981";
-        dot.style.boxShadow = "0 0 6px #10b981";
+        if (badge) {
+          badge.classList.remove("offline");
+          badge.title = "Lampu Hijau: Cloud Supabase Terhubung & Realtime Aktif (Klik untuk cek)";
+        }
+        if (text) text.textContent = customMsg || "Cloud Aktif";
+        if (dot) {
+          dot.style.background = "#10b981";
+          dot.style.boxShadow = "0 0 8px #10b981, 0 0 14px rgba(16, 185, 129, 0.5)";
+        }
       } else {
-        badge.classList.add("offline");
-        badge.title = "Mode Offline: Data aman tersimpan di HP & otomatis disinkronkan saat online";
-        text.textContent = customMsg || "Offline";
-        dot.style.background = "#ca8a04";
-        dot.style.boxShadow = "0 0 6px #ca8a04";
+        if (badge) {
+          badge.classList.add("offline");
+          badge.title = "Lampu Kuning: Mode Offline (Data aman tersimpan di HP & otomatis disinkronkan saat online)";
+        }
+        if (text) text.textContent = customMsg || "Offline";
+        if (dot) {
+          dot.style.background = "#ca8a04";
+          dot.style.boxShadow = "0 0 8px #ca8a04, 0 0 14px rgba(202, 138, 4, 0.5)";
+        }
       }
     };
 
@@ -706,15 +716,21 @@ const app = {
       const dot = document.getElementById("cloudStatusDot");
       const text = document.getElementById("cloudStatusText");
       if (res && res.ok) {
-        if (badge) badge.classList.remove("offline");
-        if (dot) { dot.style.background = "#10b981"; dot.style.boxShadow = "0 0 6px #10b981"; }
+        if (badge) {
+          badge.classList.remove("offline");
+          badge.title = "Lampu Hijau: Cloud Supabase Terhubung & Realtime Aktif";
+        }
+        if (dot) { dot.style.background = "#10b981"; dot.style.boxShadow = "0 0 8px #10b981, 0 0 14px rgba(16, 185, 129, 0.5)"; }
         if (text) text.textContent = "Cloud Aktif";
-        if (showToast) this.showToast("🟢 Cloud Terhubung! Sinkronisasi skor & bagan Supabase aktif sempurna.");
+        if (showToast) this.showToast("🟢 Indikator Hijau: Cloud Terhubung! Sinkronisasi skor Supabase aktif sempurna.");
       } else {
-        if (badge) badge.classList.add("offline");
-        if (dot) { dot.style.background = "#ca8a04"; dot.style.boxShadow = "0 0 6px #ca8a04"; }
+        if (badge) {
+          badge.classList.add("offline");
+          badge.title = "Lampu Kuning: Offline / Lokal";
+        }
+        if (dot) { dot.style.background = "#ca8a04"; dot.style.boxShadow = "0 0 8px #ca8a04, 0 0 14px rgba(202, 138, 4, 0.5)"; }
         if (text) text.textContent = "Offline";
-        if (showToast) this.showToast(`⚠️ Cloud: ${res.message || 'Gagal tersambung'}. Data tersimpan lokal.`);
+        if (showToast) this.showToast(`⚠️ Indikator Kuning: ${res.message || 'Gagal tersambung'}. Data tersimpan lokal.`);
       }
     }).catch(err => {
       if (showToast) this.showToast("⚠️ Sedang menggunakan penyimpanan lokal.");
@@ -1548,15 +1564,16 @@ const app = {
   },
 
   renderHeader() {
-    const config = this.store.data.config;
-    document.getElementById("headerTitle").textContent = config.tournamentName;
-    document.getElementById("heroTitle").textContent = config.tournamentName;
-    const cleanSub = (config.subTitle || "").replace(/â€¢/g, "•").replace(/â\S*¢/g, "•");
+    const config = this.store.data.config || {};
+    document.getElementById("headerTitle").textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName;
+    document.getElementById("heroTitle").textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName;
+    const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
+    const cleanSub = (rawSub || "").replace(/â€¢/g, "•").replace(/â\S*¢/g, "•");
     document.getElementById("heroSub").textContent = cleanSub;
-    document.getElementById("heroVenue").textContent = config.venue;
-    document.getElementById("heroDates").textContent = config.dates;
+    document.getElementById("heroVenue").textContent = config.venue || DEFAULT_DATA.config.venue;
+    document.getElementById("heroDates").textContent = config.dates || DEFAULT_DATA.config.dates;
 
-    let cleanTicker = config.runningAnnouncement || "";
+    let cleanTicker = config.runningAnnouncement || DEFAULT_DATA.config.runningAnnouncement || "";
     if (cleanTicker.includes("Selamat Datang")) {
       cleanTicker = "🏆 " + cleanTicker.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
     } else {
@@ -1565,6 +1582,7 @@ const app = {
     document.getElementById("tickerText").textContent = cleanTicker;
     this.renderHeroBanner();
     this.updateHeroLiveBadge();
+    this.updateFloatingLiveNotice();
   },
 
   updateHeroLiveBadge() {
@@ -1586,6 +1604,90 @@ const app = {
     } else {
       badgeEl.style.display = "none";
     }
+
+    this.updateFloatingLiveNotice();
+  },
+
+  updateFloatingLiveNotice() {
+    const noticeEl = document.getElementById("floatingLiveNotice");
+    if (!noticeEl) return;
+
+    const matches = (this.store && this.store.data && this.store.data.matches) || [];
+    const liveMatches = matches.filter(m => m.status === "live");
+
+    if (liveMatches.length > 0) {
+      const firstLive = liveMatches[0];
+      const home = this.store.getTeam(firstLive.homeId) || { name: firstLive.homePlaceholder || "TBD", shortName: "TBD" };
+      const away = this.store.getTeam(firstLive.awayId) || { name: firstLive.awayPlaceholder || "TBD", shortName: "TBD" };
+      const hScore = firstLive.homeScoreLive ?? firstLive.homeScore ?? 0;
+      const aScore = firstLive.awayScoreLive ?? firstLive.awayScore ?? 0;
+      const minText = firstLive.liveMinute ? `(${firstLive.liveMinute}')` : '';
+
+      const textEl = document.getElementById("floatingLiveText");
+      if (textEl) {
+        textEl.textContent = `${home.shortName || home.name} ${hScore} - ${aScore} ${away.shortName || away.name} ${minText}`;
+      }
+
+      noticeEl.style.display = "block";
+    } else {
+      noticeEl.style.display = "none";
+    }
+  },
+
+  jumpToLiveMatch() {
+    this.switchTab("matches");
+    this.filterStatus = "live";
+
+    document.querySelectorAll(".status-filter-pills .filter-pill").forEach(p => {
+      p.classList.toggle("active", p.dataset.status === "live");
+    });
+
+    const liveMatches = (this.store.data.matches || []).filter(m => m.status === "live");
+    if (liveMatches.length > 0) {
+      const targetCat = liveMatches[0].category || "SMP";
+      if (this.currentCategory !== targetCat) {
+        this.currentCategory = targetCat;
+        document.querySelectorAll(".cat-pill").forEach(p => {
+          p.classList.toggle("active", p.dataset.cat === targetCat);
+        });
+      }
+    }
+
+    this.renderMatches();
+
+    setTimeout(() => {
+      const liveCard = document.querySelector(".match-card.status-live, .match-card.is-live");
+      if (liveCard) {
+        liveCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        liveCard.classList.add("highlight-pulse");
+        setTimeout(() => liveCard.classList.remove("highlight-pulse"), 2500);
+      } else {
+        const list = document.getElementById("matchesList");
+        if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 150);
+  },
+
+  initScrollReveal() {
+    if (!("IntersectionObserver" in window)) {
+      document.querySelectorAll(".scroll-reveal").forEach(el => el.classList.add("is-revealed"));
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-revealed");
+        }
+      });
+    }, {
+      threshold: 0.12,
+      rootMargin: "0px 0px -30px 0px"
+    });
+
+    document.querySelectorAll(".scroll-reveal").forEach(el => {
+      observer.observe(el);
+    });
   },
 
   scrollToLiveStream() {
@@ -1828,6 +1930,7 @@ const app = {
     this.renderHeroBanner();
     this.renderSponsors();
     this.updateAdminVisibility();
+    this.initScrollReveal();
   },
 
   // RENDER ACC 2026 MOMENTS™ (FIFA WORLD CUP STYLE CAROUSEL)
@@ -2113,10 +2216,10 @@ const app = {
           <div class="match-status-bar bar-live">
             <div class="bar-left">
               <span class="pulse-dot"></span>
-              <strong>SEDANG BERLANGSUNG (LIVE)${m.liveMinute ? ` • Menit ${m.liveMinute}` : ''}</strong>
+              <strong>LIVE${m.liveMinute ? ` • Menit ${m.liveMinute}` : ''}</strong>
             </div>
             <div class="bar-right">
-              <span>🏟️ ${m.pitch || 'Lapangan Utama'}</span>
+              <span>${m.pitch || 'Lapangan Utama'}</span>
             </div>
           </div>
         `;
@@ -2124,8 +2227,7 @@ const app = {
         statusBarHtml = `
           <div class="match-status-bar bar-finished">
             <div class="bar-left">
-              <span>✅</span>
-              <strong>PERTANDINGAN SELESAI (FULL TIME)</strong>
+              <strong>SELESAI (FT)</strong>
             </div>
             <div class="bar-right">
               <span>Hasil Skor Resmi</span>
@@ -2136,11 +2238,10 @@ const app = {
         statusBarHtml = `
           <div class="match-status-bar bar-upcoming">
             <div class="bar-left">
-              <span>⏰</span>
-              <strong>JADWAL AKAN DATANG</strong>
+              <strong>AKAN DATANG</strong>
             </div>
             <div class="bar-right">
-              <span>Kick-off: ${m.time}</span>
+              <span>${m.time}</span>
             </div>
           </div>
         `;
@@ -2168,8 +2269,8 @@ const app = {
       const penWinnerTeam = m.penaltyWinner ? this.store.getTeam(m.penaltyWinner) : null;
 
       const catBadge = (m.category || "SMP") === "SD" ?
-        `<span class="match-category-tag cat-sd">🎒 SD (U-12)</span>` :
-        `<span class="match-category-tag cat-smp">🏆 SMP (U-15)</span>`;
+        `<span class="match-category-tag cat-sd">SD (U-12)</span>` :
+        `<span class="match-category-tag cat-smp">SMP (U-15)</span>`;
 
       return `
         <div class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''}">
@@ -2178,13 +2279,13 @@ const app = {
           <div class="fixture-header-meta">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${catBadge}
-              <span class="fixture-pitch-pill">🏟️ ${m.pitch}</span>
+              <span class="fixture-pitch-pill">${m.pitch || 'Lapangan Utama'}</span>
               <span class="fixture-group-pill">${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : `Grup ${m.group}`}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="fixture-time-hint">📅 ${m.date}</span>
+              <span class="fixture-time-hint">${m.date}</span>
               <span class="match-status-tag ${m.status}">
-                ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time)}
+                ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute ? m.liveMinute + "'" : ''}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time)}
               </span>
             </div>
           </div>
@@ -2278,17 +2379,19 @@ const app = {
 
           <!-- FOOTER AKSI -->
           <div class="fixture-footer-bar">
-            <span class="fixture-time-hint">⏰ Kick-off: ${m.time}</span>
+            <span class="fixture-field-note" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
+              ${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : `Laga #${m.id}`}
+            </span>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 8px;">
-                ℹ️ Detail
+              <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 10px;">
+                Detail
               </button>
               ${admin.isAuthenticated === true ? `
-                <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Tim Lawan & Jadwal" style="font-size: 0.72rem; padding: 4px 8px;">
-                  ⚙️ Atur Lawan
+                <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Tim Lawan & Jadwal" style="font-size: 0.72rem; padding: 4px 10px;">
+                  Atur Lawan
                 </button>
-                <button class="btn btn-primary btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan" style="font-size: 0.72rem; padding: 4px 8px;">
-                  ✏️ Skor
+                <button class="btn btn-primary btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan" style="font-size: 0.72rem; padding: 4px 10px;">
+                  Skor
                 </button>
               ` : ''}
             </div>
@@ -2296,6 +2399,7 @@ const app = {
         </div>
       `;
     }).join("");
+    this.updateFloatingLiveNotice();
   },
 
   // 2. RENDER STANDINGS (4 Grup Lengkap per Kategori: A, B, C, D)
@@ -2385,6 +2489,7 @@ const app = {
         </div>
       `;
     }).join("");
+    this.updateFloatingLiveNotice();
   },
 
   // 3. RENDER BRACKET (Bagan 8 Besar Lengkap per Kategori - FIFA / UEFA Tournament Tree)
@@ -2770,6 +2875,7 @@ const app = {
         </div>
       `;
     }).join("");
+    this.updateFloatingLiveNotice();
   },
 
   // 5. RENDER DISCIPLINARY TABLE (Crucial for Managers!)
@@ -2827,6 +2933,7 @@ const app = {
         </tr>
       `;
     }).join("");
+    this.updateFloatingLiveNotice();
   },
 
   // 6. RENDER TOP SCORER
@@ -2934,6 +3041,7 @@ const app = {
         </tr>
       `;
     }).join("");
+    this.updateFloatingLiveNotice();
   },
 
   // 7. RENDER JUKNIS (Buku Panduan)

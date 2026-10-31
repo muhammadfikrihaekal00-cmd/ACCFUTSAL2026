@@ -4945,58 +4945,160 @@ body.dark-theme .fixture-team-row:hover {
 }
 
 /* ========================================================= */
-/* CLOUD SYNC & NETWORK STATUS BADGE                         */
+/* CLOUD SYNC STATUS LAMP DOT (HANYA LAMPU INDIKATOR SAJA)   */
 /* ========================================================= */
 .cloud-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   user-select: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .cloud-status-badge:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  filter: brightness(1.2);
+  transform: scale(1.08);
 }
 
 .cloud-status-badge.offline {
   background: rgba(234, 179, 8, 0.14);
-  color: #ca8a04;
-  border-color: rgba(234, 179, 8, 0.4);
+  border-color: rgba(234, 179, 8, 0.5);
 }
 
 .status-indicator-dot {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 6px #10b981;
-  display: inline-block;
+  box-shadow: 0 0 8px #10b981, 0 0 14px rgba(16, 185, 129, 0.5);
+  display: block;
   flex-shrink: 0;
+  animation: pulseLamp 2.4s infinite ease-in-out;
 }
 
 .cloud-status-badge.offline .status-indicator-dot {
   background: #ca8a04;
-  box-shadow: 0 0 6px #ca8a04;
+  box-shadow: 0 0 8px #ca8a04, 0 0 14px rgba(202, 138, 4, 0.5);
 }
 
-@media (max-width: 480px) {
-  .cloud-status-text {
-    display: none;
-  }
-  .cloud-status-badge {
-    padding: 6px;
-    border-radius: 50%;
+@keyframes pulseLamp {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(0.92); }
+}
+
+/* ========================================================= */
+/* FLOATING LIVE MATCH NOTIFICATION BANNER                   */
+/* ========================================================= */
+.floating-live-bar {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: calc(100% - 28px);
+  max-width: 580px;
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: #ffffff;
+  border-radius: 30px;
+  padding: 8px 16px;
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4), 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  animation: floatBounce 2.5s infinite ease-in-out;
+}
+
+.floating-live-bar:hover {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 12px 28px rgba(220, 38, 38, 0.55);
+}
+
+.floating-live-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.floating-pulse-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  color: #dc2626;
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.floating-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #dc2626;
+}
+
+.floating-live-text {
+  flex: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.floating-live-action {
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 3px 9px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@keyframes floatBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+
+/* ========================================================= */
+/* SCROLL REVEAL / SWIPE-IN FROM SIDE ANIMATIONS             */
+/* ========================================================= */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateX(-35px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.reveal-right {
+  transform: translateX(35px);
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
 

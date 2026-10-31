@@ -1,5 +1,5 @@
 // js/supabase-client.js - Seamless, Silent, Real-Time Supabase Synchronization
-(function(window) {
+(function (window) {
   'use strict';
 
   // Default configuration placeholders (Can be injected via window.SUPABASE_CONFIG or localStorage)
