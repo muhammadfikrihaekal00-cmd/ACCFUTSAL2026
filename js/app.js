@@ -602,6 +602,7 @@ const app = {
     this.renderCurrentView();
     this.initPwa();
     this.initSupabaseSync();
+    this.initGlobalLiveMatchTimer();
 
     // DOM-level guarantee
     const tickerEl = document.getElementById("tickerText");
@@ -625,6 +626,69 @@ const app = {
       }, 50);
     }
     // TIDAK ADA AUTO-DISMISS: Tetap di layar opening sampai user klik tombol untuk masuk
+  },
+
+  // =========================================================
+  // GLOBAL BACKGROUND TIMER UNTUK PERTANDINGAN LIVE
+  // Otomatis menambah menit setiap 60 detik meskipun modal ditutup
+  // =========================================================
+  initGlobalLiveMatchTimer() {
+    if (this._globalLiveTimerInterval) {
+      clearInterval(this._globalLiveTimerInterval);
+    }
+
+    this._globalLiveTimerInterval = setInterval(() => {
+      const matches = this.store && this.store.data ? this.store.data.matches : [];
+      if (!matches || matches.length === 0) return;
+
+      const liveMatches = matches.filter(m => m.status === "live");
+      if (liveMatches.length === 0) return;
+
+      const now = Date.now();
+      let hasChange = false;
+
+      liveMatches.forEach(m => {
+        let curMin = parseInt((m.liveMinute || "1'").toString().replace(/\D/g, ""), 10) || 1;
+        if (!m.liveStartedAt) {
+          m.liveStartedAt = now - ((curMin - 1) * 60000);
+        }
+        const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
+        const newMin = Math.min(50, Math.max(1, elapsed));
+        const newMinStr = `${newMin}'`;
+
+        if (m.liveMinute !== newMinStr) {
+          m.liveMinute = newMinStr;
+          hasChange = true;
+        }
+      });
+
+      if (hasChange) {
+        this.store.saveData();
+        this.renderLiveStreamHero();
+        if (this.currentView === "matches" || !this.currentView || this.currentView === "home") {
+          this.renderMatches();
+        }
+        if (this.currentView === "bracket") {
+          this.renderBracket();
+        }
+
+        // Jika modal admin sedang terbuka untuk pertandingan ini, update input menit
+        if (window.admin && admin.activeQuickMatchId) {
+          const activeM = liveMatches.find(m => m.id === admin.activeQuickMatchId);
+          if (activeM) {
+            const matchMinInput = document.getElementById("matchMinuteInput");
+            if (matchMinInput) matchMinInput.value = activeM.liveMinute;
+          }
+        }
+
+        // Sinkronkan menit terbaru ke Supabase Cloud
+        if (window.SupabaseService && window.SupabaseService.syncMatch) {
+          liveMatches.forEach(m => {
+            window.SupabaseService.syncMatch(m);
+          });
+        }
+      }
+    }, 5000);
   },
 
   dismissSplashScreen() {
@@ -966,7 +1030,15 @@ const app = {
               mapped.awayScoreLive = mapped.awayScore;
             }
 
-            if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
+            if ((mapped.status || curMatch.status) === 'live') {
+              const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
+              mapped.liveStartedAt = curMatch.liveStartedAt || (Date.now() - ((minNum - 1) * 60000));
+            } else if ((mapped.status || curMatch.status) === 'finished') {
+              delete mapped.liveStartedAt;
+              delete curMatch.liveStartedAt;
+            } else if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
+              delete mapped.liveStartedAt;
+              delete curMatch.liveStartedAt;
               mapped.homeScore = null;
               mapped.awayScore = null;
               mapped.homeScoreLive = null;
@@ -974,15 +1046,7 @@ const app = {
               mapped.liveMinute = "";
             }
 
-            if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
-          mapped.homeScore = null;
-          mapped.awayScore = null;
-          mapped.homeScoreLive = null;
-          mapped.awayScoreLive = null;
-          mapped.liveMinute = "";
-        }
-
-        Object.assign(this.store.data.matches[idx], mapped);
+            Object.assign(this.store.data.matches[idx], mapped);
           }
         });
       }
@@ -1072,7 +1136,15 @@ const app = {
           mapped.awayScoreLive = mapped.awayScore;
         }
 
-        if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
+        if ((mapped.status || curMatch.status) === 'live') {
+          const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
+          mapped.liveStartedAt = curMatch.liveStartedAt || (Date.now() - ((minNum - 1) * 60000));
+        } else if ((mapped.status || curMatch.status) === 'finished') {
+          delete mapped.liveStartedAt;
+          delete curMatch.liveStartedAt;
+        } else if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
+          delete mapped.liveStartedAt;
+          delete curMatch.liveStartedAt;
           mapped.homeScore = null;
           mapped.awayScore = null;
           mapped.homeScoreLive = null;
@@ -2141,6 +2213,32 @@ const app = {
     const thirdMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id.startsWith("3RD")));
     const finalMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id.startsWith("FINAL")));
 
+    let champTeam = null;
+    let runnerUpTeam = null;
+    let thirdTeam = null;
+
+    if (finalMatch && finalMatch.status === "finished") {
+      const hScore = Number(finalMatch.homeScore ?? finalMatch.homeScoreLive ?? 0);
+      const aScore = Number(finalMatch.awayScore ?? finalMatch.awayScoreLive ?? 0);
+      if (hScore > aScore) {
+        champTeam = this.store.getTeam(finalMatch.homeId);
+        runnerUpTeam = this.store.getTeam(finalMatch.awayId);
+      } else if (aScore > hScore) {
+        champTeam = this.store.getTeam(finalMatch.awayId);
+        runnerUpTeam = this.store.getTeam(finalMatch.homeId);
+      }
+    }
+
+    if (thirdMatch && thirdMatch.status === "finished") {
+      const hScore = Number(thirdMatch.homeScore ?? thirdMatch.homeScoreLive ?? 0);
+      const aScore = Number(thirdMatch.awayScore ?? thirdMatch.awayScoreLive ?? 0);
+      if (hScore > aScore) {
+        thirdTeam = this.store.getTeam(thirdMatch.homeId);
+      } else if (aScore > hScore) {
+        thirdTeam = this.store.getTeam(thirdMatch.awayId);
+      }
+    }
+
     const renderBracketCard = (m, cardType = "qf") => {
       if (!m) return "";
       const home = this.store.getTeam(m.homeId);
@@ -2333,19 +2431,46 @@ const app = {
 
           <!-- COLUMN 3: GRAND FINAL & BRONZE -->
           <div class="bracket-col-final">
-            <!-- Top Trophy Box -->
-            <div class="bracket-trophy-top">
-              <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 4px;">🏆</div>
-              <div style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px;">
-                TROFI BERGILIR ACC 2026
+            <!-- Dedicated Champion 1 Podium Showcase / Trophy Box -->
+            ${champTeam ? `
+              <div class="bracket-champion-podium-card">
+                <div class="champ-banner-tag">
+                  <span>🏆</span>
+                  <span>BAGAN KHUSUS JUARA 1</span>
+                  <span>🏆</span>
+                </div>
+                <div class="champ-content-row">
+                  <div class="champ-logo-wrap" style="border-color: ${champTeam.badgeColor || '#f59e0b'};">
+                    ${champTeam.logo ? `<img src="${champTeam.logo}" alt="${champTeam.name}">` : `<span class="champ-logo-fallback" style="background:${champTeam.badgeColor || '#059669'};">${(champTeam.shortName || 'ACC').substring(0, 3)}</span>`}
+                    <div class="champ-crown-badge">👑</div>
+                  </div>
+                  <div class="champ-info-text">
+                    <div class="champ-podium-label">JUARA 1 (CHAMPION) • ${isSMP ? 'SMP (U-15)' : 'SD (U-12)'}</div>
+                    <div class="champ-school-title" title="${champTeam.name}">${champTeam.name}</div>
+                    <div class="champ-school-sub">📍 ${champTeam.city || 'Maros'} • Kampiun & Pemegang Trofi ACC 2026</div>
+                  </div>
+                </div>
+                ${runnerUpTeam || thirdTeam ? `
+                  <div class="champ-podium-pills">
+                    ${runnerUpTeam ? `<div class="champ-pill champ-pill-silver">🥈 Juara 2: <strong>${runnerUpTeam.name}</strong></div>` : ''}
+                    ${thirdTeam ? `<div class="champ-pill champ-pill-bronze">🥉 Juara 3: <strong>${thirdTeam.name}</strong></div>` : ''}
+                  </div>
+                ` : ''}
               </div>
-              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
-                🥇 Juara 1 • 🥈 Juara 2 • 🥉 Juara 3
+            ` : `
+              <div class="bracket-trophy-top">
+                <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 4px;">🏆</div>
+                <div style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px;">
+                  BAGAN JUARA 1 • TROFI BERGILIR ACC 2026
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+                  🥇 Juara 1 • 🥈 Juara 2 • 🥉 Juara 3
+                </div>
+                <div style="font-size: 0.68rem; color: var(--text-subtle); margin-top: 2px;">
+                  Nama & Logo Sekolah Kampiun Otomatis Muncul Di Sini
+                </div>
               </div>
-              <div style="font-size: 0.68rem; color: var(--primary); font-weight: 700; margin-top: 4px;">
-                + Medali & Uang Pembinaan Santri
-              </div>
-            </div>
+            `}
 
             <!-- Center Grand Final Slot -->
             <div class="bracket-final-slot">
@@ -2505,7 +2630,7 @@ const app = {
     }
 
     tableContainer.innerHTML = scorers.map((s, idx) => {
-      // RANK 1: UKURAN BESAR (~7 BARIS TINGGI DENGAN FOTO WAJAH 180PX SANGAT JELAS)
+      // RANK 1: FEATURED LEADER ROW
       if (idx === 0) {
         return `
           <tr class="top-scorer-leader-row">
@@ -2520,20 +2645,17 @@ const app = {
               <div class="leader-player-col">
                 <div class="leader-avatar-frame">
                   <img src="${s.photo || 'assets/player_athar.jpg'}" alt="${s.playerName}" class="leader-avatar-img" onerror="this.onerror=null; this.src='assets/mvp_player.jpg'">
-                  <span class="leader-jersey-pill" style="background: ${s.badgeColor};">
+                  <span class="leader-jersey-pill" style="background: ${s.badgeColor || '#059669'};">
                     #${s.playerNo}
                   </span>
                 </div>
                 <div class="leader-name-info">
-                  <div class="leader-golden-tag">👑 TOP SCORER SEMENTARA (GOLDEN BOOT)</div>
+                  <div class="leader-golden-tag">👑 TOP SCORER #1 (GOLDEN BOOT)</div>
                   <div class="leader-name-text">${s.playerName}</div>
                   <div class="leader-sub-text">
                     <span class="leader-pos-badge">${s.pos}</span>
                     <span class="leader-team-inline" style="font-weight: 700; color: var(--text-main);">${s.teamName}</span>
                     <span class="player-rating-pill rating-superb" style="font-size: 0.72rem; padding: 2px 7px;">⭐ ${this.calculatePlayerRating(s)}</span>
-                  </div>
-                  <div class="leader-highlight-stat">
-                    ⚡ Performa Tersubur • Peringkat 1 Turnamen ACC 2026
                   </div>
                 </div>
               </div>
@@ -2543,7 +2665,6 @@ const app = {
                 <div class="leader-school-name">${s.teamName}</div>
                 <div class="leader-school-sub">
                   <span>📍 Kontestan ACC 2026</span>
-                  <span style="color: var(--primary); font-weight: 700;">Fase Penyisihan Grup</span>
                 </div>
               </div>
             </td>
@@ -2575,10 +2696,10 @@ const app = {
 
       return `
         <tr>
-          <td style="text-align: center;">
+          <td style="text-align: center; vertical-align: middle;">
             ${rankBadgeHtml}
           </td>
-          <td style="text-align: left;">
+          <td style="text-align: left; vertical-align: middle;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <img src="${s.photo || 'assets/mvp_player.jpg'}" alt="${s.playerName}" class="${avatarClass}" onerror="this.onerror=null; this.src='assets/mvp_player.jpg'">
               <div>
@@ -2593,10 +2714,10 @@ const app = {
               </div>
             </div>
           </td>
-          <td class="col-secondary" style="text-align: left; color: var(--text-main); font-weight: 600;">${s.teamName}</td>
-          <td class="col-secondary" style="text-align: center;"><span style="color: var(--secondary); font-size: 0.75rem; font-weight: 700;">${s.pos}</span></td>
-          <td style="text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--primary);">
-            ${s.goals}
+          <td class="col-secondary" style="text-align: left; vertical-align: middle; color: var(--text-main); font-weight: 600;">${s.teamName}</td>
+          <td class="col-secondary" style="text-align: center; vertical-align: middle;"><span style="color: var(--secondary); font-size: 0.75rem; font-weight: 700;">${s.pos}</span></td>
+          <td style="text-align: center; vertical-align: middle;">
+            <span class="scorer-goal-badge">${s.goals}</span>
           </td>
         </tr>
       `;

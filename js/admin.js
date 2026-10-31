@@ -261,7 +261,11 @@ const admin = {
 
     // Dapatkan menit awal (bersihkan petik)
     let initialMinute = "";
-    if (match.liveMinute) {
+    if (match.status === "live" && match.liveStartedAt) {
+      const elapsed = Math.floor((Date.now() - match.liveStartedAt) / 60000) + 1;
+      initialMinute = String(Math.min(50, Math.max(1, elapsed)));
+      match.liveMinute = `${initialMinute}'`;
+    } else if (match.liveMinute) {
       initialMinute = match.liveMinute.toString().replace(/[^0-9]/g, "");
     } else if (match.status === "live") {
       initialMinute = "1";
@@ -400,6 +404,13 @@ const admin = {
     if (input) input.value = `${cur}'`;
     this.syncEventMinute(cur);
 
+    if (this.activeQuickMatchId) {
+      const match = app.store.getMatch(this.activeQuickMatchId);
+      if (match) {
+        match.liveStartedAt = Date.now() - ((cur - 1) * 60000);
+      }
+    }
+
     if (btn) {
       btn.innerHTML = `⏸️ ${cur}'`;
       btn.classList.add("active");
@@ -411,6 +422,13 @@ const admin = {
       if (input) input.value = `${nowMin}'`;
       this.syncEventMinute(nowMin);
       if (btn) btn.innerHTML = `⏸️ ${nowMin}'`;
+      if (this.activeQuickMatchId) {
+        const match = app.store.getMatch(this.activeQuickMatchId);
+        if (match) {
+          match.liveMinute = `${nowMin}'`;
+          match.liveStartedAt = Date.now() - ((nowMin - 1) * 60000);
+        }
+      }
     }, 60000);
 
     app.showToast(`⏱️ Stopwatch menit ${cur}' dimulai`);
@@ -423,6 +441,13 @@ const admin = {
     cur = Math.max(0, cur + delta);
     input.value = cur > 0 ? `${cur}'` : "0'";
     this.syncEventMinute(cur);
+    if (this.activeQuickMatchId) {
+      const match = app.store.getMatch(this.activeQuickMatchId);
+      if (match && match.status === 'live') {
+        match.liveMinute = input.value;
+        match.liveStartedAt = Date.now() - ((Math.max(1, cur) - 1) * 60000);
+      }
+    }
   },
 
   syncEventMinute(val) {
@@ -674,12 +699,21 @@ const admin = {
     match.status = status;
     match.liveMinute = status === 'live' ? (minute || "1'") : minute;
 
-    if (status === "live" || status === "finished") {
+    if (status === "live") {
+      const minNum = parseInt((match.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
+      match.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+      match.homeScore = hScore;
+      match.awayScore = aScore;
+      match.homeScoreLive = hScore;
+      match.awayScoreLive = aScore;
+    } else if (status === "finished") {
+      delete match.liveStartedAt;
       match.homeScore = hScore;
       match.awayScore = aScore;
       match.homeScoreLive = hScore;
       match.awayScoreLive = aScore;
     } else {
+      delete match.liveStartedAt;
       match.homeScore = null;
       match.awayScore = null;
       match.homeScoreLive = null;
@@ -2581,6 +2615,7 @@ const admin = {
       if (m20) {
         m20.status = "live";
         m20.liveMinute = "24'";
+        m20.liveStartedAt = Date.now() - (23 * 60000);
         m20.homeScore = 2;
         m20.awayScore = 2;
         m20.homeScoreLive = 2;

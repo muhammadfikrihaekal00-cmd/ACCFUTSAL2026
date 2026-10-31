@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=5.6">
+  <link rel="stylesheet" href="css/styles.css?v=5.8">
 </head>
 <body>
 
@@ -536,15 +536,15 @@
             <table class="standings-table top-scorers-table">
               <thead>
                 <tr>
-                  <th style="width: 50px; text-align: center;">#</th>
+                  <th style="width: 48px; text-align: center;">#</th>
                   <th style="text-align: left;">Pemain</th>
-                  <th class="col-secondary" style="text-align: left;">Sekolah / Tim</th>
-                  <th class="col-secondary" style="text-align: center; width: 90px;">Posisi</th>
-                  <th style="text-align: center; width: 80px;">GOL</th>
+                  <th class="col-secondary" style="text-align: left; width: 170px;">Sekolah / Tim</th>
+                  <th class="col-secondary" style="text-align: center; width: 75px;">Posisi</th>
+                  <th style="text-align: center; width: 70px;">GOL</th>
                 </tr>
               </thead>
               <tbody id="topScorersTableBody">
-                <!-- Rendered by app.js (Rank 1 is rendered as a 3-row tall featured leader) -->
+                <!-- Rendered by app.js (Rank 1 is rendered as a featured leader) -->
               </tbody>
             </table>
           </div>
@@ -1902,16 +1902,16 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/security.js?v=4.8"></script>
-  <script src="js/supabase-client.js?v=5.7"></script>
-  <script src="js/data.js?v=5.7"></script>
-  <script src="js/app.js?v=5.7"></script>
-  <script src="js/admin.js?v=5.7"></script>
+  <script src="js/supabase-client.js?v=5.8"></script>
+  <script src="js/data.js?v=5.8"></script>
+  <script src="js/app.js?v=5.8"></script>
+  <script src="js/admin.js?v=5.8"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=36')
+        navigator.serviceWorker.register('sw.js?v=37')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
