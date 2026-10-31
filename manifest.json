@@ -4,8 +4,8 @@
   "description": "Portal Resmi Pemantauan Pertandingan, Skor Langsung, Klasemen, dan Disiplin Kartu ACC Al-Fayyadh Champions Cup 2026 - Ma'had Tahfizhul Qur'an Al Fayyadh",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#28050c",
+  "theme_color": "#28050c",
   "orientation": "portrait-primary",
   "icons": [
     {

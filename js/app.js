@@ -890,7 +890,7 @@ const app = {
           });
         }
       }
-    }, 4000);
+    }, 2000);
   },
 
   dismissSplashScreen() {
@@ -1508,10 +1508,10 @@ const app = {
 
     if (theme === "dark") {
       document.body.classList.add("dark-theme");
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#070b14");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#180206");
     } else {
       document.body.classList.remove("dark-theme");
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#001838");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#28050c");
     }
 
     const toggleIcon = document.getElementById("themeToggleIcon");
@@ -1520,7 +1520,7 @@ const app = {
     }
 
     if (showToastMsg) {
-      this.showToast(`Beralih ke Tampilan ${theme === 'light' ? '☀️ Mode Terang (Clean Stadium)' : '🌙 Mode Gelap (Night Stadium)'}`);
+      this.showToast(`Beralih ke ${theme === 'light' ? '👑 Merah Maroon & Emas' : '🌙 Midnight Maroon Gelap'}`);
     }
   },
 

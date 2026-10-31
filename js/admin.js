@@ -345,9 +345,14 @@ const admin = {
     }
 
     const btnTimer = document.getElementById("btnLiveTimerToggle");
-    if (btnTimer) {
-      btnTimer.innerHTML = "⏱️";
-      btnTimer.classList.remove("active");
+    if (match.status === "live") {
+      this.startLiveTimer();
+    } else {
+      this.stopLiveTimer();
+      if (btnTimer) {
+        btnTimer.innerHTML = "⏱️ Mulai";
+        btnTimer.classList.remove("active");
+      }
     }
 
     this.renderAdminEventsList(match);
@@ -459,6 +464,7 @@ const admin = {
           window.SupabaseService.syncMatch(match);
         }
       }
+      this.startLiveTimer();
     } else {
       this.stopLiveTimer();
       if (match) {
@@ -523,7 +529,7 @@ const admin = {
     }
   },
 
-  // Stopwatch & Sinkronisasi Menit Laga
+  // Stopwatch & Sinkronisasi Menit Laga (Akurat per detik, sinkron 100% dengan HP penonton)
   liveTimerInterval: null,
 
   stopLiveTimer() {
@@ -533,36 +539,80 @@ const admin = {
     }
     const btn = document.getElementById("btnLiveTimerToggle");
     if (btn) {
-      btn.innerHTML = "⏱️";
+      btn.innerHTML = "⏱️ Mulai";
       btn.classList.remove("active");
     }
-    document.body.classList.remove("modal-open");
+  },
+
+  startLiveTimer() {
+    if (this.liveTimerInterval) {
+      clearInterval(this.liveTimerInterval);
+      this.liveTimerInterval = null;
+    }
+
+    const tick = () => {
+      const matchId = this.activeMatchId || this.activeQuickMatchId;
+      if (!matchId) return;
+      const match = app.store.getMatch(matchId);
+      if (!match || match.status !== "live") {
+        this.stopLiveTimer();
+        return;
+      }
+
+      const now = Date.now();
+      if (!match.liveStartedAt) {
+        const cur = parseInt((match.liveMinute || "1").replace(/\D/g, ""), 10) || 1;
+        match.liveStartedAt = now - ((cur - 1) * 60000);
+      }
+
+      // Rumus matematis presisi sama persis dengan perhitungan di HP peserta
+      const elapsed = Math.max(1, Math.min(50, Math.floor((now - match.liveStartedAt) / 60000) + 1));
+      const elapsedStr = `${elapsed}'`;
+
+      const input = document.getElementById("matchMinuteInput");
+      if (input && document.activeElement !== input) {
+        input.value = elapsedStr;
+      }
+      this.syncEventMinute(elapsed);
+
+      const btn = document.getElementById("btnLiveTimerToggle");
+      if (btn) {
+        btn.innerHTML = `⏸️ ${elapsedStr}`;
+        btn.classList.add("active");
+      }
+
+      if (match.liveMinute !== elapsedStr) {
+        match.liveMinute = elapsedStr;
+        app.store.saveData();
+        if (window.SupabaseService && window.SupabaseService.syncMatch) {
+          window.SupabaseService.syncMatch(match);
+        }
+      }
+    };
+
+    tick();
+    this.liveTimerInterval = setInterval(tick, 1000);
   },
 
   toggleLiveTimer() {
-    const btn = document.getElementById("btnLiveTimerToggle");
-    const input = document.getElementById("matchMinuteInput");
-    const statusSelect = document.getElementById("matchStatusSelect");
-
     if (this.liveTimerInterval) {
       this.stopLiveTimer();
-      app.showToast("Stopwatch live dijeda");
+      app.showToast("⏱️ Stopwatch dijeda");
       return;
     }
 
+    const statusSelect = document.getElementById("matchStatusSelect");
     if (statusSelect && statusSelect.value !== "live") {
       this.setStatus("live");
+      return;
     }
-
-    let cur = parseInt((input?.value || "1").replace(/[^0-9]/g, ""), 10) || 1;
-    if (cur <= 0) cur = 1;
-    if (input) input.value = `${cur}'`;
-    this.syncEventMinute(cur);
 
     const matchId = this.activeMatchId || this.activeQuickMatchId;
     if (matchId) {
       const match = app.store.getMatch(matchId);
       if (match) {
+        const input = document.getElementById("matchMinuteInput");
+        let cur = parseInt((input?.value || match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
         match.status = "live";
         match.liveMinute = `${cur}'`;
         match.liveStartedAt = Date.now() - ((cur - 1) * 60000);
@@ -573,53 +623,37 @@ const admin = {
       }
     }
 
-    if (btn) {
-      btn.innerHTML = `⏸️ ${cur}'`;
-      btn.classList.add("active");
-    }
-
-    this.liveTimerInterval = setInterval(() => {
-      let nowMin = parseInt((input?.value || "1").replace(/[^0-9]/g, ""), 10) || 1;
-      nowMin += 1;
-      if (input) input.value = `${nowMin}'`;
-      this.syncEventMinute(nowMin);
-      if (btn) btn.innerHTML = `⏸️ ${nowMin}'`;
-      const curMatchId = this.activeMatchId || this.activeQuickMatchId;
-      if (curMatchId) {
-        const curMatch = app.store.getMatch(curMatchId);
-        if (curMatch) {
-          curMatch.liveMinute = `${nowMin}'`;
-          curMatch.liveStartedAt = Date.now() - ((nowMin - 1) * 60000);
-          app.store.saveData();
-          if (window.SupabaseService && window.SupabaseService.syncMatch) {
-            window.SupabaseService.syncMatch(curMatch);
-          }
-        }
-      }
-    }, 60000);
-
-    app.showToast(`⏱️ Stopwatch menit ${cur}' dimulai`);
+    this.startLiveTimer();
+    app.showToast("⏱️ Stopwatch berjalan");
   },
 
   stepMatchMinute(delta) {
     const input = document.getElementById("matchMinuteInput");
-    if (!input) return;
-    let cur = parseInt((input.value || "1").replace(/[^0-9]/g, ""), 10) || 1;
-    cur = Math.max(1, cur + delta);
-    input.value = `${cur}'`;
-    this.syncEventMinute(cur);
     const matchId = this.activeMatchId || this.activeQuickMatchId;
-    if (matchId) {
-      const match = app.store.getMatch(matchId);
-      if (match && match.status === 'live') {
-        match.liveMinute = input.value;
-        match.liveStartedAt = Date.now() - ((cur - 1) * 60000);
-        app.store.saveData();
-        if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match);
-        }
-      }
+    if (!matchId) return;
+    const match = app.store.getMatch(matchId);
+    if (!match) return;
+
+    let cur = parseInt((input?.value || match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
+    let next = Math.max(1, cur + delta);
+    const nextStr = `${next}'`;
+
+    if (input) input.value = nextStr;
+    this.syncEventMinute(next);
+
+    match.liveMinute = nextStr;
+    match.liveStartedAt = Date.now() - ((next - 1) * 60000);
+    app.store.saveData();
+
+    const btn = document.getElementById("btnLiveTimerToggle");
+    if (btn && this.liveTimerInterval) {
+      btn.innerHTML = `⏸️ ${nextStr}`;
     }
+
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match);
+    }
+    app.showToast(`⏱️ Menit disetel ke ${nextStr}`);
   },
 
   syncEventMinute(val) {
