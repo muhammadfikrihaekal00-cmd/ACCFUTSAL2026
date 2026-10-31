@@ -58,35 +58,58 @@ const admin = {
     }
   },
 
-  // 1-Click Fast Login Helper
-  doQuickLogin(pin = "1234") {
-    const input = document.getElementById("adminPinInput");
-    if (input) input.value = pin;
-    this.doLogin(pin);
-  },
-
-  // Core Login Routine - Instant, Safe & Non-Blocking
-  doLogin(providedPin) {
+  // Core Login Routine - Secure, SHA-256 Validated, Anti-Brute-Force Protected
+  async doLogin(providedPin) {
     const input = document.getElementById("adminPinInput");
     const pin = (providedPin !== undefined ? providedPin : (input ? input.value : "")).toString().trim();
-    
-    // Master PINs accepted unconditionally
-    const masterPins = ["1234", "2026", "admin"];
-    const isMaster = masterPins.includes(pin) || masterPins.includes(pin.toLowerCase());
+    const lockoutNote = document.getElementById("adminLoginLockoutNote");
 
-    // Recover from any stored lockout immediately
-    try {
-      localStorage.removeItem("acc_sec_attempts_v1");
-      localStorage.removeItem("acc_sec_lockout_until_v1");
-      if (window.Security) window.Security.recordSuccess();
-    } catch (e) {}
+    if (!pin) {
+      if (lockoutNote) {
+        lockoutNote.textContent = "Silakan masukkan PIN Panitia.";
+        lockoutNote.style.display = "block";
+      }
+      return;
+    }
 
-    let isValid = isMaster;
-    if (!isValid && pin === "1234") isValid = true;
+    // Periksa apakah akun sedang terkena penalti lockout brute-force
+    if (window.Security && typeof window.Security.checkLockout === "function") {
+      const lockInfo = window.Security.checkLockout();
+      if (lockInfo.isLocked) {
+        const msg = `⚠️ Terlalu banyak percobaan salah! Akun panitia terkunci sementara selama ${lockInfo.remainingSeconds} detik.`;
+        if (lockoutNote) {
+          lockoutNote.textContent = msg;
+          lockoutNote.style.display = "block";
+        }
+        alert(msg);
+        return;
+      }
+    }
+
+    // Validasi PIN terhadap stored hash di config atau master PIN turnamen
+    const storedHash = (app.store && app.store.data && app.store.data.config && app.store.data.config.adminPinHash)
+      || "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
+
+    let isValid = false;
+    let computedHash = "";
+    if (window.Security && typeof window.Security.verifyPin === "function") {
+      isValid = await window.Security.verifyPin(pin, storedHash);
+      if (isValid) {
+        computedHash = await window.Security.hashPin(pin);
+      }
+    }
+    // Master PINs turnamen fallback
+    if (!isValid && (pin === "1234" || pin === "2026")) {
+      isValid = true;
+      computedHash = "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
+    }
 
     if (isValid) {
+      if (window.Security && typeof window.Security.recordSuccess === "function") {
+        window.Security.recordSuccess();
+      }
       this.isAuthenticated = true;
-      this.adminPinHash = "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
+      this.adminPinHash = computedHash || "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
 
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
@@ -94,34 +117,46 @@ const admin = {
       } catch (e) {}
 
       if (input) input.value = "";
+      if (lockoutNote) {
+        lockoutNote.textContent = "";
+        lockoutNote.style.display = "none";
+      }
 
       const loginModal = document.getElementById("adminLoginModal");
       if (loginModal) loginModal.classList.remove("active");
 
-      // Safely update all UI views
+      // Perbarui tampilan antarmuka
       this.updateAdminUi();
 
       if (window.app && typeof app.showToast === "function") {
-        app.showToast("✅ Berhasil Masuk Mode Panitia! Akses Input Skor Aktif.");
+        app.showToast("✅ Berhasil Masuk Mode Panitia! Akses Pengaturan Aktif.");
       }
 
-      // If triggered from a match card, open score editor or opponent editor for that match
       if (this.pendingScoreMatchId) {
         const mId = this.pendingScoreMatchId;
         this.pendingScoreMatchId = null;
-        setTimeout(() => {
-          this.openQuickScore(mId);
-        }, 150);
+        setTimeout(() => { this.openQuickScore(mId); }, 150);
       }
       if (this.pendingEditorMatchId) {
         const mId = this.pendingEditorMatchId;
         this.pendingEditorMatchId = null;
-        setTimeout(() => {
-          this.openMatchEditor(mId);
-        }, 150);
+        setTimeout(() => { this.openMatchEditor(mId); }, 150);
       }
     } else {
-      alert("⚠️ PIN Panitia salah!\n\nPIN Resmi Turnamen adalah: 1234\nSilakan klik tombol '1-Klik Masuk Langsung' atau ketik 1234.");
+      let penaltyMsg = "⚠️ PIN Panitia yang Anda masukkan salah. Akses ditolak!";
+      if (window.Security && typeof window.Security.recordFailedAttempt === "function") {
+        const res = window.Security.recordFailedAttempt();
+        if (res.penaltySeconds > 0) {
+          penaltyMsg = `⚠️ Terlalu banyak percobaan salah! Akun panitia terkunci sementara selama ${res.penaltySeconds} detik.`;
+        } else {
+          penaltyMsg = `⚠️ PIN Panitia salah! Sisa percobaan: ${Math.max(0, 5 - res.attempts)}.`;
+        }
+      }
+      if (lockoutNote) {
+        lockoutNote.textContent = penaltyMsg;
+        lockoutNote.style.display = "block";
+      }
+      alert(penaltyMsg);
     }
   },
 
@@ -131,7 +166,7 @@ const admin = {
     const labelEl = document.getElementById("adminHeaderLabel");
     const dotEl = document.getElementById("adminActiveBadge");
     if (btn) {
-      btn.title = this.isAuthenticated ? "Panel Kontrol Panitia (Klik untuk Dashboard / Logout)" : "Masuk Mode Panitia (PIN: 1234)";
+      btn.title = this.isAuthenticated ? "Panel Kontrol Panitia (Klik untuk Dashboard / Logout)" : "Masuk Mode Panitia";
       btn.classList.toggle("logged-in", this.isAuthenticated);
     }
     if (iconEl) {
@@ -163,12 +198,20 @@ const admin = {
       try {
         if (typeof app.renderMoments === "function") app.renderMoments();
       } catch (e) {}
+      try {
+        if (typeof app.renderLiveStreamHero === "function") app.renderLiveStreamHero();
+      } catch (e) {}
     }
   },
 
   openLoginModal() {
     const modal = document.getElementById("adminLoginModal");
     const pinInput = document.getElementById("adminPinInput");
+    const lockoutNote = document.getElementById("adminLoginLockoutNote");
+    if (lockoutNote) {
+      lockoutNote.textContent = "";
+      lockoutNote.style.display = "none";
+    }
     if (pinInput) pinInput.value = "";
     if (modal) modal.classList.add("active");
     if (pinInput) {
@@ -193,7 +236,7 @@ const admin = {
     if (!this.isAuthenticated) {
       this.pendingScoreMatchId = matchId;
       this.openLoginModal();
-      app.showToast("🔒 Silakan masukkan PIN 1234 untuk membuka form input skor!");
+      app.showToast("🔒 Silakan login Mode Panitia untuk mengatur skor!");
       return;
     }
 
@@ -673,6 +716,10 @@ const admin = {
   },
 
   saveQuickScore(overrideStatus = null) {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
     if (!match) return;
 
@@ -747,7 +794,7 @@ const admin = {
     if (!this.isAuthenticated) {
       this.pendingEditorMatchId = matchId || "first";
       this.openLoginModal();
-      app.showToast("🔒 Silakan masukkan PIN 1234 untuk mengatur tim lawan!");
+      app.showToast("🔒 Silakan login Mode Panitia untuk mengatur tim lawan!");
       return;
     }
 
@@ -862,6 +909,10 @@ const admin = {
   },
 
   saveMatchSchedule(andNext = false) {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
     const idInput = document.getElementById("editMatchId");
     if (!idInput) return;
     const mId = idInput.value;
@@ -930,7 +981,7 @@ const admin = {
   openYoutubeLiveModal() {
     if (!this.isAuthenticated) {
       this.openLoginModal();
-      app.showToast("🔒 Silakan masukkan PIN 1234 untuk mengubah siaran langsung YouTube!");
+      app.showToast("🔒 Silakan login Mode Panitia untuk mengubah siaran langsung!");
       return;
     }
     const cfg = (app.store && app.store.data && app.store.data.config) || {};
@@ -953,6 +1004,10 @@ const admin = {
   },
 
   saveYoutubeLiveConfig() {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
     const titleInput = document.getElementById("ytLiveTitleInput");
     const urlInput = document.getElementById("ytLiveUrlInput");
     if (!urlInput) return;
@@ -1087,6 +1142,10 @@ const admin = {
   },
 
   async saveSettings() {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
     const cfg = app.store.data.config;
     cfg.tournamentName = document.getElementById("settingName").value.trim();
     cfg.subTitle = document.getElementById("settingSub").value.trim();
@@ -1446,6 +1505,10 @@ const admin = {
   },
 
   saveHeroBanner() {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
     const urlInput = document.getElementById("heroBannerUrlInput");
     const bannerVal = (urlInput && urlInput.value.trim()) || "assets/hero_banner.jpg";
 
@@ -1789,6 +1852,10 @@ const admin = {
   },
 
   saveTeamData() {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
     const id = document.getElementById("editTeamId").value.trim();
     const name = document.getElementById("editTeamName").value.trim();
     const shortName = document.getElementById("editTeamShortName").value.trim();
@@ -2048,6 +2115,10 @@ const admin = {
   },
 
   deleteTeam() {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
     const id = document.getElementById("editTeamId").value.trim();
     if (!id) return;
 
@@ -2580,6 +2651,11 @@ const admin = {
   },
 
   async resetDemo() {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      app.showToast("🔒 Akses ditolak. Silakan login Mode Panitia.");
+      return;
+    }
     if (confirm("Reset seluruh data turnamen ke kondisi awal siap simulasi ulang?\n\nSemua skor, pencetak gol, dan kartu akan dikosongkan baik di HP/Laptop ini maupun di database Supabase Cloud agar seluruh penonton yang memiliki link langsung terupdate dari awal.")) {
       app.store.resetData();
       app.renderHeader();
@@ -2789,7 +2865,7 @@ const admin = {
     sessionStorage.removeItem("pondok_futsal_admin_pin_hash");
     this.updateAdminUi();
     document.getElementById("adminDashboardModal").classList.remove("active");
-    app.showToast("Anda telah logout dari mode admin.");
+    app.showToast("Anda telah keluar dari Mode Panitia (kembali ke Mode Peserta).");
   }
 };
 

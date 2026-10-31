@@ -784,7 +784,7 @@ const app = {
             <strong class="ticker-score-teams">${hTeam.name} <span class="score-highlight">${hScore} - ${aScore}</span> ${aTeam.name}</strong>
           </div>
           <div class="ticker-actions">
-            <button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">✏️ Input Skor Laga</button>
+            ${admin.isAuthenticated === true ? `<button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">✏️ Input Skor Laga</button>` : ''}
             <button class="btn btn-sm btn-outline" onclick="app.showMatchDetail('${lm.id}')">ℹ️ Detail Laga</button>
           </div>
         </div>
@@ -825,9 +825,11 @@ const app = {
             <h2 class="live-stream-title">${title}</h2>
           </div>
           <div class="live-stream-header-right">
-            <button class="btn btn-outline btn-sm btn-edit-stream" onclick="admin.openYoutubeLiveModal()" title="Ubah Link Siaran Langsung YouTube (Panitia)">
-              ⚙️ Ganti Link YouTube Live
-            </button>
+            ${admin.isAuthenticated === true ? `
+              <button class="btn btn-outline btn-sm btn-edit-stream" onclick="admin.openYoutubeLiveModal()" title="Ubah Link Siaran Langsung YouTube (Panitia)">
+                ⚙️ Ganti Link YouTube Live
+              </button>
+            ` : ''}
           </div>
         </div>
 
@@ -1349,6 +1351,9 @@ const app = {
 
     const btnAddMoment = document.getElementById("btnAddMomentBtn");
     if (btnAddMoment) btnAddMoment.style.display = isPanitia ? "inline-flex" : "none";
+
+    const btnHeaderAturLawan = document.getElementById("btnHeaderAturLawan");
+    if (btnHeaderAturLawan) btnHeaderAturLawan.style.display = isPanitia ? "inline-flex" : "none";
   },
 
   renderHeroBanner() {
@@ -2085,12 +2090,14 @@ const app = {
               <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 8px;">
                 ℹ️ Detail
               </button>
-              <button class="btn ${admin.isAuthenticated === true ? 'btn-admin' : 'btn-outline'} btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Tim Lawan & Jadwal" style="font-size: 0.72rem; padding: 4px 8px;">
-                ⚙️ Atur Lawan
-              </button>
-              <button class="btn ${admin.isAuthenticated === true ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan" style="font-size: 0.72rem; padding: 4px 8px;">
-                ✏️ Skor
-              </button>
+              ${admin.isAuthenticated === true ? `
+                <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Tim Lawan & Jadwal" style="font-size: 0.72rem; padding: 4px 8px;">
+                  ⚙️ Atur Lawan
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan" style="font-size: 0.72rem; padding: 4px 8px;">
+                  ✏️ Skor
+                </button>
+              ` : ''}
             </div>
           </div>
         </div>
