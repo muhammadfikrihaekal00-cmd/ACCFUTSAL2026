@@ -241,6 +241,7 @@ const admin = {
     }
 
     this.activeMatchId = matchId;
+    this.activeQuickMatchId = matchId;
     const match = app.store.data.matches.find(m => m.id === matchId);
     if (!match) return;
 
@@ -303,36 +304,30 @@ const admin = {
     this.stopLiveTimer();
 
     // Dapatkan menit awal (bersihkan petik)
-    let initialMinute = "";
-    if (match.status === "live" && match.liveStartedAt) {
-      const elapsed = Math.floor((Date.now() - match.liveStartedAt) / 60000) + 1;
-      initialMinute = String(Math.min(50, Math.max(1, elapsed)));
+    let initialMinute = "1";
+    if (match.status === "live") {
+      let cur = parseInt((match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
+      initialMinute = String(Math.max(1, cur));
       match.liveMinute = `${initialMinute}'`;
-    } else if (match.liveMinute) {
-      initialMinute = match.liveMinute.toString().replace(/[^0-9]/g, "");
-    } else if (match.status === "live") {
+    } else {
       initialMinute = "1";
+      match.liveMinute = "1'";
     }
 
     const matchMinInput = document.getElementById("matchMinuteInput");
-    matchMinInput.value = initialMinute ? `${initialMinute}'` : "";
+    matchMinInput.value = `${initialMinute}'`;
 
     const eventMinInput = document.getElementById("eventMinuteInput");
     if (eventMinInput) {
       eventMinInput.dataset.manualEdit = "false";
-      eventMinInput.value = initialMinute || "";
-      eventMinInput.placeholder = initialMinute ? `Menit (${initialMinute}')` : "Menit (12')";
+      eventMinInput.value = initialMinute;
+      eventMinInput.placeholder = `Menit (${initialMinute}')`;
     }
 
     const syncNotice = document.getElementById("eventSyncNotice");
     if (syncNotice) {
-      if (initialMinute) {
-        syncNotice.textContent = `Sinkron: ${initialMinute}'`;
-        syncNotice.style.color = "var(--primary)";
-      } else {
-        syncNotice.textContent = "Sinkron ke Menit Laga";
-        syncNotice.style.color = "var(--text-subtle)";
-      }
+      syncNotice.textContent = `Sinkron: ${initialMinute}'`;
+      syncNotice.style.color = "var(--primary)";
     }
 
     if (statusSelect) {
@@ -438,15 +433,28 @@ const admin = {
     this.updateStatusPills(status);
 
     const minInput = document.getElementById("matchMinuteInput");
+    const match = app.store.getMatch(this.activeMatchId);
+
     if (status === "live") {
-      if (!minInput.value || minInput.value === "0'") {
+      // Jika baru dimulai live dari status upcoming, selalu mulai dari menit 1
+      if (!match || match.status !== "live") {
         minInput.value = "1'";
         this.syncEventMinute("1");
+        if (match) {
+          match.liveMinute = "1'";
+          match.liveStartedAt = Date.now();
+        }
+      } else {
+        let cur = parseInt((minInput.value || match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
+        minInput.value = `${cur}'`;
+        this.syncEventMinute(cur);
       }
     } else {
       this.stopLiveTimer();
+      if (match) {
+        delete match.liveStartedAt;
+      }
     }
-    const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
     if (match) this.checkPenaltySectionVisibility(match);
   },
 
@@ -527,15 +535,22 @@ const admin = {
       this.setStatus("live");
     }
 
-    let cur = parseInt((input?.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
-    if (cur === 0) cur = 1;
+    let cur = parseInt((input?.value || "1").replace(/[^0-9]/g, ""), 10) || 1;
+    if (cur <= 0) cur = 1;
     if (input) input.value = `${cur}'`;
     this.syncEventMinute(cur);
 
-    if (this.activeQuickMatchId) {
-      const match = app.store.getMatch(this.activeQuickMatchId);
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    if (matchId) {
+      const match = app.store.getMatch(matchId);
       if (match) {
+        match.status = "live";
+        match.liveMinute = `${cur}'`;
         match.liveStartedAt = Date.now() - ((cur - 1) * 60000);
+        app.store.saveData();
+        if (window.SupabaseService && window.SupabaseService.syncMatch) {
+          window.SupabaseService.syncMatch(match);
+        }
       }
     }
 
@@ -545,16 +560,21 @@ const admin = {
     }
 
     this.liveTimerInterval = setInterval(() => {
-      let nowMin = parseInt((input?.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
+      let nowMin = parseInt((input?.value || "1").replace(/[^0-9]/g, ""), 10) || 1;
       nowMin += 1;
       if (input) input.value = `${nowMin}'`;
       this.syncEventMinute(nowMin);
       if (btn) btn.innerHTML = `⏸️ ${nowMin}'`;
-      if (this.activeQuickMatchId) {
-        const match = app.store.getMatch(this.activeQuickMatchId);
-        if (match) {
-          match.liveMinute = `${nowMin}'`;
-          match.liveStartedAt = Date.now() - ((nowMin - 1) * 60000);
+      const curMatchId = this.activeMatchId || this.activeQuickMatchId;
+      if (curMatchId) {
+        const curMatch = app.store.getMatch(curMatchId);
+        if (curMatch) {
+          curMatch.liveMinute = `${nowMin}'`;
+          curMatch.liveStartedAt = Date.now() - ((nowMin - 1) * 60000);
+          app.store.saveData();
+          if (window.SupabaseService && window.SupabaseService.syncMatch) {
+            window.SupabaseService.syncMatch(curMatch);
+          }
         }
       }
     }, 60000);
@@ -565,15 +585,20 @@ const admin = {
   stepMatchMinute(delta) {
     const input = document.getElementById("matchMinuteInput");
     if (!input) return;
-    let cur = parseInt((input.value || "0").replace(/[^0-9]/g, ""), 10) || 0;
-    cur = Math.max(0, cur + delta);
-    input.value = cur > 0 ? `${cur}'` : "0'";
+    let cur = parseInt((input.value || "1").replace(/[^0-9]/g, ""), 10) || 1;
+    cur = Math.max(1, cur + delta);
+    input.value = `${cur}'`;
     this.syncEventMinute(cur);
-    if (this.activeQuickMatchId) {
-      const match = app.store.getMatch(this.activeQuickMatchId);
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    if (matchId) {
+      const match = app.store.getMatch(matchId);
       if (match && match.status === 'live') {
         match.liveMinute = input.value;
-        match.liveStartedAt = Date.now() - ((Math.max(1, cur) - 1) * 60000);
+        match.liveStartedAt = Date.now() - ((cur - 1) * 60000);
+        app.store.saveData();
+        if (window.SupabaseService && window.SupabaseService.syncMatch) {
+          window.SupabaseService.syncMatch(match);
+        }
       }
     }
   },

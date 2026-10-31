@@ -5222,13 +5222,13 @@ body.dark-theme .fixture-team-row:hover {
 /* ========================================================= */
 .scroll-reveal {
   opacity: 0;
-  transform: translateX(-35px);
-  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(-48px);
+  transition: opacity 0.88s cubic-bezier(0.22, 1, 0.36, 1), transform 0.88s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: opacity, transform;
 }
 
 .scroll-reveal.reveal-right {
-  transform: translateX(35px);
+  transform: translateX(48px);
 }
 
 .scroll-reveal.is-revealed {

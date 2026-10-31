@@ -214,6 +214,11 @@ class TournamentStore {
     return this.data.teams.find(t => t.id === id);
   }
 
+  getMatch(id) {
+    if (!this.data || !this.data.matches) return null;
+    return this.data.matches.find(m => m.id === id) || null;
+  }
+
   // Calculate Standings for a specific group & category
   calculateGroupStandings(groupLetter, category = null) {
     let groupTeams = this.data.teams.filter(t => t.group === groupLetter);
@@ -846,41 +851,40 @@ const app = {
           m.liveStartedAt = now - ((curMin - 1) * 60000);
         }
 
-        if (isOfficial) {
-          const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
-          // Strictly monotonic (menit hanya boleh bertambah, tidak pernah berkurang)
-          const newMin = Math.min(50, Math.max(curMin, elapsed));
-          const newMinStr = `${newMin}'`;
+        const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
+        // Strictly monotonic (menit hanya boleh bertambah, tidak pernah berkurang)
+        const newMin = Math.min(50, Math.max(curMin, elapsed));
+        const newMinStr = `${newMin}'`;
 
-          if (m.liveMinute !== newMinStr) {
-            m.liveMinute = newMinStr;
-            hasChange = true;
-          }
+        if (m.liveMinute !== newMinStr) {
+          m.liveMinute = newMinStr;
+          hasChange = true;
         }
       });
 
       if (hasChange) {
         this.store.saveData();
         this.renderLiveStreamHero();
-        if (this.currentView === "matches" || !this.currentView || this.currentView === "home") {
+        if (this.currentTab === "matches" || !this.currentTab || this.currentTab === "home") {
           this.renderMatches();
         }
-        if (this.currentView === "bracket") {
+        if (this.currentTab === "bracket") {
           this.renderBracket();
         }
         this.updateFloatingLiveNotice();
         this.refreshActiveMatchDetail();
 
         // Jika modal admin sedang terbuka untuk pertandingan ini, update input menit
-        if (window.admin && admin.activeQuickMatchId) {
-          const activeM = liveMatches.find(m => m.id === admin.activeQuickMatchId);
+        const activeModalMatchId = window.admin && (admin.activeMatchId || admin.activeQuickMatchId);
+        if (activeModalMatchId) {
+          const activeM = liveMatches.find(m => m.id === activeModalMatchId);
           if (activeM) {
             const matchMinInput = document.getElementById("matchMinuteInput");
             if (matchMinInput) matchMinInput.value = activeM.liveMinute;
           }
         }
 
-        // Sinkronkan menit terbaru ke Supabase Cloud (Hanya oleh panitia resmi)
+        // Sinkronkan menit terbaru ke Supabase Cloud (Hanya oleh panitia resmi agar tidak bentrok)
         if (isOfficial && window.SupabaseService && window.SupabaseService.syncMatch) {
           liveMatches.forEach(m => {
             window.SupabaseService.syncMatch(m);
@@ -1695,19 +1699,23 @@ const app = {
       return;
     }
 
-    const observer = new IntersectionObserver((entries) => {
+    if (this._scrollObserver) {
+      this._scrollObserver.disconnect();
+    }
+
+    this._scrollObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add("is-revealed");
         }
       });
     }, {
-      threshold: 0.12,
-      rootMargin: "0px 0px -30px 0px"
+      threshold: 0.08,
+      rootMargin: "0px 0px -20px 0px"
     });
 
-    document.querySelectorAll(".scroll-reveal").forEach(el => {
-      observer.observe(el);
+    document.querySelectorAll(".scroll-reveal:not(.is-revealed)").forEach(el => {
+      this._scrollObserver.observe(el);
     });
   },
 
@@ -1930,8 +1938,8 @@ const app = {
     // 2. Render News Grid
     const newsContainer = document.getElementById("homeNewsContainer");
     if (newsContainer && homeData.news) {
-      newsContainer.innerHTML = homeData.news.map(n => `
-        <div class="news-card" onclick="app.openNewsModal('${n.id}')" style="cursor: pointer;" title="Klik untuk membaca selengkapnya">
+      newsContainer.innerHTML = homeData.news.map((n, idx) => `
+        <div class="news-card scroll-reveal ${idx % 2 === 1 ? 'reveal-right' : ''}" onclick="app.openNewsModal('${n.id}')" style="cursor: pointer;" title="Klik untuk membaca selengkapnya">
           <div class="news-header-meta">
             <span class="news-tag">${n.tag}</span>
             <span class="news-date">📅 ${n.date}</span>
@@ -2222,7 +2230,7 @@ const app = {
       return;
     }
 
-    container.innerHTML = matches.map(m => {
+    container.innerHTML = matches.map((m, idx) => {
       const home = this.store.getTeam(m.homeId) || { name: m.homePlaceholder || "TBD", shortName: "TBD", badgeColor: "#64748b", city: "-" };
       const away = this.store.getTeam(m.awayId) || { name: m.awayPlaceholder || "TBD", shortName: "TBD", badgeColor: "#64748b", city: "-" };
 
@@ -2230,6 +2238,8 @@ const app = {
       const isFinished = m.status === "finished";
       const isUpcoming = !isLive && !isFinished;
       const statusClass = isLive ? "status-live" : (isFinished ? "status-finished" : "status-upcoming");
+      const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
+      const cleanMinBadge = m.liveMinute ? (m.liveMinute.toString().endsWith("'") ? m.liveMinute : `${m.liveMinute}'`) : '';
 
       let statusBarHtml = "";
       if (isLive) {
@@ -2237,7 +2247,7 @@ const app = {
           <div class="match-status-bar bar-live">
             <div class="bar-left">
               <span class="pulse-dot"></span>
-              <strong>LIVE${m.liveMinute ? ` • Menit ${m.liveMinute}` : ''}</strong>
+              <strong>LIVE${m.liveMinute ? ` • Menit ${cleanMinBadge}` : ''}</strong>
             </div>
             <div class="bar-right">
               <span>${m.pitch || 'Lapangan Utama'}</span>
@@ -2294,7 +2304,7 @@ const app = {
         `<span class="match-category-tag cat-smp">SMP (U-15)</span>`;
 
       return `
-        <div class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''}">
+        <div class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''} ${swipeClass}">
           ${statusBarHtml}
           <!-- HEADER META -->
           <div class="fixture-header-meta">
@@ -2306,7 +2316,7 @@ const app = {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="fixture-time-hint">${m.date}</span>
               <span class="match-status-tag ${m.status}">
-                ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute ? m.liveMinute + "'" : ''}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time)}
+                ${isLive ? `<span class="pulse-dot"></span> LIVE ${cleanMinBadge}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time)}
               </span>
             </div>
           </div>
@@ -2421,6 +2431,7 @@ const app = {
       `;
     }).join("");
     this.updateFloatingLiveNotice();
+    this.initScrollReveal();
   },
 
   // 2. RENDER STANDINGS (4 Grup Lengkap per Kategori: A, B, C, D)
@@ -2445,11 +2456,12 @@ const app = {
       ];
     }
 
-    container.innerHTML = groupsToShow.map(g => {
+    container.innerHTML = groupsToShow.map((g, idx) => {
       const standings = this.store.calculateGroupStandings(g.letter, g.category);
+      const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
 
       return `
-        <div class="group-card">
+        <div class="group-card ${swipeClass}">
           <div class="group-card-header">
             <div class="group-title">
               <span class="group-badge" style="background: ${g.category === 'SD' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'linear-gradient(135deg, #10b981, #047857)'};">
@@ -2511,6 +2523,7 @@ const app = {
       `;
     }).join("");
     this.updateFloatingLiveNotice();
+    this.initScrollReveal();
   },
 
   // 3. RENDER BRACKET (Bagan 8 Besar Lengkap per Kategori - FIFA / UEFA Tournament Tree)
@@ -2849,11 +2862,12 @@ const app = {
 
     const isPanitia = admin.isAuthenticated === true;
 
-    container.innerHTML = teams.map(t => {
+    container.innerHTML = teams.map((t, idx) => {
       const waLink = this.getWhatsAppUrl(t.official.phone, `Halo Official ${t.name}, informasi ACC 2026`);
+      const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
 
       return `
-        <div class="school-card" onclick="app.openTeamModal('${t.id}')">
+        <div class="school-card ${swipeClass}" onclick="app.openTeamModal('${t.id}')">
           <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor || '#10b981'}, #0f172a);">
             <span class="group-tag-corner">
               ${(t.category || 'SMP') === 'SD' ? '🎒 SD' : '🏆 SMP'} • GRUP ${t.group}
@@ -2897,6 +2911,7 @@ const app = {
       `;
     }).join("");
     this.updateFloatingLiveNotice();
+    this.initScrollReveal();
   },
 
   // 5. RENDER DISCIPLINARY TABLE (Crucial for Managers!)
