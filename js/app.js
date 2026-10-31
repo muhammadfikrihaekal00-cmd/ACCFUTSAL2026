@@ -374,17 +374,35 @@ class TournamentStore {
       }
     }
 
-    // Helper to get winner & loser from finished match
+    // Helper to get winner & loser from finished match (with Penalty Shootout support)
     const getWinnerId = (m) => {
       if (!m || m.status !== "finished" || m.homeScore === null || m.awayScore === null) return null;
       if (m.homeScore > m.awayScore) return m.homeId;
       if (m.awayScore > m.homeScore) return m.awayId;
+      // Knockout tie-breaker: Adu Penalti
+      if (m.penaltyWinner) {
+        if (m.penaltyWinner === m.homeId) return m.homeId;
+        if (m.penaltyWinner === m.awayId) return m.awayId;
+      }
+      if (m.penaltyHomeScore !== null && m.penaltyAwayScore !== null && m.penaltyHomeScore !== undefined && m.penaltyAwayScore !== undefined) {
+        if (m.penaltyHomeScore > m.penaltyAwayScore) return m.homeId;
+        if (m.penaltyAwayScore > m.penaltyHomeScore) return m.awayId;
+      }
       return null;
     };
     const getLoserId = (m) => {
       if (!m || m.status !== "finished" || m.homeScore === null || m.awayScore === null) return null;
       if (m.homeScore > m.awayScore) return m.awayId;
       if (m.awayScore > m.homeScore) return m.homeId;
+      // Knockout tie-breaker: Adu Penalti
+      if (m.penaltyWinner) {
+        if (m.penaltyWinner === m.homeId) return m.awayId;
+        if (m.penaltyWinner === m.awayId) return m.homeId;
+      }
+      if (m.penaltyHomeScore !== null && m.penaltyAwayScore !== null && m.penaltyHomeScore !== undefined && m.penaltyAwayScore !== undefined) {
+        if (m.penaltyHomeScore > m.penaltyAwayScore) return m.awayId;
+        if (m.penaltyAwayScore > m.penaltyHomeScore) return m.homeId;
+      }
       return null;
     };
 
@@ -603,11 +621,166 @@ const app = {
     this.initPwa();
     this.initSupabaseSync();
     this.initGlobalLiveMatchTimer();
+    this.initNetworkStatusListeners();
 
     // DOM-level guarantee
     const tickerEl = document.getElementById("tickerText");
     if (tickerEl && tickerEl.textContent && (tickerEl.textContent.includes("ð") || tickerEl.textContent.includes("†") || !tickerEl.textContent.trim().startsWith("🏆"))) {
       tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
+    }
+  },
+
+  cleanWhatsAppNumber(phone) {
+    if (!phone) return "";
+    let clean = phone.toString().replace(/[^0-9]/g, "");
+    if (clean.startsWith("62")) {
+      return clean;
+    }
+    if (clean.startsWith("0")) {
+      return "62" + clean.slice(1);
+    }
+    if (clean.length > 5) {
+      return "62" + clean;
+    }
+    return clean;
+  },
+
+  getWhatsAppUrl(phone, text = "") {
+    const clean = this.cleanWhatsAppNumber(phone);
+    if (!clean) return "#";
+    const query = text ? `?text=${encodeURIComponent(text)}` : "";
+    return `https://wa.me/${clean}${query}`;
+  },
+
+  initNetworkStatusListeners() {
+    const updateStatus = (isOnline, customMsg = null) => {
+      const badge = document.getElementById("cloudStatusBadge");
+      const dot = document.getElementById("cloudStatusDot");
+      const text = document.getElementById("cloudStatusText");
+      if (!badge || !dot || !text) return;
+
+      if (isOnline) {
+        badge.classList.remove("offline");
+        badge.title = "Terhubung ke Supabase Cloud • Realtime Aktif (Klik untuk cek)";
+        text.textContent = customMsg || "Cloud Aktif";
+        dot.style.background = "#10b981";
+        dot.style.boxShadow = "0 0 6px #10b981";
+      } else {
+        badge.classList.add("offline");
+        badge.title = "Mode Offline: Data aman tersimpan di HP & otomatis disinkronkan saat online";
+        text.textContent = customMsg || "Offline";
+        dot.style.background = "#ca8a04";
+        dot.style.boxShadow = "0 0 6px #ca8a04";
+      }
+    };
+
+    window.addEventListener("online", () => {
+      updateStatus(true);
+      this.showToast("🟢 Koneksi internet kembali aktif! Menyinkronkan data...");
+      if (window.SupabaseService && window.SupabaseService.fetchAllData) {
+        window.SupabaseService.fetchAllData().then(d => {
+          if (d) this.applyRemoteData(d);
+        });
+      }
+    });
+
+    window.addEventListener("offline", () => {
+      updateStatus(false, "Offline");
+      this.showToast("⚠️ Jaringan offline. Data aman di HP & otomatis disinkron saat online.");
+    });
+
+    updateStatus(navigator.onLine);
+  },
+
+  checkCloudConnection(showToast = false) {
+    if (!navigator.onLine) {
+      if (showToast) this.showToast("⚠️ Perangkat sedang offline. Data Anda tetap tersimpan aman di HP!");
+      return;
+    }
+    if (!window.SupabaseService) {
+      if (showToast) this.showToast("ℹ️ Layanan Cloud Supabase belum siap.");
+      return;
+    }
+    window.SupabaseService.checkConnection().then(res => {
+      const badge = document.getElementById("cloudStatusBadge");
+      const dot = document.getElementById("cloudStatusDot");
+      const text = document.getElementById("cloudStatusText");
+      if (res && res.ok) {
+        if (badge) badge.classList.remove("offline");
+        if (dot) { dot.style.background = "#10b981"; dot.style.boxShadow = "0 0 6px #10b981"; }
+        if (text) text.textContent = "Cloud Aktif";
+        if (showToast) this.showToast("🟢 Cloud Terhubung! Sinkronisasi skor & bagan Supabase aktif sempurna.");
+      } else {
+        if (badge) badge.classList.add("offline");
+        if (dot) { dot.style.background = "#ca8a04"; dot.style.boxShadow = "0 0 6px #ca8a04"; }
+        if (text) text.textContent = "Offline";
+        if (showToast) this.showToast(`⚠️ Cloud: ${res.message || 'Gagal tersambung'}. Data tersimpan lokal.`);
+      }
+    }).catch(err => {
+      if (showToast) this.showToast("⚠️ Sedang menggunakan penyimpanan lokal.");
+    });
+  },
+
+  copyDailyMatchRecap() {
+    const config = this.store.data.config || {};
+    const matches = this.store.data.matches || [];
+    const cat = this.currentCategory;
+
+    let targetMatches = matches.filter(m => {
+      if (cat !== "all" && m.category && m.category !== cat) return false;
+      return m.status === "finished" || m.status === "live";
+    });
+
+    if (targetMatches.length === 0) {
+      targetMatches = matches.slice(0, 8);
+    }
+
+    const tName = config.tournamentName || 'ACC "Al-Fayyadh Champions Cup" 2026';
+    const venue = config.venue || "GOR Futsal MTQ Al-Fayyadh Maros";
+
+    let text = `🏆 *REKAP HASIL PERTANDINGAN RESMI*\n`;
+    text += `*${tName}*\n`;
+    text += `📍 ${venue}\n`;
+    text += `📅 ${config.dates || "22 - 26 November 2026"}\n`;
+    text += `───────────────────\n\n`;
+
+    let currentGroupOrStage = "";
+    targetMatches.forEach((m) => {
+      const hTeam = this.store.getTeam(m.homeId) || { name: m.homePlaceholder || "Home", shortName: "HOME" };
+      const aTeam = this.store.getTeam(m.awayId) || { name: m.awayPlaceholder || "Away", shortName: "AWAY" };
+      const stageName = m.stage === "knockout" ? (m.roundName || "Babak Gugur") : `Grup ${m.group} (${m.category || 'SMP'})`;
+
+      if (stageName !== currentGroupOrStage) {
+        currentGroupOrStage = stageName;
+        text += `⚽ *${currentGroupOrStage}*\n`;
+      }
+
+      if (m.status === "finished") {
+        let scoreStr = `${hTeam.shortName || hTeam.name} ${m.homeScore} - ${m.awayScore} ${aTeam.shortName || aTeam.name}`;
+        if (m.penaltyHomeScore !== null && m.penaltyAwayScore !== null && m.penaltyHomeScore !== undefined && m.penaltyAwayScore !== undefined) {
+          scoreStr += ` (A.P. ${m.penaltyHomeScore}-${m.penaltyAwayScore})`;
+        }
+        text += `• ${scoreStr} [FT]\n`;
+      } else if (m.status === "live") {
+        text += `• ${hTeam.shortName || hTeam.name} ${m.homeScoreLive || 0} - ${m.awayScoreLive || 0} ${aTeam.shortName || aTeam.name} 🔴 LIVE ${m.liveMinute || ''}\n`;
+      } else {
+        text += `• ${hTeam.shortName || hTeam.name} vs ${aTeam.shortName || aTeam.name} (Pukul ${m.time} WITA)\n`;
+      }
+    });
+
+    text += `\n───────────────────\n`;
+    text += `📊 *Pantau Klasemen, Top Skor & Live Streaming YouTube di Portal Resmi:*\n`;
+    text += `👉 https://accfutsal2026.vercel.app\n\n`;
+    text += `_#ACC2026 #AlFayyadhChampionsCup #FutsalSulsel_`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.showToast("📋 Rekap hasil laga berhasil disalin! Siap ditempel ke WhatsApp.");
+      }).catch(() => {
+        prompt("Salin teks rekap pertandingan berikut:", text);
+      });
+    } else {
+      prompt("Salin teks rekap pertandingan berikut:", text);
     }
   },
 
@@ -991,6 +1164,9 @@ const app = {
         if (data.config.hero_banner_image || data.config.heroBannerImage) {
           this.store.data.config.heroBannerImage = data.config.hero_banner_image || data.config.heroBannerImage;
         }
+        if (data.config.dates && (data.config.dates.includes("15 - 20") || data.config.dates.includes("15 – 20"))) {
+          data.config.dates = "22 - 26 November 2026";
+        }
         Object.assign(this.store.data.config, data.config);
         this.renderHeader();
         this.renderLiveStreamHero();
@@ -1006,6 +1182,9 @@ const app = {
             if (remoteMatch.scorers) mapped.scorers = remoteMatch.scorers;
             if (remoteMatch.cards) mapped.cards = remoteMatch.cards;
             if (remoteMatch.minute_live) mapped.liveMinute = `${remoteMatch.minute_live}'`;
+            if (remoteMatch.penalty_home_score !== undefined) mapped.penaltyHomeScore = remoteMatch.penalty_home_score;
+            if (remoteMatch.penalty_away_score !== undefined) mapped.penaltyAwayScore = remoteMatch.penalty_away_score;
+            if (remoteMatch.penalty_winner !== undefined) mapped.penaltyWinner = remoteMatch.penalty_winner;
 
             const rHome = remoteMatch.home_score !== undefined ? remoteMatch.home_score : remoteMatch.homeScore;
             const rAway = remoteMatch.away_score !== undefined ? remoteMatch.away_score : remoteMatch.awayScore;
@@ -1112,6 +1291,9 @@ const app = {
         if (payload.scorers) mapped.scorers = payload.scorers;
         if (payload.cards) mapped.cards = payload.cards;
         if (payload.minute_live) mapped.liveMinute = `${payload.minute_live}'`;
+        if (payload.penalty_home_score !== undefined) mapped.penaltyHomeScore = payload.penalty_home_score;
+        if (payload.penalty_away_score !== undefined) mapped.penaltyAwayScore = payload.penalty_away_score;
+        if (payload.penalty_winner !== undefined) mapped.penaltyWinner = payload.penalty_winner;
 
         const rHome = payload.home_score !== undefined ? payload.home_score : payload.homeScore;
         const rAway = payload.away_score !== undefined ? payload.away_score : payload.awayScore;
@@ -1982,6 +2164,9 @@ const app = {
         }
       }
 
+      const hasPenalties = isFinished && (m.penaltyHomeScore !== null && m.penaltyAwayScore !== null && m.penaltyHomeScore !== undefined && m.penaltyAwayScore !== undefined);
+      const penWinnerTeam = m.penaltyWinner ? this.store.getTeam(m.penaltyWinner) : null;
+
       const catBadge = (m.category || "SMP") === "SD" ?
         `<span class="match-category-tag cat-sd">🎒 SD (U-12)</span>` :
         `<span class="match-category-tag cat-smp">🏆 SMP (U-15)</span>`;
@@ -1999,7 +2184,7 @@ const app = {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="fixture-time-hint">📅 ${m.date}</span>
               <span class="match-status-tag ${m.status}">
-                ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}` : (isFinished ? 'Selesai' : m.time)}
+                ${isLive ? `<span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time)}
               </span>
             </div>
           </div>
@@ -2019,7 +2204,7 @@ const app = {
                 </div>
               </div>
               <div class="fixture-score-number ${isLive ? 'live' : ''}">
-                ${homeScore}
+                ${homeScore} ${hasPenalties ? `<small style="font-size:0.75rem; color:#ca8a04; font-weight:700;">(${m.penaltyHomeScore})</small>` : ''}
               </div>
             </div>
 
@@ -2057,7 +2242,7 @@ const app = {
                 </div>
               </div>
               <div class="fixture-score-number ${isLive ? 'live' : ''}">
-                ${awayScore}
+                ${awayScore} ${hasPenalties ? `<small style="font-size:0.75rem; color:#ca8a04; font-weight:700;">(${m.penaltyAwayScore})</small>` : ''}
               </div>
             </div>
 
@@ -2078,6 +2263,14 @@ const app = {
                     <span class="chip-min">${c.minute}</span>
                   </span>
                 `).join("")}
+              </div>
+            ` : ''}
+
+            ${hasPenalties ? `
+              <div class="fixture-penalty-badge">
+                <span>🎯</span>
+                <span>Adu Penalti: <strong>${m.penaltyHomeScore} - ${m.penaltyAwayScore}</strong></span>
+                ${penWinnerTeam ? `<span>• Lolos: <strong>${penWinnerTeam.shortName || penWinnerTeam.name}</strong></span>` : ''}
               </div>
             ` : ''}
 
@@ -2224,24 +2417,36 @@ const app = {
     let runnerUpTeam = null;
     let thirdTeam = null;
 
+    const getMatchWinnerId = (m) => {
+      if (!m || m.status !== "finished") return null;
+      const h = Number(m.homeScore ?? m.homeScoreLive ?? 0);
+      const a = Number(m.awayScore ?? m.awayScoreLive ?? 0);
+      if (h > a) return m.homeId;
+      if (a > h) return m.awayId;
+      if (m.penaltyWinner) return m.penaltyWinner;
+      if (m.penaltyHomeScore !== null && m.penaltyAwayScore !== null && m.penaltyHomeScore !== undefined && m.penaltyAwayScore !== undefined) {
+        if (m.penaltyHomeScore > m.penaltyAwayScore) return m.homeId;
+        if (m.penaltyAwayScore > m.penaltyHomeScore) return m.awayId;
+      }
+      return null;
+    };
+
     if (finalMatch && finalMatch.status === "finished") {
-      const hScore = Number(finalMatch.homeScore ?? finalMatch.homeScoreLive ?? 0);
-      const aScore = Number(finalMatch.awayScore ?? finalMatch.awayScoreLive ?? 0);
-      if (hScore > aScore) {
+      const winnerId = getMatchWinnerId(finalMatch);
+      if (winnerId === finalMatch.homeId) {
         champTeam = this.store.getTeam(finalMatch.homeId);
         runnerUpTeam = this.store.getTeam(finalMatch.awayId);
-      } else if (aScore > hScore) {
+      } else if (winnerId === finalMatch.awayId) {
         champTeam = this.store.getTeam(finalMatch.awayId);
         runnerUpTeam = this.store.getTeam(finalMatch.homeId);
       }
     }
 
     if (thirdMatch && thirdMatch.status === "finished") {
-      const hScore = Number(thirdMatch.homeScore ?? thirdMatch.homeScoreLive ?? 0);
-      const aScore = Number(thirdMatch.awayScore ?? thirdMatch.awayScoreLive ?? 0);
-      if (hScore > aScore) {
+      const winnerId = getMatchWinnerId(thirdMatch);
+      if (winnerId === thirdMatch.homeId) {
         thirdTeam = this.store.getTeam(thirdMatch.homeId);
-      } else if (aScore > hScore) {
+      } else if (winnerId === thirdMatch.awayId) {
         thirdTeam = this.store.getTeam(thirdMatch.awayId);
       }
     }
@@ -2257,11 +2462,13 @@ const app = {
       const isLive = m.status === "live";
       const isFinished = m.status === "finished";
 
-      const homeScore = isLive ? (m.homeScoreLive ?? 0) : (isFinished ? m.homeScore : "-");
-      const awayScore = isLive ? (m.awayScoreLive ?? 0) : (isFinished ? m.awayScore : "-");
+      const hasPenalties = isFinished && (m.penaltyHomeScore !== null && m.penaltyAwayScore !== null && m.penaltyHomeScore !== undefined && m.penaltyAwayScore !== undefined);
+      const winnerId = getMatchWinnerId(m);
+      const isHomeWinner = isFinished && winnerId === m.homeId;
+      const isAwayWinner = isFinished && winnerId === m.awayId;
 
-      const isHomeWinner = isFinished && Number(homeScore) > Number(awayScore);
-      const isAwayWinner = isFinished && Number(awayScore) > Number(homeScore);
+      const homeScore = isLive ? (m.homeScoreLive ?? 0) : (isFinished ? (hasPenalties ? `${m.homeScore} <small style="color:#ca8a04; font-size:0.72rem; font-weight:800;">(${m.penaltyHomeScore})</small>` : m.homeScore) : "-");
+      const awayScore = isLive ? (m.awayScoreLive ?? 0) : (isFinished ? (hasPenalties ? `${m.awayScore} <small style="color:#ca8a04; font-size:0.72rem; font-weight:800;">(${m.penaltyAwayScore})</small>` : m.awayScore) : "-");
 
       // Seed / placeholder hint (e.g., 1A, 2B, QF1)
       let homeSeed = "";
@@ -2287,7 +2494,9 @@ const app = {
       if (isLive) {
         statusBadge = `<span class="bracket-status-chip live"><span class="pulse-dot"></span> LIVE ${m.liveMinute || ''}</span>`;
       } else if (isFinished) {
-        statusBadge = `<span class="bracket-status-chip ft">FT • Selesai</span>`;
+        statusBadge = hasPenalties
+          ? `<span class="bracket-status-chip ft" style="background:rgba(234,179,8,0.15); color:#ca8a04; border-color:rgba(234,179,8,0.4);">FT (Pen. ${m.penaltyHomeScore}-${m.penaltyAwayScore})</span>`
+          : `<span class="bracket-status-chip ft">FT • Selesai</span>`;
       } else {
         statusBadge = `<span class="bracket-status-chip upcoming">📅 ${m.date ? m.date.replace(' Nov 2026', '') : ''} • ${m.time ? m.time.replace(' WIB', '') : ''}</span>`;
       }
@@ -2515,8 +2724,7 @@ const app = {
     const isPanitia = admin.isAuthenticated === true;
 
     container.innerHTML = teams.map(t => {
-      const waNumber = t.official.phone.replace(/[^0-9]/g, "");
-      const waLink = `https://wa.me/62${waNumber.startsWith('0') ? waNumber.slice(1) : waNumber}?text=Halo%20Official%20${encodeURIComponent(t.name)}%2C%20informasi%20ACC%202026`;
+      const waLink = this.getWhatsAppUrl(t.official.phone, `Halo Official ${t.name}, informasi ACC 2026`);
 
       return `
         <div class="school-card" onclick="app.openTeamModal('${t.id}')">
@@ -2583,11 +2791,8 @@ const app = {
     }
 
     container.innerHTML = records.map((r, idx) => {
-      const waMsg = encodeURIComponent(
-        `⚠️ PEMBERITAHUAN DISIPLIN PANITIA:\nPemain an. ${r.playerName} (#${r.playerNo}) dari tim *${r.teamName}* telah menerima ${r.yellowCount} Kartu Kuning & ${r.redCount} Kartu Merah.\nStatus: *${r.status}*${r.actionNote ? ` (${r.actionNote})` : ''}.\nHarap official memperhatikan demi kelancaran pertandingan.`
-      );
-      const cleanPhone = r.managerPhone.replace(/[^0-9]/g, "");
-      const waUrl = `https://wa.me/62${cleanPhone.startsWith('0') ? cleanPhone.slice(1) : cleanPhone}?text=${waMsg}`;
+      const waMsgText = `⚠️ PEMBERITAHUAN DISIPLIN PANITIA:\nPemain an. ${r.playerName} (#${r.playerNo}) dari tim *${r.teamName}* telah menerima ${r.yellowCount} Kartu Kuning & ${r.redCount} Kartu Merah.\nStatus: *${r.status}*${r.actionNote ? ` (${r.actionNote})` : ''}.\nHarap official memperhatikan demi kelancaran pertandingan.`;
+      const waUrl = this.getWhatsAppUrl(r.managerPhone, waMsgText);
 
       return `
         <tr>
@@ -2773,8 +2978,7 @@ const app = {
       <span>${team.name} (Grup ${team.group})</span>
     `;
 
-    const waNumber = (team.official.phone || "").replace(/[^0-9]/g, "");
-    const waLink = `https://wa.me/62${waNumber.startsWith('0') ? waNumber.slice(1) : waNumber}`;
+    const waLink = this.getWhatsAppUrl(team.official.phone, `Halo Official ${team.name}, informasi ACC 2026`);
 
     body.innerHTML = `
       ${isPanitia ? `
@@ -2983,6 +3187,11 @@ const app = {
             <div class="match-detail-status ${match.status}" style="margin-top: 6px;">
               ${match.status === 'live' ? '🔴 Sedang Berlangsung' : (match.status === 'finished' ? 'Selesai' : 'Belum Mulai')}
             </div>
+            ${(match.penaltyHomeScore !== null && match.penaltyAwayScore !== null && match.penaltyHomeScore !== undefined && match.penaltyAwayScore !== undefined) ? `
+              <div style="margin-top: 6px; padding: 4px 8px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 6px; color: #ca8a04; font-size: 0.76rem; font-weight: 800; white-space: nowrap;">
+                🎯 Adu Penalti: ${match.penaltyHomeScore} - ${match.penaltyAwayScore}
+              </div>
+            ` : ''}
           </div>
 
           <!-- TIM AWAY & GOL DI BAWAHNYA -->

@@ -78,6 +78,12 @@
       </div>
 
       <div class="header-actions">
+        <!-- Cloud Sync / Network Status Pill -->
+        <div id="cloudStatusBadge" class="cloud-status-badge" title="Status Sinkronisasi Cloud Supabase (Klik untuk cek)" onclick="app.checkCloudConnection(true)">
+          <span id="cloudStatusDot" class="status-indicator-dot"></span>
+          <span id="cloudStatusText" class="cloud-status-text">Cloud Aktif</span>
+        </div>
+
         <!-- Quick Media & Photo Upload Button -->
         <button id="btnQuickMediaHub" class="header-icon-btn" onclick="admin.openMediaHubModal()" title="Upload Foto & Media (Logo Tim, Pemain, Momen)" aria-label="Upload Foto & Media">
           <span>📸</span>
@@ -416,6 +422,9 @@
         <button class="status-pill pill-finished" data-status="finished" onclick="app.setStatusFilter('finished')">
           ✅ Telah Selesai (<span id="countFinishedMatches">0</span>)
         </button>
+        <button type="button" class="status-pill pill-share-recap" onclick="app.copyDailyMatchRecap()" style="background: rgba(37, 211, 102, 0.12); color: #16a34a; border: 1px solid rgba(37, 211, 102, 0.4); font-weight: 700; margin-left: auto;" title="Salin rekap hasil pertandingan format WhatsApp">
+          📋 Salin Hasil (WA)
+        </button>
       </div>
 
       <div class="matches-grid" id="matchesList">
@@ -744,6 +753,33 @@
             </select>
           </div>
 
+          <!-- Adu Penalti Section (Khusus Babak Gugur jika Skor Seri) -->
+          <div id="penaltySection" style="display: none; background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.35); border-radius: var(--radius-md); padding: 10px 12px; margin-top: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <strong style="font-size: 0.8rem; color: #ca8a04; display: flex; align-items: center; gap: 5px;">
+                <span>🎯</span> Adu Penalti (Skor Seri Babak Gugur)
+              </strong>
+              <span style="font-size: 0.68rem; color: var(--text-muted);">Juknis: 3 Penendang</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; text-align: center;">
+              <div>
+                <div id="penaltyHomeLabel" style="font-size: 0.74rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Home</div>
+                <input type="number" id="penaltyHomeScore" class="form-input" style="text-align: center; font-weight: 800; font-size: 1.1rem; padding: 4px;" min="0" max="20" placeholder="0" oninput="admin.updatePenaltyWinnerSuggestion()">
+              </div>
+              <span style="font-weight: 800; color: var(--text-muted); font-size: 1.1rem; padding-top: 14px;">-</span>
+              <div>
+                <div id="penaltyAwayLabel" style="font-size: 0.74rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Away</div>
+                <input type="number" id="penaltyAwayScore" class="form-input" style="text-align: center; font-weight: 800; font-size: 1.1rem; padding: 4px;" min="0" max="20" placeholder="0" oninput="admin.updatePenaltyWinnerSuggestion()">
+              </div>
+            </div>
+            <div style="margin-top: 8px;">
+              <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight: 600;">Tim Pemenang Lolos:</label>
+              <select id="penaltyWinnerSelect" class="form-select" style="font-size: 0.8rem; padding: 5px 8px; font-weight: 700;">
+                <option value="">-- Pilih Tim Pemenang Adu Penalti --</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Add Match Event (Goal & Card) -->
           <div style="border-top: 1px solid var(--border-color); padding-top: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -1053,6 +1089,9 @@
             </button>
             <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('adminDashboardModal').classList.remove('active'); admin.openYoutubeLiveModal();" style="border-color: #ef4444; color: #ef4444; font-weight: 700;">
               🔴 Ganti Siaran Langsung YouTube Live
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="app.copyDailyMatchRecap()" style="border-color: #25d366; color: #16a34a; font-weight: 700;" title="Salin rekap hasil pertandingan format WhatsApp">
+              📋 Salin Rekap Laga (Format WA)
             </button>
           </div>
           <h4 style="color: #00d2ff; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">⚡ Kelola Konten Visual Beranda</h4>
@@ -1883,17 +1922,17 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/security.js?v=4.9"></script>
-  <script src="js/supabase-client.js?v=5.9"></script>
-  <script src="js/data.js?v=5.9"></script>
-  <script src="js/app.js?v=5.9"></script>
-  <script src="js/admin.js?v=5.9"></script>
+  <script src="js/security.js?v=5.0"></script>
+  <script src="js/supabase-client.js?v=6.0"></script>
+  <script src="js/data.js?v=6.0"></script>
+  <script src="js/app.js?v=6.0"></script>
+  <script src="js/admin.js?v=6.0"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=38')
+        navigator.serviceWorker.register('sw.js?v=39')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

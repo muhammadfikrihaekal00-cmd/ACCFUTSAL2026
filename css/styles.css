@@ -4943,3 +4943,82 @@ body.dark-theme .fixture-team-row:hover {
     gap: 8px;
   }
 }
+
+/* ========================================================= */
+/* CLOUD SYNC & NETWORK STATUS BADGE                         */
+/* ========================================================= */
+.cloud-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.cloud-status-badge:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.cloud-status-badge.offline {
+  background: rgba(234, 179, 8, 0.14);
+  color: #ca8a04;
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.status-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.cloud-status-badge.offline .status-indicator-dot {
+  background: #ca8a04;
+  box-shadow: 0 0 6px #ca8a04;
+}
+
+@media (max-width: 480px) {
+  .cloud-status-text {
+    display: none;
+  }
+  .cloud-status-badge {
+    padding: 6px;
+    border-radius: 50%;
+  }
+}
+
+/* ========================================================= */
+/* ADU PENALTI STYLES & FIXTURE BADGE                        */
+/* ========================================================= */
+.fixture-penalty-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(234, 179, 8, 0.1);
+  color: #ca8a04;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  margin: 6px 0 2px;
+}
+
+.pill-share-recap:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}

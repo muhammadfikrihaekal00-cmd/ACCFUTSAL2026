@@ -254,28 +254,41 @@
         if (!error) return true;
 
         // Fallback: direct table update if RLS allows authenticated session
-        const { error: directErr } = await this.client
+        const payload = {
+          id: match.id,
+          home_id: match.homeId,
+          away_id: match.awayId,
+          date: match.date || "22 Nov 2026",
+          time: match.time || "08:00",
+          pitch: match.pitch || match.venue || "Lapangan 1",
+          stage: match.stage || "group",
+          group_letter: match.group || null,
+          round_name: match.roundName || "",
+          home_score: hScoreNum,
+          away_score: aScoreNum,
+          home_score_live: hScoreNum,
+          away_score_live: aScoreNum,
+          minute_live: parseInt((match.liveMinute || "0").replace(/\D/g, ''), 10) || 0,
+          status: match.status || 'scheduled',
+          scorers: match.scorers || [],
+          cards: match.cards || [],
+          penalty_home_score: match.penaltyHomeScore !== undefined ? match.penaltyHomeScore : null,
+          penalty_away_score: match.penaltyAwayScore !== undefined ? match.penaltyAwayScore : null,
+          penalty_winner: match.penaltyWinner !== undefined ? match.penaltyWinner : null,
+          updated_at: new Date().toISOString()
+        };
+
+        let { error: directErr } = await this.client
           .from('matches')
-          .upsert({
-            id: match.id,
-            home_id: match.homeId,
-            away_id: match.awayId,
-            date: match.date || "22 Nov 2026",
-            time: match.time || "08:00",
-            pitch: match.pitch || match.venue || "Lapangan 1",
-            stage: match.stage || "group",
-            group_letter: match.group || null,
-            round_name: match.roundName || "",
-            home_score: hScoreNum,
-            away_score: aScoreNum,
-            home_score_live: hScoreNum,
-            away_score_live: aScoreNum,
-            minute_live: parseInt((match.liveMinute || "0").replace(/\D/g, ''), 10) || 0,
-            status: match.status || 'scheduled',
-            scorers: match.scorers || [],
-            cards: match.cards || [],
-            updated_at: new Date().toISOString()
-          });
+          .upsert(payload);
+
+        if (directErr && (directErr.code === '42703' || (directErr.message && directErr.message.includes('penalty')))) {
+          delete payload.penalty_home_score;
+          delete payload.penalty_away_score;
+          delete payload.penalty_winner;
+          const retry = await this.client.from('matches').upsert(payload);
+          directErr = retry.error;
+        }
 
         return !directErr;
       } catch (e) {
@@ -402,10 +415,18 @@
             status: m.status || 'scheduled',
             scorers: m.scorers || [],
             cards: m.cards || [],
+            penalty_home_score: m.penaltyHomeScore !== undefined ? m.penaltyHomeScore : null,
+            penalty_away_score: m.penaltyAwayScore !== undefined ? m.penaltyAwayScore : null,
+            penalty_winner: m.penaltyWinner !== undefined ? m.penaltyWinner : null,
             updated_at: new Date().toISOString()
           }));
 
-          const { error: matchErr } = await this.client.from('matches').upsert(matchesPayload);
+          let { error: matchErr } = await this.client.from('matches').upsert(matchesPayload);
+          if (matchErr && (matchErr.code === '42703' || (matchErr.message && matchErr.message.includes('penalty')))) {
+            const fallbackMatches = matchesPayload.map(({ penalty_home_score, penalty_away_score, penalty_winner, ...rest }) => rest);
+            const retry = await this.client.from('matches').upsert(fallbackMatches);
+            matchErr = retry.error;
+          }
           if (matchErr) {
             const isRls = matchErr.code === '42501' || (matchErr.message && matchErr.message.includes('row-level security'));
             return { ok: false, message: matchErr.message, isRls: isRls, table: 'matches' };

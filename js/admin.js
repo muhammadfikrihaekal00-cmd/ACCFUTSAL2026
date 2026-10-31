@@ -358,8 +358,78 @@ const admin = {
     this.renderAdminEventsList(match);
     this.populateEventTeamSelectors(match);
 
+    // Setup penalty shootout section for knockout matches
+    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
+    const penaltySection = document.getElementById("penaltySection");
+    if (penaltySection) {
+      if (isKnockout) {
+        const hLabel = document.getElementById("penaltyHomeLabel");
+        const aLabel = document.getElementById("penaltyAwayLabel");
+        if (hLabel) hLabel.textContent = home.shortName || home.name;
+        if (aLabel) aLabel.textContent = away.shortName || away.name;
+
+        const penWinnerSelect = document.getElementById("penaltyWinnerSelect");
+        if (penWinnerSelect) {
+          penWinnerSelect.innerHTML = `
+            <option value="">-- Pilih Tim Pemenang Adu Penalti --</option>
+            <option value="${match.homeId}">${home.shortName || home.name}</option>
+            <option value="${match.awayId}">${away.shortName || away.name}</option>
+          `;
+          penWinnerSelect.value = match.penaltyWinner || "";
+        }
+
+        const penHInput = document.getElementById("penaltyHomeScore");
+        const penAInput = document.getElementById("penaltyAwayScore");
+        if (penHInput) penHInput.value = (match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined) ? match.penaltyHomeScore : "";
+        if (penAInput) penAInput.value = (match.penaltyAwayScore !== null && match.penaltyAwayScore !== undefined) ? match.penaltyAwayScore : "";
+
+        this.checkPenaltySectionVisibility(match, homeScoreVal, awayScoreVal);
+      } else {
+        penaltySection.style.display = "none";
+      }
+    }
+
     modal.classList.add("active");
     document.body.classList.add("modal-open");
+  },
+
+  checkPenaltySectionVisibility(match, hScore, aScore) {
+    const penaltySection = document.getElementById("penaltySection");
+    if (!penaltySection) return;
+    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
+    if (!isKnockout) {
+      penaltySection.style.display = "none";
+      return;
+    }
+    const h = (hScore !== undefined) ? parseInt(hScore, 10) : parseInt(document.getElementById("homeScoreDisplay").textContent, 10);
+    const a = (aScore !== undefined) ? parseInt(aScore, 10) : parseInt(document.getElementById("awayScoreDisplay").textContent, 10);
+    const statusSelect = document.getElementById("matchStatusSelect");
+    const isFinishedOrLive = statusSelect && (statusSelect.value === 'finished' || statusSelect.value === 'live');
+
+    if (h === a && isFinishedOrLive) {
+      penaltySection.style.display = "block";
+    } else if (match.penaltyWinner || (match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined)) {
+      penaltySection.style.display = "block";
+    } else {
+      penaltySection.style.display = "none";
+    }
+  },
+
+  updatePenaltyWinnerSuggestion() {
+    const penH = parseInt(document.getElementById("penaltyHomeScore")?.value, 10);
+    const penA = parseInt(document.getElementById("penaltyAwayScore")?.value, 10);
+    const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
+    if (!match) return;
+    const penWinnerSelect = document.getElementById("penaltyWinnerSelect");
+    if (!penWinnerSelect) return;
+
+    if (!isNaN(penH) && !isNaN(penA)) {
+      if (penH > penA) {
+        penWinnerSelect.value = match.homeId;
+      } else if (penA > penH) {
+        penWinnerSelect.value = match.awayId;
+      }
+    }
   },
 
   setStatus(status) {
@@ -376,6 +446,8 @@ const admin = {
     } else {
       this.stopLiveTimer();
     }
+    const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
+    if (match) this.checkPenaltySectionVisibility(match);
   },
 
   updateStatusPills(status) {
@@ -404,6 +476,19 @@ const admin = {
     const away = app.store.getTeam(match.awayId);
     const hName = home ? (home.shortName || home.name) : "Home";
     const aName = away ? (away.shortName || away.name) : "Away";
+
+    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
+    if (isKnockout && hScore === aScore) {
+      const penWinner = document.getElementById("penaltyWinnerSelect") ? document.getElementById("penaltyWinnerSelect").value : "";
+      const penH = document.getElementById("penaltyHomeScore") ? document.getElementById("penaltyHomeScore").value : "";
+      const penA = document.getElementById("penaltyAwayScore") ? document.getElementById("penaltyAwayScore").value : "";
+      if (!penWinner && (!penH || !penA)) {
+        this.setStatus("finished");
+        this.checkPenaltySectionVisibility(match, hScore, aScore);
+        alert(`⚠️ Pertandingan babak gugur berakhir seri (${hScore} - ${aScore}).\n\nSesuai Juknis, silakan isi skor adu penalti atau tentukan tim pemenang lolos pada kotak 'Adu Penalti' di bawah.`);
+        return;
+      }
+    }
 
     if (confirm(`Akhiri & Selesaikan Pertandingan Ini?\n\nSkor Akhir: ${hName} ${hScore} - ${aScore} ${aName}\n\nStatus akan langsung disimpan sebagai SELESAI (Finished) dan klasemen akan langsung terupdate.`)) {
       this.setStatus("finished");
@@ -561,6 +646,8 @@ const admin = {
     let current = parseInt(el.textContent, 10) || 0;
     current = Math.max(0, current + delta);
     el.textContent = current;
+    const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
+    if (match) this.checkPenaltySectionVisibility(match);
   },
 
   populateEventTeamSelectors(match) {
@@ -746,6 +833,26 @@ const admin = {
     match.status = status;
     match.liveMinute = status === 'live' ? (minute || "1'") : minute;
 
+    // Handle Knockout Penalty Shootout if tied
+    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
+    if (isKnockout && status === "finished" && hScore === aScore) {
+      const penHVal = document.getElementById("penaltyHomeScore") ? parseInt(document.getElementById("penaltyHomeScore").value, 10) : NaN;
+      const penAVal = document.getElementById("penaltyAwayScore") ? parseInt(document.getElementById("penaltyAwayScore").value, 10) : NaN;
+      const penWinner = document.getElementById("penaltyWinnerSelect") ? document.getElementById("penaltyWinnerSelect").value : "";
+
+      if (!isNaN(penHVal)) match.penaltyHomeScore = penHVal;
+      if (!isNaN(penAVal)) match.penaltyAwayScore = penAVal;
+      match.penaltyWinner = penWinner || (!isNaN(penHVal) && !isNaN(penAVal) ? (penHVal > penAVal ? match.homeId : (penAVal > penHVal ? match.awayId : null)) : null);
+
+      if (!match.penaltyWinner && isNaN(penHVal) && isNaN(penAVal)) {
+        app.showToast("⚠️ Babak gugur seri: tentukan pemenang penalti agar bagan terisi.");
+      }
+    } else if (hScore !== aScore) {
+      delete match.penaltyHomeScore;
+      delete match.penaltyAwayScore;
+      delete match.penaltyWinner;
+    }
+
     if (status === "live") {
       const minNum = parseInt((match.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
       match.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
@@ -776,6 +883,15 @@ const admin = {
     // Silently synchronize to Supabase
     if (window.SupabaseService) {
       window.SupabaseService.syncMatch(match, this.adminPinHash);
+      if (isKnockout || match.stage === "group") {
+        const downstreamIds = ['SF1_SMP', 'SF2_SMP', 'FINAL_SMP', '3RD_SMP', 'SF1_SD', 'SF2_SD', 'FINAL_SD', '3RD_SD', 'QF1_SMP', 'QF2_SMP', 'QF3_SMP', 'QF4_SMP', 'QF1_SD', 'QF2_SD', 'QF3_SD', 'QF4_SD'];
+        downstreamIds.forEach(id => {
+          const dm = app.store.data.matches.find(m => m.id === id);
+          if (dm && (dm.homeId || dm.awayId)) {
+            window.SupabaseService.syncMatch(dm, this.adminPinHash);
+          }
+        });
+      }
     }
 
     document.getElementById("quickScoreModal").classList.remove("active");
