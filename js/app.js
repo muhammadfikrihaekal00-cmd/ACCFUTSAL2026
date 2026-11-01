@@ -794,15 +794,61 @@ const app = {
     text += `👉 https://accfutsal2026.vercel.app\n\n`;
     text += `_#ACC2026 #AlFayyadhChampionsCup #FutsalSulsel_`;
 
+    if (navigator.share) {
+      navigator.share({
+        title: tName,
+        text: text
+      }).then(() => {
+        this.showToast("✅ Rekap berhasil dibagikan!");
+      }).catch((err) => {
+        if (err.name !== "AbortError") {
+          this.fallbackCopyText(text);
+        }
+      });
+      return;
+    }
+    this.fallbackCopyText(text);
+  },
+
+  fallbackCopyText(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
         this.showToast("📋 Rekap hasil laga berhasil disalin! Siap ditempel ke WhatsApp.");
       }).catch(() => {
-        prompt("Salin teks rekap pertandingan berikut:", text);
+        this.legacyCopyText(text);
       });
     } else {
+      this.legacyCopyText(text);
+    }
+  },
+
+  legacyCopyText(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand("copy");
+      this.showToast("📋 Rekap hasil laga berhasil disalin! Siap ditempel ke WhatsApp.");
+    } catch (e) {
       prompt("Salin teks rekap pertandingan berikut:", text);
     }
+    document.body.removeChild(ta);
+  },
+
+  shareToWhatsApp() {
+    const config = (this.store && this.store.data && this.store.data.config) || {};
+    const tName = config.tournamentName || 'ACC "Al-Fayyadh Champions Cup" 2026';
+    const text = encodeURIComponent(
+      `🏆 *${tName}*\n` +
+      `Pantau jadwal pertandingan, skor langsung (live score), klasemen grup, bagan fase gugur, dan sanksi kartu di portal resmi turnamen:\n` +
+      window.location.href
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   },
 
   // =========================================================
@@ -1775,8 +1821,9 @@ const app = {
     // Mobile Bottom Nav
     document.querySelectorAll(".mobile-nav-item").forEach(item => {
       item.addEventListener("click", (e) => {
-        const tab = e.currentTarget.dataset.tab;
-        this.switchTab(tab);
+        const btn = e.target.closest(".mobile-nav-item") || e.currentTarget;
+        const tab = btn?.dataset?.tab;
+        if (tab) this.switchTab(tab);
       });
     });
 

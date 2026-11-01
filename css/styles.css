@@ -620,44 +620,7 @@ body.dark-theme .brand-text h1 {
   box-shadow: 0 4px 14px rgba(217, 119, 6, 0.38);
 }
 
-/* Mobile Bottom Navigation Bar */
-.mobile-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-color);
-  padding: 8px 12px;
-  z-index: 100;
-  justify-content: space-around;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
-}
-.mobile-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.65rem;
-  font-weight: 700;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  transition: var(--transition);
-}
-.mobile-nav-item svg {
-  width: 20px;
-  height: 20px;
-}
-.mobile-nav-item.active {
-  color: var(--primary);
-}
+
 
 @media (max-width: 768px) {
   .mobile-nav {
@@ -3684,12 +3647,13 @@ body.dark-theme .news-tag {
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid #e2e8f0;
   padding: 6px 2px calc(6px + env(safe-area-inset-bottom, 0px)) 2px;
-  z-index: 999;
+  z-index: 99999 !important;
   justify-content: space-around;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  pointer-events: auto !important;
 }
 .mobile-nav::-webkit-scrollbar {
   display: none;
@@ -3707,6 +3671,7 @@ body.dark-theme .mobile-nav {
   gap: 2px;
   flex: 1 0 auto;
   min-width: 44px;
+  min-height: 48px;
   color: #64748b;
   text-decoration: none;
   font-size: 0.60rem;
@@ -3718,10 +3683,18 @@ body.dark-theme .mobile-nav {
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
   user-select: none;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: rgba(217, 119, 6, 0.2) !important;
+  pointer-events: auto !important;
+}
+.mobile-nav-item svg,
+.mobile-nav-item svg *,
+.mobile-nav-item span {
+  pointer-events: none !important;
 }
 .mobile-nav-item svg {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   stroke-width: 2.2;
   transition: transform 0.2s ease, stroke 0.2s ease;
 }
@@ -3849,6 +3822,13 @@ body.dark-theme .mobile-nav-item.active {
     border-radius: 50% !important;
     font-size: 0.95rem !important;
     flex-shrink: 0 !important;
+    touch-action: manipulation !important;
+    cursor: pointer !important;
+  }
+  .header-icon-btn span,
+  .header-icon-btn svg,
+  .btn-admin-header span {
+    pointer-events: none !important;
   }
   .btn-admin-header #adminHeaderLabel {
     display: none !important;
