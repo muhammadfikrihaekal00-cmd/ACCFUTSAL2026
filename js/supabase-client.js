@@ -245,7 +245,7 @@
       }
     }
 
-    // Push Match Score with Security Validation (RPC protected against tampering)
+    // Push Match Score with Security Validation & Direct Realtime Cloud Sync
     async syncMatch(match, pinHash) {
       if (!this.client || !this.isConfigured) return false;
 
@@ -257,58 +257,78 @@
           ? (match.awayScore !== undefined && match.awayScore !== null ? parseInt(match.awayScore, 10) : (parseInt(match.awayScoreLive, 10) || 0))
           : 0;
 
-        // Try calling the security definer RPC function first
-        const { data, error } = await this.client.rpc('secure_update_match', {
-          p_match_id: match.id,
-          p_home_score: hScoreNum,
-          p_away_score: aScoreNum,
-          p_status: match.status,
-          p_scorers: match.scorers || [],
-          p_cards: match.cards || [],
-          p_pin_hash: pinHash || ""
-        });
+        const minuteNum = match.status === 'live'
+          ? (parseInt(String(match.liveMinute || "1").replace(/\D/g, ''), 10) || 1)
+          : 0;
 
-        if (!error) return true;
+        // 1. Try secure RPC if pinHash is provided
+        if (pinHash) {
+          try {
+            await this.client.rpc('secure_update_match', {
+              p_match_id: match.id,
+              p_home_score: hScoreNum,
+              p_away_score: aScoreNum,
+              p_status: match.status,
+              p_scorers: match.scorers || [],
+              p_cards: match.cards || [],
+              p_pin_hash: pinHash
+            });
+          } catch (rpcErr) {
+            console.warn('[Supabase] secure_update_match info:', rpcErr);
+          }
+        }
 
-        // Fallback: direct table update if RLS allows authenticated session
-        const payload = {
-          id: match.id,
-          home_id: match.homeId,
-          away_id: match.awayId,
-          date: match.date || "22 Nov 2026",
-          time: match.time || "08:00",
-          pitch: match.pitch || match.venue || "Lapangan 1",
-          stage: match.stage || "group",
-          group_letter: match.group || null,
-          round_name: match.roundName || "",
+        // 2. Direct table update: Persists minute_live, scores & triggers Supabase Realtime across all devices
+        const updatePayload = {
           home_score: hScoreNum,
           away_score: aScoreNum,
           home_score_live: hScoreNum,
           away_score_live: aScoreNum,
-          minute_live: match.status === 'live' ? (parseInt((match.liveMinute || "1").replace(/\D/g, ''), 10) || 1) : 0,
+          minute_live: minuteNum,
           status: match.status || 'scheduled',
           scorers: match.scorers || [],
           cards: match.cards || [],
-          penalty_home_score: match.penaltyHomeScore !== undefined ? match.penaltyHomeScore : null,
-          penalty_away_score: match.penaltyAwayScore !== undefined ? match.penaltyAwayScore : null,
-          penalty_winner: match.penaltyWinner !== undefined ? match.penaltyWinner : null,
           updated_at: new Date().toISOString()
         };
 
-        let { error: directErr } = await this.client
-          .from('matches')
-          .upsert(payload);
+        if (match.penaltyHomeScore !== undefined) updatePayload.penalty_home_score = match.penaltyHomeScore;
+        if (match.penaltyAwayScore !== undefined) updatePayload.penalty_away_score = match.penaltyAwayScore;
+        if (match.penaltyWinner !== undefined) updatePayload.penalty_winner = match.penaltyWinner;
 
-        if (directErr && (directErr.code === '42703' || (directErr.message && directErr.message.includes('penalty')))) {
-          delete payload.penalty_home_score;
-          delete payload.penalty_away_score;
-          delete payload.penalty_winner;
-          const retry = await this.client.from('matches').upsert(payload);
-          directErr = retry.error;
+        let { error: updateErr } = await this.client
+          .from('matches')
+          .update(updatePayload)
+          .eq('id', match.id);
+
+        if (updateErr && (updateErr.code === '42703' || (updateErr.message && updateErr.message.includes('penalty')))) {
+          delete updatePayload.penalty_home_score;
+          delete updatePayload.penalty_away_score;
+          delete updatePayload.penalty_winner;
+          const retry = await this.client.from('matches').update(updatePayload).eq('id', match.id);
+          updateErr = retry.error;
         }
 
-        return !directErr;
+        // 3. Fallback: If row doesn't exist yet, upsert full row
+        if (updateErr) {
+          const upsertPayload = {
+            id: match.id,
+            home_id: match.homeId,
+            away_id: match.awayId,
+            date: match.date || "22 Nov 2026",
+            time: match.time || "08:00",
+            pitch: match.pitch || match.venue || "Lapangan 1",
+            stage: match.stage || "group",
+            group_letter: match.group || null,
+            round_name: match.roundName || "",
+            ...updatePayload
+          };
+          const { error: upsertErr } = await this.client.from('matches').upsert(upsertPayload);
+          return !upsertErr;
+        }
+
+        return true;
       } catch (e) {
+        console.error('[Supabase] syncMatch error:', e);
         return false;
       }
     }

@@ -850,14 +850,16 @@ const app = {
           m.liveStartedAt = now - ((curMin - 1) * 60000);
         }
 
-        const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
-        // Strictly monotonic (menit hanya boleh bertambah, tidak pernah berkurang)
-        const newMin = Math.min(50, Math.max(curMin, elapsed));
-        const newMinStr = `${newMin}'`;
+        // Hanya panitia resmi yang otomatis memajukan timer
+        if (isOfficial) {
+          const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
+          const newMin = Math.min(50, Math.max(curMin, elapsed));
+          const newMinStr = `${newMin}'`;
 
-        if (m.liveMinute !== newMinStr) {
-          m.liveMinute = newMinStr;
-          hasChange = true;
+          if (m.liveMinute !== newMinStr) {
+            m.liveMinute = newMinStr;
+            hasChange = true;
+          }
         }
       });
 
@@ -879,14 +881,17 @@ const app = {
           const activeM = liveMatches.find(m => m.id === activeModalMatchId);
           if (activeM) {
             const matchMinInput = document.getElementById("matchMinuteInput");
-            if (matchMinInput) matchMinInput.value = activeM.liveMinute;
+            if (matchMinInput && document.activeElement !== matchMinInput) {
+              matchMinInput.value = activeM.liveMinute;
+            }
           }
         }
 
         // Sinkronkan menit terbaru ke Supabase Cloud (Hanya oleh panitia resmi agar tidak bentrok)
         if (isOfficial && window.SupabaseService && window.SupabaseService.syncMatch) {
+          const pin = (window.admin && admin.adminPinHash) || "";
           liveMatches.forEach(m => {
-            window.SupabaseService.syncMatch(m);
+            window.SupabaseService.syncMatch(m, pin);
           });
         }
       }
@@ -1191,18 +1196,19 @@ const app = {
             if (remoteMatch.cards) mapped.cards = remoteMatch.cards;
             if (remoteMatch.minute_live !== undefined && remoteMatch.minute_live !== null) {
               const remoteMinNum = parseInt(remoteMatch.minute_live, 10) || 0;
-              const curMinNum = parseInt((curMatch.liveMinute || "0").replace(/\D/g, ''), 10) || 0;
               const finalStatus = remoteMatch.status || curMatch.status;
               const isMatchLive = finalStatus === 'live';
-              const isActiveInAdminModal = Boolean(window.admin && (admin.activeMatchId === remoteMatch.id || admin.activeQuickMatchId === remoteMatch.id));
+              const isActiveInAdminModal = Boolean(window.admin && admin.isAuthenticated && (admin.activeMatchId === remoteMatch.id || admin.activeQuickMatchId === remoteMatch.id));
               if (isMatchLive) {
                 if (!isActiveInAdminModal) {
-                  if (remoteMinNum >= curMinNum || curMatch.status !== 'live') {
-                    mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
-                  }
+                  const validatedMin = Math.max(1, remoteMinNum);
+                  mapped.liveMinute = `${validatedMin}'`;
+                  mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
                 }
               } else {
                 mapped.liveMinute = "";
+                delete mapped.liveStartedAt;
+                delete curMatch.liveStartedAt;
               }
             }
             if (remoteMatch.penalty_home_score !== undefined) mapped.penaltyHomeScore = remoteMatch.penalty_home_score;
@@ -1236,7 +1242,7 @@ const app = {
 
             if ((mapped.status || curMatch.status) === 'live') {
               const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-              mapped.liveStartedAt = curMatch.liveStartedAt || (Date.now() - ((minNum - 1) * 60000));
+              mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
             } else if ((mapped.status || curMatch.status) === 'finished') {
               delete mapped.liveStartedAt;
               delete curMatch.liveStartedAt;
@@ -1320,18 +1326,19 @@ const app = {
         if (payload.cards) mapped.cards = payload.cards;
         if (payload.minute_live !== undefined && payload.minute_live !== null) {
           const remoteMinNum = parseInt(payload.minute_live, 10) || 0;
-          const curMinNum = parseInt((curMatch.liveMinute || "0").replace(/\D/g, ''), 10) || 0;
           const finalStatus = payload.status || curMatch.status;
           const isMatchLive = finalStatus === 'live';
-          const isActiveInAdminModal = Boolean(window.admin && (admin.activeMatchId === payload.id || admin.activeQuickMatchId === payload.id));
+          const isActiveInAdminModal = Boolean(window.admin && admin.isAuthenticated && (admin.activeMatchId === payload.id || admin.activeQuickMatchId === payload.id));
           if (isMatchLive) {
             if (!isActiveInAdminModal) {
-              if (remoteMinNum >= curMinNum || curMatch.status !== 'live') {
-                mapped.liveMinute = `${Math.max(1, remoteMinNum)}'`;
-              }
+              const validatedMin = Math.max(1, remoteMinNum);
+              mapped.liveMinute = `${validatedMin}'`;
+              mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
             }
           } else {
             mapped.liveMinute = "";
+            delete mapped.liveStartedAt;
+            delete curMatch.liveStartedAt;
           }
         }
         if (payload.penalty_home_score !== undefined) mapped.penaltyHomeScore = payload.penalty_home_score;
@@ -1365,7 +1372,7 @@ const app = {
 
         if ((mapped.status || curMatch.status) === 'live') {
           const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-          mapped.liveStartedAt = curMatch.liveStartedAt || (Date.now() - ((minNum - 1) * 60000));
+          mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
         } else if ((mapped.status || curMatch.status) === 'finished') {
           delete mapped.liveStartedAt;
           delete curMatch.liveStartedAt;
@@ -1644,6 +1651,11 @@ const app = {
     const noticeEl = document.getElementById("floatingLiveNotice");
     if (!noticeEl) return;
 
+    if (this.currentTab === "matches" || this.floatingNoticeDismissed) {
+      noticeEl.style.display = "none";
+      return;
+    }
+
     const matches = (this.store && this.store.data && this.store.data.matches) || [];
     const liveMatches = matches.filter(m => m.status === "live");
 
@@ -1653,7 +1665,8 @@ const app = {
       const away = this.store.getTeam(firstLive.awayId) || { name: firstLive.awayPlaceholder || "TBD", shortName: "TBD" };
       const hScore = firstLive.homeScoreLive ?? firstLive.homeScore ?? 0;
       const aScore = firstLive.awayScoreLive ?? firstLive.awayScore ?? 0;
-      const minText = firstLive.liveMinute ? `(${firstLive.liveMinute}')` : '';
+      const cleanMin = (firstLive.liveMinute || "").toString().replace(/\D/g, "");
+      const minText = cleanMin ? `(${cleanMin}')` : '';
 
       const textEl = document.getElementById("floatingLiveText");
       if (textEl) {
@@ -1664,6 +1677,13 @@ const app = {
     } else {
       noticeEl.style.display = "none";
     }
+  },
+
+  dismissFloatingLiveNotice(e) {
+    if (e) e.stopPropagation();
+    this.floatingNoticeDismissed = true;
+    const noticeEl = document.getElementById("floatingLiveNotice");
+    if (noticeEl) noticeEl.style.display = "none";
   },
 
   jumpToLiveMatch() {
@@ -2246,7 +2266,8 @@ const app = {
       const isUpcoming = !isLive && !isFinished;
       const statusClass = isLive ? "status-live" : (isFinished ? "status-finished" : "status-upcoming");
       const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
-      const cleanMinBadge = m.liveMinute ? (m.liveMinute.toString().endsWith("'") ? m.liveMinute : `${m.liveMinute}'`) : '';
+      const minOnly = (m.liveMinute || "").toString().replace(/\D/g, "");
+      const cleanMinBadge = minOnly ? `${minOnly}'` : '';
 
       let statusBarHtml = "";
       if (isLive) {
@@ -2254,7 +2275,7 @@ const app = {
           <div class="match-status-bar bar-live">
             <div class="bar-left">
               <span class="pulse-dot"></span>
-              <strong>LIVE${m.liveMinute ? ` • Menit ${cleanMinBadge}` : ''}</strong>
+              <strong>LIVE${cleanMinBadge ? ` • Menit ${cleanMinBadge}` : ''}</strong>
             </div>
             <div class="bar-right">
               <span>${m.pitch || 'Lapangan Utama'}</span>

@@ -461,7 +461,7 @@ const admin = {
       if (match) {
         app.store.saveData();
         if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match);
+          window.SupabaseService.syncMatch(match, this.adminPinHash || "");
         }
       }
       this.startLiveTimer();
@@ -476,7 +476,7 @@ const admin = {
         }
         app.store.saveData();
         if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match);
+          window.SupabaseService.syncMatch(match, this.adminPinHash || "");
         }
       }
     }
@@ -585,7 +585,7 @@ const admin = {
         match.liveMinute = elapsedStr;
         app.store.saveData();
         if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match);
+          window.SupabaseService.syncMatch(match, this.adminPinHash || "");
         }
       }
     };
@@ -618,7 +618,7 @@ const admin = {
         match.liveStartedAt = Date.now() - ((cur - 1) * 60000);
         app.store.saveData();
         if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match);
+          window.SupabaseService.syncMatch(match, this.adminPinHash || "");
         }
       }
     }
@@ -651,7 +651,7 @@ const admin = {
     }
 
     if (window.SupabaseService && window.SupabaseService.syncMatch) {
-      window.SupabaseService.syncMatch(match);
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
     }
     app.showToast(`⏱️ Menit disetel ke ${nextStr}`);
   },
