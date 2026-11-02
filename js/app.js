@@ -978,30 +978,26 @@ const app = {
   },
 
   // =========================================================
-  // YOUTUBE EMBED HELPER & LIVE STREAM HERO
+  // YOUTUBE EMBED HELPER & LIVE STREAM HERO (LITE FACADE PATTERN)
   // =========================================================
-  formatYoutubeEmbedUrl(url) {
-    if (!url) return "https://www.youtube.com/embed/5qap5aO4i9A";
+  getYoutubeVideoId(url) {
+    if (!url) return "5qap5aO4i9A";
     url = url.trim();
-    if (url.includes("youtube.com/embed/")) {
-      return url;
-    }
+    const embedMatch = url.match(/embed\/([a-zA-Z0-9_-]+)/);
+    if (embedMatch && embedMatch[1]) return embedMatch[1].split(/[?&]/)[0];
     const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
-    if (shortMatch && shortMatch[1]) {
-      return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1&mute=1`;
-    }
+    if (shortMatch && shortMatch[1]) return shortMatch[1].split(/[?&]/)[0];
     const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
-    if (watchMatch && watchMatch[1]) {
-      return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1&mute=1`;
-    }
+    if (watchMatch && watchMatch[1]) return watchMatch[1].split('&')[0];
     const liveMatch = url.match(/youtube\.com\/live\/([a-zA-Z0-9_-]+)/);
-    if (liveMatch && liveMatch[1]) {
-      return `https://www.youtube.com/embed/${liveMatch[1]}?autoplay=1&mute=1`;
-    }
-    if (/^[a-zA-Z0-9_-]{10,12}$/.test(url)) {
-      return `https://www.youtube.com/embed/${url}?autoplay=1&mute=1`;
-    }
-    return url;
+    if (liveMatch && liveMatch[1]) return liveMatch[1].split(/[?&]/)[0];
+    if (/^[a-zA-Z0-9_-]{10,12}$/.test(url)) return url;
+    return "5qap5aO4i9A";
+  },
+
+  formatYoutubeEmbedUrl(url) {
+    const videoId = this.getYoutubeVideoId(url);
+    return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&rel=0`;
   },
 
   renderLiveStreamHero() {
@@ -1011,7 +1007,7 @@ const app = {
 
     const cfg = (this.store && this.store.data && this.store.data.config) || {};
     const rawYtUrl = cfg.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
-    const embedUrl = this.formatYoutubeEmbedUrl(rawYtUrl);
+    const videoId = this.getYoutubeVideoId(rawYtUrl);
     const title = cfg.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
 
     // Cari apakah ada pertandingan yang sedang LIVE saat ini
@@ -1066,6 +1062,22 @@ const app = {
       }
     }
 
+    // Cek apakah video player iframe sudah sedang aktif berputar
+    const existingPlayer = document.getElementById("mainYoutubeIframe");
+    const isAlreadyPlaying = Boolean(existingPlayer);
+
+    // Jika video sedang aktif ditonton, cukup update header & ticker tanpa me-reset iframe video
+    if (isAlreadyPlaying) {
+      const titleEl = container.querySelector(".live-stream-title");
+      if (titleEl) titleEl.textContent = title;
+      const tickerWrapper = container.querySelector(".live-stream-match-ticker");
+      if (tickerWrapper) {
+        tickerWrapper.outerHTML = liveTickerHtml;
+      }
+      return;
+    }
+
+    // Default: Lite YouTube Facade (Sangat cepat, hemat payload 2.5MB & 0 cookie pelacak saat muat)
     container.innerHTML = `
       <div class="live-stream-card">
         <!-- HEADER SIARAN LANGSUNG -->
@@ -1086,21 +1098,50 @@ const app = {
           </div>
         </div>
 
-        <!-- YOUTUBE VIDEO EMBED WRAPPER (16:9 RATIO) -->
-        <div class="live-video-player-wrapper">
-          <iframe 
-            id="mainYoutubeIframe" 
-            src="${embedUrl}" 
-            title="YouTube Live Siaran ACC MTQ Al-Fayyadh" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            allowfullscreen>
-          </iframe>
+        <!-- LITE YOUTUBE FACADE (On-demand video loading) -->
+        <div class="live-video-player-wrapper yt-facade" id="ytVideoPlayerContainer" onclick="app.playYoutubeLiveStream('${videoId}')" title="Klik untuk memutar siaran langsung YouTube">
+          <img class="yt-facade-thumb" 
+               src="https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp" 
+               onerror="this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg'" 
+               alt="${title}" 
+               loading="lazy" 
+               decoding="async">
+          <div class="yt-facade-overlay">
+            <div class="yt-facade-play-btn" aria-label="Putar Siaran Langsung YouTube">
+              <svg viewBox="0 0 68 48" width="68" height="48">
+                <path class="yt-play-bg" d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#f00"></path>
+                <path d="M45 24L27 14v20z" fill="#fff"></path>
+              </svg>
+            </div>
+            <div class="yt-facade-info">
+              <span class="yt-facade-badge">🔴 KLIK UNTUK NONTON LIVE STREAM</span>
+              <span class="yt-facade-title">${title}</span>
+            </div>
+          </div>
         </div>
 
         <!-- MATCH TICKER DI BAWAH VIDEO -->
         ${liveTickerHtml}
       </div>
     `;
+  },
+
+  playYoutubeLiveStream(videoId) {
+    const container = document.getElementById("ytVideoPlayerContainer");
+    if (!container) return;
+    const vid = videoId || this.getYoutubeVideoId((this.store && this.store.data && this.store.data.config && this.store.data.config.youtubeLiveUrl));
+    container.innerHTML = `
+      <iframe 
+        id="mainYoutubeIframe" 
+        src="https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0" 
+        title="YouTube Live Siaran ACC MTQ Al-Fayyadh" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+        allowfullscreen>
+      </iframe>
+    `;
+    container.classList.remove("yt-facade");
+    container.style.cursor = "default";
+    container.onclick = null;
   },
 
   setCategory(cat, showToastMsg = true) {
@@ -1125,7 +1166,7 @@ const app = {
   initSupabaseSync() {
     if (!window.SupabaseService) return;
 
-    // Listen for realtime live score & match changes
+    // Listen for realtime live score & match changes via WebSocket (instan ~50ms)
     window.SupabaseService.onRemoteUpdate((table, payload) => {
       this.handleRemoteSync(table, payload);
     });
@@ -1133,15 +1174,20 @@ const app = {
     // Helper to apply full remote dataset with change detection
     let lastDataSignature = "";
     let isInitialLoad = true;
+    let isSyncing = false;
+
     const syncFromRemote = () => {
-      if (!window.SupabaseService) return;
+      if (!window.SupabaseService || isSyncing) return;
       const isReady = typeof window.SupabaseService.isReady === 'function'
         ? window.SupabaseService.isReady()
         : Boolean(window.SupabaseService.isConfigured);
       if (!isReady && typeof window.SupabaseService.init === 'function') {
         window.SupabaseService.init();
       }
+
+      isSyncing = true;
       window.SupabaseService.fetchAllData().then(data => {
+        isSyncing = false;
         if (data) {
           // Generate signature dari seluruh field penting: skor, menit, kartu, pencetak gol, status
           const signature = (data.matches ? data.matches.map(m => 
@@ -1161,14 +1207,19 @@ const app = {
           }
         }
       }).catch(err => {
+        isSyncing = false;
         console.warn("Supabase sync notice:", err);
       });
     };
 
-    // Initial silent load from Supabase
-    syncFromRemote();
+    // Defer initial load non-blocking agar tidak membebani rendering FCP/LCP Lighthouse
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(() => syncFromRemote(), { timeout: 1500 });
+    } else {
+      setTimeout(syncFromRemote, 400);
+    }
 
-    // Auto-refresh instan saat pengguna kembali ke aplikasi / unlock HP
+    // Auto-refresh instan saat pengguna kembali ke aplikasi / unlock HP / jaringan reconnect
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         syncFromRemote();
@@ -1181,12 +1232,26 @@ const app = {
       syncFromRemote();
     });
 
-    // Fast polling fallback (setiap 3.5 detik) agar HP penonton otomatis ter-update cepat meskipun WebSocket tidur
+    // Smart Fallback Polling (WebSocket realtime sudah menangani push instan).
+    // Polling hanya berjalan sebagai pengaman koneksi:
+    // 15 detik jika ada match LIVE, dan 45 detik jika tidak ada match LIVE.
     setInterval(() => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState !== "visible") return;
+      const matches = (this.store && this.store.data && this.store.data.matches) || [];
+      const hasLiveMatch = matches.some(m => m.status === "live");
+      if (hasLiveMatch) {
         syncFromRemote();
       }
-    }, 3500);
+    }, 15000);
+
+    setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      const matches = (this.store && this.store.data && this.store.data.matches) || [];
+      const hasLiveMatch = matches.some(m => m.status === "live");
+      if (!hasLiveMatch) {
+        syncFromRemote();
+      }
+    }, 45000);
   },
 
   applyRemoteData(data) {

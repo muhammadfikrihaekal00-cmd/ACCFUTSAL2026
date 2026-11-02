@@ -15,10 +15,14 @@
   <!-- Google Fonts Preconnect & Optimized Loading -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+  </noscript>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=7.1">
+  <link rel="stylesheet" href="css/styles.css?v=7.2">
 </head>
 <body>
 
@@ -84,7 +88,7 @@
   <header class="header">
     <div class="container header-inner">
       <div class="brand-group">
-        <img src="assets/acc_logo.png" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo">
+        <img src="assets/acc_logo.png" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo" width="48" height="68" decoding="async">
         <div class="brand-text">
           <h1 id="headerTitle">ACC 2026</h1>
           <p>Ma'had Tahfizhul Qur'an Al Fayyadh</p>
@@ -300,7 +304,7 @@
 
       <div class="mvp-spotlight-card scroll-reveal reveal-right">
         <div class="mvp-photo-wrapper">
-          <img src="assets/mvp_player.jpg" alt="Foto MVP Pemain Bintang ACC" class="mvp-photo-img" id="mvpPhoto">
+          <img src="assets/mvp_player.jpg" alt="Foto MVP Pemain Bintang ACC" class="mvp-photo-img" id="mvpPhoto" width="160" height="200" loading="lazy" decoding="async">
           <div class="mvp-badge-overlay">
             <span>🏆</span> <span>MVP MATCHDAY #2</span>
           </div>
@@ -1965,17 +1969,17 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/security.js?v=7.1"></script>
-  <script src="js/supabase-client.js?v=7.1"></script>
-  <script src="js/data.js?v=7.1"></script>
-  <script src="js/app.js?v=7.1"></script>
-  <script src="js/admin.js?v=7.1"></script>
+  <script src="js/security.js?v=7.2"></script>
+  <script src="js/supabase-client.js?v=7.2"></script>
+  <script src="js/data.js?v=7.2"></script>
+  <script src="js/app.js?v=7.2"></script>
+  <script src="js/admin.js?v=7.2"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=49')
+        navigator.serviceWorker.register('sw.js?v=50')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
