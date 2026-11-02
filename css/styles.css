@@ -4852,6 +4852,10 @@ body.dark-theme .fixture-team-row:hover {
 .yt-facade-play-btn {
   width: 68px;
   height: 48px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

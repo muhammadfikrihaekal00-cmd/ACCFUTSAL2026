@@ -1107,12 +1107,12 @@ const app = {
                loading="lazy" 
                decoding="async">
           <div class="yt-facade-overlay">
-            <div class="yt-facade-play-btn" aria-label="Putar Siaran Langsung YouTube">
-              <svg viewBox="0 0 68 48" width="68" height="48">
+            <button type="button" class="yt-facade-play-btn" aria-label="Putar Siaran Langsung YouTube">
+              <svg viewBox="0 0 68 48" width="68" height="48" aria-hidden="true">
                 <path class="yt-play-bg" d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#f00"></path>
                 <path d="M45 24L27 14v20z" fill="#fff"></path>
               </svg>
-            </div>
+            </button>
             <div class="yt-facade-info">
               <span class="yt-facade-badge">🔴 KLIK UNTUK NONTON LIVE STREAM</span>
               <span class="yt-facade-title">${title}</span>
@@ -1212,11 +1212,22 @@ const app = {
       });
     };
 
-    // Defer initial load non-blocking agar tidak membebani rendering FCP/LCP Lighthouse
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(() => syncFromRemote(), { timeout: 1500 });
+    // Defer initial remote fetch sampai halaman selesai di-render sempurna (window load + delay)
+    // Data lokal (memory/localStorage) langsung tampil instan tanpa antrean Supabase di critical path FCP/LCP
+    const startInitialSync = () => {
+      setTimeout(() => {
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(() => syncFromRemote(), { timeout: 3500 });
+        } else {
+          syncFromRemote();
+        }
+      }, 2500);
+    };
+
+    if (document.readyState === "complete") {
+      startInitialSync();
     } else {
-      setTimeout(syncFromRemote, 400);
+      window.addEventListener("load", startInitialSync, { once: true });
     }
 
     // Auto-refresh instan saat pengguna kembali ke aplikasi / unlock HP / jaringan reconnect
