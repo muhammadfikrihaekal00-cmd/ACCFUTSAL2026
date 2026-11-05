@@ -35,7 +35,7 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.4";
+      var CURRENT_VER = "8.5";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -98,7 +98,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.4">
+  <link rel="stylesheet" href="css/styles.css?v=8.5">
 </head>
 <body>
 
@@ -2135,11 +2135,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.4"></script>
-  <script defer src="js/supabase-client.js?v=8.4"></script>
-  <script defer src="js/data.js?v=8.4"></script>
-  <script defer src="js/admin.js?v=8.4"></script>
-  <script defer src="js/app.js?v=8.4"></script>
+  <script defer src="js/security.js?v=8.5"></script>
+  <script defer src="js/supabase-client.js?v=8.5"></script>
+  <script defer src="js/data.js?v=8.5"></script>
+  <script defer src="js/admin.js?v=8.5"></script>
+  <script defer src="js/app.js?v=8.5"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2156,7 +2156,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=58')
+        navigator.serviceWorker.register('sw.js?v=59')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

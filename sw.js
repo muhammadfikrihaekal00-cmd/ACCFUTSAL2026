@@ -1,15 +1,15 @@
 // Service Worker for Pondok Futsal Cup Offline PWA Support
-const CACHE_NAME = 'acc-al-fayyadh-futsal-v58';
+const CACHE_NAME = 'acc-al-fayyadh-futsal-v59';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './css/styles.css?v=8.4',
-  './js/data.js?v=8.4',
-  './js/admin.js?v=8.4',
-  './js/app.js?v=8.4',
-  './js/supabase-client.js?v=8.4',
-  './js/security.js?v=8.4',
+  './css/styles.css?v=8.5',
+  './js/data.js?v=8.5',
+  './js/admin.js?v=8.5',
+  './js/app.js?v=8.5',
+  './js/supabase-client.js?v=8.5',
+  './js/security.js?v=8.5',
   './assets/acc_logo.png',
   './assets/icon-192.png',
   './assets/icon-512.png',

@@ -587,6 +587,13 @@ const admin = {
         if (window.SupabaseService && window.SupabaseService.syncMatch) {
           window.SupabaseService.syncMatch(match, this.adminPinHash || "");
         }
+        app.renderCurrentView();
+        if (app.currentTab === "matches" || !app.currentTab || app.currentTab === "home") {
+          app.renderMatches();
+        }
+        app.renderLiveStreamHero();
+        app.updateFloatingLiveNotice();
+        app.refreshActiveMatchDetail();
       }
     };
 

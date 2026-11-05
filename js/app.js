@@ -1340,8 +1340,15 @@ const app = {
                 if (!isActiveInAdminModal) {
                   const validatedMin = Math.max(1, remoteMinNum);
                   mapped.liveMinute = `${validatedMin}'`;
-                  if (!curMatch.liveStartedAt || curMatch.liveMinute !== `${validatedMin}'`) {
+                  if (!curMatch.liveStartedAt) {
                     mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+                  } else {
+                    const curLocalElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
+                    if (Math.abs(validatedMin - curLocalElapsed) > 1) {
+                      mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+                    } else {
+                      mapped.liveStartedAt = curMatch.liveStartedAt;
+                    }
                   }
                 }
               } else {
@@ -1381,7 +1388,18 @@ const app = {
 
             if ((mapped.status || curMatch.status) === 'live') {
               const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-              mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+              if (!mapped.liveStartedAt) {
+                if (curMatch.liveStartedAt) {
+                  const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
+                  if (Math.abs(minNum - curElapsed) > 1) {
+                    mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+                  } else {
+                    mapped.liveStartedAt = curMatch.liveStartedAt;
+                  }
+                } else {
+                  mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+                }
+              }
             } else if ((mapped.status || curMatch.status) === 'finished') {
               delete mapped.liveStartedAt;
               delete curMatch.liveStartedAt;
@@ -1472,8 +1490,15 @@ const app = {
             if (!isActiveInAdminModal) {
               const validatedMin = Math.max(1, remoteMinNum);
               mapped.liveMinute = `${validatedMin}'`;
-              if (!curMatch.liveStartedAt || curMatch.liveMinute !== `${validatedMin}'`) {
+              if (!curMatch.liveStartedAt) {
                 mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+              } else {
+                const curLocalElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
+                if (Math.abs(validatedMin - curLocalElapsed) > 1) {
+                  mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+                } else {
+                  mapped.liveStartedAt = curMatch.liveStartedAt;
+                }
               }
             }
           } else {
@@ -1513,7 +1538,18 @@ const app = {
 
         if ((mapped.status || curMatch.status) === 'live') {
           const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-          mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+          if (!mapped.liveStartedAt) {
+            if (curMatch.liveStartedAt) {
+              const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
+              if (Math.abs(minNum - curElapsed) > 1) {
+                mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+              } else {
+                mapped.liveStartedAt = curMatch.liveStartedAt;
+              }
+            } else {
+              mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+            }
+          }
         } else if ((mapped.status || curMatch.status) === 'finished') {
           delete mapped.liveStartedAt;
           delete curMatch.liveStartedAt;
