@@ -28,7 +28,7 @@
   </noscript>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=7.4">
+  <link rel="stylesheet" href="css/styles.css?v=8.0">
 </head>
 <body>
 
@@ -217,14 +217,14 @@
     <!-- ========================================================= -->
     <div class="nav-tabs-wrapper">
       <nav class="nav-tabs" aria-label="Menu Utama Turnamen">
-        <button class="tab-btn active" data-tab="home">Beranda</button>
-        <button class="tab-btn" data-tab="matches">Jadwal</button>
-        <button class="tab-btn" data-tab="standings">Klasemen</button>
-        <button class="tab-btn" data-tab="bracket">Bagan</button>
-        <button class="tab-btn" data-tab="teams">Tim</button>
-        <button class="tab-btn" data-tab="scorers">Top Skor</button>
-        <button class="tab-btn" data-tab="discipline">Disiplin</button>
-        <button class="tab-btn" data-tab="juknis">Regulasi</button>
+        <button type="button" class="tab-btn active" data-tab="home" onclick="app.switchTab('home')">Beranda</button>
+        <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
+        <button type="button" class="tab-btn" data-tab="standings" onclick="app.switchTab('standings')">Klasemen</button>
+        <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
+        <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
+        <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
+        <button type="button" class="tab-btn" data-tab="discipline" onclick="app.switchTab('discipline')">Disiplin</button>
+        <button type="button" class="tab-btn" data-tab="juknis" onclick="app.switchTab('juknis')">Regulasi</button>
       </nav>
     </div>
 
@@ -1975,17 +1975,17 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=7.4"></script>
-  <script defer src="js/supabase-client.js?v=7.4"></script>
-  <script defer src="js/data.js?v=7.4"></script>
-  <script defer src="js/app.js?v=7.4"></script>
-  <script defer src="js/admin.js?v=7.4"></script>
+  <script defer src="js/security.js?v=8.0"></script>
+  <script defer src="js/supabase-client.js?v=8.0"></script>
+  <script defer src="js/data.js?v=8.0"></script>
+  <script defer src="js/admin.js?v=8.0"></script>
+  <script defer src="js/app.js?v=8.0"></script>
 
   <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=52')
+        navigator.serviceWorker.register('sw.js?v=53')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

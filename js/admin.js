@@ -2,13 +2,13 @@
 const admin = {
   isAuthenticated: false,
   activeMatchId: null,
+  activeQuickMatchId: null,
+  adminPinHash: "",
 
   init() {
     this.checkSession();
     this.bindAdminEvents();
   },
-
-  adminPinHash: "",
 
   checkSession() {
     if (sessionStorage.getItem("pondok_futsal_admin_auth") === "true") {
@@ -3149,9 +3149,13 @@ const admin = {
   }
 };
 
-// Initialize Admin
-document.addEventListener("DOMContentLoaded", () => {
-  admin.init();
-});
-
 window.admin = admin;
+
+// Initialize Admin
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    try { admin.init(); } catch (e) { console.warn("Admin init:", e); }
+  });
+} else {
+  try { admin.init(); } catch (e) { console.warn("Admin init:", e); }
+}

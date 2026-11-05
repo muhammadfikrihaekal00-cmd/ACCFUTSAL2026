@@ -1,4 +1,11 @@
 // app.js - Main Tournament Logic & UI Rendering
+window.admin = window.admin || {
+  isAuthenticated: false,
+  activeMatchId: null,
+  activeQuickMatchId: null,
+  adminPinHash: ""
+};
+
 class TournamentStore {
   constructor() {
     this.STORAGE_KEY = "acc_futsal_tournament_2026_clean_zero_v5";
@@ -615,26 +622,32 @@ const app = {
   currentTheme: "light", // Default ramah dengan white space luas
   currentViewMode: "participant", // "participant" atau "operator"
 
+  isAdmin() {
+    return Boolean(window.admin && window.admin.isAuthenticated === true);
+  },
+
   init() {
-    this.initSplashScreen();
-    this.initThemeAndViewMode();
-    this.updateCategoryUI();
-    this.renderHeader();
-    this.renderLiveStreamHero();
-    this.bindEvents();
-    this.renderCurrentView();
-    this.initPwa();
-    this.initSupabaseSync();
-    this.initGlobalLiveMatchTimer();
-    this.initNetworkStatusListeners();
-    this.initScrollReveal();
-    this.updateFloatingLiveNotice();
+    try { this.initSplashScreen(); } catch(e) { console.warn("Splash init:", e); }
+    try { this.initThemeAndViewMode(); } catch(e) { console.warn("Theme init:", e); }
+    try { this.updateCategoryUI(); } catch(e) { console.warn("Category init:", e); }
+    try { this.renderHeader(); } catch(e) { console.warn("Header init:", e); }
+    try { this.renderLiveStreamHero(); } catch(e) { console.warn("LiveStream init:", e); }
+    try { this.bindEvents(); } catch(e) { console.warn("Events init:", e); }
+    try { this.renderCurrentView(); } catch(e) { console.warn("View init:", e); }
+    try { this.initPwa(); } catch(e) { console.warn("PWA init:", e); }
+    try { this.initSupabaseSync(); } catch(e) { console.warn("Supabase init:", e); }
+    try { this.initGlobalLiveMatchTimer(); } catch(e) { console.warn("LiveTimer init:", e); }
+    try { this.initNetworkStatusListeners(); } catch(e) { console.warn("Network init:", e); }
+    try { this.initScrollReveal(); } catch(e) { console.warn("ScrollReveal init:", e); }
+    try { this.updateFloatingLiveNotice(); } catch(e) { console.warn("FloatingLive init:", e); }
 
     // DOM-level guarantee
-    const tickerEl = document.getElementById("tickerText");
-    if (tickerEl && tickerEl.textContent && (tickerEl.textContent.includes("ð") || tickerEl.textContent.includes("†") || !tickerEl.textContent.trim().startsWith("🏆"))) {
-      tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
-    }
+    try {
+      const tickerEl = document.getElementById("tickerText");
+      if (tickerEl && tickerEl.textContent && (tickerEl.textContent.includes("ð") || tickerEl.textContent.includes("†") || !tickerEl.textContent.trim().startsWith("🏆"))) {
+        tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
+      }
+    } catch(e) {}
   },
 
   cleanWhatsAppNumber(phone) {
@@ -888,7 +901,7 @@ const app = {
 
       // HANYA PANITIA RESMI yang berhak memajukan timer secara otomatis dan menyinkronkannya ke Supabase
       // Penonton dan perangkat mobile hanya menerima data resmi dari Supabase agar tidak bentrok atau berkurang
-      const isOfficial = Boolean(window.admin && admin.isAuthenticated);
+      const isOfficial = this.isAdmin();
 
       liveMatches.forEach(m => {
         let curMin = parseInt((m.liveMinute || "1'").toString().replace(/\D/g, ""), 10) || 1;
@@ -922,7 +935,7 @@ const app = {
         this.refreshActiveMatchDetail();
 
         // Jika modal admin sedang terbuka untuk pertandingan ini, update input menit
-        const activeModalMatchId = window.admin && (admin.activeMatchId || admin.activeQuickMatchId);
+        const activeModalMatchId = window.admin && (window.admin.activeMatchId || window.admin.activeQuickMatchId);
         if (activeModalMatchId) {
           const activeM = liveMatches.find(m => m.id === activeModalMatchId);
           if (activeM) {
@@ -935,7 +948,7 @@ const app = {
 
         // Sinkronkan menit terbaru ke Supabase Cloud (Hanya oleh panitia resmi agar tidak bentrok)
         if (isOfficial && window.SupabaseService && window.SupabaseService.syncMatch) {
-          const pin = (window.admin && admin.adminPinHash) || "";
+          const pin = (window.admin && window.admin.adminPinHash) || "";
           liveMatches.forEach(m => {
             window.SupabaseService.syncMatch(m, pin);
           });
@@ -1033,7 +1046,7 @@ const app = {
             <strong class="ticker-score-teams">${hTeam.name} <span class="score-highlight">${hScore} - ${aScore}</span> ${aTeam.name}</strong>
           </div>
           <div class="ticker-actions">
-            ${admin.isAuthenticated === true ? `<button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">✏️ Input Skor Laga</button>` : ''}
+            ${this.isAdmin() ? `<button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">✏️ Input Skor Laga</button>` : ''}
             <button class="btn btn-sm btn-outline" onclick="app.showMatchDetail('${lm.id}')">ℹ️ Detail Laga</button>
           </div>
         </div>
@@ -1090,7 +1103,7 @@ const app = {
             <h2 class="live-stream-title">${title}</h2>
           </div>
           <div class="live-stream-header-right">
-            ${admin.isAuthenticated === true ? `
+            ${this.isAdmin() ? `
               <button class="btn btn-outline btn-sm btn-edit-stream" onclick="admin.openYoutubeLiveModal()" title="Ubah Link Siaran Langsung YouTube (Panitia)">
                 ⚙️ Ganti Link YouTube Live
               </button>
@@ -1320,7 +1333,7 @@ const app = {
               const remoteMinNum = parseInt(remoteMatch.minute_live, 10) || 0;
               const finalStatus = remoteMatch.status || curMatch.status;
               const isMatchLive = finalStatus === 'live';
-              const isActiveInAdminModal = Boolean(window.admin && admin.isAuthenticated && (admin.activeMatchId === remoteMatch.id || admin.activeQuickMatchId === remoteMatch.id));
+              const isActiveInAdminModal = Boolean(this.isAdmin() && (window.admin.activeMatchId === remoteMatch.id || window.admin.activeQuickMatchId === remoteMatch.id));
               if (isMatchLive) {
                 if (!isActiveInAdminModal) {
                   const validatedMin = Math.max(1, remoteMinNum);
@@ -1450,7 +1463,7 @@ const app = {
           const remoteMinNum = parseInt(payload.minute_live, 10) || 0;
           const finalStatus = payload.status || curMatch.status;
           const isMatchLive = finalStatus === 'live';
-          const isActiveInAdminModal = Boolean(window.admin && admin.isAuthenticated && (admin.activeMatchId === payload.id || admin.activeQuickMatchId === payload.id));
+          const isActiveInAdminModal = Boolean(this.isAdmin() && (window.admin.activeMatchId === payload.id || window.admin.activeQuickMatchId === payload.id));
           if (isMatchLive) {
             if (!isActiveInAdminModal) {
               const validatedMin = Math.max(1, remoteMinNum);
@@ -1697,7 +1710,7 @@ const app = {
   },
 
   updateAdminVisibility() {
-    const isPanitia = admin.isAuthenticated === true;
+    const isPanitia = this.isAdmin();
 
     const btnQuickBanner = document.getElementById("btnChangeBannerQuick");
     if (btnQuickBanner) btnQuickBanner.style.display = isPanitia ? "inline-flex" : "none";
@@ -1843,8 +1856,14 @@ const app = {
   },
 
   initScrollReveal() {
+    const revealAll = () => {
+      document.querySelectorAll(".scroll-reveal:not(.is-revealed)").forEach(el => {
+        el.classList.add("is-revealed");
+      });
+    };
+
     if (!("IntersectionObserver" in window)) {
-      document.querySelectorAll(".scroll-reveal").forEach(el => el.classList.add("is-revealed"));
+      revealAll();
       return;
     }
 
@@ -1859,13 +1878,16 @@ const app = {
         }
       });
     }, {
-      threshold: 0.08,
-      rootMargin: "0px 0px -20px 0px"
+      threshold: 0.02,
+      rootMargin: "60px 0px 60px 0px"
     });
 
     document.querySelectorAll(".scroll-reveal:not(.is-revealed)").forEach(el => {
       this._scrollObserver.observe(el);
     });
+
+    // Safety fallback: Never allow content to stay invisible longer than 600ms
+    setTimeout(revealAll, 600);
   },
 
   scrollToLiveStream() {
@@ -2248,7 +2270,7 @@ const app = {
       this.store.data.sponsors = sponsors;
     }
 
-    const isPanitia = admin.isAuthenticated === true;
+    const isPanitia = this.isAdmin();
 
     // 1. Primary Grid: Sponsor Ukuran Besar (Baris Atas) - Tanpa tulisan 'Utama'
     const primaryContainer = document.getElementById("sponsorsPrimaryGrid");
@@ -2568,7 +2590,7 @@ const app = {
               <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 10px;">
                 Detail
               </button>
-              ${admin.isAuthenticated === true ? `
+              ${this.isAdmin() ? `
                 <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Tim Lawan & Jadwal" style="font-size: 0.72rem; padding: 4px 10px;">
                   Atur Lawan
                 </button>
@@ -3011,7 +3033,7 @@ const app = {
       countEl.textContent = `${teams.length} Tim (${this.currentCategory === 'all' ? 'Semua Kelas' : (this.currentCategory === 'SMP' ? 'SMP / MTs' : 'SD / MI')})`;
     }
 
-    const isPanitia = admin.isAuthenticated === true;
+    const isPanitia = this.isAdmin();
 
     container.innerHTML = teams.map((t, idx) => {
       const waLink = this.getWhatsAppUrl(t.official.phone, `Halo Official ${t.name}, informasi ACC 2026`);
@@ -3262,7 +3284,7 @@ const app = {
     const team = this.store.getTeam(teamId);
     if (!team) return;
 
-    const isPanitia = admin.isAuthenticated === true;
+    const isPanitia = this.isAdmin();
 
     const modal = document.getElementById("teamModal");
     const title = document.getElementById("teamModalTitle");
@@ -3594,13 +3616,22 @@ const app = {
   }
 };
 
+// Guarantee window.app is defined immediately before any event triggers
+window.app = app;
+
 // Initialize when DOM ready (supports already-loaded state on mobile/PWA cache)
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    app.init();
+    try {
+      app.init();
+    } catch (err) {
+      console.error("Critical app.init error:", err);
+    }
   });
 } else {
-  app.init();
+  try {
+    app.init();
+  } catch (err) {
+    console.error("Critical app.init error:", err);
+  }
 }
-
-window.app = app;

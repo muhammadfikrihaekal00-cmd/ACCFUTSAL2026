@@ -3,7 +3,7 @@
   "cleanUrls": true,
   "headers": [
     {
-      "source": "/(sw.js|index.html)",
+      "source": "/(sw.js|index.html|js/.*|css/.*)",
       "headers": [
         {
           "key": "Cache-Control",
