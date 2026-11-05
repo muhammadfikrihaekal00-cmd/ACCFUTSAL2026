@@ -8,9 +8,10 @@
   <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="assets/acc_logo.png">
-  <link rel="apple-touch-icon" href="assets/acc_logo.png">
+  <link rel="manifest" href="manifest.json?v=8.4">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.4">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.4">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.4">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -34,7 +35,7 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.3";
+      var CURRENT_VER = "8.4";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -97,7 +98,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.3">
+  <link rel="stylesheet" href="css/styles.css?v=8.4">
 </head>
 <body>
 
@@ -2134,11 +2135,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.3"></script>
-  <script defer src="js/supabase-client.js?v=8.3"></script>
-  <script defer src="js/data.js?v=8.3"></script>
-  <script defer src="js/admin.js?v=8.3"></script>
-  <script defer src="js/app.js?v=8.3"></script>
+  <script defer src="js/security.js?v=8.4"></script>
+  <script defer src="js/supabase-client.js?v=8.4"></script>
+  <script defer src="js/data.js?v=8.4"></script>
+  <script defer src="js/admin.js?v=8.4"></script>
+  <script defer src="js/app.js?v=8.4"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2155,7 +2156,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=57')
+        navigator.serviceWorker.register('sw.js?v=58')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
