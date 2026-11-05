@@ -27,8 +27,28 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
   </noscript>
 
+  <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
+  <script>
+    (function() {
+      var CURRENT_VER = "8.1";
+      if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
+        localStorage.setItem("acc_app_version", CURRENT_VER);
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            names.forEach(function(name) { caches.delete(name); });
+          });
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(reg) { reg.unregister(); });
+          });
+        }
+      }
+    })();
+  </script>
+
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.0">
+  <link rel="stylesheet" href="css/styles.css?v=8.1">
 </head>
 <body>
 
@@ -268,7 +288,7 @@
       </div>
 
       <!-- 2. ACC 2026 MOMENTS™ SHOWCASE BAR (INSPIRED BY FIFA WORLD CUP MOMENTS) -->
-      <section class="acc-moments-section scroll-reveal" id="accMomentsContainer">
+      <section class="acc-moments-section" id="accMomentsContainer">
         <div class="moments-header-row">
           <div class="moments-title-wrap">
             <h2 class="moments-main-title">
@@ -308,7 +328,7 @@
         </span>
       </div>
 
-      <div class="mvp-spotlight-card scroll-reveal reveal-right">
+      <div class="mvp-spotlight-card">
         <div class="mvp-photo-wrapper">
           <img src="assets/mvp_player.jpg" alt="Foto MVP Pemain Bintang ACC" class="mvp-photo-img" id="mvpPhoto" width="160" height="200" loading="lazy" decoding="async">
           <div class="mvp-badge-overlay">
@@ -375,11 +395,46 @@
       </div>
 
       <div class="news-grid" id="homeNewsContainer">
-        <!-- Rendered by app.renderHome() -->
+        <div class="news-card" onclick="app.openNewsModal('N1')" style="cursor: pointer;" title="Klik untuk membaca selengkapnya">
+          <div class="news-header-meta">
+            <span class="news-tag">KILAS PEMBUKAAN</span>
+            <span class="news-date">📅 21 November 2026</span>
+          </div>
+          <div class="news-title">Technical Meeting 32 Sekolah Peserta ACC 2026 Sukses Digelar</div>
+          <div class="news-desc">Dihadiri official 16 tim SMP dan 16 tim SD dari Maros, Makassar, Pangkep, dan Luwu di GOR MTQ Al-Fayyadh. Kesepakatan fair play ditandatangani.</div>
+          <div style="margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 0.72rem; color: var(--accent-gold); font-weight: 700;">ACC Newsroom</span>
+            <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700; cursor: pointer;">Baca Selengkapnya ➔</span>
+          </div>
+        </div>
+        <div class="news-card" onclick="app.openNewsModal('N2')" style="cursor: pointer;" title="Klik untuk membaca selengkapnya">
+          <div class="news-header-meta">
+            <span class="news-tag">PERBURUAN TIKET 8 BESAR</span>
+            <span class="news-date">📅 23 November 2026</span>
+          </div>
+          <div class="news-title">Persaingan Sengit Menuju Babak Gugur SMP & SD se-Sulsel</div>
+          <div class="news-desc">Laga panas tersaji di Lapangan Utama GOR Al-Fayyadh Maros. Tim-tim unggulan saling berebut 2 tiket teratas menuju perempat final.</div>
+          <div style="margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 0.72rem; color: var(--accent-gold); font-weight: 700;">ACC Newsroom</span>
+            <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700; cursor: pointer;">Baca Selengkapnya ➔</span>
+          </div>
+        </div>
+        <div class="news-card" onclick="app.openNewsModal('N3')" style="cursor: pointer;" title="Klik untuk membaca selengkapnya">
+          <div class="news-header-meta">
+            <span class="news-tag">AKHLAK & SPORTIVITAS</span>
+            <span class="news-date">📅 23 November 2026</span>
+          </div>
+          <div class="news-title">Ketertiban Suporter & Jeda Shalat Berjamaah Ditegakkan</div>
+          <div class="news-desc">Panitia mengapresiasi kebersihan suporter tamu dan mengingatkan jeda laga setiap kali adzan berkumandang di komplek pesantren.</div>
+          <div style="margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 0.72rem; color: var(--accent-gold); font-weight: 700;">ACC Newsroom</span>
+            <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700; cursor: pointer;">Baca Selengkapnya ➔</span>
+          </div>
+        </div>
       </div>
 
       <!-- 4. SPONSORSHIP & MITRA PENDUKUNG -->
-      <div class="sponsors-showcase-bar scroll-reveal reveal-right" id="sponsorsShowcaseBar">
+      <div class="sponsors-showcase-bar" id="sponsorsShowcaseBar">
         <div class="section-header sponsors-header-row" style="margin-bottom: 16px;">
           <div>
             <h2 class="section-title sponsors-main-title" style="margin: 0;">
@@ -393,12 +448,44 @@
 
         <!-- Baris 1: Logo Besar (Utama) - Tanpa Keterangan Teks 'Utama' -->
         <div class="sponsors-grid-primary" id="sponsorsPrimaryGrid">
-          <!-- Rendered dynamically by app.renderSponsors() -->
+          <div class="sponsor-card-primary">
+            <div class="sponsor-logo-box-lg"><span class="sponsor-emoji-lg">🏛️</span></div>
+            <div class="sponsor-name-lg">Bank Syariah Al-Barakah</div>
+            <div class="sponsor-sub-text">Official Banking Partner</div>
+          </div>
+          <div class="sponsor-card-primary">
+            <div class="sponsor-logo-box-lg"><span class="sponsor-emoji-lg">👕</span></div>
+            <div class="sponsor-name-lg">Al-Fayyadh Sportswear</div>
+            <div class="sponsor-sub-text">Official Apparel & Kit</div>
+          </div>
         </div>
 
         <!-- Baris 2: Logo Normal (Lebih Kecil) - Tanpa Keterangan Teks 'Normal' -->
         <div class="sponsors-grid-secondary" id="sponsorsSecondaryGrid">
-          <!-- Rendered dynamically by app.renderSponsors() -->
+          <div class="sponsor-card-secondary">
+            <span class="sponsor-emoji-md">⚽</span>
+            <span class="sponsor-name-md">Specs & Molten</span>
+          </div>
+          <div class="sponsor-card-secondary">
+            <span class="sponsor-emoji-md">💧</span>
+            <span class="sponsor-name-md">Air Kh-Q</span>
+          </div>
+          <div class="sponsor-card-secondary">
+            <span class="sponsor-emoji-md">🏥</span>
+            <span class="sponsor-name-md">RS Islam Medika</span>
+          </div>
+          <div class="sponsor-card-secondary">
+            <span class="sponsor-emoji-md">📰</span>
+            <span class="sponsor-name-md">Media Santri</span>
+          </div>
+          <div class="sponsor-card-secondary">
+            <span class="sponsor-emoji-md">📱</span>
+            <span class="sponsor-name-md">Info Futsal</span>
+          </div>
+          <div class="sponsor-card-secondary">
+            <span class="sponsor-emoji-md">📺</span>
+            <span class="sponsor-name-md">Pesantren TV</span>
+          </div>
         </div>
       </div>
 
@@ -1975,17 +2062,28 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.0"></script>
-  <script defer src="js/supabase-client.js?v=8.0"></script>
-  <script defer src="js/data.js?v=8.0"></script>
-  <script defer src="js/admin.js?v=8.0"></script>
-  <script defer src="js/app.js?v=8.0"></script>
+  <script defer src="js/security.js?v=8.1"></script>
+  <script defer src="js/supabase-client.js?v=8.1"></script>
+  <script defer src="js/data.js?v=8.1"></script>
+  <script defer src="js/admin.js?v=8.1"></script>
+  <script defer src="js/app.js?v=8.1"></script>
 
-  <!-- Service Worker for PWA -->
+  <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
     if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!window._swReloaded) {
+          window._swReloaded = true;
+          window.location.reload();
+        }
+      });
+      navigator.serviceWorker.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'SW_UPDATED') {
+          window.location.reload();
+        }
+      });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=53')
+        navigator.serviceWorker.register('sw.js?v=55')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

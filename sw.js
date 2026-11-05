@@ -1,15 +1,15 @@
 // Service Worker for Pondok Futsal Cup Offline PWA Support
-const CACHE_NAME = 'acc-al-fayyadh-futsal-v53';
+const CACHE_NAME = 'acc-al-fayyadh-futsal-v55';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './css/styles.css',
-  './js/data.js',
-  './js/app.js',
-  './js/admin.js',
-  './js/supabase-client.js',
-  './js/security.js',
+  './css/styles.css?v=8.1',
+  './js/data.js?v=8.1',
+  './js/admin.js?v=8.1',
+  './js/app.js?v=8.1',
+  './js/supabase-client.js?v=8.1',
+  './js/security.js?v=8.1',
   './assets/acc_logo.png',
   './assets/hero_banner.jpg',
   './assets/mvp_player.jpg'
@@ -32,11 +32,18 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('Purged stale PWA cache:', key);
             return caches.delete(key);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => self.clients.claim()).then(() => {
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_UPDATED' });
+        });
+      });
+    })
   );
 });
 
@@ -96,7 +103,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(async () => {
-        const cached = await caches.match(event.request, { ignoreSearch: true });
+        const cached = await caches.match(event.request);
         if (cached) {
           return cached;
         }

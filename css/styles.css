@@ -5334,17 +5334,16 @@ body.dark-theme .fixture-team-row:hover {
 }
 
 /* ========================================================= */
-/* SCROLL REVEAL / SWIPE-IN FROM SIDE ANIMATIONS             */
+/* SCROLL REVEAL / SAFE VISIBILITY ANIMATIONS                */
 /* ========================================================= */
 .scroll-reveal {
-  opacity: 0;
-  transform: translateX(-32px);
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 .scroll-reveal.reveal-right {
-  transform: translateX(32px);
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 .scroll-reveal.is-revealed {
