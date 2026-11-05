@@ -1089,10 +1089,14 @@ body.dark-theme .team-badge-circle {
   background: rgba(16, 185, 129, 0.12);
   color: var(--primary);
   font-weight: 800;
-  font-size: 0.88rem;
-  padding: 6px 14px;
+  font-size: 0.84rem;
+  padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid rgba(16, 185, 129, 0.25);
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.4;
+  box-sizing: border-box;
 }
 
 .bracket-cat-switcher {
@@ -2562,7 +2566,15 @@ body.dark-theme .player-rating-pill.rating-great {
   padding: 16px;
 }
 .modal-overlay.active {
-  display: flex;
+  display: flex !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+.modal-overlay:not(.active) {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  z-index: -9999 !important;
 }
 body.modal-open .mobile-nav,
 body:has(.modal-overlay.active) .mobile-nav {
@@ -4544,9 +4556,11 @@ body.dark-theme .fixture-team-row:hover {
 }
 
 .app-splash-screen.splash-fade-out {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  display: none !important;
+  z-index: -9999 !important;
 }
 
 .splash-backdrop-glow {
@@ -4719,6 +4733,54 @@ body.dark-theme .fixture-team-row:hover {
 
 .btn-splash-enter:hover .btn-splash-arrow {
   transform: translateX(4px);
+}
+
+.splash-status-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.splash-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-splash-panitia {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-full);
+  padding: 14px 22px;
+  font-size: 0.90rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  touch-action: manipulation !important;
+}
+
+.btn-splash-panitia:hover,
+.btn-splash-panitia:active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 /* ========================================================= */

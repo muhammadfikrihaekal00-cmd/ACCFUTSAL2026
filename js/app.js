@@ -1,9 +1,9 @@
 // app.js - Main Tournament Logic & UI Rendering
 window.admin = window.admin || {
-  isAuthenticated: false,
+  isAuthenticated: (sessionStorage.getItem("pondok_futsal_admin_auth") === "true"),
   activeMatchId: null,
   activeQuickMatchId: null,
-  adminPinHash: ""
+  adminPinHash: sessionStorage.getItem("pondok_futsal_admin_pin_hash") || ""
 };
 
 class TournamentStore {
@@ -873,11 +873,9 @@ const app = {
 
     if (this.splashTimeout) {
       clearTimeout(this.splashTimeout);
+      this.splashTimeout = null;
     }
-    // Auto-dismiss lembut setelah 3.5 detik agar pengguna mobile langsung masuk bila tidak menekan tombol
-    this.splashTimeout = setTimeout(() => {
-      this.dismissSplashScreen();
-    }, 3500);
+    // Komitmen Pengguna: Splash screen TETAP TAMPIL dan TIDAK AKAN MASUK OTOMATIS jika tombol Log In belum diklik!
   },
 
   // =========================================================
@@ -965,16 +963,18 @@ const app = {
     const splash = document.getElementById("appSplashScreen");
     if (!splash) return;
 
+    splash.style.pointerEvents = "none";
     splash.classList.add("splash-fade-out");
     setTimeout(() => {
       splash.style.display = "none";
-    }, 480);
+    }, 350);
   },
 
   replaySplashScreen() {
     const splash = document.getElementById("appSplashScreen");
     if (!splash) return;
     splash.style.display = "flex";
+    splash.style.pointerEvents = "auto";
     splash.classList.remove("splash-fade-out");
     this.initSplashScreen();
   },
@@ -1167,6 +1167,10 @@ const app = {
       const lbl = cat === "SMP" ? "🏆 Kelas SMP (U-15)" : "⚽ Kelas SD (U-12)";
       this.showToast(`Beralih ke ${lbl}`);
     }
+  },
+
+  switchCategory(cat, showToastMsg = true) {
+    return this.setCategory(cat, showToastMsg);
   },
 
   updateCategoryUI() {
@@ -1742,14 +1746,22 @@ const app = {
     document.getElementById("headerTitle").textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName;
     document.getElementById("heroTitle").textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName;
     const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
-    const cleanSub = (rawSub || "").replace(/â€¢/g, "•").replace(/â\S*¢/g, "•");
+    let cleanSub = (rawSub || "")
+      .replace(/â€¢/g, "•")
+      .replace(/â\S*¢/g, "•")
+      .replace(/Â/g, "")
+      .replace(/Ã¢/g, "")
+      .trim();
+    if (!cleanSub.includes("•")) {
+      cleanSub = cleanSub.replace(/\s+Ma'had/i, " • Ma'had");
+    }
     document.getElementById("heroSub").textContent = cleanSub;
     document.getElementById("heroVenue").textContent = config.venue || DEFAULT_DATA.config.venue;
     document.getElementById("heroDates").textContent = config.dates || DEFAULT_DATA.config.dates;
 
     let cleanTicker = config.runningAnnouncement || DEFAULT_DATA.config.runningAnnouncement || "";
     if (cleanTicker.includes("Selamat Datang")) {
-      cleanTicker = "🏆 " + cleanTicker.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
+      cleanTicker = "🏆 " + cleanTicker.substring(cleanTicker.indexOf("Selamat Datang")).trim();
     } else {
       cleanTicker = cleanTicker.replace(/ð[^\s]*\s*†?/g, "🏆 ").replace(/ðŸ\S*/g, "🏆 ");
     }
@@ -1950,11 +1962,20 @@ const app = {
       });
     }
 
-    // Modal Close buttons
+    // Modal Close buttons & Backdrop clicks
     document.querySelectorAll(".modal-close, .btn-modal-close").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("active"));
         document.body.classList.remove("modal-open");
+      });
+    });
+
+    document.querySelectorAll(".modal-overlay").forEach(overlay => {
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove("active");
+          document.body.classList.remove("modal-open");
+        }
       });
     });
 
@@ -2010,63 +2031,73 @@ const app = {
   },
 
   switchTab(tabId, pushHistory = true) {
-    if (pushHistory && tabId !== this.currentTab) {
-      try {
-        history.pushState({ tab: tabId }, "");
-      } catch (err) {}
+    try {
+      if (pushHistory && tabId !== this.currentTab) {
+        try {
+          history.pushState({ tab: tabId }, "");
+        } catch (err) {}
+      }
+      this.currentTab = tabId;
+
+      // Update Desktop Tabs
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tabId);
+      });
+
+      // Update Mobile Nav
+      document.querySelectorAll(".mobile-nav-item").forEach(item => {
+        item.classList.toggle("active", item.dataset.tab === tabId);
+      });
+
+      // Update Panes with explicit display guarantee
+      document.querySelectorAll(".tab-pane").forEach(pane => {
+        pane.classList.remove("active");
+        pane.style.display = "none";
+      });
+      const targetPane = document.getElementById(`pane-${tabId}`);
+      if (targetPane) {
+        targetPane.classList.add("active");
+        targetPane.style.display = "block";
+      }
+
+      this.renderCurrentView();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error("switchTab error:", err);
     }
-    this.currentTab = tabId;
-
-    // Update Desktop Tabs
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.tab === tabId);
-    });
-
-    // Update Mobile Nav
-    document.querySelectorAll(".mobile-nav-item").forEach(item => {
-      item.classList.toggle("active", item.dataset.tab === tabId);
-    });
-
-    // Update Panes
-    document.querySelectorAll(".tab-pane").forEach(pane => {
-      pane.classList.remove("active");
-    });
-    const targetPane = document.getElementById(`pane-${tabId}`);
-    if (targetPane) {
-      targetPane.classList.add("active");
-    }
-
-    this.renderCurrentView();
-    window.scrollTo({ top: 0, behavior: "smooth" });
   },
 
   renderCurrentView() {
-    this.updateHeroLiveBadge();
-    switch (this.currentTab) {
-      case "home":
-        this.renderHome();
-        break;
-      case "matches":
-        this.renderMatches();
-        break;
-      case "standings":
-        this.renderStandings();
-        break;
-      case "bracket":
-        this.renderBracket();
-        break;
-      case "teams":
-        this.renderTeams();
-        break;
-      case "discipline":
-        this.renderDiscipline();
-        break;
-      case "scorers":
-        this.renderTopScorers();
-        break;
-      case "juknis":
-        this.renderJuknis();
-        break;
+    try { this.updateHeroLiveBadge(); } catch (e) {}
+    try {
+      switch (this.currentTab) {
+        case "home":
+          this.renderHome();
+          break;
+        case "matches":
+          this.renderMatches();
+          break;
+        case "standings":
+          this.renderStandings();
+          break;
+        case "bracket":
+          this.renderBracket();
+          break;
+        case "teams":
+          this.renderTeams();
+          break;
+        case "discipline":
+          this.renderDiscipline();
+          break;
+        case "scorers":
+          this.renderTopScorers();
+          break;
+        case "juknis":
+          this.renderJuknis();
+          break;
+      }
+    } catch (err) {
+      console.error("renderCurrentView error for " + this.currentTab, err);
     }
   },
 
@@ -3618,6 +3649,12 @@ const app = {
 
 // Guarantee window.app is defined immediately before any event triggers
 window.app = app;
+if (window._pendingTab) {
+  try { app.switchTab(window._pendingTab, false); } catch(e) {}
+}
+if (window._pendingCat) {
+  try { app.setCategory(window._pendingCat, false); } catch(e) {}
+}
 
 // Initialize when DOM ready (supports already-loaded state on mobile/PWA cache)
 if (document.readyState === "loading") {
