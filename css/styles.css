@@ -4595,6 +4595,16 @@ body.dark-theme .fixture-team-row:hover {
   margin: 0 auto;
 }
 
+@media (max-width: 860px) {
+  .splash-content {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 16px !important;
+    width: 100% !important;
+    max-width: 420px !important;
+  }
+}
+
 /* Sisi Kiri: Logo Besar di Bagian Tengah Vertikal (Plat Putih Halo Kontras) */
 .splash-logo-container {
   position: relative;
@@ -5194,59 +5204,114 @@ body.dark-theme .fixture-team-row:hover {
   .ticker-actions button {
     flex: 1;
   }
+  .app-splash-screen {
+    padding: 20px 14px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
   .splash-content {
-    gap: 20px;
-    padding: 16px;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    padding: 10px 6px !important;
+    box-sizing: border-box !important;
   }
   .splash-logo-container {
-    width: 130px;
-    height: 130px;
-    padding: 8px;
+    width: 120px !important;
+    height: 120px !important;
+    margin: 0 auto 6px auto !important;
+    padding: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  .splash-right-col {
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   .splash-title {
-    margin-bottom: 16px;
+    text-align: center !important;
+    margin-bottom: 8px !important;
   }
   .splash-title-sub {
-    font-size: 1.15rem;
+    font-size: 0.92rem !important;
+    text-align: center !important;
+    margin-bottom: 2px !important;
   }
   .splash-title-brand {
-    font-size: 1.85rem;
+    font-size: 1.75rem !important;
+    text-align: center !important;
+    line-height: 1.05 !important;
+    margin-bottom: 2px !important;
   }
   .splash-title-cup {
-    font-size: 1.5rem;
+    font-size: 1.4rem !important;
+    text-align: center !important;
+    line-height: 1.05 !important;
+  }
+  .splash-status-hint {
+    margin: 4px auto 14px auto !important;
+    text-align: center !important;
+    font-size: 0.72rem !important;
+    padding: 4px 12px !important;
+    display: inline-flex !important;
+  }
+  .splash-btn-group {
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 290px !important;
+    gap: 10px !important;
+    margin: 0 auto !important;
   }
   .btn-splash-enter {
-    padding: 12px 24px;
-    font-size: 0.95rem;
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 13px 20px !important;
+    font-size: 0.95rem !important;
+    box-sizing: border-box !important;
+  }
+  .btn-splash-panitia {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 11px 18px !important;
+    font-size: 0.85rem !important;
+    box-sizing: border-box !important;
   }
 }
 
 @media (max-width: 440px) {
   .splash-content {
-    gap: 14px;
-    padding: 12px 8px;
+    gap: 10px !important;
+    padding: 6px 4px !important;
   }
   .splash-logo-container {
-    width: 105px;
-    height: 105px;
-    padding: 6px;
-  }
-  .splash-title {
-    margin-bottom: 12px;
+    width: 100px !important;
+    height: 100px !important;
+    padding: 6px !important;
   }
   .splash-title-sub {
-    font-size: 1rem;
+    font-size: 0.82rem !important;
   }
   .splash-title-brand {
-    font-size: 1.5rem;
+    font-size: 1.5rem !important;
   }
   .splash-title-cup {
-    font-size: 1.25rem;
+    font-size: 1.2rem !important;
   }
   .btn-splash-enter {
-    padding: 10px 18px;
-    font-size: 0.85rem;
-    gap: 8px;
+    padding: 11px 16px !important;
+    font-size: 0.88rem !important;
+    gap: 8px !important;
+  }
+  .btn-splash-panitia {
+    padding: 10px 14px !important;
+    font-size: 0.80rem !important;
   }
 }
 

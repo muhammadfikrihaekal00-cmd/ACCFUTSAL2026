@@ -933,7 +933,15 @@ const admin = {
 
     if (status === "live") {
       const minNum = parseInt((match.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-      match.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+      // JANGAN timpa liveStartedAt jika pertandingan memang sudah berstatus live dan menitnya masih sama
+      if (!match.liveStartedAt) {
+        match.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+      } else {
+        const curElapsed = Math.floor((Date.now() - match.liveStartedAt) / 60000) + 1;
+        if (minNum !== curElapsed) {
+          match.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+        }
+      }
       match.homeScore = hScore;
       match.awayScore = aScore;
       match.homeScoreLive = hScore;
@@ -974,6 +982,9 @@ const admin = {
 
     document.getElementById("quickScoreModal").classList.remove("active");
     document.body.classList.remove("modal-open");
+    if (status === 'live') {
+      this.startLiveTimer();
+    }
     app.showToast(status === 'finished' ? "🏁 Pertandingan selesai & hasil resmi disimpan!" : "💾 Skor pertandingan berhasil disimpan!");
     app.renderCurrentView();
     if (app && typeof app.updateHeroLiveBadge === 'function') {

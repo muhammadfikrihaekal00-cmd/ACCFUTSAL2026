@@ -907,16 +907,14 @@ const app = {
           m.liveStartedAt = now - ((curMin - 1) * 60000);
         }
 
-        // Hanya panitia resmi yang otomatis memajukan timer
-        if (isOfficial) {
-          const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
-          const newMin = Math.min(50, Math.max(curMin, elapsed));
-          const newMinStr = `${newMin}'`;
+        // Hitung menit berjalan presisi di SEMUA perangkat (HP peserta & laptop panitia)
+        const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
+        const newMin = Math.min(50, Math.max(curMin, elapsed));
+        const newMinStr = `${newMin}'`;
 
-          if (m.liveMinute !== newMinStr) {
-            m.liveMinute = newMinStr;
-            hasChange = true;
-          }
+        if (m.liveMinute !== newMinStr) {
+          m.liveMinute = newMinStr;
+          hasChange = true;
         }
       });
 
@@ -952,7 +950,7 @@ const app = {
           });
         }
       }
-    }, 2000);
+    }, 1000);
   },
 
   dismissSplashScreen() {
@@ -1342,7 +1340,9 @@ const app = {
                 if (!isActiveInAdminModal) {
                   const validatedMin = Math.max(1, remoteMinNum);
                   mapped.liveMinute = `${validatedMin}'`;
-                  mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+                  if (!curMatch.liveStartedAt || curMatch.liveMinute !== `${validatedMin}'`) {
+                    mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+                  }
                 }
               } else {
                 mapped.liveMinute = "";
@@ -1472,7 +1472,9 @@ const app = {
             if (!isActiveInAdminModal) {
               const validatedMin = Math.max(1, remoteMinNum);
               mapped.liveMinute = `${validatedMin}'`;
-              mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+              if (!curMatch.liveStartedAt || curMatch.liveMinute !== `${validatedMin}'`) {
+                mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
+              }
             }
           } else {
             mapped.liveMinute = "";
