@@ -1467,6 +1467,7 @@ const app = {
       this.updateFloatingLiveNotice();
       this.renderHeader();
       this.renderLiveStreamHero();
+      this.renderHeroBanner();
       this.refreshActiveMatchDetail();
     }
   },
@@ -1641,6 +1642,7 @@ const app = {
       this.store.saveData();
       this.renderHeader();
       this.renderLiveStreamHero();
+      this.renderHeroBanner();
     } else if (table === 'sponsors') {
       if (window.SupabaseService && typeof window.SupabaseService.fetchTournamentData === 'function') {
         window.SupabaseService.fetchTournamentData().then(data => {
@@ -2430,7 +2432,16 @@ const app = {
     }
     // Filter by Pitch
     if (this.filterPitch !== "all") {
-      matches = matches.filter(m => m.pitch.includes(this.filterPitch));
+      matches = matches.filter(m => {
+        if (!m.pitch) return false;
+        if (this.filterPitch === "1" || this.filterPitch === "lapangan_1") {
+          return m.pitch.includes("1") || m.pitch.includes("Utama") || m.pitch.includes("Vinyl");
+        }
+        if (this.filterPitch === "2" || this.filterPitch === "lapangan_2") {
+          return m.pitch.includes("2");
+        }
+        return m.pitch.toLowerCase().includes(this.filterPitch.toLowerCase());
+      });
     }
     // Filter by Group
     if (this.filterGroup !== "all") {

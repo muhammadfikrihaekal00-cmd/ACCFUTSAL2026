@@ -1117,7 +1117,13 @@ const admin = {
     const timeInput = document.getElementById("editMatchTimeInput");
     if (timeInput) timeInput.value = match.time || "08:00 - 08:40 WITA";
     const pitchInput = document.getElementById("editMatchPitchInput");
-    if (pitchInput) pitchInput.value = match.pitch || "Lapangan Utama (Vinyl) - GOR Futsal MTQ Al-Fayyadh Maros";
+    if (pitchInput) {
+      if (match.pitch && match.pitch.includes("2")) {
+        pitchInput.value = "Lapangan 2";
+      } else {
+        pitchInput.value = "Lapangan 1 (Utama Vinyl)";
+      }
+    }
   },
 
   saveMatchSchedule(andNext = false) {
@@ -1691,12 +1697,29 @@ const admin = {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const dataUrl = e.target.result;
-      const urlInput = document.getElementById("heroBannerUrlInput");
-      if (urlInput) urlInput.value = dataUrl;
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 1280;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxWidth) {
+          h = Math.round((h * maxWidth) / w);
+          w = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
 
-      const preview = document.getElementById("bannerPreviewBox");
-      if (preview) preview.style.backgroundImage = `url('${dataUrl}')`;
+        const urlInput = document.getElementById("heroBannerUrlInput");
+        if (urlInput) urlInput.value = compressedDataUrl;
+
+        const preview = document.getElementById("bannerPreviewBox");
+        if (preview) preview.style.backgroundImage = `url('${compressedDataUrl}')`;
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   },
@@ -1728,9 +1751,13 @@ const admin = {
     app.store.data.config.heroBannerImage = bannerVal;
     app.store.saveData();
 
+    if (window.SupabaseService && window.SupabaseService.updateTournamentConfig) {
+      window.SupabaseService.updateTournamentConfig(app.store.data.config);
+    }
+
     app.renderHeroBanner();
     document.getElementById("heroBannerModal").classList.remove("active");
-    app.showToast("Gambar banner beranda berhasil diperbarui!");
+    app.showToast("🎉 Gambar banner berhasil disimpan & disinkronkan ke seluruh HP peserta!");
   },
 
   resetHeroBanner() {
@@ -1738,6 +1765,10 @@ const admin = {
       if (!app.store.data.config) app.store.data.config = {};
       app.store.data.config.heroBannerImage = "assets/hero_banner.jpg";
       app.store.saveData();
+
+      if (window.SupabaseService && window.SupabaseService.updateTournamentConfig) {
+        window.SupabaseService.updateTournamentConfig(app.store.data.config);
+      }
 
       const urlInput = document.getElementById("heroBannerUrlInput");
       if (urlInput) urlInput.value = "assets/hero_banner.jpg";
@@ -1747,7 +1778,7 @@ const admin = {
 
       app.renderHeroBanner();
       document.getElementById("heroBannerModal").classList.remove("active");
-      app.showToast("Banner beranda dikembalikan ke default.");
+      app.showToast("Banner beranda dikembalikan ke default dan disinkronkan!");
     }
   },
 
@@ -2292,6 +2323,9 @@ const admin = {
       } else if (type === "banner") {
         if (!app.store.data.config) app.store.data.config = {};
         app.store.data.config.heroBannerImage = photoUrl;
+        if (window.SupabaseService && window.SupabaseService.updateTournamentConfig) {
+          window.SupabaseService.updateTournamentConfig(app.store.data.config);
+        }
       } else if (type === "moment") {
         const newMoment = {
           id: "M_" + Date.now() + "_" + i,

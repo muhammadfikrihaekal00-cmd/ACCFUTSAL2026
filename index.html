@@ -35,7 +35,7 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.5";
+      var CURRENT_VER = "8.6";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -98,7 +98,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.5">
+  <link rel="stylesheet" href="css/styles.css?v=8.6">
 </head>
 <body>
 
@@ -335,14 +335,6 @@
           📷 Ganti Gambar Banner (Panitia)
         </button>
         <div class="home-banner-overlay">
-          <div class="banner-badge-row">
-            <span class="banner-badge-gold">👑 TURNAMEN RESMI PESANTREN 2026</span>
-            <span style="color: #cbd5e1; font-size: 0.8rem; font-weight: 700;">📍 GOR Futsal MTQ Al-Fayyadh</span>
-          </div>
-          <h2 class="banner-title-text">ACC "Al-Fayyadh Champions Cup" 2026</h2>
-          <p class="banner-subtitle-text">
-            Pusat Informasi & Pemantauan Turnamen Futsal Antar-Sekolah & Pesantren se-Wilayah. Menjalin Ukhuwah, Mengukir Prestasi, dan Menjunjung Tinggi Adab Sportivitas.
-          </p>
           <div class="banner-cta-group">
             <button class="btn btn-primary" onclick="app.switchTab('matches')">
               🏟️ Cek Jadwal & Live Skor
@@ -360,14 +352,13 @@
         </div>
       </div>
 
-      <!-- 2. ACC 2026 MOMENTS™ SHOWCASE BAR (INSPIRED BY FIFA WORLD CUP MOMENTS) -->
+      <!-- 2. MOMENT SHOWCASE BAR -->
       <section class="acc-moments-section" id="accMomentsContainer">
         <div class="moments-header-row">
           <div class="moments-title-wrap">
             <h2 class="moments-main-title">
-              <span>ACC 2026 Moments™</span>
+              <span>Moment</span>
             </h2>
-            <p class="moments-sub-title">Sorotan Aksi Spektakuler, Gol Menawan & Selebrasi Emas Turnamen</p>
           </div>
           <div class="moments-controls-wrap">
             <button id="btnAddMomentBtn" class="btn btn-primary btn-sm btn-panitia-moment" onclick="admin.openMomentEditorModal()" style="display: none;">
@@ -587,11 +578,10 @@
             <option value="2">Hari Ke-2 (Matchday 2)</option>
             <option value="3">Hari Ke-3 (Matchday 3)</option>
           </select>
-          <span class="badge" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-color); font-weight: 700; font-size: 0.78rem; padding: 6px 12px; border-radius: var(--radius-sm); color: var(--text-main); display: inline-flex; align-items: center; gap: 4px;">
-            🏟️ Lapangan Utama (Vinyl)
-          </span>
-          <select id="filterPitch" class="filter-select" aria-label="Pilih Lapangan" style="display: none;">
-            <option value="all">Semua Lapangan</option>
+          <select id="filterPitch" class="filter-select" aria-label="Pilih Lapangan Pertandingan">
+            <option value="all">🏟️ Semua Lapangan</option>
+            <option value="1">🏟️ Lapangan 1 (Utama Vinyl)</option>
+            <option value="2">🏟️ Lapangan 2</option>
           </select>
           <select id="filterGroup" class="filter-select" aria-label="Pilih Grup">
             <option value="all">Semua Grup</option>
@@ -1048,7 +1038,10 @@
 
           <div class="form-group" style="margin-top: 8px;">
             <label class="form-label">Lapangan Pertandingan</label>
-            <input type="text" id="editMatchPitchInput" class="form-input" value="Lapangan Utama (Vinyl) - GOR Futsal MTQ Al-Fayyadh Maros" required>
+            <select id="editMatchPitchInput" class="form-select">
+              <option value="Lapangan 1 (Utama Vinyl)">🏟️ Lapangan 1 (Utama Vinyl)</option>
+              <option value="Lapangan 2">🏟️ Lapangan 2</option>
+            </select>
           </div>
         </div>
 
@@ -2135,11 +2128,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.5"></script>
-  <script defer src="js/supabase-client.js?v=8.5"></script>
-  <script defer src="js/data.js?v=8.5"></script>
-  <script defer src="js/admin.js?v=8.5"></script>
-  <script defer src="js/app.js?v=8.5"></script>
+  <script defer src="js/security.js?v=8.6"></script>
+  <script defer src="js/supabase-client.js?v=8.6"></script>
+  <script defer src="js/data.js?v=8.6"></script>
+  <script defer src="js/admin.js?v=8.6"></script>
+  <script defer src="js/app.js?v=8.6"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2156,7 +2149,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=59')
+        navigator.serviceWorker.register('sw.js?v=60')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
