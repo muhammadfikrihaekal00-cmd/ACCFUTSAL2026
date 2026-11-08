@@ -35,7 +35,7 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.8";
+      var CURRENT_VER = "8.9";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -98,7 +98,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.8">
+  <link rel="stylesheet" href="css/styles.css?v=8.9">
 </head>
 <body>
 
@@ -133,10 +133,9 @@
   <div id="appSplashScreen" class="app-splash-screen">
     <div class="splash-backdrop-glow"></div>
     <div class="splash-content" onclick="event.stopPropagation()">
-      <!-- SISI KIRI: LOGO BESAR DENGAN ANIMASI TERBANG AKROBATIK -->
+      <!-- SISI KIRI: LOGO BESAR DENGAN ANIMASI TERBANG 3D TANPA BACKGROUND PUTIH -->
       <div class="splash-logo-container splash-flight-active">
-        <div class="splash-logo-pulse-ring"></div>
-        <div class="splash-logo-pulse-ring delay"></div>
+        <div class="splash-logo-glow"></div>
         <div class="splash-logo-sheen"></div>
         <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img" width="220" height="312" fetchpriority="high">
       </div>
@@ -2129,11 +2128,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.8"></script>
-  <script defer src="js/supabase-client.js?v=8.8"></script>
-  <script defer src="js/data.js?v=8.8"></script>
-  <script defer src="js/admin.js?v=8.8"></script>
-  <script defer src="js/app.js?v=8.8"></script>
+  <script defer src="js/security.js?v=8.9"></script>
+  <script defer src="js/supabase-client.js?v=8.9"></script>
+  <script defer src="js/data.js?v=8.9"></script>
+  <script defer src="js/admin.js?v=8.9"></script>
+  <script defer src="js/app.js?v=8.9"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2150,7 +2149,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=62')
+        navigator.serviceWorker.register('sw.js?v=63')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
