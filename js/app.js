@@ -875,7 +875,99 @@ const app = {
       clearTimeout(this.splashTimeout);
       this.splashTimeout = null;
     }
-    // Komitmen Pengguna: Splash screen TETAP TAMPIL dan TIDAK AKAN MASUK OTOMATIS jika tombol Log In belum diklik!
+
+    // Pastikan animasi terbang logo aktif
+    const logoContainer = splash.querySelector(".splash-logo-container");
+    if (logoContainer && !logoContainer.classList.contains("splash-flight-active")) {
+      logoContainer.classList.add("splash-flight-active");
+    }
+
+    // Jalankan efek animasi ketik (typewriter) huruf judul
+    this.runSplashTypewriter();
+  },
+
+  runSplashTypewriter() {
+    const subEl = document.getElementById("splashTitleSub");
+    const brandEl = document.getElementById("splashTitleBrand");
+    const cupEl = document.getElementById("splashTitleCup");
+    const hintEl = document.querySelector(".splash-status-hint");
+    const btnGroupEl = document.querySelector(".splash-btn-group");
+
+    if (!subEl || !brandEl || !cupEl) return;
+
+    // Bersihkan timeout animasi sebelumnya jika ada (misal replay berulang)
+    if (this._splashTypewriterTimeouts && Array.isArray(this._splashTypewriterTimeouts)) {
+      this._splashTypewriterTimeouts.forEach(t => clearTimeout(t));
+    }
+    this._splashTypewriterTimeouts = [];
+
+    const textSub = "Selamat Datang di Portal Resmi";
+    const textBrand = "AL-FAYYADH";
+    const textCup = "CHAMPIONS CUP 2026";
+
+    // Format DOM awal: teks kosong dan kursor aktif di baris pertama
+    subEl.innerHTML = '<span class="tw-text"></span><span class="tw-cursor"></span>';
+    brandEl.innerHTML = '<span class="tw-text"></span><span class="tw-cursor tw-hidden"></span>';
+    cupEl.innerHTML = '<span class="tw-text"></span><span class="tw-cursor tw-hidden"></span>';
+
+    // Sembunyikan badge & tombol terlebih dahulu agar muncul setelah ketikan tuntas
+    if (hintEl) {
+      hintEl.classList.remove("splash-item-visible");
+      hintEl.classList.add("splash-item-hidden");
+    }
+    if (btnGroupEl) {
+      btnGroupEl.classList.remove("splash-item-visible");
+      btnGroupEl.classList.add("splash-item-hidden");
+    }
+
+    const typeLine = (containerEl, fullText, speedMs, onDone) => {
+      const textSpan = containerEl.querySelector(".tw-text");
+      const cursorSpan = containerEl.querySelector(".tw-cursor");
+      if (cursorSpan) cursorSpan.classList.remove("tw-hidden");
+
+      let idx = 0;
+      const step = () => {
+        if (idx <= fullText.length) {
+          if (textSpan) textSpan.textContent = fullText.slice(0, idx);
+          idx++;
+          if (idx <= fullText.length) {
+            const tid = setTimeout(step, speedMs);
+            this._splashTypewriterTimeouts.push(tid);
+          } else {
+            if (cursorSpan) cursorSpan.classList.add("tw-hidden");
+            if (onDone) onDone();
+          }
+        }
+      };
+      step();
+    };
+
+    // Mulai ketik saat logo meluncur ke sisi kanan (setelah delay 320ms)
+    const startTid = setTimeout(() => {
+      typeLine(subEl, textSub, 20, () => {
+        typeLine(brandEl, textBrand, 42, () => {
+          typeLine(cupEl, textCup, 32, () => {
+            // Selesai: Tampilkan cursor berkedip elegan di baris piala
+            const lastCursor = cupEl.querySelector(".tw-cursor");
+            if (lastCursor) {
+              lastCursor.classList.remove("tw-hidden");
+              lastCursor.classList.add("tw-pulse");
+            }
+            // Munculkan badge status & tombol aksi dengan transisi smooth
+            if (hintEl) {
+              hintEl.classList.remove("splash-item-hidden");
+              hintEl.classList.add("splash-item-visible");
+            }
+            if (btnGroupEl) {
+              btnGroupEl.classList.remove("splash-item-hidden");
+              btnGroupEl.classList.add("splash-item-visible");
+            }
+          });
+        });
+      });
+    }, 320);
+
+    this._splashTypewriterTimeouts.push(startTid);
   },
 
   // =========================================================
@@ -958,6 +1050,10 @@ const app = {
       clearTimeout(this.splashTimeout);
       this.splashTimeout = null;
     }
+    if (this._splashTypewriterTimeouts && Array.isArray(this._splashTypewriterTimeouts)) {
+      this._splashTypewriterTimeouts.forEach(t => clearTimeout(t));
+      this._splashTypewriterTimeouts = [];
+    }
     const splash = document.getElementById("appSplashScreen");
     if (!splash) return;
 
@@ -974,6 +1070,15 @@ const app = {
     splash.style.display = "flex";
     splash.style.pointerEvents = "auto";
     splash.classList.remove("splash-fade-out");
+
+    // Reset dan restart animasi terbang logo (force reflow)
+    const logoContainer = splash.querySelector(".splash-logo-container");
+    if (logoContainer) {
+      logoContainer.classList.remove("splash-flight-active");
+      void logoContainer.offsetWidth; // Trigger reflow untuk reset keyframe
+      logoContainer.classList.add("splash-flight-active");
+    }
+
     this.initSplashScreen();
   },
 
