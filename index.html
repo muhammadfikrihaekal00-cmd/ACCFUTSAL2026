@@ -35,7 +35,7 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.10";
+      var CURRENT_VER = "8.11";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -98,7 +98,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.10">
+  <link rel="stylesheet" href="css/styles.css?v=8.11">
 </head>
 <body>
 
@@ -313,6 +313,7 @@
         <button type="button" class="tab-btn active" data-tab="home" onclick="app.switchTab('home')">Beranda</button>
         <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
         <button type="button" class="tab-btn" data-tab="standings" onclick="app.switchTab('standings')">Klasemen</button>
+        <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')">🎲 Draw Grup</button>
         <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
         <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
         <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
@@ -341,6 +342,9 @@
             </button>
             <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.switchTab('standings')">
               📊 Klasemen Sementara
+            </button>
+            <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.switchTab('draw')" title="Undian Grup 1 per 1 dengan Efek Nama Berputar">
+              🎲 Live Draw Grup
             </button>
             <button class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);" onclick="app.replaySplashScreen()" title="Putar Ulang Animasi Opening Sambutan">
               ✨ Putar Opening
@@ -626,6 +630,105 @@
       </div>
       <div class="groups-container" id="groupsStandingsContainer">
         <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- TAB: DRAWING & PENGUNDIAN GRUP INTERAKTIF 1 PER 1 -->
+    <section id="pane-draw" class="tab-pane">
+      <div class="draw-header-wrapper">
+        <div class="draw-header-main">
+          <h2 class="section-title">
+            <span>🎲</span> Drawing & Pengundian Grup Resmi ACC 2026
+          </h2>
+          <p class="draw-header-desc">
+            Sistem pengundian grup turnamen interaktif dengan efek nama berputar (roulette spin) dan terisi secara acak satu per satu (1 per 1) ke dalam 4 grup (Grup A, B, C, D).
+          </p>
+        </div>
+
+        <div class="draw-cat-switch">
+          <button type="button" class="btn-draw-cat active" data-cat="SMP" onclick="app.setDrawCategory('SMP')">SMP (U-15)</button>
+          <button type="button" class="btn-draw-cat" data-cat="SD" onclick="app.setDrawCategory('SD')">SD (U-12)</button>
+        </div>
+      </div>
+
+      <!-- MAIN DRAW STAGE / ARENA DISPLAY -->
+      <div class="draw-stage-card">
+        <div class="draw-stage-glow"></div>
+
+        <div class="draw-target-banner">
+          <span class="draw-target-icon">🎯</span>
+          <span class="draw-target-label">Target Pengundian:</span>
+          <span class="draw-target-slot" id="drawTargetSlotText">GRUP A — SLOT 1</span>
+        </div>
+
+        <!-- REEL BOX: TAMPILAN NAMA BERPUTAR -->
+        <div class="draw-reel-container" id="drawReelContainer">
+          <div class="draw-reel-border-glow"></div>
+          <div class="draw-reel-window" id="drawReelWindow">
+            <div class="draw-reel-item" id="drawReelItem">
+              <div class="draw-reel-badge" id="drawReelBadge">🎲</div>
+              <div class="draw-reel-info">
+                <div class="draw-reel-name" id="drawReelName">Klik 'Putar Undian' untuk Mulai</div>
+                <div class="draw-reel-sub" id="drawReelSub">16 Tim Tersedia di Pot Undian</div>
+              </div>
+            </div>
+          </div>
+          <div class="draw-reel-scanline"></div>
+          <div class="draw-confetti-container" id="drawConfettiContainer"></div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="draw-actions-bar">
+          <button type="button" class="btn btn-draw-spin" id="btnDrawSingle" onclick="app.spinSingleDraw()">
+            <span class="btn-spin-icon">🎲</span>
+            <span class="btn-spin-text" id="btnDrawSingleText">Putar & Undi 1 Tim (Berikutnya)</span>
+          </button>
+
+          <button type="button" class="btn btn-draw-auto" id="btnDrawAuto" onclick="app.toggleAutoDraw()">
+            <span class="btn-auto-icon">⚡</span>
+            <span class="btn-auto-text" id="btnDrawAutoText">Undi Otomatis 1 per 1</span>
+          </button>
+
+          <button type="button" class="btn btn-draw-reset" id="btnDrawReset" onclick="app.resetDraw()">
+            <span>🔄</span> Reset Undian
+          </button>
+
+          <button type="button" class="btn btn-draw-copy" id="btnDrawCopy" onclick="app.copyDrawResults()">
+            <span>📋</span> Salin Hasil
+          </button>
+
+          <button type="button" class="btn btn-draw-apply" id="btnDrawApply" onclick="app.applyDrawToTournament()" style="display: none;">
+            <span>💾</span> Simpan Hasil ke Turnamen (Panitia)
+          </button>
+        </div>
+
+        <!-- STATUS COUNTER & LIVE LOG -->
+        <div class="draw-status-strip">
+          <div class="draw-progress-badge">
+            Progres: <strong id="drawCountText">0 / 16</strong> Tim Terundi
+          </div>
+          <div class="draw-last-result" id="drawAnnouncement">
+            Siap melakukan drawing resmi 1 per 1. Tekan tombol putar untuk mengundi tim pertama!
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 GRUP DISPLAY CARDS (GRUP A, B, C, D) -->
+      <div class="draw-groups-grid" id="drawGroupsGrid">
+        <!-- Rendered by app.renderDrawSlots() -->
+      </div>
+
+      <!-- POT TIM YANG BELUM TERUNDI (UNDRAWN POOL) -->
+      <div class="draw-pool-card">
+        <div class="draw-pool-header">
+          <h3 class="draw-pool-title">
+            <span>🗳️</span> Pot Tim Menunggu Undian (<span id="drawPoolCount">16</span> Tim Tersisa)
+          </h3>
+          <span class="draw-pool-hint">Daftar tim yang belum terundi ke dalam grup</span>
+        </div>
+        <div class="draw-pool-badges" id="drawPoolBadges">
+          <!-- Rendered by app.renderDrawPool() -->
+        </div>
       </div>
     </section>
 
@@ -2101,6 +2204,10 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
       <span>Klasemen</span>
     </button>
+    <button type="button" class="mobile-nav-item" data-tab="draw" onclick="app.switchTab('draw')" aria-label="Draw Grup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8" cy="8" r="1.5" fill="currentColor"></circle><circle cx="16" cy="8" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="8" cy="16" r="1.5" fill="currentColor"></circle><circle cx="16" cy="16" r="1.5" fill="currentColor"></circle></svg>
+      <span>Draw</span>
+    </button>
     <button type="button" class="mobile-nav-item" data-tab="bracket" onclick="app.switchTab('bracket')" aria-label="Bagan Fase Gugur">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M9 6h6a3 3 0 0 1 3 3v6M9 18h6a3 3 0 0 0 3-3"></path><circle cx="18" cy="12" r="3"></circle></svg>
       <span>Bagan</span>
@@ -2128,11 +2235,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.10"></script>
-  <script defer src="js/supabase-client.js?v=8.10"></script>
-  <script defer src="js/data.js?v=8.10"></script>
-  <script defer src="js/admin.js?v=8.10"></script>
-  <script defer src="js/app.js?v=8.10"></script>
+  <script defer src="js/security.js?v=8.11"></script>
+  <script defer src="js/supabase-client.js?v=8.11"></script>
+  <script defer src="js/data.js?v=8.11"></script>
+  <script defer src="js/admin.js?v=8.11"></script>
+  <script defer src="js/app.js?v=8.11"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2149,7 +2256,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=64')
+        navigator.serviceWorker.register('sw.js?v=65')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

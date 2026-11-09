@@ -5507,3 +5507,705 @@ body.dark-theme .fixture-team-row:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
 }
+
+/* ========================================================= */
+/* DRAW GRUP (LIVE GROUP DRAWING SIMULATOR) STYLES           */
+/* ========================================================= */
+.draw-header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.draw-header-main {
+  flex: 1;
+  min-width: 260px;
+}
+
+.draw-header-desc {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.draw-cat-switch {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.btn-draw-cat {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-draw-cat:hover {
+  color: #f1f5f9;
+}
+
+.btn-draw-cat.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0f172a;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35);
+}
+
+/* DRAW STAGE CARD */
+.draw-stage-card {
+  position: relative;
+  background: linear-gradient(165deg, #111827 0%, #0b0f19 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), 0 0 30px rgba(245, 158, 11, 0.08);
+  margin-bottom: 26px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.draw-stage-glow {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 420px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.draw-target-banner {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.draw-target-slot {
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #fbbf24;
+}
+
+/* REEL CONTAINER (SLOT MACHINE DISPLAY) */
+.draw-reel-container {
+  position: relative;
+  z-index: 1;
+  max-width: 660px;
+  height: 120px;
+  margin: 0 auto 22px auto;
+  background: linear-gradient(180deg, #090d16 0%, #0f172a 50%, #090d16 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 18px;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.3), inset 0 0 24px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.draw-reel-window {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.draw-reel-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 20px;
+  width: 100%;
+  transition: transform 0.08s ease-out;
+}
+
+.draw-reel-item.spinning {
+  filter: blur(1.5px);
+  transform: translateY(6px);
+}
+
+.draw-reel-item.winner-celebrate {
+  animation: reelWinnerPulse 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes reelWinnerPulse {
+  0% { transform: scale(0.85); filter: brightness(1.6); }
+  50% { transform: scale(1.08); filter: brightness(1.3); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.draw-reel-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: #f59e0b;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.draw-reel-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.draw-reel-info {
+  text-align: left;
+  min-width: 0;
+}
+
+.draw-reel-name {
+  font-size: 1.38rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.draw-reel-sub {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.draw-reel-scanline {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.7) 30%, rgba(245, 158, 11, 1) 50%, rgba(245, 158, 11, 0.7) 70%, transparent 100%);
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+}
+
+/* CONFETTI PARTICLES CONTAINER */
+.draw-confetti-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 4;
+}
+
+.draw-confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confettiBurst 1.2s forwards ease-out;
+}
+
+@keyframes confettiBurst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.6);
+  }
+}
+
+/* ACTIONS BAR */
+.draw-actions-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.btn-draw-spin {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0f172a !important;
+  font-weight: 800;
+  font-size: 1.02rem;
+  padding: 13px 26px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-draw-spin:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.55);
+}
+
+.btn-draw-spin:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-draw-spin:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.btn-draw-auto {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.94rem;
+  padding: 13px 22px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-draw-auto.is-running {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+  animation: autoDrawPulse 1.2s infinite;
+}
+
+@keyframes autoDrawPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.btn-draw-reset,
+.btn-draw-copy,
+.btn-draw-apply {
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 12px 18px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-draw-reset {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-draw-reset:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-draw-copy {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.btn-draw-copy:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.btn-draw-apply {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: #ffffff !important;
+  border: none;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+}
+
+/* STATUS STRIP */
+.draw-status-strip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 18px;
+  text-align: left;
+}
+
+.draw-progress-badge {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.draw-progress-badge strong {
+  color: #f59e0b;
+  font-size: 0.95rem;
+}
+
+.draw-last-result {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  flex: 1;
+  min-width: 220px;
+}
+
+/* 4 GROUPS GRID */
+.draw-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+@media (max-width: 1024px) {
+  .draw-groups-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  .draw-groups-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.draw-group-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.draw-group-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.draw-group-tag {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.draw-group-tag.group-A {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+}
+
+.draw-group-tag.group-B {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.draw-group-tag.group-C {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.draw-group-tag.group-D {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+}
+
+.draw-group-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.draw-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.draw-slot-item {
+  border-radius: 12px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.draw-slot-item.empty {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  color: #64748b;
+}
+
+.draw-slot-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  font-size: 0.74rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.draw-slot-placeholder {
+  font-size: 0.8rem;
+  color: #475569;
+  font-style: italic;
+}
+
+.draw-slot-item.target-active {
+  border: 1.5px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+  animation: targetSlotGlow 1.4s infinite alternate;
+}
+
+@keyframes targetSlotGlow {
+  0% { box-shadow: 0 0 6px rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.6); }
+  100% { box-shadow: 0 0 18px rgba(245, 158, 11, 0.45); border-color: rgba(245, 158, 11, 1); }
+}
+
+.draw-slot-item.target-active .draw-slot-placeholder {
+  color: #f59e0b;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.draw-slot-item.filled {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.draw-slot-item.just-stamped {
+  animation: slotStampAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slotStampAnim {
+  0% {
+    transform: scale(0.85);
+    background: rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    transform: scale(1.04);
+    background: rgba(16, 185, 129, 0.25);
+  }
+  100% {
+    transform: scale(1);
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.draw-slot-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.draw-slot-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.draw-slot-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.draw-slot-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.draw-slot-city {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+/* UNDRAWN POOL CARD */
+.draw-pool-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.draw-pool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.draw-pool-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.draw-pool-hint {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.draw-pool-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.draw-pool-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+}
+
+.draw-pool-pill.available {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f1f5f9;
+}
+
+.draw-pool-pill.available:hover {
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+}
+
+.draw-pool-pill.is-drawn {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  color: #475569;
+  text-decoration: line-through;
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.draw-pool-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* MOBILE RESPONSIVE TWEAKS */
+@media (max-width: 640px) {
+  .draw-reel-container {
+    height: 100px;
+  }
+  .draw-reel-badge {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+  .draw-reel-name {
+    font-size: 1.1rem;
+  }
+  .draw-reel-sub {
+    font-size: 0.76rem;
+  }
+  .btn-draw-spin,
+  .btn-draw-auto {
+    width: 100%;
+    justify-content: center;
+  }
+  .draw-actions-bar {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  .draw-status-strip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
