@@ -1338,6 +1338,8 @@ const app = {
           if (idx !== -1) {
             const mapped = {};
             const curMatch = this.store.data.matches[idx];
+            if (remoteMatch.home_id !== undefined && remoteMatch.home_id !== null) mapped.homeId = remoteMatch.home_id;
+            if (remoteMatch.away_id !== undefined && remoteMatch.away_id !== null) mapped.awayId = remoteMatch.away_id;
             if (remoteMatch.status) mapped.status = remoteMatch.status;
             if (remoteMatch.scorers) mapped.scorers = remoteMatch.scorers;
             if (remoteMatch.cards) mapped.cards = remoteMatch.cards;
@@ -1468,8 +1470,8 @@ const app = {
       this.store.saveData();
       this.store.syncKnockoutFromStandings();
       try {
-        this.syncDrawStateFromTournament("SMP");
-        this.syncDrawStateFromTournament("SD");
+        this.syncDrawStateFromTournament("SMP", true);
+        this.syncDrawStateFromTournament("SD", true);
       } catch (e) {}
       this.renderCurrentView();
       this.renderMatches();
@@ -3144,7 +3146,7 @@ const app = {
         <div class="school-card ${swipeClass}" onclick="app.openTeamModal('${t.id}')">
           <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor || '#10b981'}, #0f172a);">
             <span class="group-tag-corner">
-              ${(t.category || 'SMP') === 'SD' ? '🎒 SD' : '🏆 SMP'} • GRUP ${t.group}
+              ${(t.category || 'SMP') === 'SD' ? '🎒 SD' : '🏆 SMP'} • ${t.group && t.group !== '-' ? 'GRUP ' + t.group : 'Belum Diundi'}
             </span>
           </div>
 
@@ -3475,18 +3477,19 @@ const app = {
     }
     if (!this.drawState) {
       this.drawState = {
-        SMP: { groups: { A: [], B: [], C: [], D: [] }, history: [] },
-        SD: { groups: { A: [], B: [], C: [], D: [] }, history: [] }
+        SMP: { groups: { A: [], B: [], C: [], D: [] }, history: [], isReset: false },
+        SD: { groups: { A: [], B: [], C: [], D: [] }, history: [], isReset: false }
       };
     }
-    if (!this.drawState.SMP) this.drawState.SMP = { groups: { A: [], B: [], C: [], D: [] }, history: [] };
-    if (!this.drawState.SD) this.drawState.SD = { groups: { A: [], B: [], C: [], D: [] }, history: [] };
+    if (!this.drawState.SMP) this.drawState.SMP = { groups: { A: [], B: [], C: [], D: [] }, history: [], isReset: false };
+    if (!this.drawState.SD) this.drawState.SD = { groups: { A: [], B: [], C: [], D: [] }, history: [], isReset: false };
     ["SMP", "SD"].forEach(cat => {
       if (!this.drawState[cat].groups) this.drawState[cat].groups = { A: [], B: [], C: [], D: [] };
       ["A", "B", "C", "D"].forEach(g => {
         if (!Array.isArray(this.drawState[cat].groups[g])) this.drawState[cat].groups[g] = [];
       });
       if (!Array.isArray(this.drawState[cat].history)) this.drawState[cat].history = [];
+      this.drawState[cat].isReset = Boolean(this.drawState[cat].isReset);
     });
     return this.drawState;
   },
@@ -3890,6 +3893,7 @@ const app = {
 
         // Update state
         const state = this.getDrawState()[cat];
+        state.isReset = false;
         state.groups[nextTarget.group].push({
           teamId: winnerTeam.id,
           name: winnerTeam.name,
@@ -4034,7 +4038,7 @@ const app = {
     const cat = this.currentDrawCat || "SMP";
     const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
 
-    if (!confirm(`Apakah Anda yakin ingin me-reset hasil undian grup ${catLabel}? Seluruh tim akan dikembalikan ke pot undian dan dikosongkan dari klasemen.`)) {
+    if (!confirm(`Apakah Anda yakin ingin me-reset hasil undian grup ${catLabel}? Seluruh tim akan dikembalikan ke pot undian dan dikosongkan dari klasemen & jadwal.`)) {
       return;
     }
 
@@ -4043,26 +4047,21 @@ const app = {
     const state = this.getDrawState()[cat];
     state.groups = { A: [], B: [], C: [], D: [] };
     state.history = [];
+    state.isReset = true;
     this.saveDrawState();
 
-    // Reset tim di turnamen kembali ke grup default awal
-    const defaultTeams = (window.DEFAULT_DATA && window.DEFAULT_DATA.teams) || [];
-    defaultTeams.forEach(dt => {
-      if ((dt.category || "SMP") === cat) {
-        const teamObj = this.store.data.teams.find(t => t.id === dt.id);
-        if (teamObj) teamObj.group = dt.group;
+    // Kosongkan grup tim di turnamen agar klasemen bersih & tidak otomatis terisi ulang sebelum diundi ulang
+    (this.store.data.teams || []).forEach(teamObj => {
+      if ((teamObj.category || "SMP") === cat) {
+        teamObj.group = "-";
       }
     });
 
-    // Reset pertandingan babak grup kategori ini ke pasangan default
-    const defaultMatches = (window.DEFAULT_DATA && window.DEFAULT_DATA.matches) || [];
-    defaultMatches.forEach(dm => {
-      if ((dm.category || "SMP") === cat && dm.stage === "group") {
-        const mObj = this.store.data.matches.find(m => m.id === dm.id);
-        if (mObj) {
-          mObj.homeId = dm.homeId;
-          mObj.awayId = dm.awayId;
-        }
+    // Kosongkan pasangan tim pada jadwal babak grup kategori ini menjadi TBD hingga diundi ulang
+    (this.store.data.matches || []).forEach(mObj => {
+      if ((mObj.category || "SMP") === cat && mObj.stage === "group") {
+        mObj.homeId = "";
+        mObj.awayId = "";
       }
     });
 
@@ -4076,6 +4075,10 @@ const app = {
       this.renderMatches();
       this.renderTeams();
       this.renderBracket();
+      if (this.currentTab === "home") {
+        this.renderHome();
+        this.renderLiveStreamHero();
+      }
     } catch(e) {}
 
     if (window.SupabaseService && typeof window.SupabaseService.syncAllData === "function") {
@@ -4083,7 +4086,7 @@ const app = {
     }
 
     this.renderDrawView();
-    this.showToast(`🔄 Hasil drawing ${catLabel} berhasil di-reset ke kondisi awal.`);
+    this.showToast(`🔄 Hasil drawing ${catLabel} berhasil di-reset! Semua grup kembali kosong (0/16).`);
   },
 
   copyDrawResults() {
@@ -4225,13 +4228,33 @@ const app = {
   },
 
   // Rekonstruksi drawState dari data tim turnamen jika di perangkat peserta belum ada history lokal
-  syncDrawStateFromTournament(cat = this.currentDrawCat) {
+  syncDrawStateFromTournament(cat = this.currentDrawCat, fromRemote = false) {
     if (!cat) cat = "SMP";
     const state = this.getDrawState()[cat];
-    if (state && state.history && state.history.length > 0) return;
-
     const allTeams = (this.store && this.store.data && this.store.data.teams) || [];
-    const catTeams = allTeams.filter(t => (t.category || "SMP") === cat && t.group);
+    const catAllTeams = allTeams.filter(t => (t.category || "SMP") === cat);
+
+    // Lindungi sesi drawing/reset yang sedang berlangsung pada perangkat Panpel dari timpaan remote lama
+    if (fromRemote && this.isAdmin() && (state.isReset || (state.history && state.history.length > 0 && state.history.length < 16))) {
+      return;
+    }
+
+    // Jika semua tim di kategori ini bertanda "-" (baru saja di-reset oleh Panpel)
+    if (catAllTeams.length > 0 && catAllTeams.every(t => t.group === "-")) {
+      if (state.history.length > 0 || !state.isReset) {
+        state.groups = { A: [], B: [], C: [], D: [] };
+        state.history = [];
+        state.isReset = true;
+        this.saveDrawState();
+      }
+      return;
+    }
+
+    // Jangan timpa state undian jika sudah ada progres atau sedang dalam kondisi reset
+    if (!fromRemote && ((state && state.history && state.history.length > 0) || (state && state.isReset))) return;
+    if (fromRemote && state && state.isReset && catAllTeams.some(t => !t.group || t.group === "-")) return;
+
+    const catTeams = catAllTeams.filter(t => t.group && ["A", "B", "C", "D"].includes(t.group));
     if (catTeams.length >= 16) {
       const groups = ["A", "B", "C", "D"];
       let hasValidGroups = true;
@@ -4241,6 +4264,16 @@ const app = {
       });
 
       if (hasValidGroups) {
+        if (fromRemote && state.history && state.history.length === 16) {
+          const isSameSet = groups.every(g => {
+            const localIds = (state.groups[g] || []).map(x => x.teamId).sort().join(",");
+            const remoteIds = catTeams.filter(t => t.group === g).map(t => t.id).sort().join(",");
+            return localIds === remoteIds;
+          });
+          if (isSameSet) return;
+        }
+
+        state.isReset = false;
         groups.forEach(g => {
           const teamsInG = catTeams.filter(t => t.group === g);
           state.groups[g] = teamsInG.map((t, idx) => ({
@@ -4315,7 +4348,7 @@ const app = {
 
     title.innerHTML = `
       <span class="mini-badge" style="background: ${team.badgeColor};">${team.shortName.substring(0,2)}</span>
-      <span>${team.name} (Grup ${team.group})</span>
+      <span>${team.name} (${team.group && team.group !== '-' ? 'Grup ' + team.group : 'Belum Diundi'})</span>
     `;
 
     const waLink = this.getWhatsAppUrl(team.official.phone, `Halo Official ${team.name}, informasi ACC 2026`);
