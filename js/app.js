@@ -639,6 +639,10 @@ const app = {
     try { this.renderHeader(); } catch(e) { console.warn("Header init:", e); }
     try { this.renderLiveStreamHero(); } catch(e) { console.warn("LiveStream init:", e); }
     try { this.bindEvents(); } catch(e) { console.warn("Events init:", e); }
+    try {
+      this.connectDrawToTournament("SMP", false);
+      this.connectDrawToTournament("SD", false);
+    } catch(e) {}
     try { this.renderCurrentView(); } catch(e) { console.warn("View init:", e); }
     try { this.initPwa(); } catch(e) { console.warn("PWA init:", e); }
     try { this.initSupabaseSync(); } catch(e) { console.warn("Supabase init:", e); }
@@ -1463,6 +1467,10 @@ const app = {
       this.store.syncPlayerStatsFromMatches();
       this.store.saveData();
       this.store.syncKnockoutFromStandings();
+      try {
+        this.syncDrawStateFromTournament("SMP");
+        this.syncDrawStateFromTournament("SD");
+      } catch (e) {}
       this.renderCurrentView();
       this.renderMatches();
       this.renderStandings();
@@ -1776,6 +1784,10 @@ const app = {
 
     const btnHeaderAturLawan = document.getElementById("btnHeaderAturLawan");
     if (btnHeaderAturLawan) btnHeaderAturLawan.style.display = isPanitia ? "inline-flex" : "none";
+
+    if (this.currentTab === "draw" && typeof this.renderDrawView === "function") {
+      this.renderDrawView();
+    }
   },
 
   renderHeroBanner() {
@@ -3518,10 +3530,40 @@ const app = {
 
   renderDrawView() {
     const cat = this.currentDrawCat || "SMP";
+    // Sinkronkan state draw dari turnamen jika state undian masih kosong tapi data tim sudah memiliki grup
+    this.syncDrawStateFromTournament(cat);
+
+    const isPanitia = this.isAdmin();
     const state = this.getDrawState()[cat];
     const undrawn = this.getUndrawnTeams(cat);
     const nextTarget = this.getNextDrawTarget(cat);
     const isFinished = !nextTarget;
+
+    // 0. Update Role Banner (Mode Peserta vs Mode Panpel)
+    const roleBanner = document.getElementById("drawRoleBanner");
+    if (roleBanner) {
+      if (isPanitia) {
+        roleBanner.innerHTML = `
+          <div class="draw-role-tag role-panitia">
+            <span class="draw-role-icon">👑</span>
+            <div class="draw-role-info">
+              <div class="draw-role-badge">MODE PANITIA PELAKSANA (PANPEL)</div>
+              <div class="draw-role-desc">Anda memiliki wewenang penuh mengundi 1 per 1 atau otomatis. Setiap hasil undian otomatis terhubung langsung ke Klasemen, Jadwal Pertandingan, & Cloud Supabase.</div>
+            </div>
+          </div>
+        `;
+      } else {
+        roleBanner.innerHTML = `
+          <div class="draw-role-tag role-participant">
+            <span class="draw-role-icon">🛡️</span>
+            <div class="draw-role-info">
+              <div class="draw-role-badge">MODE PEMANTAU RESMI PESERTA</div>
+              <div class="draw-role-desc">Pengundian grup resmi dipimpin & ditetapkan oleh Panitia Pelaksana (Panpel). Pembagian grup di bawah ini sah & otomatis tersambung ke Jadwal dan Klasemen.</div>
+            </div>
+          </div>
+        `;
+      }
+    }
 
     // 1. Update Category Buttons
     document.querySelectorAll(".btn-draw-cat").forEach(btn => {
@@ -3533,12 +3575,22 @@ const app = {
     if (targetSlotText && targetSlotText.parentElement) {
       if (isFinished) {
         targetSlotText.textContent = "SELESAI — SEMUA GRUP TELAH LENGKAP";
-        targetSlotText.parentElement.style.borderColor = "rgba(16, 185, 129, 0.4)";
-        targetSlotText.parentElement.style.color = "#34d399";
+        targetSlotText.parentElement.style.background = "#ecfdf5";
+        targetSlotText.parentElement.style.borderColor = "#a7f3d0";
+        targetSlotText.parentElement.style.color = "#047857";
+        targetSlotText.style.color = "#065f46";
+      } else if (!isPanitia) {
+        targetSlotText.textContent = `GRUP ${nextTarget.group} — SLOT ${nextTarget.slotIndex} (Menunggu Giliran Panpel)`;
+        targetSlotText.parentElement.style.background = "#f0f9ff";
+        targetSlotText.parentElement.style.borderColor = "#bae6fd";
+        targetSlotText.parentElement.style.color = "#0369a1";
+        targetSlotText.style.color = "#0c4a6e";
       } else {
         targetSlotText.textContent = `GRUP ${nextTarget.group} — SLOT ${nextTarget.slotIndex} (Urutan ke-${nextTarget.stepIndex})`;
-        targetSlotText.parentElement.style.borderColor = "rgba(245, 158, 11, 0.35)";
-        targetSlotText.parentElement.style.color = "#f59e0b";
+        targetSlotText.parentElement.style.background = "#fef3c7";
+        targetSlotText.parentElement.style.borderColor = "#fde68a";
+        targetSlotText.parentElement.style.color = "#92400e";
+        targetSlotText.style.color = "#b45309";
       }
     }
 
@@ -3551,7 +3603,13 @@ const app = {
     const announce = document.getElementById("drawAnnouncement");
     if (announce && !this.isDrawingSpinning) {
       if (isFinished) {
-        announce.textContent = "🎉 Seluruh 16 tim telah selesai diundi secara sah ke dalam 4 grup!";
+        announce.textContent = "🎉 Seluruh 16 tim telah selesai diundi secara sah ke dalam 4 grup (Grup A, B, C, D) dan tersambung otomatis ke Klasemen & Jadwal!";
+      } else if (!isPanitia) {
+        if (state.history.length === 0) {
+          announce.textContent = `Proses drawing resmi Kategori ${cat === "SMP" ? "SMP (U-15)" : "SD (U-12)"} akan segera dilakukan oleh Panitia Pelaksana.`;
+        } else {
+          announce.textContent = `Sebanyak ${state.history.length} dari 16 tim telah sah terundi oleh Panpel. Hubungi panitia untuk informasi siaran langsung.`;
+        }
       } else if (state.history.length === 0) {
         announce.textContent = `Siap melakukan drawing resmi 1 per 1 untuk Kategori ${cat === "SMP" ? "SMP (U-15)" : "SD (U-12)"}. Tekan tombol putar untuk mengundi tim pertama!`;
       } else {
@@ -3573,7 +3631,7 @@ const app = {
           reelBadge.style.background = "#10b981";
           reelBadge.innerHTML = "🏆";
         }
-        if (reelName) reelName.textContent = "Drawing Grup Selesai!";
+        if (reelName) reelName.textContent = "Hasil Drawing Resmi Lengkap";
         if (reelSub) reelSub.textContent = `16 Tim ${cat} telah menempati Grup A, B, C, & D`;
       } else if (state.history.length > 0) {
         const last = state.history[state.history.length - 1];
@@ -3583,7 +3641,14 @@ const app = {
           reelBadge.innerHTML = (lastTeam && lastTeam.logo) ? `<img src="${lastTeam.logo}" alt="${last.teamName}">` : (lastTeam && lastTeam.shortName ? lastTeam.shortName.substring(0, 2) : "⚽");
         }
         if (reelName) reelName.textContent = last.teamName;
-        if (reelSub) reelSub.textContent = `Terundi di Grup ${last.group} • ${undrawn.length} Tim Tersisa`;
+        if (reelSub) reelSub.textContent = `Terundi di Grup ${last.group} (Slot ${last.slot}) • ${undrawn.length} Tim Tersisa`;
+      } else if (!isPanitia) {
+        if (reelBadge) {
+          reelBadge.style.background = "#0284c7";
+          reelBadge.innerHTML = "⚽";
+        }
+        if (reelName) reelName.textContent = "Drawing Dipimpin oleh Panpel";
+        if (reelSub) reelSub.textContent = `16 Tim Siap Diundi ke Grup A, B, C, & D`;
       } else {
         if (reelBadge) {
           reelBadge.style.background = "#f59e0b";
@@ -3594,24 +3659,37 @@ const app = {
       }
     }
 
-    // 5. Update Buttons
+    // 5. Update Buttons Based On Panitia Authority
     const btnSpin = document.getElementById("btnDrawSingle");
     const btnSpinText = document.getElementById("btnDrawSingleText");
+    const btnAuto = document.getElementById("btnDrawAuto");
+    const btnReset = document.getElementById("btnDrawReset");
+    const btnCopy = document.getElementById("btnDrawCopy");
+    const btnApply = document.getElementById("btnDrawApply");
+
     if (btnSpin) {
+      btnSpin.style.display = isPanitia ? "inline-flex" : "none";
       btnSpin.disabled = isFinished || this.isDrawingSpinning;
       if (btnSpinText) {
         btnSpinText.textContent = isFinished ? "Semua Tim Terundi" : "Putar & Undi 1 Tim (Berikutnya)";
       }
     }
 
-    const btnAuto = document.getElementById("btnDrawAuto");
     if (btnAuto) {
+      btnAuto.style.display = isPanitia ? "inline-flex" : "none";
       btnAuto.disabled = isFinished;
     }
 
-    const btnApply = document.getElementById("btnDrawApply");
+    if (btnReset) {
+      btnReset.style.display = isPanitia ? "inline-flex" : "none";
+    }
+
+    if (btnCopy) {
+      btnCopy.style.display = "inline-flex"; // Dapat diakses oleh peserta & panitia
+    }
+
     if (btnApply) {
-      btnApply.style.display = this.isAdmin() ? "inline-flex" : "none";
+      btnApply.style.display = isPanitia ? "inline-flex" : "none";
     }
 
     // 6. Render 4 Groups Grid
@@ -3725,6 +3803,11 @@ const app = {
   },
 
   spinSingleDraw(onFinished = null) {
+    if (!this.isAdmin()) {
+      this.showToast("🔒 Fitur pengundian hanya dapat dijalankan oleh Panitia Pelaksana (Panpel).");
+      return;
+    }
+
     if (this.isDrawingSpinning) return;
 
     const cat = this.currentDrawCat || "SMP";
@@ -3742,7 +3825,7 @@ const app = {
       return;
     }
 
-    // Winner chosen randomly from the remaining pool
+    // Pemenang dipilih secara acak murni dari pot tim yang tersisa
     const winnerTeam = undrawn[Math.floor(Math.random() * undrawn.length)];
     this.isDrawingSpinning = true;
 
@@ -3766,14 +3849,13 @@ const app = {
       reelItem.classList.add("spinning");
     }
 
-    // Animation: Decelerating spin with audio clicks
+    // Animasi putaran dengan deselerasi bertahap
     const allPoolTeams = this.getDrawCategoryTeams(cat);
     const totalTicks = 26;
     let tickCount = 0;
 
     const runTick = () => {
       tickCount++;
-      // Pick random team for visual shuffle
       const randomDisplayTeam = allPoolTeams[Math.floor(Math.random() * allPoolTeams.length)];
 
       if (reelName) reelName.textContent = randomDisplayTeam.name;
@@ -3786,12 +3868,11 @@ const app = {
       this.playDrawTickSound();
 
       if (tickCount < totalTicks) {
-        // Easing deceleration calculation
         const progress = tickCount / totalTicks;
         const delay = 45 + Math.pow(progress, 2.6) * 320;
         setTimeout(runTick, delay);
       } else {
-        // FINAL REVEAL ON WINNER TEAM!
+        // PENGUMUMAN RESMI TIM PEMENANG!
         if (reelItem) {
           reelItem.classList.remove("spinning");
           reelItem.classList.add("winner-celebrate");
@@ -3830,6 +3911,12 @@ const app = {
         this.saveDrawState();
         this.isDrawingSpinning = false;
 
+        const updatedNext = this.getNextDrawTarget(cat);
+
+        // LANGSUNG SAMBUNGKAN KE TOURNAMENT (KLASEMEN, JADWAL, TIM, BRACKET)
+        // Jika sudah selesai 16 tim, otomatis sinkronkan juga ke Cloud Supabase!
+        this.connectDrawToTournament(cat, !updatedNext);
+
         // Re-render UI components
         this.renderDrawSlots();
         this.renderDrawPool();
@@ -3841,13 +3928,25 @@ const app = {
         }, 50);
 
         // Update Announcement & Target Header
-        const updatedNext = this.getNextDrawTarget(cat);
         const targetSlotText = document.getElementById("drawTargetSlotText");
         if (targetSlotText) {
+          const pillEl = targetSlotText.parentElement;
           if (!updatedNext) {
             targetSlotText.textContent = "SELESAI — SEMUA GRUP TELAH LENGKAP";
+            targetSlotText.style.color = "#065f46";
+            if (pillEl) {
+              pillEl.style.background = "#ecfdf5";
+              pillEl.style.borderColor = "#a7f3d0";
+              pillEl.style.color = "#047857";
+            }
           } else {
             targetSlotText.textContent = `GRUP ${updatedNext.group} — SLOT ${updatedNext.slotIndex} (Urutan ke-${updatedNext.stepIndex})`;
+            targetSlotText.style.color = "#b45309";
+            if (pillEl) {
+              pillEl.style.background = "#fef3c7";
+              pillEl.style.borderColor = "#fde68a";
+              pillEl.style.color = "#92400e";
+            }
           }
         }
 
@@ -3855,7 +3954,7 @@ const app = {
         if (countText) countText.textContent = `${state.history.length} / 16`;
 
         if (announce) {
-          announce.textContent = `🎉 RESMI: ${winnerTeam.name} sah menempati Grup ${nextTarget.group} (Slot ${nextTarget.slotIndex})!`;
+          announce.textContent = `🎉 RESMI: ${winnerTeam.name} sah menempati Grup ${nextTarget.group} (Slot ${nextTarget.slotIndex})! Otomatis terhubung ke Klasemen & Jadwal.`;
         }
 
         if (btnSpin) {
@@ -3872,6 +3971,11 @@ const app = {
   },
 
   toggleAutoDraw(forceStop = false) {
+    if (!this.isAdmin()) {
+      this.showToast("🔒 Fitur pengundian otomatis hanya dapat dijalankan oleh Panitia Pelaksana (Panpel).");
+      return;
+    }
+
     if (this.isAutoDrawing || forceStop) {
       this.isAutoDrawing = false;
       if (this._autoDrawTimer) {
@@ -3905,7 +4009,7 @@ const app = {
       const target = this.getNextDrawTarget(cat);
       if (!target) {
         this.toggleAutoDraw(true);
-        this.showToast("🎉 Seluruh grup telah lengkap diundi!");
+        this.showToast("🎉 Seluruh grup telah lengkap diundi & otomatis tersambung ke Klasemen dan Jadwal!");
         return;
       }
 
@@ -3921,11 +4025,16 @@ const app = {
   },
 
   resetDraw() {
+    if (!this.isAdmin()) {
+      this.showToast("🔒 Reset undian hanya dapat dilakukan oleh Panitia Pelaksana (Panpel).");
+      return;
+    }
+
     if (this.isDrawingSpinning) return;
     const cat = this.currentDrawCat || "SMP";
     const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
 
-    if (!confirm(`Apakah Anda yakin ingin me-reset hasil undian grup ${catLabel}? Seluruh tim akan dikembalikan ke pot undian.`)) {
+    if (!confirm(`Apakah Anda yakin ingin me-reset hasil undian grup ${catLabel}? Seluruh tim akan dikembalikan ke pot undian dan dikosongkan dari klasemen.`)) {
       return;
     }
 
@@ -3936,8 +4045,45 @@ const app = {
     state.history = [];
     this.saveDrawState();
 
+    // Reset tim di turnamen kembali ke grup default awal
+    const defaultTeams = (window.DEFAULT_DATA && window.DEFAULT_DATA.teams) || [];
+    defaultTeams.forEach(dt => {
+      if ((dt.category || "SMP") === cat) {
+        const teamObj = this.store.data.teams.find(t => t.id === dt.id);
+        if (teamObj) teamObj.group = dt.group;
+      }
+    });
+
+    // Reset pertandingan babak grup kategori ini ke pasangan default
+    const defaultMatches = (window.DEFAULT_DATA && window.DEFAULT_DATA.matches) || [];
+    defaultMatches.forEach(dm => {
+      if ((dm.category || "SMP") === cat && dm.stage === "group") {
+        const mObj = this.store.data.matches.find(m => m.id === dm.id);
+        if (mObj) {
+          mObj.homeId = dm.homeId;
+          mObj.awayId = dm.awayId;
+        }
+      }
+    });
+
+    this.store.saveData();
+    if (typeof this.store.syncKnockoutFromStandings === "function") {
+      this.store.syncKnockoutFromStandings();
+    }
+
+    try {
+      this.renderStandings();
+      this.renderMatches();
+      this.renderTeams();
+      this.renderBracket();
+    } catch(e) {}
+
+    if (window.SupabaseService && typeof window.SupabaseService.syncAllData === "function") {
+      window.SupabaseService.syncAllData(this.store.data).catch(() => {});
+    }
+
     this.renderDrawView();
-    this.showToast(`🔄 Hasil drawing ${catLabel} berhasil di-reset. Siap mengundi ulang!`);
+    this.showToast(`🔄 Hasil drawing ${catLabel} berhasil di-reset ke kondisi awal.`);
   },
 
   copyDrawResults() {
@@ -3979,49 +4125,174 @@ const app = {
     }
   },
 
+  // =========================================================
+  // INTEGRASI DRAW GRUP KE TURNAMEN (KLASEMEN, JADWAL, BRACKET)
+  // =========================================================
+  connectDrawToTournament(cat = this.currentDrawCat, syncCloud = false) {
+    if (!cat) cat = "SMP";
+    const state = this.getDrawState()[cat];
+    if (!state || !state.groups) return;
+
+    let updatedTeamCount = 0;
+    const groups = ["A", "B", "C", "D"];
+
+    // 1. Update grup tim di this.store.data.teams
+    groups.forEach(g => {
+      const list = state.groups[g] || [];
+      list.forEach(item => {
+        const teamObj = (this.store.data.teams || []).find(t => t.id === item.teamId);
+        if (teamObj) {
+          teamObj.group = g;
+          updatedTeamCount++;
+        }
+      });
+    });
+
+    // 2. Update jadwal pertandingan babak grup (Matchday 1, 2, 3) sesuai penempatan slot
+    groups.forEach(g => {
+      const slotList = state.groups[g] || [];
+      const slotMap = {};
+      slotList.forEach(item => {
+        if (item.slot) slotMap[item.slot] = item.teamId;
+      });
+
+      const gMatches = (this.store.data.matches || []).filter(m =>
+        (m.category || "SMP") === cat &&
+        m.stage === "group" &&
+        m.group === g
+      );
+
+      // Matchday 1: Slot 1 vs Slot 2, Slot 3 vs Slot 4
+      const md1 = gMatches.filter(m => Number(m.matchday) === 1).sort((a, b) => a.id.localeCompare(b.id));
+      if (md1[0]) {
+        if (slotMap[1]) md1[0].homeId = slotMap[1];
+        if (slotMap[2]) md1[0].awayId = slotMap[2];
+      }
+      if (md1[1]) {
+        if (slotMap[3]) md1[1].homeId = slotMap[3];
+        if (slotMap[4]) md1[1].awayId = slotMap[4];
+      }
+
+      // Matchday 2: Slot 1 vs Slot 3, Slot 2 vs Slot 4
+      const md2 = gMatches.filter(m => Number(m.matchday) === 2).sort((a, b) => a.id.localeCompare(b.id));
+      if (md2[0]) {
+        if (slotMap[1]) md2[0].homeId = slotMap[1];
+        if (slotMap[3]) md2[0].awayId = slotMap[3];
+      }
+      if (md2[1]) {
+        if (slotMap[2]) md2[1].homeId = slotMap[2];
+        if (slotMap[4]) md2[1].awayId = slotMap[4];
+      }
+
+      // Matchday 3: Slot 1 vs Slot 4, Slot 2 vs Slot 3
+      const md3 = gMatches.filter(m => Number(m.matchday) === 3).sort((a, b) => a.id.localeCompare(b.id));
+      if (md3[0]) {
+        if (slotMap[1]) md3[0].homeId = slotMap[1];
+        if (slotMap[4]) md3[0].awayId = slotMap[4];
+      }
+      if (md3[1]) {
+        if (slotMap[2]) md3[1].homeId = slotMap[2];
+        if (slotMap[3]) md3[1].awayId = slotMap[3];
+      }
+    });
+
+    // 3. Simpan perubahan secara persisten di localStorage
+    this.store.saveData();
+
+    // 4. Update pemetaan babak gugur jika ada
+    if (typeof this.store.syncKnockoutFromStandings === "function") {
+      this.store.syncKnockoutFromStandings();
+    }
+
+    // 5. Render ulang tampilan Klasemen, Jadwal, Tim, & Bagan
+    try {
+      this.renderStandings();
+      this.renderMatches();
+      this.renderTeams();
+      this.renderBracket();
+      if (this.currentTab === "home") {
+        this.renderHome();
+        this.renderLiveStreamHero();
+      }
+    } catch (e) {}
+
+    // 6. Sinkronisasi ke Cloud Supabase jika diminta atau selesai 16 tim
+    if (syncCloud && window.SupabaseService) {
+      if (typeof window.SupabaseService.syncAllData === "function") {
+        window.SupabaseService.syncAllData(this.store.data).catch(() => {});
+      }
+    }
+  },
+
+  // Rekonstruksi drawState dari data tim turnamen jika di perangkat peserta belum ada history lokal
+  syncDrawStateFromTournament(cat = this.currentDrawCat) {
+    if (!cat) cat = "SMP";
+    const state = this.getDrawState()[cat];
+    if (state && state.history && state.history.length > 0) return;
+
+    const allTeams = (this.store && this.store.data && this.store.data.teams) || [];
+    const catTeams = allTeams.filter(t => (t.category || "SMP") === cat && t.group);
+    if (catTeams.length >= 16) {
+      const groups = ["A", "B", "C", "D"];
+      let hasValidGroups = true;
+      groups.forEach(g => {
+        const teamsInG = catTeams.filter(t => t.group === g);
+        if (teamsInG.length !== 4) hasValidGroups = false;
+      });
+
+      if (hasValidGroups) {
+        groups.forEach(g => {
+          const teamsInG = catTeams.filter(t => t.group === g);
+          state.groups[g] = teamsInG.map((t, idx) => ({
+            teamId: t.id,
+            name: t.name,
+            shortName: t.shortName || t.name,
+            badgeColor: t.badgeColor || "#0284c7",
+            city: t.city || "",
+            logo: t.logo || "",
+            slot: idx + 1
+          }));
+        });
+        state.history = [];
+        for (let s = 1; s <= 4; s++) {
+          for (const g of groups) {
+            const item = (state.groups[g] || []).find(x => x.slot === s);
+            if (item) {
+              state.history.push({
+                step: state.history.length + 1,
+                group: g,
+                slot: s,
+                teamId: item.teamId,
+                teamName: item.name
+              });
+            }
+          }
+        }
+        this.saveDrawState();
+      }
+    }
+  },
+
   applyDrawToTournament() {
     if (!this.isAdmin()) {
-      this.showToast("⚠️ Fitur ini hanya untuk Panitia / Admin.");
+      this.showToast("⚠️ Fitur ini hanya untuk Panitia Pelaksana (Panpel).");
       return;
     }
 
     const cat = this.currentDrawCat || "SMP";
     const state = this.getDrawState()[cat];
     if (state.history.length < 16) {
-      if (!confirm(`Baru ${state.history.length} dari 16 tim yang terundi. Tetap terapkan hasil parsial ke turnamen?`)) {
+      if (!confirm(`Baru ${state.history.length} dari 16 tim yang terundi. Tetap terapkan hasil parsial ke turnamen (Klasemen & Jadwal)?`)) {
         return;
       }
     } else {
-      if (!confirm(`Terapkan hasil drawing ${cat} ke data resmi turnamen (grup tim di klasemen & jadwal)?`)) {
+      if (!confirm(`Terapkan hasil drawing ${cat} ke data resmi turnamen? Seluruh grup di Klasemen & Jadwal Pertandingan akan diperbarui dan disinkronkan ke Supabase Cloud.`)) {
         return;
       }
     }
 
-    const teams = this.store.data.teams || [];
-    let updatedCount = 0;
-
-    ["A", "B", "C", "D"].forEach(g => {
-      const list = state.groups[g] || [];
-      list.forEach(item => {
-        const teamObj = teams.find(t => t.id === item.teamId);
-        if (teamObj) {
-          teamObj.group = g;
-          updatedCount++;
-        }
-      });
-    });
-
-    this.store.saveData();
-
-    if (window.SupabaseService && window.SupabaseService.saveTournamentData) {
-      window.SupabaseService.saveTournamentData(this.store.data).then(res => {
-        if (res && res.success) {
-          this.showToast(`✅ ${updatedCount} tim berhasil disinkronkan ke Cloud Supabase!`);
-        }
-      }).catch(() => {});
-    }
-
-    this.showToast(`💾 Hasil drawing berhasil disimpan ke turnamen (${updatedCount} tim diperbarui).`);
+    this.connectDrawToTournament(cat, true);
+    this.showToast(`💾 Hasil drawing ${cat} berhasil disimpan & disinkronkan ke Klasemen, Jadwal, dan Cloud Supabase!`);
   },
 
   closeAllModals() {

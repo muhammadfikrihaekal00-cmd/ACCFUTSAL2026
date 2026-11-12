@@ -35,7 +35,7 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.11";
+      var CURRENT_VER = "8.12";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -98,7 +98,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.11">
+  <link rel="stylesheet" href="css/styles.css?v=8.12">
 </head>
 <body>
 
@@ -650,6 +650,9 @@
           <button type="button" class="btn-draw-cat" data-cat="SD" onclick="app.setDrawCategory('SD')">SD (U-12)</button>
         </div>
       </div>
+
+      <!-- ROLE BANNER: INFORMASI MODE PESERTA VS KONTROL PANITIA -->
+      <div class="draw-role-banner" id="drawRoleBanner"></div>
 
       <!-- MAIN DRAW STAGE / ARENA DISPLAY -->
       <div class="draw-stage-card">
@@ -2235,11 +2238,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.11"></script>
-  <script defer src="js/supabase-client.js?v=8.11"></script>
-  <script defer src="js/data.js?v=8.11"></script>
-  <script defer src="js/admin.js?v=8.11"></script>
-  <script defer src="js/app.js?v=8.11"></script>
+  <script defer src="js/security.js?v=8.12"></script>
+  <script defer src="js/supabase-client.js?v=8.12"></script>
+  <script defer src="js/data.js?v=8.12"></script>
+  <script defer src="js/admin.js?v=8.12"></script>
+  <script defer src="js/app.js?v=8.12"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2256,7 +2259,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=65')
+        navigator.serviceWorker.register('sw.js?v=66')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
