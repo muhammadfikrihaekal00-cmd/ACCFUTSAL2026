@@ -221,6 +221,10 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         this.pendingEditorMatchId = null;
         setTimeout(() => { this.openMatchEditor(mId); }, 150);
       }
+      if (this.pendingBatchSave) {
+        this.pendingBatchSave = false;
+        setTimeout(() => { this.saveBatchUploadedTeams(); }, 150);
+      }
     } else {
       let penaltyMsg = "⚠️ PIN Panitia yang Anda masukkan salah. Akses ditolak! (Gunakan PIN: 1234)";
       if (window.Security && typeof window.Security.recordFailedAttempt === "function") {
@@ -3296,10 +3300,6 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   batchParsedTeams: [],
 
   openBatchUploadModal() {
-    if (!this.isAuthenticated) {
-      this.openLoginModal();
-      return;
-    }
     this.batchParsedTeams = [];
     const modal = document.getElementById("modalBatchUploadTeams");
     if (!modal) return;
@@ -3330,6 +3330,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (dropzone) dropzone.style.display = "block";
     const folderInput = document.getElementById("batchFolderInput");
     if (folderInput) folderInput.value = "";
+    const filesDirectInput = document.getElementById("batchFilesDirectInput");
+    if (filesDirectInput) filesDirectInput.value = "";
     const zipInput = document.getElementById("batchZipInput");
     if (zipInput) zipInput.value = "";
   },
@@ -4361,7 +4363,11 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   // Save all parsed teams to local store and sync across devices & Supabase
   async saveBatchUploadedTeams() {
     if (!this.isAuthenticated) {
-      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      this.pendingBatchSave = true;
+      this.openLoginModal();
+      if (window.app && typeof app.showToast === "function") {
+        app.showToast("🔒 Silakan verifikasi Mode Panitia (PIN: 1234) untuk menyimpan berkas tim!");
+      }
       return;
     }
     if (!this.batchParsedTeams || this.batchParsedTeams.length === 0) {

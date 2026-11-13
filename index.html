@@ -36,7 +36,7 @@
   <script>
     (function() {
       localStorage.setItem("pondok_futsal_theme", "light");
-      var CURRENT_VER = "8.17";
+      var CURRENT_VER = "8.18";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -99,6 +99,17 @@
         var m = document.getElementById("adminDashboardModal");
         if (m) m.classList.add("active");
       },
+      openBatchUploadModal: function() {
+        var m = document.getElementById("modalBatchUploadTeams");
+        if (m) m.classList.add("active");
+        if (window.admin && typeof window.admin.resetBatchUploadUI === 'function') {
+          try { window.admin.resetBatchUploadUI(); } catch(e) {}
+        }
+      },
+      closeBatchUploadModal: function() {
+        var m = document.getElementById("modalBatchUploadTeams");
+        if (m) m.classList.remove("active");
+      },
       doLogin: function(pin) {
         // Master PIN fast fallback jika file admin.js masih dalam proses loading
         var p = (pin || (document.getElementById("adminPinInput") ? document.getElementById("adminPinInput").value : "")).toString().trim().toLowerCase();
@@ -133,7 +144,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.17">
+  <link rel="stylesheet" href="css/styles.css?v=8.18">
 </head>
 <body>
 
@@ -254,8 +265,8 @@
           <span id="adminActiveBadge" class="admin-live-pulse-dot" style="display: none;"></span>
         </button>
 
-        <!-- Quick Batch Upload 1 Folder Tim Button (Only visible in Panitia Mode) -->
-        <button id="btnHeaderBatchUpload" class="btn btn-sm" onclick="admin.openBatchUploadModal()" title="Import 1 Folder Berkas Data Tim & Pemain Otomatis" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; font-weight: 700; border: none; border-radius: 999px; padding: 6px 14px; font-size: 0.78rem; gap: 6px; align-items: center; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35); cursor: pointer;">
+        <!-- Quick Batch Upload 1 Folder Tim Button -->
+        <button id="btnHeaderBatchUpload" class="btn btn-sm" onclick="if(window.admin&&window.admin.openBatchUploadModal){window.admin.openBatchUploadModal();}else{document.getElementById('modalBatchUploadTeams').classList.add('active');}" title="Import 1 Folder Berkas Data Tim & Pemain Otomatis" style="display: inline-flex; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; font-weight: 700; border: none; border-radius: 999px; padding: 6px 14px; font-size: 0.78rem; gap: 6px; align-items: center; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35); cursor: pointer;">
           <span>📂</span>
           <span>Upload Folder Tim</span>
         </button>
@@ -349,7 +360,7 @@
         <button type="button" class="tab-btn active" data-tab="home" onclick="app.switchTab('home')">Beranda</button>
         <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
         <button type="button" class="tab-btn" data-tab="standings" onclick="app.switchTab('standings')">Klasemen</button>
-        <button type="button" class="tab-btn admin-only-tab" data-tab="draw" onclick="app.switchTab('draw')" style="display: none;">🎲 Draw Grup</button>
+        <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')">🎲 Draw Grup</button>
         <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
         <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
         <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
@@ -800,8 +811,8 @@
           </span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <button id="btnBatchUploadTeams" class="btn btn-primary btn-sm" onclick="admin.openBatchUploadModal()" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700;">
-            📂 Import 1 Folder Berkas Tim (Panitia)
+          <button id="btnBatchUploadTeams" class="btn btn-primary btn-sm" onclick="if(window.admin&&window.admin.openBatchUploadModal){window.admin.openBatchUploadModal();}else{document.getElementById('modalBatchUploadTeams').classList.add('active');}" style="display: inline-flex; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700;">
+            📂 Import 1 Folder Berkas Tim
           </button>
           <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()" style="display: none;">
             ➕ Tambah Tim Baru (Panitia)
@@ -2287,16 +2298,19 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
           <p class="batch-dropzone-desc">
             Mendukung <strong>Folder</strong>, <strong>File Excel (.xlsx/.xls)</strong>, <strong>Dokumen Word (.docx)</strong>, <strong>Teks (.txt/.csv)</strong>, <strong>ZIP (.zip)</strong>, serta <strong>Foto Pemain/Pelatih</strong>. Aplikasi langsung otomatis mendeteksi nama tim, foto, nomor punggung, posisi, dan nomor WA pelatih.
           </p>
-          <div class="batch-dropzone-actions" onclick="event.stopPropagation();">
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('batchFolderInput').click()" style="background: #0284c7; border: none; font-weight: 700;">
-              📂 Pilih 1 Folder Tim (PC)
+          <div class="batch-dropzone-actions" onclick="event.stopPropagation();" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 12px;">
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('batchFolderInput').click()" style="background: #0284c7; border: none; font-weight: 700; padding: 10px 16px;">
+              📂 Pilih 1 Folder Tim (Laptop / PC)
             </button>
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('batchFilesDirectInput').click()" style="background: #0369a1; border: none; font-weight: 700;">
-              📄 Pilih File Sekaligus (Excel / Word / Foto / HP)
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('batchFilesDirectInput').click()" style="background: #10b981; border: none; font-weight: 700; padding: 10px 16px;">
+              📱 Pilih Banyak File / Foto dari HP
             </button>
-            <button type="button" class="btn btn-outline" onclick="document.getElementById('batchZipInput').click()" style="border-color: #0284c7; color: #0284c7; font-weight: 700;">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('batchZipInput').click()" style="border-color: #0284c7; color: #0284c7; font-weight: 700; padding: 10px 16px;">
               📦 Pilih File ZIP (.zip)
             </button>
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-subtle, #64748b); text-align: center; margin-top: 8px;">
+            💡 <em>Khusus HP (Android/iPhone): Gunakan tombol hijau <strong>"Pilih Banyak File / Foto dari HP"</strong> atau tombol <strong>"File ZIP"</strong>. Di Laptop/PC: Gunakan tombol <strong>"Pilih 1 Folder Tim"</strong> atau seret-lepas folder ke kotak ini.</em>
           </div>
           <!-- Hidden Inputs -->
           <input type="file" id="batchFolderInput" webkitdirectory directory multiple style="display:none;" onchange="admin.handleBatchFolderInput(this)">
@@ -2363,7 +2377,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
       <span>Klasemen</span>
     </button>
-    <button type="button" class="mobile-nav-item admin-only-tab" data-tab="draw" onclick="app.switchTab('draw')" aria-label="Draw Grup" style="display: none;">
+    <button type="button" class="mobile-nav-item" data-tab="draw" onclick="app.switchTab('draw')" aria-label="Draw Grup">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8" cy="8" r="1.5" fill="currentColor"></circle><circle cx="16" cy="8" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="8" cy="16" r="1.5" fill="currentColor"></circle><circle cx="16" cy="16" r="1.5" fill="currentColor"></circle></svg>
       <span>Draw</span>
     </button>
@@ -2396,11 +2410,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="js/security.js?v=8.17"></script>
-  <script defer src="js/supabase-client.js?v=8.17"></script>
-  <script defer src="js/data.js?v=8.17"></script>
-  <script defer src="js/admin.js?v=8.17"></script>
-  <script defer src="js/app.js?v=8.17"></script>
+  <script defer src="js/security.js?v=8.18"></script>
+  <script defer src="js/supabase-client.js?v=8.18"></script>
+  <script defer src="js/data.js?v=8.18"></script>
+  <script defer src="js/admin.js?v=8.18"></script>
+  <script defer src="js/app.js?v=8.18"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2417,7 +2431,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=71')
+        navigator.serviceWorker.register('sw.js?v=72')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

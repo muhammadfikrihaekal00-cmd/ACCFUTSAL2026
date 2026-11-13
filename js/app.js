@@ -1760,29 +1760,26 @@ const app = {
   updateAdminVisibility() {
     const isPanitia = this.isAdmin();
 
-    // Tab Draw Grup hanya muncul di Mode Panitia
+    // Tab Draw Grup selalu dapat diakses oleh semua pengguna (Peserta melihat hasil undian, Panitia mengatur undian)
     document.querySelectorAll('.tab-btn[data-tab="draw"]').forEach(btn => {
-      btn.style.display = isPanitia ? "inline-flex" : "none";
+      btn.style.display = "inline-flex";
     });
     document.querySelectorAll('.mobile-nav-item[data-tab="draw"]').forEach(item => {
-      item.style.display = isPanitia ? "flex" : "none";
+      item.style.display = "flex";
     });
 
-    if (!isPanitia && this.currentTab === "draw") {
-      this.switchTab("home", false);
-    }
+    // Tombol Import 1 Folder Berkas Tim selalu dapat diakses langsung
+    const btnBatchUpload = document.getElementById("btnBatchUploadTeams");
+    if (btnBatchUpload) btnBatchUpload.style.display = "inline-flex";
+
+    const btnHeaderBatch = document.getElementById("btnHeaderBatchUpload");
+    if (btnHeaderBatch) btnHeaderBatch.style.display = "inline-flex";
 
     const btnQuickBanner = document.getElementById("btnChangeBannerQuick");
     if (btnQuickBanner) btnQuickBanner.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnAddTeam = document.getElementById("btnAddTeamBtn");
     if (btnAddTeam) btnAddTeam.style.display = isPanitia ? "inline-flex" : "none";
-
-    const btnBatchUpload = document.getElementById("btnBatchUploadTeams");
-    if (btnBatchUpload) btnBatchUpload.style.display = isPanitia ? "inline-flex" : "none";
-
-    const btnHeaderBatch = document.getElementById("btnHeaderBatchUpload");
-    if (btnHeaderBatch) btnHeaderBatch.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnManageSponsors = document.getElementById("btnManageSponsors");
     if (btnManageSponsors) btnManageSponsors.style.display = isPanitia ? "inline-flex" : "none";
