@@ -56,6 +56,67 @@ const admin = {
         this.saveSettings();
       });
     }
+
+    // Batch Upload Drag & Drop Support
+    const dropzone = document.getElementById("batchUploadDropzone");
+    if (dropzone) {
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragover");
+      });
+      dropzone.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          const file = e.dataTransfer.files[0];
+          if (file.name.toLowerCase().endsWith(".zip")) {
+            admin.handleBatchZipInput({ files: [file] });
+          } else {
+            const items = e.dataTransfer.items;
+            if (items && items.length > 0 && items[0].webkitGetAsEntry) {
+              const rawFiles = [];
+              const readEntry = async (entry, currentPath = "") => {
+                if (entry.isFile) {
+                  return new Promise((resolve) => {
+                    entry.file((f) => {
+                      rawFiles.push({
+                        path: (currentPath ? currentPath + "/" : "") + f.name,
+                        name: f.name,
+                        readText: () => f.text(),
+                        readDataUrl: () => admin.compressImageToDataUrl(f)
+                      });
+                      resolve();
+                    });
+                  });
+                } else if (entry.isDirectory) {
+                  const dirReader = entry.createReader();
+                  return new Promise((resolve) => {
+                    dirReader.readEntries(async (entries) => {
+                      for (const ent of entries) {
+                        await readEntry(ent, (currentPath ? currentPath + "/" : "") + entry.name);
+                      }
+                      resolve();
+                    });
+                  });
+                }
+              };
+              for (let i = 0; i < items.length; i++) {
+                const entry = items[i].webkitGetAsEntry();
+                if (entry) await readEntry(entry);
+              }
+              if (rawFiles.length > 0) {
+                await admin.processBatchFiles(rawFiles);
+                return;
+              }
+            }
+            admin.handleBatchFolderInput({ files: e.dataTransfer.files });
+          }
+        }
+      });
+    }
   },
 
   // Core Login Routine - Secure, SHA-256 Validated, Anti-Brute-Force Protected
@@ -3187,6 +3248,682 @@ const admin = {
       }
     } else {
       app.showToast("✅ Seluruh data pertandingan berhasil di-reset ke 0!");
+    }
+  },
+
+  // ==========================================
+  // BATCH UPLOAD 1 FOLDER TIM & PEMAIN OTOMATIS
+  // ==========================================
+  batchParsedTeams: [],
+
+  openBatchUploadModal() {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+    this.batchParsedTeams = [];
+    const modal = document.getElementById("modalBatchUploadTeams");
+    if (!modal) return;
+    this.resetBatchUploadUI();
+    modal.classList.add("active");
+  },
+
+  closeBatchUploadModal() {
+    const modal = document.getElementById("modalBatchUploadTeams");
+    if (modal) modal.classList.remove("active");
+  },
+
+  resetBatchUploadUI() {
+    this.batchParsedTeams = [];
+    const statusEl = document.getElementById("batchUploadStatus");
+    if (statusEl) {
+      statusEl.style.display = "none";
+      statusEl.innerHTML = "";
+    }
+    const previewEl = document.getElementById("batchUploadPreviewContainer");
+    if (previewEl) {
+      previewEl.style.display = "none";
+      previewEl.innerHTML = "";
+    }
+    const btnSave = document.getElementById("btnBatchSaveTeams");
+    if (btnSave) btnSave.style.display = "none";
+    const dropzone = document.getElementById("batchUploadDropzone");
+    if (dropzone) dropzone.style.display = "block";
+    const folderInput = document.getElementById("batchFolderInput");
+    if (folderInput) folderInput.value = "";
+    const zipInput = document.getElementById("batchZipInput");
+    if (zipInput) zipInput.value = "";
+  },
+
+  // Compress image to lightweight data URL (max 400x400)
+  async compressImageToDataUrl(fileOrBlob) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 400;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(fileOrBlob);
+    });
+  },
+
+  // Smart fuzzy match folder name to registered teams
+  findBestMatchingTeam(folderName) {
+    const teams = (app.store && app.store.data && app.store.data.teams) || [];
+    if (!folderName) return null;
+    const clean = folderName.trim().toLowerCase();
+
+    // 1. Exact match by name or shortName
+    let match = teams.find(t => t.name.toLowerCase() === clean || (t.shortName && t.shortName.toLowerCase() === clean));
+    if (match) return match;
+
+    // 2. Clean prefixes (SMP, SMPN, SMPIT, SD, SDN, SDIT, Pesantren, MTs, MI)
+    const normalize = (str) => str.toLowerCase()
+      .replace(/[^a-z0-9]/g, "")
+      .replace(/^(smpn|smpit|smp|sdn|sdit|sd|pesantren|mts|mi|ponpes|mahad|sekolah)/g, "");
+
+    const cleanNorm = normalize(clean);
+    if (cleanNorm.length >= 3) {
+      match = teams.find(t => {
+        const tNorm = normalize(t.name);
+        return tNorm === cleanNorm || tNorm.includes(cleanNorm) || cleanNorm.includes(tNorm);
+      });
+      if (match) return match;
+    }
+
+    // 3. Substring matching
+    match = teams.find(t => {
+      const tLow = t.name.toLowerCase();
+      return clean.includes(tLow) || tLow.includes(clean);
+    });
+    if (match) return match;
+
+    // 4. Token-based overlap
+    const tokens = clean.split(/[\s\-_\/]+/).filter(tok => tok.length > 2 && !["smp", "sd", "dan", "cup", "fc", "maros", "tim"].includes(tok));
+    if (tokens.length > 0) {
+      match = teams.find(t => {
+        const tLow = t.name.toLowerCase();
+        return tokens.some(tok => tLow.includes(tok));
+      });
+      if (match) return match;
+    }
+
+    return null;
+  },
+
+  // Parse text files (txt/csv/tsv) for coach, manager, phone, players
+  parseTeamTextFile(content) {
+    const res = {
+      coach: "",
+      phone: "",
+      manager: "",
+      jerseyHome: "",
+      jerseyAway: "",
+      players: []
+    };
+    if (!content) return res;
+
+    const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const phoneRegex = /(?:\+62|62|08)[\d\-\s]{8,15}/;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Coach detection
+      if (/^(?:pelatih|coach|head\s*coach)\b/i.test(line) || /pelatih\s*:/i.test(line) || /coach\s*:/i.test(line)) {
+        const mPhone = line.match(phoneRegex);
+        if (mPhone) res.phone = mPhone[0].replace(/[\-\s]/g, "");
+        const namePart = line
+          .replace(/^(?:pelatih|coach|head\s*coach)[\s\:\-]+/i, "")
+          .replace(phoneRegex, "")
+          .replace(/[\(\)\[\]]/g, "")
+          .trim();
+        if (namePart) res.coach = namePart;
+        continue;
+      }
+
+      // Manager detection
+      if (/^(?:manager|manajer|ofisial|official)\b/i.test(line) || /manajer\s*:/i.test(line) || /manager\s*:/i.test(line)) {
+        const mPhone = line.match(phoneRegex);
+        if (mPhone && !res.phone) res.phone = mPhone[0].replace(/[\-\s]/g, "");
+        const namePart = line
+          .replace(/^(?:manager|manajer|ofisial|official)[\s\:\-]+/i, "")
+          .replace(phoneRegex, "")
+          .replace(/[\(\)\[\]]/g, "")
+          .trim();
+        if (namePart) res.manager = namePart;
+        continue;
+      }
+
+      // Standalone phone detection
+      if (/^(?:no\.?\s*hp|telepon|wa|whatsapp)\s*[\:\-]/i.test(line)) {
+        const mPhone = line.match(phoneRegex);
+        if (mPhone) res.phone = mPhone[0].replace(/[\-\s]/g, "");
+        continue;
+      }
+
+      // Jersey detection
+      if (/^(?:jersey|kostum|seragam)\b/i.test(line)) {
+        const val = line.replace(/^(?:jersey|kostum|seragam)[\s\:\-]+/i, "").trim();
+        if (val) res.jerseyHome = val;
+        continue;
+      }
+
+      // Player line parsing
+      if (/^(?:daftar|list|nama|skuad|pemain|roster)\b/i.test(line) && line.length < 30) {
+        continue;
+      }
+
+      // Check position keywords
+      let pos = "Flank";
+      if (/\b(?:gk|kiper|goalie|penjaga\s*gawang)\b/i.test(line)) pos = "Kiper";
+      else if (/\b(?:anchor|bek|def|defender|bertahan|cb)\b/i.test(line)) pos = "Anchor";
+      else if (/\b(?:pivot|striker|penyerang|fw|ujung\s*tombak)\b/i.test(line)) pos = "Pivot";
+      else if (/\b(?:flank|sayap|winger|mf|gelandang)\b/i.test(line)) pos = "Flank";
+
+      // Check number
+      let pNo = null;
+      const numMatch = line.match(/^(?:no\.?\s*)?(\d{1,2})[\.\s\)\-\|\,]/i) || line.match(/#(\d{1,2})\b/) || line.match(/[\(\[\,\-\|]\s*(?:no\.?\s*)?(\d{1,2})\s*[\)\]\,\-\|]?$/i) || line.match(/\b(?:no\.?\s*)(\d{1,2})\b/i);
+      if (numMatch) {
+        pNo = parseInt(numMatch[1], 10);
+      }
+
+      // Clean name
+      let pName = line
+        .replace(/^(?:no\.?\s*)?\d{1,2}[\.\s\)\-\|\,]+/i, "")
+        .replace(/#\d{1,2}/g, "")
+        .replace(/\b(?:gk|kiper|goalie|penjaga\s*gawang|anchor|bek|def|defender|bertahan|cb|pivot|striker|penyerang|fw|flank|sayap|winger|mf|gelandang)\b/gi, "")
+        .replace(/[\(\)\[\]\|\,\:\-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (pName && !/^\d+$/.test(pName) && pName.length >= 2 && pName.length <= 40) {
+        if (!pNo) pNo = res.players.length + 1;
+        res.players.push({
+          no: pNo,
+          name: pName,
+          pos: pos,
+          goals: 0,
+          yc: 0,
+          rc: 0,
+          photo: ""
+        });
+      }
+    }
+
+    return res;
+  },
+
+  // Main processing pipeline from raw files
+  async processBatchFiles(rawFiles) {
+    const statusEl = document.getElementById("batchUploadStatus");
+    if (statusEl) {
+      statusEl.style.display = "block";
+      statusEl.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; color:#0284c7; font-weight:700;">
+          <span class="pulse-dot" style="background:#0284c7;"></span>
+          <span>Sedang membaca dan mengekstrak ${rawFiles.length} berkas...</span>
+        </div>
+      `;
+    }
+
+    // 1. Group files by team folder
+    const folderMap = {};
+    for (const item of rawFiles) {
+      const fullPath = (item.path || item.name || "").replace(/\\/g, "/");
+      const parts = fullPath.split("/").filter(Boolean);
+
+      let teamFolder = "Tim Umum";
+      if (parts.length >= 2) {
+        if (parts.length === 2) {
+          teamFolder = parts[0];
+        } else {
+          const ignored = ["berkas", "data", "upload", "turnamen", "acc", "acc2026", "foto", "photos", "gambar", "images"];
+          let candidate = parts[1];
+          if (ignored.includes(candidate.toLowerCase()) && parts.length > 2) {
+            candidate = parts[2];
+          } else if (ignored.includes(parts[0].toLowerCase())) {
+            candidate = parts[1];
+          } else {
+            candidate = parts[0];
+          }
+          teamFolder = candidate;
+        }
+      }
+
+      if (!folderMap[teamFolder]) folderMap[teamFolder] = [];
+      folderMap[teamFolder].push(item);
+    }
+
+    const parsedResults = [];
+
+    // 2. Process each team folder
+    for (const folderName of Object.keys(folderMap)) {
+      const files = folderMap[folderName];
+      const matchedTeam = this.findBestMatchingTeam(folderName);
+
+      const teamData = {
+        folderName: folderName,
+        matchedTeamId: matchedTeam ? matchedTeam.id : "",
+        teamName: matchedTeam ? matchedTeam.name : folderName,
+        shortName: matchedTeam ? matchedTeam.shortName : folderName.substring(0, 12).toUpperCase(),
+        category: matchedTeam ? matchedTeam.category : (/sd\b/i.test(folderName) ? "SD" : "SMP"),
+        group: matchedTeam ? matchedTeam.group : "A",
+        badgeColor: matchedTeam ? matchedTeam.badgeColor : "#0284c7",
+        city: matchedTeam ? matchedTeam.city : "Maros",
+        coach: matchedTeam ? (matchedTeam.official && matchedTeam.official.coach) : "",
+        phone: matchedTeam ? (matchedTeam.official && matchedTeam.official.phone) : "",
+        manager: matchedTeam ? (matchedTeam.official && matchedTeam.official.manager) : "",
+        coachPhoto: matchedTeam ? (matchedTeam.official && matchedTeam.official.coachPhoto) : "",
+        managerPhoto: matchedTeam ? (matchedTeam.official && matchedTeam.official.managerPhoto) : "",
+        jerseyHome: matchedTeam ? (matchedTeam.official && matchedTeam.official.jerseyHome) : "Hijau - Putih",
+        jerseyAway: matchedTeam ? (matchedTeam.official && matchedTeam.official.jerseyAway) : "Hitam - Emas",
+        logo: matchedTeam ? matchedTeam.logo : "",
+        players: matchedTeam && matchedTeam.players && matchedTeam.players.length > 0 ? JSON.parse(JSON.stringify(matchedTeam.players)) : [],
+        rawFilesCount: files.length
+      };
+
+      // Read text / document files
+      const textFiles = files.filter(f => /\.(txt|csv|tsv|json)$/i.test(f.name));
+      for (const tf of textFiles) {
+        try {
+          const txt = await tf.readText();
+          const parsed = this.parseTeamTextFile(txt);
+          if (parsed.coach) teamData.coach = parsed.coach;
+          if (parsed.phone) teamData.phone = parsed.phone;
+          if (parsed.manager) teamData.manager = parsed.manager;
+          if (parsed.jerseyHome) teamData.jerseyHome = parsed.jerseyHome;
+          if (parsed.jerseyAway) teamData.jerseyAway = parsed.jerseyAway;
+          if (parsed.players && parsed.players.length > 0) {
+            teamData.players = parsed.players;
+          }
+        } catch (e) {
+          console.warn("Text file parse error:", e);
+        }
+      }
+
+      // Read image files
+      const imgFiles = files.filter(f => /\.(jpg|jpeg|png|webp|gif)$/i.test(f.name));
+      for (const imgF of imgFiles) {
+        try {
+          const dataUrl = await imgF.readDataUrl();
+          const fNameLow = imgF.name.toLowerCase();
+
+          // Coach photo
+          if (/pelatih|coach|headcoach/i.test(fNameLow)) {
+            teamData.coachPhoto = dataUrl;
+            const mPhone = fNameLow.match(/(?:\+62|62|08)[\d]{8,13}/);
+            if (mPhone && !teamData.phone) teamData.phone = mPhone[0];
+            continue;
+          }
+
+          // Manager photo
+          if (/manager|manajer|ofisial|official/i.test(fNameLow)) {
+            teamData.managerPhoto = dataUrl;
+            continue;
+          }
+
+          // Logo
+          if (/logo|crest|lambang/i.test(fNameLow)) {
+            teamData.logo = dataUrl;
+            continue;
+          }
+
+          // Player photo
+          const pNumMatch = fNameLow.match(/^(?:no\.?\s*)?(\d{1,2})[\b_\-\s\.]/i) || fNameLow.match(/[\b_\-\s](\d{1,2})\.(?:jpg|jpeg|png|webp)$/i);
+          let assigned = false;
+          if (pNumMatch) {
+            const pNo = parseInt(pNumMatch[1], 10);
+            const pObj = teamData.players.find(p => p.no === pNo);
+            if (pObj) {
+              pObj.photo = dataUrl;
+              assigned = true;
+            }
+          }
+
+          if (!assigned) {
+            for (const p of teamData.players) {
+              const cleanPName = p.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+              if (cleanPName.length >= 3 && fNameLow.includes(cleanPName)) {
+                p.photo = dataUrl;
+                assigned = true;
+                break;
+              }
+            }
+          }
+
+          if (!assigned && teamData.players.length < 16) {
+            const numPart = pNumMatch ? parseInt(pNumMatch[1], 10) : (teamData.players.length + 1);
+            let namePart = imgF.name.replace(/\.[^/.]+$/, "").replace(/^\d+[\s\-_\.]+/, "").replace(/[\-_]/g, " ").trim();
+            if (!namePart) namePart = `Pemain #${numPart}`;
+            teamData.players.push({
+              no: numPart,
+              name: namePart,
+              pos: /gk|kiper/i.test(fNameLow) ? "Kiper" : (/pivot|striker/i.test(fNameLow) ? "Pivot" : (/bek|anchor/i.test(fNameLow) ? "Anchor" : "Flank")),
+              goals: 0,
+              yc: 0,
+              rc: 0,
+              photo: dataUrl
+            });
+          }
+        } catch (e) {
+          console.warn("Image file parse error:", e);
+        }
+      }
+
+      parsedResults.push(teamData);
+    }
+
+    this.batchParsedTeams = parsedResults;
+    this.renderBatchUploadPreview();
+  },
+
+  // Render the interactive preview cards in the modal
+  renderBatchUploadPreview() {
+    const statusEl = document.getElementById("batchUploadStatus");
+    const previewEl = document.getElementById("batchUploadPreviewContainer");
+    const btnSave = document.getElementById("btnBatchSaveTeams");
+    const dropzone = document.getElementById("batchUploadDropzone");
+    const teams = (app.store && app.store.data && app.store.data.teams) || [];
+
+    if (!previewEl) return;
+    if (dropzone) dropzone.style.display = "none";
+    previewEl.style.display = "flex";
+    if (btnSave) btnSave.style.display = "inline-flex";
+
+    const totalTeams = this.batchParsedTeams.length;
+    let totalPlayers = 0;
+    this.batchParsedTeams.forEach(t => totalPlayers += (t.players ? t.players.length : 0));
+
+    if (statusEl) {
+      statusEl.style.display = "block";
+      statusEl.innerHTML = `
+        <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:var(--radius-md); padding:10px 14px; color:#065f46; font-size:0.84rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong>✅ Berhasil Mengekstrak:</strong> Terdeteksi <strong>${totalTeams} Tim</strong> dan <strong>${totalPlayers} Pemain</strong> beserta foto & data ofisial.
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="admin.resetBatchUploadUI()" style="font-size:0.74rem; padding:3px 8px;">
+            🔄 Ganti Folder
+          </button>
+        </div>
+      `;
+    }
+
+    let html = "";
+    this.batchParsedTeams.forEach((tData, idx) => {
+      const isMatched = Boolean(tData.matchedTeamId);
+
+      const teamOptionsHtml = teams.map(t => {
+        const isSel = t.id === tData.matchedTeamId;
+        return `<option value="${t.id}" ${isSel ? 'selected' : ''}>[${t.category}] ${t.name} (Grup ${t.group || '-'})</option>`;
+      }).join("");
+
+      const playersTableRows = (tData.players || []).map(p => `
+        <tr>
+          <td style="width:36px; text-align:center;">
+            ${p.photo ? `<img src="${p.photo}" class="batch-player-thumb" alt="${p.name}">` : `<span style="display:inline-block; width:24px; height:24px; border-radius:50%; background:#e2e8f0; text-align:center; line-height:24px; font-size:0.65rem;">⚽</span>`}
+          </td>
+          <td style="width:36px; font-weight:800; color:#0284c7;">#${p.no}</td>
+          <td style="font-weight:700;">${p.name}</td>
+          <td><span class="batch-pos-pill pos-${p.pos}">${p.pos}</span></td>
+        </tr>
+      `).join("");
+
+      html += `
+        <div class="batch-team-card ${isMatched ? 'matched' : 'unmatched'}" id="batchTeamCard_${idx}">
+          <div class="batch-team-header">
+            <div>
+              <span class="batch-team-title">📁 Folder: ${tData.folderName}</span>
+              <div style="margin-top: 4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                <label style="font-size:0.74rem; font-weight:700; color:#475569;">Target Tim Turnamen:</label>
+                <select class="form-select" style="font-size:0.75rem; padding:3px 8px; width:auto; max-width:260px;" onchange="admin.updateBatchTeamMapping(${idx}, this.value)">
+                  <option value="">➕ Tambah Sebagai Tim Baru</option>
+                  ${teamOptionsHtml}
+                </select>
+              </div>
+            </div>
+            <span class="batch-team-badge ${isMatched ? 'badge-matched' : 'badge-new'}">
+              ${isMatched ? '✅ Terhubung ke Turnamen' : '⚠️ Tim Baru'}
+            </span>
+          </div>
+
+          <div class="batch-official-preview">
+            <div class="batch-official-item">
+              ${tData.coachPhoto ? `<img src="${tData.coachPhoto}" class="batch-official-thumb" alt="Pelatih">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">👔</span>`}
+              <div>
+                <div style="font-size:0.68rem; color:#64748b;">Pelatih (Coach):</div>
+                <strong style="color:#0f172a;">${tData.coach || '-'}</strong>
+                ${tData.phone ? `<div style="font-size:0.7rem; color:#059669; font-weight:700;">📱 WA: ${tData.phone}</div>` : ''}
+              </div>
+            </div>
+
+            <div class="batch-official-item">
+              ${tData.managerPhoto ? `<img src="${tData.managerPhoto}" class="batch-official-thumb" alt="Manajer">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">💼</span>`}
+              <div>
+                <div style="font-size:0.68rem; color:#64748b;">Manajer:</div>
+                <strong style="color:#0f172a;">${tData.manager || '-'}</strong>
+                <div style="font-size:0.7rem; color:#64748b;">🎽 Kostum: ${tData.jerseyHome || '-'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:0.74rem; font-weight:800; color:#334155;">Daftar Skuad Pemain (${tData.players ? tData.players.length : 0} Pemain)</span>
+            </div>
+            ${tData.players && tData.players.length > 0 ? `
+              <div style="max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:var(--radius-sm);">
+                <table class="batch-players-table">
+                  <thead>
+                    <tr>
+                      <th>Foto</th>
+                      <th>No</th>
+                      <th>Nama Pemain</th>
+                      <th>Posisi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${playersTableRows}
+                  </tbody>
+                </table>
+              </div>
+            ` : `<div style="font-size:0.74rem; color:#94a3b8; font-style:italic;">Tidak ada data pemain terdeteksi di folder ini.</div>`}
+          </div>
+        </div>
+      `;
+    });
+
+    previewEl.innerHTML = html;
+  },
+
+  updateBatchTeamMapping(idx, teamId) {
+    if (!this.batchParsedTeams[idx]) return;
+    this.batchParsedTeams[idx].matchedTeamId = teamId;
+    if (teamId) {
+      const existing = app.store.getTeam(teamId);
+      if (existing) {
+        this.batchParsedTeams[idx].teamName = existing.name;
+        this.batchParsedTeams[idx].shortName = existing.shortName;
+        this.batchParsedTeams[idx].category = existing.category;
+        this.batchParsedTeams[idx].group = existing.group;
+      }
+    }
+    this.renderBatchUploadPreview();
+  },
+
+  // Save all parsed teams to local store and sync across devices & Supabase
+  async saveBatchUploadedTeams() {
+    if (!this.isAuthenticated) {
+      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      return;
+    }
+    if (!this.batchParsedTeams || this.batchParsedTeams.length === 0) {
+      alert("Belum ada data tim yang diekstrak.");
+      return;
+    }
+
+    const btnSave = document.getElementById("btnBatchSaveTeams");
+    if (btnSave) {
+      btnSave.disabled = true;
+      btnSave.textContent = "⏳ Menyimpan & Menyinkronkan...";
+    }
+
+    let updatedCount = 0;
+    let newCount = 0;
+
+    for (const tData of this.batchParsedTeams) {
+      if (tData.matchedTeamId) {
+        const existing = app.store.getTeam(tData.matchedTeamId);
+        if (existing) {
+          if (!existing.official) existing.official = {};
+          if (tData.coach) existing.official.coach = tData.coach;
+          if (tData.phone) existing.official.phone = tData.phone;
+          if (tData.manager) existing.official.manager = tData.manager;
+          if (tData.coachPhoto) existing.official.coachPhoto = tData.coachPhoto;
+          if (tData.managerPhoto) existing.official.managerPhoto = tData.managerPhoto;
+          if (tData.jerseyHome) existing.official.jerseyHome = tData.jerseyHome;
+          if (tData.jerseyAway) existing.official.jerseyAway = tData.jerseyAway;
+          if (tData.logo) existing.logo = tData.logo;
+          if (tData.players && tData.players.length > 0) {
+            existing.players = tData.players;
+          }
+          updatedCount++;
+        }
+      } else {
+        const newId = "T" + String(app.store.data.teams.length + 1).padStart(2, "0");
+        const newTeamObj = {
+          id: newId,
+          name: tData.teamName || tData.folderName,
+          shortName: tData.shortName || (tData.teamName || tData.folderName).substring(0, 10).toUpperCase(),
+          category: tData.category || "SMP",
+          logo: tData.logo || "",
+          group: tData.group || "A",
+          badgeColor: tData.badgeColor || "#0284c7",
+          city: tData.city || "Maros",
+          official: {
+            coach: tData.coach || "",
+            coachPhoto: tData.coachPhoto || "",
+            manager: tData.manager || "",
+            managerPhoto: tData.managerPhoto || "",
+            medic: "",
+            phone: tData.phone || "",
+            jerseyHome: tData.jerseyHome || "Hijau - Putih",
+            jerseyAway: tData.jerseyAway || "Hitam - Emas"
+          },
+          players: tData.players || []
+        };
+        app.store.data.teams.push(newTeamObj);
+        newCount++;
+      }
+    }
+
+    if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
+      app.store.syncPlayerStatsFromMatches();
+    }
+    app.store.saveData();
+    app.store.syncKnockoutFromStandings();
+
+    // Render UI updates
+    app.renderTeams();
+    app.renderStandings();
+    app.renderMatches();
+    if (typeof app.renderTopScorer === "function") app.renderTopScorer();
+    if (typeof app.renderDisciplinary === "function") app.renderDisciplinary();
+
+    // Push to Supabase Cloud so all participant phones receive update in real time
+    if (window.SupabaseService && typeof window.SupabaseService.syncAllData === "function") {
+      try {
+        await window.SupabaseService.syncAllData(app.store.data);
+      } catch (e) {
+        console.warn("Supabase batch sync notice:", e);
+      }
+    }
+
+    if (btnSave) {
+      btnSave.disabled = false;
+      btnSave.textContent = "💾 Terapkan & Simpan ke Turnamen (Semua HP & Cloud)";
+    }
+
+    this.closeBatchUploadModal();
+    app.showToast(`🎉 Sukses! ${updatedCount} tim diperbarui & ${newCount} tim baru ditambahkan. Otomatis tersinkron ke Cloud & semua HP!`);
+  },
+
+  // Handlers for Folder & Zip selection
+  async handleBatchFolderInput(input) {
+    if (!input || !input.files || input.files.length === 0) return;
+    const rawFiles = [];
+    for (let i = 0; i < input.files.length; i++) {
+      const f = input.files[i];
+      rawFiles.push({
+        path: f.webkitRelativePath || f.name,
+        name: f.name,
+        readText: () => f.text(),
+        readDataUrl: () => admin.compressImageToDataUrl(f)
+      });
+    }
+    await this.processBatchFiles(rawFiles);
+  },
+
+  async handleBatchZipInput(input) {
+    if (!input || !input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    if (typeof JSZip === "undefined") {
+      alert("Pustaka JSZip sedang dimuat, silakan coba beberapa saat lagi.");
+      return;
+    }
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const rawFiles = [];
+      const entries = [];
+      zip.forEach((relPath, entry) => {
+        if (!entry.dir) entries.push({ relPath, entry });
+      });
+
+      for (const item of entries) {
+        const parts = item.relPath.split("/");
+        const fName = parts[parts.length - 1];
+        rawFiles.push({
+          path: item.relPath,
+          name: fName,
+          readText: () => item.entry.async("string"),
+          readDataUrl: async () => {
+            const b64 = await item.entry.async("base64");
+            const ext = fName.split(".").pop().toLowerCase();
+            const mime = ext === "png" ? "image/png" : (ext === "webp" ? "image/webp" : "image/jpeg");
+            const rawUrl = `data:${mime};base64,${b64}`;
+            const res = await fetch(rawUrl);
+            const blob = await res.blob();
+            return admin.compressImageToDataUrl(blob);
+          }
+        });
+      }
+
+      await this.processBatchFiles(rawFiles);
+    } catch (e) {
+      console.error("ZIP extract error:", e);
+      alert("Gagal membaca file ZIP: " + e.message);
     }
   },
 

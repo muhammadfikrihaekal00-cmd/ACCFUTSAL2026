@@ -643,6 +643,7 @@ const app = {
       this.connectDrawToTournament("SMP", false);
       this.connectDrawToTournament("SD", false);
     } catch(e) {}
+    try { this.updateAdminVisibility(); } catch(e) {}
     try { this.renderCurrentView(); } catch(e) { console.warn("View init:", e); }
     try { this.initPwa(); } catch(e) { console.warn("PWA init:", e); }
     try { this.initSupabaseSync(); } catch(e) { console.warn("Supabase init:", e); }
@@ -1772,11 +1773,26 @@ const app = {
   updateAdminVisibility() {
     const isPanitia = this.isAdmin();
 
+    // Tab Draw Grup hanya muncul di Mode Panitia
+    document.querySelectorAll('.tab-btn[data-tab="draw"]').forEach(btn => {
+      btn.style.display = isPanitia ? "inline-flex" : "none";
+    });
+    document.querySelectorAll('.mobile-nav-item[data-tab="draw"]').forEach(item => {
+      item.style.display = isPanitia ? "flex" : "none";
+    });
+
+    if (!isPanitia && this.currentTab === "draw") {
+      this.switchTab("home", false);
+    }
+
     const btnQuickBanner = document.getElementById("btnChangeBannerQuick");
     if (btnQuickBanner) btnQuickBanner.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnAddTeam = document.getElementById("btnAddTeamBtn");
     if (btnAddTeam) btnAddTeam.style.display = isPanitia ? "inline-flex" : "none";
+
+    const btnBatchUpload = document.getElementById("btnBatchUploadTeams");
+    if (btnBatchUpload) btnBatchUpload.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnManageSponsors = document.getElementById("btnManageSponsors");
     if (btnManageSponsors) btnManageSponsors.style.display = isPanitia ? "inline-flex" : "none";
@@ -2092,6 +2108,11 @@ const app = {
 
   switchTab(tabId, pushHistory = true) {
     try {
+      if (tabId === "draw" && !this.isAdmin()) {
+        this.showToast("🔒 Menu Draw Grup hanya dapat diakses pada Mode Panitia.");
+        tabId = "home";
+      }
+
       if (pushHistory && tabId !== this.currentTab) {
         try {
           history.pushState({ tab: tabId }, "");
@@ -2990,7 +3011,12 @@ const app = {
       </div>
 
       <div class="bracket-mobile-hint">
-        👉 Geser layar ke samping untuk melihat Semifinal & Final
+        <div style="margin-bottom: 6px;">👉 Geser layar ke samping atau pilih babak untuk melihat bagan lengkap:</div>
+        <div class="bracket-quick-nav">
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('qf')">Babak 8 Besar</button>
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('sf')">Semifinal</button>
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('final')">🏆 Grand Final & Juara 3</button>
+        </div>
       </div>
 
       <!-- MAIN TREE CONTAINER -->
@@ -3119,6 +3145,18 @@ const app = {
         </div>
       </div>
     `;
+  },
+
+  scrollBracket(target) {
+    const wrapper = document.querySelector(".bracket-wrapper");
+    if (!wrapper) return;
+    if (target === "qf") {
+      wrapper.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (target === "sf") {
+      wrapper.scrollTo({ left: 340, behavior: "smooth" });
+    } else if (target === "final") {
+      wrapper.scrollTo({ left: wrapper.scrollWidth, behavior: "smooth" });
+    }
   },
 
   // 4. RENDER TEAM & OFFICIAL PORTAL (FILTERED BY CATEGORY)

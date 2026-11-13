@@ -35,7 +35,7 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.13";
+      var CURRENT_VER = "8.14";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -98,7 +98,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.13">
+  <link rel="stylesheet" href="css/styles.css?v=8.14">
 </head>
 <body>
 
@@ -313,7 +313,7 @@
         <button type="button" class="tab-btn active" data-tab="home" onclick="app.switchTab('home')">Beranda</button>
         <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
         <button type="button" class="tab-btn" data-tab="standings" onclick="app.switchTab('standings')">Klasemen</button>
-        <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')">🎲 Draw Grup</button>
+        <button type="button" class="tab-btn admin-only-tab" data-tab="draw" onclick="app.switchTab('draw')" style="display: none;">🎲 Draw Grup</button>
         <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
         <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
         <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
@@ -763,7 +763,10 @@
             Klik kartu tim untuk melihat daftar nama pemain & nomor punggung
           </span>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button id="btnBatchUploadTeams" class="btn btn-primary btn-sm" onclick="admin.openBatchUploadModal()" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700;">
+            📂 Import 1 Folder Berkas Tim (Panitia)
+          </button>
           <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()" style="display: none;">
             ➕ Tambah Tim Baru (Panitia)
           </button>
@@ -2193,6 +2196,70 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
     </div>
   </div>
 
+  <!-- 17. MODAL BATCH UPLOAD 1 FOLDER BERKAS TIM & PEMAIN OTOMATIS (PANITIA) -->
+  <div id="modalBatchUploadTeams" class="modal-overlay">
+    <div class="modal-box" style="max-width: 820px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff;">
+        <h3 class="modal-title" style="color: #ffffff;">📂 Import Berkas Data Pemain & Tim (Batch Otomatis)</h3>
+        <button type="button" class="modal-close" onclick="admin.closeBatchUploadModal()" style="color: #ffffff;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div class="batch-upload-dropzone" id="batchUploadDropzone" onclick="document.getElementById('batchFolderInput').click()">
+          <span class="batch-dropzone-icon">📁</span>
+          <div class="batch-dropzone-title">Tarik & Lepas 1 Folder Berkas Tim ke Sini</div>
+          <p class="batch-dropzone-desc">
+            Masukkan 1 folder turnamen yang berisi sub-folder masing-masing tim. Aplikasi akan otomatis mendeteksi nama tim, mengekstrak foto pemain & pelatih, nomor punggung, posisi, serta nomor WhatsApp pelatih.
+          </p>
+          <div class="batch-dropzone-actions" onclick="event.stopPropagation();">
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('batchFolderInput').click()" style="background: #0284c7; border: none; font-weight: 700;">
+              📂 Pilih 1 Folder Berkas Tim
+            </button>
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('batchZipInput').click()" style="border-color: #0284c7; color: #0284c7; font-weight: 700;">
+              📦 Atau Pilih File ZIP (.zip)
+            </button>
+          </div>
+          <input type="file" id="batchFolderInput" webkitdirectory directory multiple style="display:none;" onchange="admin.handleBatchFolderInput(this)">
+          <input type="file" id="batchZipInput" accept=".zip" style="display:none;" onchange="admin.handleBatchZipInput(this)">
+        </div>
+
+        <details class="batch-format-guide">
+          <summary>💡 Panduan Struktur Folder yang Didukung (Klik untuk melihat)</summary>
+          <p style="margin-top:6px; line-height: 1.4;">
+            Anda cukup menyiapkan 1 folder induk (contoh: <code>Berkas ACC 2026</code>), di dalamnya buat sub-folder sesuai nama tim/sekolah:
+          </p>
+          <pre>📁 Berkas Tim ACC 2026/
+  📁 SMP 5 Mandai/
+    📄 data_tim.txt (atau pemain.csv / daftar_pemain.txt)
+       Pelatih: Coach Pep Guardiola (081244112233)
+       Manajer: Ust. Syamsuddin
+       Kostum: Biru - Putih
+       1. Gianluigi Donnarumma - Kiper
+       3. Julian Ryerson - Anchor
+       8. Martin Odegaard - Flank
+       9. Erling Haaland - Pivot
+    🖼️ pelatih.jpg (foto pelatih)
+    🖼️ manajer.jpg (foto manajer)
+    🖼️ 1_Donnarumma.jpg (foto pemain nomor 1)
+    🖼️ 9_Haaland.jpg (foto pemain nomor 9)
+  📁 SMP 16 Mandai/
+    ... (dan tim lainnya)</pre>
+          <div style="margin-top: 6px; font-size: 0.72rem; color: #64748b;">
+            *Tips: Jika tidak ada file teks, sistem juga bisa membaca foto yang dinamai format <code>09_Erling_Haaland_Pivot.jpg</code> atau <code>pelatih_08123456789.jpg</code> secara otomatis!
+          </div>
+        </details>
+
+        <div id="batchUploadStatus" style="display: none; margin-bottom: 14px;"></div>
+        <div id="batchUploadPreviewContainer" class="batch-preview-wrapper" style="display: none;"></div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px; border-top: 1px solid #e2e8f0;">
+        <button type="button" class="btn btn-outline" onclick="admin.closeBatchUploadModal()">Batal</button>
+        <button type="button" id="btnBatchSaveTeams" class="btn btn-primary" onclick="admin.saveBatchUploadedTeams()" style="display: none; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700;">
+          💾 Terapkan & Simpan ke Turnamen (Semua HP & Cloud)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MOBILE BOTTOM NAVIGATION (RAMAH HP & PRAKTIS) -->
   <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi Bawah Khusus HP">
     <button type="button" class="mobile-nav-item active" data-tab="home" onclick="app.switchTab('home')" aria-label="Beranda">
@@ -2207,7 +2274,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
       <span>Klasemen</span>
     </button>
-    <button type="button" class="mobile-nav-item" data-tab="draw" onclick="app.switchTab('draw')" aria-label="Draw Grup">
+    <button type="button" class="mobile-nav-item admin-only-tab" data-tab="draw" onclick="app.switchTab('draw')" aria-label="Draw Grup" style="display: none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8" cy="8" r="1.5" fill="currentColor"></circle><circle cx="16" cy="8" r="1.5" fill="currentColor"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle><circle cx="8" cy="16" r="1.5" fill="currentColor"></circle><circle cx="16" cy="16" r="1.5" fill="currentColor"></circle></svg>
       <span>Draw</span>
     </button>
@@ -2238,11 +2305,12 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.13"></script>
-  <script defer src="js/supabase-client.js?v=8.13"></script>
-  <script defer src="js/data.js?v=8.13"></script>
-  <script defer src="js/admin.js?v=8.13"></script>
-  <script defer src="js/app.js?v=8.13"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script defer src="js/security.js?v=8.14"></script>
+  <script defer src="js/supabase-client.js?v=8.14"></script>
+  <script defer src="js/data.js?v=8.14"></script>
+  <script defer src="js/admin.js?v=8.14"></script>
+  <script defer src="js/app.js?v=8.14"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2259,7 +2327,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=67')
+        navigator.serviceWorker.register('sw.js?v=68')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
