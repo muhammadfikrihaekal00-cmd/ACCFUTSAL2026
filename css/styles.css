@@ -3872,9 +3872,9 @@ body.dark-theme .mobile-nav-item.active {
   }
   .header-icon-btn,
   .btn-admin-header {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
     padding: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -3884,6 +3884,14 @@ body.dark-theme .mobile-nav-item.active {
     flex-shrink: 0 !important;
     touch-action: manipulation !important;
     cursor: pointer !important;
+  }
+  .btn-admin-header {
+    border: 1.5px solid rgba(245, 158, 11, 0.7) !important;
+    background: rgba(245, 158, 11, 0.2) !important;
+  }
+  .btn-admin-header.logged-in {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.28) !important;
   }
   .header-icon-btn span,
   .header-icon-btn svg,

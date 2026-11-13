@@ -79,7 +79,18 @@
         const remainingSeconds = Math.ceil((lockUntil - now) / 1000);
         return { isLocked: true, remainingSeconds };
       }
+      // Bersihkan jika waktu lockout sudah habis
+      if (lockUntil > 0 && now >= lockUntil) {
+        localStorage.removeItem(STORAGE_KEY_LOCKOUT);
+        localStorage.removeItem(STORAGE_KEY_FAILURES);
+      }
       return { isLocked: false, remainingSeconds: 0 };
+    },
+
+    // Reset attempt counter & lockout completely
+    clearLockout() {
+      localStorage.removeItem(STORAGE_KEY_FAILURES);
+      localStorage.removeItem(STORAGE_KEY_LOCKOUT);
     },
 
     // Record failed login attempt and apply progressive lockout penalty
@@ -107,8 +118,7 @@
 
     // Reset attempt counter after successful authentication
     recordSuccess() {
-      localStorage.removeItem(STORAGE_KEY_FAILURES);
-      localStorage.removeItem(STORAGE_KEY_LOCKOUT);
+      this.clearLockout();
     },
 
     sanitize: sanitize
