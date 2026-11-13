@@ -370,6 +370,13 @@ body.dark-theme .brand-text h1 {
     padding: 8px 10px;
     border-radius: 50%;
   }
+  #btnHeaderBatchUpload span:last-child {
+    display: none;
+  }
+  #btnHeaderBatchUpload {
+    padding: 8px 10px !important;
+    border-radius: 50% !important;
+  }
 }
 .header-v-divider {
   width: 1px;
@@ -1071,14 +1078,15 @@ body.dark-theme .team-badge-circle {
 }
 
 .bracket-tree {
-  min-width: 1120px;
-  width: max-content;
+  width: 1080px;
+  min-width: 1080px;
   box-sizing: border-box;
+  margin: 0 auto;
 }
 
 /* Category header & quick switch on top of the bracket */
 .bracket-top-bar {
-  width: 100%;
+  width: 1080px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -1185,10 +1193,10 @@ body.dark-theme .team-badge-circle {
   }
 }
 
-/* Tournament tree container - Lebar 1100px presisi menampung seluruh kolom tanpa terpotong di mobile */
+/* Tournament tree container - Lebar 1080px presisi menampung seluruh kolom tanpa terpotong di mobile */
 .bracket-tree-container {
-  width: 1100px;
-  min-width: 1100px;
+  width: 1080px;
+  min-width: 1080px;
   box-sizing: border-box;
   margin: 0 auto;
   position: relative;
@@ -5990,17 +5998,19 @@ body.dark-theme .fixture-team-row:hover {
 .draw-groups-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  gap: 16px;
   margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1120px) {
   .draw-groups-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 580px) {
+@media (max-width: 600px) {
   .draw-groups-grid {
     grid-template-columns: 1fr;
   }
@@ -6010,8 +6020,12 @@ body.dark-theme .fixture-team-row:hover {
   background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 18px;
+  padding: 16px;
   box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
   position: relative;
   display: flex;
   flex-direction: column;

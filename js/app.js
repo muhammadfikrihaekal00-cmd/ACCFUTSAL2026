@@ -1696,35 +1696,22 @@ const app = {
   },
 
   initThemeAndViewMode() {
-    const savedTheme = localStorage.getItem("pondok_futsal_theme") || "light";
-    this.setTheme(savedTheme, false);
+    this.currentTheme = "light";
+    localStorage.setItem("pondok_futsal_theme", "light");
+    document.body.classList.remove("dark-theme");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#28050c");
   },
 
   toggleTheme() {
-    const nextTheme = this.currentTheme === "dark" ? "light" : "dark";
-    this.setTheme(nextTheme);
+    this.currentTheme = "light";
+    document.body.classList.remove("dark-theme");
   },
 
-  setTheme(theme, showToastMsg = true) {
-    this.currentTheme = theme;
-    localStorage.setItem("pondok_futsal_theme", theme);
-
-    if (theme === "dark") {
-      document.body.classList.add("dark-theme");
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#180206");
-    } else {
-      document.body.classList.remove("dark-theme");
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#28050c");
-    }
-
-    const toggleIcon = document.getElementById("themeToggleIcon");
-    if (toggleIcon) {
-      toggleIcon.textContent = theme === "dark" ? "☀️" : "🌙";
-    }
-
-    if (showToastMsg) {
-      this.showToast(`Beralih ke ${theme === 'light' ? '👑 Merah Maroon & Emas' : '🌙 Midnight Maroon Gelap'}`);
-    }
+  setTheme(theme, showToastMsg = false) {
+    this.currentTheme = "light";
+    localStorage.setItem("pondok_futsal_theme", "light");
+    document.body.classList.remove("dark-theme");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#28050c");
   },
 
   setViewMode(mode, showToastMsg = true) {
@@ -1793,6 +1780,9 @@ const app = {
 
     const btnBatchUpload = document.getElementById("btnBatchUploadTeams");
     if (btnBatchUpload) btnBatchUpload.style.display = isPanitia ? "inline-flex" : "none";
+
+    const btnHeaderBatch = document.getElementById("btnHeaderBatchUpload");
+    if (btnHeaderBatch) btnHeaderBatch.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnManageSponsors = document.getElementById("btnManageSponsors");
     if (btnManageSponsors) btnManageSponsors.style.display = isPanitia ? "inline-flex" : "none";
@@ -3590,6 +3580,11 @@ const app = {
             <div class="draw-role-info">
               <div class="draw-role-badge">MODE PANITIA PELAKSANA (PANPEL)</div>
               <div class="draw-role-desc">Anda memiliki wewenang penuh mengundi 1 per 1 atau otomatis. Setiap hasil undian otomatis terhubung langsung ke Klasemen, Jadwal Pertandingan, & Cloud Supabase.</div>
+              <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-primary" onclick="admin.openBatchUploadModal()" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700; padding: 4px 12px; font-size: 0.76rem; border-radius: 999px; cursor: pointer;">
+                  📂 Upload 1 Folder Berkas Data Tim & Pemain
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -3600,6 +3595,11 @@ const app = {
             <div class="draw-role-info">
               <div class="draw-role-badge">MODE PEMANTAU RESMI PESERTA</div>
               <div class="draw-role-desc">Pengundian grup resmi dipimpin & ditetapkan oleh Panitia Pelaksana (Panpel). Pembagian grup di bawah ini sah & otomatis tersambung ke Jadwal dan Klasemen.</div>
+              <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-sm" onclick="admin.openLoginModal()" style="background: rgba(3, 105, 161, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700; padding: 4px 12px; font-size: 0.74rem; border-radius: 999px; cursor: pointer;">
+                  🔑 Panitia? Masuk untuk Unggah Folder Tim / Atur Undian ➔
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -3824,6 +3824,16 @@ const app = {
     const undrawnCount = allTeams.length - drawnIds.size;
 
     if (countEl) countEl.textContent = undrawnCount;
+
+    if (undrawnCount === 0) {
+      container.innerHTML = `
+        <div style="padding: 14px 18px; text-align: center; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); font-weight: 700; font-size: 0.86rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span style="font-size: 1.2rem;">🎉</span>
+          <span>Seluruh ${allTeams.length} tim (${cat}) telah selesai diundi secara sah ke dalam 4 grup (Grup A, B, C, & D) dan tersinkron otomatis ke Klasemen & Jadwal!</span>
+        </div>
+      `;
+      return;
+    }
 
     let html = "";
     allTeams.forEach(t => {

@@ -35,7 +35,8 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile Updates -->
   <script>
     (function() {
-      var CURRENT_VER = "8.14";
+      localStorage.setItem("pondok_futsal_theme", "light");
+      var CURRENT_VER = "8.15";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -98,7 +99,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.14">
+  <link rel="stylesheet" href="css/styles.css?v=8.15">
 </head>
 <body>
 
@@ -205,11 +206,6 @@
           <span>📸</span>
         </button>
 
-        <!-- Theme Toggle (Icon Only) -->
-        <button id="themeToggleBtn" class="header-icon-btn" onclick="app.toggleTheme()" title="Ganti Tema (Terang / Gelap)" aria-label="Ganti Tema">
-          <span id="themeToggleIcon">🌙</span>
-        </button>
-
         <!-- Share to WhatsApp (Icon Only) -->
         <button id="btnShareWa" class="header-icon-btn btn-share-header" onclick="app.shareToWhatsApp()" title="Bagikan ke WhatsApp Official" aria-label="Bagikan ke WhatsApp">
           <span>📤</span>
@@ -222,6 +218,12 @@
           <span id="adminHeaderIcon">🔒</span>
           <span id="adminHeaderLabel">Mode Panitia</span>
           <span id="adminActiveBadge" class="admin-live-pulse-dot" style="display: none;"></span>
+        </button>
+
+        <!-- Quick Batch Upload 1 Folder Tim Button (Only visible in Panitia Mode) -->
+        <button id="btnHeaderBatchUpload" class="btn btn-sm" onclick="admin.openBatchUploadModal()" title="Import 1 Folder Berkas Data Tim & Pemain Otomatis" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; font-weight: 700; border: none; border-radius: 999px; padding: 6px 14px; font-size: 0.78rem; gap: 6px; align-items: center; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35); cursor: pointer;">
+          <span>📂</span>
+          <span>Upload Folder Tim</span>
         </button>
       </div>
     </div>
@@ -1216,6 +1218,22 @@
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- FITUR UTAMA: BATCH UPLOAD 1 FOLDER TIM -->
+        <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(3, 105, 161, 0.08)); border: 2px solid #0284c7; border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <h4 style="color: #0284c7; font-size: 0.95rem; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 6px; font-weight: 800;">
+              <span>📂</span> Import Berkas 1 Folder Tim Otomatis
+            </h4>
+            <span style="font-size: 0.7rem; background: #0284c7; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: 700;">FITUR PANITIA</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+            Upload 1 folder turnamen berisi data dan foto pemain/pelatih dari seluruh tim. Aplikasi langsung otomatis membagi ke tiap tim dan menyinkronkan ke seluruh HP peserta.
+          </p>
+          <button type="button" class="btn btn-primary" onclick="admin.openBatchUploadModal()" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700; width: 100%; justify-content: center; padding: 10px 16px; cursor: pointer;">
+            📁 Buka Menu Upload 1 Folder Berkas Tim
+          </button>
+        </div>
+
         <form id="adminSettingsForm" style="display: flex; flex-direction: column; gap: 14px;">
           <h4 style="color: var(--primary); font-size: 0.9rem; text-transform: uppercase;">1. Informasi Utama Turnamen</h4>
           
@@ -2306,11 +2324,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script defer src="js/security.js?v=8.14"></script>
-  <script defer src="js/supabase-client.js?v=8.14"></script>
-  <script defer src="js/data.js?v=8.14"></script>
-  <script defer src="js/admin.js?v=8.14"></script>
-  <script defer src="js/app.js?v=8.14"></script>
+  <script defer src="js/security.js?v=8.15"></script>
+  <script defer src="js/supabase-client.js?v=8.15"></script>
+  <script defer src="js/data.js?v=8.15"></script>
+  <script defer src="js/admin.js?v=8.15"></script>
+  <script defer src="js/app.js?v=8.15"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2327,7 +2345,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=68')
+        navigator.serviceWorker.register('sw.js?v=69')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
