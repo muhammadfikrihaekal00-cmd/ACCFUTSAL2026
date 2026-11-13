@@ -83,9 +83,11 @@ const admin = {
                   return new Promise((resolve) => {
                     entry.file((f) => {
                       rawFiles.push({
+                        file: f,
                         path: (currentPath ? currentPath + "/" : "") + f.name,
                         name: f.name,
                         readText: () => f.text(),
+                        readArrayBuffer: () => f.arrayBuffer(),
                         readDataUrl: () => admin.compressImageToDataUrl(f)
                       });
                       resolve();
@@ -93,14 +95,26 @@ const admin = {
                   });
                 } else if (entry.isDirectory) {
                   const dirReader = entry.createReader();
-                  return new Promise((resolve) => {
-                    dirReader.readEntries(async (entries) => {
-                      for (const ent of entries) {
-                        await readEntry(ent, (currentPath ? currentPath + "/" : "") + entry.name);
-                      }
-                      resolve();
+                  const readAllEntries = () => {
+                    return new Promise((resolve) => {
+                      const allEntries = [];
+                      const readBatch = () => {
+                        dirReader.readEntries(async (entries) => {
+                          if (!entries || entries.length === 0) {
+                            for (const ent of allEntries) {
+                              await readEntry(ent, (currentPath ? currentPath + "/" : "") + entry.name);
+                            }
+                            resolve();
+                          } else {
+                            allEntries.push(...entries);
+                            readBatch();
+                          }
+                        });
+                      };
+                      readBatch();
                     });
-                  });
+                  };
+                  return await readAllEntries();
                 }
               };
               for (let i = 0; i < items.length; i++) {
@@ -112,7 +126,7 @@ const admin = {
                 return;
               }
             }
-            admin.handleBatchFolderInput({ files: e.dataTransfer.files });
+            admin.handleBatchDirectFilesInput({ files: e.dataTransfer.files });
           }
         }
       });
@@ -3329,7 +3343,7 @@ const admin = {
     });
   },
 
-  // Smart fuzzy match folder name to registered teams
+  // Smart fuzzy match folder or text name to registered teams
   findBestMatchingTeam(folderName) {
     const teams = (app.store && app.store.data && app.store.data.teams) || [];
     if (!folderName) return null;
@@ -3373,9 +3387,236 @@ const admin = {
     return null;
   },
 
-  // Parse text files (txt/csv/tsv) for coach, manager, phone, players
-  parseTeamTextFile(content) {
-    const res = {
+  // Extract cleanest team folder name from relative file path
+  extractTeamFolderFromPath(fullPath) {
+    if (!fullPath) return null;
+    const parts = fullPath.replace(/\\/g, "/").split("/").filter(Boolean);
+    if (parts.length <= 1) return null;
+    const dirParts = parts.slice(0, parts.length - 1);
+    const generic = /^(?:berkas|data|upload|uploads|turnamen|acc|acc2026|futsal|dokumen|document|documents|file|files|pendaftaran|peserta|new\s*folder|folder)$/i;
+    const meaningful = dirParts.filter(p => !generic.test(p.trim()));
+    if (meaningful.length > 0) {
+      return meaningful[meaningful.length - 1].trim();
+    }
+    return dirParts[dirParts.length - 1].trim();
+  },
+
+  // Parse Excel Files (.xlsx, .xls) using SheetJS
+  async parseExcelFile(fileOrBuffer) {
+    if (typeof XLSX === "undefined") {
+      console.warn("SheetJS library is not loaded.");
+      return [];
+    }
+    try {
+      let arrayBuffer = null;
+      if (fileOrBuffer instanceof ArrayBuffer) {
+        arrayBuffer = fileOrBuffer;
+      } else if (fileOrBuffer && typeof fileOrBuffer.arrayBuffer === "function") {
+        arrayBuffer = await fileOrBuffer.arrayBuffer();
+      }
+      if (!arrayBuffer) return [];
+      const data = new Uint8Array(arrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const parsedTeams = [];
+
+      for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) continue;
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+        if (!rows || rows.length === 0) continue;
+
+        const extracted = this.extractTeamsFromExcelRows(rows, sheetName);
+        if (extracted && extracted.length > 0) {
+          parsedTeams.push(...extracted);
+        }
+      }
+      return parsedTeams;
+    } catch (e) {
+      console.warn("Excel parse error:", e);
+      return [];
+    }
+  },
+
+  // Extract team metadata and player rows from 2D Excel sheet array
+  extractTeamsFromExcelRows(rows, sheetName = "") {
+    let headerRowIdx = -1;
+    let colTeam = -1;
+    let colName = -1;
+    let colNo = -1;
+    let colPos = -1;
+
+    for (let r = 0; r < Math.min(rows.length, 12); r++) {
+      const row = rows[r];
+      if (!Array.isArray(row)) continue;
+      for (let c = 0; c < row.length; c++) {
+        const val = String(row[c] || "").trim().toLowerCase();
+        if (/^(?:tim|sekolah|klub|club|nama\s*tim|nama\s*sekolah|team)$/i.test(val)) colTeam = c;
+        if (/^(?:nama|nama\s*pemain|nama\s*lengkap|player|name)$/i.test(val)) colName = c;
+        if (/^(?:no|nomor|no\.?\s*punggung|punggung|jersey|#)$/i.test(val)) colNo = c;
+        if (/^(?:posisi|position|pos)$/i.test(val)) colPos = c;
+      }
+      if (colName !== -1 || (colNo !== -1 && colPos !== -1)) {
+        headerRowIdx = r;
+        break;
+      }
+    }
+
+    let metaTeam = "";
+    let metaCoach = "";
+    let metaPhone = "";
+    let metaManager = "";
+    let metaJersey = "";
+    const phoneRegex = /(?:\+62|62|08)[\d\-\s]{8,15}/;
+
+    for (let r = 0; r < rows.length; r++) {
+      const rowStr = (rows[r] || []).join(" ");
+      if (/^(?:nama\s*tim|sekolah|tim)\s*[\:\=]/i.test(rowStr)) {
+        const m = rowStr.match(/(?:nama\s*tim|sekolah|tim)\s*[\:\=]\s*([^,\n\|]+)/i);
+        if (m && !metaTeam) metaTeam = m[1].trim();
+      }
+      if (/pelatih|coach/i.test(rowStr)) {
+        const mPhone = rowStr.match(phoneRegex);
+        if (mPhone && !metaPhone) metaPhone = mPhone[0].replace(/[\-\s]/g, "");
+        const m = rowStr.match(/(?:pelatih|coach|head\s*coach)\s*[\:\=]\s*([^,\n\(\d]+)/i);
+        if (m && !metaCoach) metaCoach = m[1].trim();
+      }
+      if (/manajer|manager/i.test(rowStr)) {
+        const m = rowStr.match(/(?:manajer|manager)\s*[\:\=]\s*([^,\n\(\d]+)/i);
+        if (m && !metaManager) metaManager = m[1].trim();
+      }
+      if (/kostum|jersey|seragam/i.test(rowStr)) {
+        const m = rowStr.match(/(?:kostum|jersey|seragam)\s*[\:\=]\s*([^,\n\|]+)/i);
+        if (m && !metaJersey) metaJersey = m[1].trim();
+      }
+    }
+
+    const defaultTeamName = metaTeam || (sheetName && !/^sheet\d+$/i.test(sheetName) ? sheetName : "Tim Turnamen");
+    const teamGroups = {};
+
+    const startRow = headerRowIdx !== -1 ? headerRowIdx + 1 : 0;
+    for (let r = startRow; r < rows.length; r++) {
+      const row = rows[r];
+      if (!Array.isArray(row) || row.every(c => !String(c).trim())) continue;
+
+      let tName = defaultTeamName;
+      if (colTeam !== -1 && row[colTeam]) {
+        const candidate = String(row[colTeam]).trim();
+        if (candidate && !/^(?:tim|sekolah|klub)$/i.test(candidate)) {
+          tName = candidate;
+        }
+      }
+
+      let pName = colName !== -1 ? String(row[colName]).trim() : "";
+      let pNo = colNo !== -1 && row[colNo] !== "" ? parseInt(row[colNo], 10) : null;
+      let pPos = colPos !== -1 ? String(row[colPos]).trim() : "";
+
+      if (!pName) {
+        for (let c = 0; c < row.length; c++) {
+          const val = String(row[c]).trim();
+          if (!val) continue;
+          if (!pNo && /^\d{1,2}$/.test(val)) {
+            pNo = parseInt(val, 10);
+            continue;
+          }
+          if (!pPos && /^(?:gk|kiper|anchor|bek|flank|sayap|pivot|striker)$/i.test(val)) {
+            pPos = val;
+            continue;
+          }
+          if (!pName && val.length >= 2 && val.length <= 40 && !/^(?:no|nomor|nama|posisi|tim|sekolah)$/i.test(val)) {
+            pName = val;
+          }
+        }
+      }
+
+      if (!pName || /^(?:nama|pemain|player|total|subtotal|daftar)$/i.test(pName)) continue;
+
+      let normPos = "Flank";
+      if (/kiper|gk|goalie/i.test(pPos)) normPos = "Kiper";
+      else if (/anchor|bek|def|cb/i.test(pPos)) normPos = "Anchor";
+      else if (/pivot|striker|penyerang|fw/i.test(pPos)) normPos = "Pivot";
+      else if (/flank|sayap|winger|mf/i.test(pPos)) normPos = "Flank";
+
+      if (!teamGroups[tName]) {
+        teamGroups[tName] = {
+          teamName: tName,
+          coach: metaCoach,
+          phone: metaPhone,
+          manager: metaManager,
+          jerseyHome: metaJersey || "Hijau - Putih",
+          jerseyAway: "Hitam - Emas",
+          players: []
+        };
+      }
+
+      const playerNo = (pNo && !isNaN(pNo)) ? pNo : (teamGroups[tName].players.length + 1);
+      teamGroups[tName].players.push({
+        no: playerNo,
+        name: pName,
+        pos: normPos,
+        goals: 0,
+        yc: 0,
+        rc: 0,
+        photo: ""
+      });
+    }
+
+    return Object.values(teamGroups);
+  },
+
+  // Parse Microsoft Word (.docx) files using JSZip
+  async parseDocxFile(fileOrBuffer) {
+    if (typeof JSZip === "undefined") return "";
+    try {
+      const zip = await JSZip.loadAsync(fileOrBuffer);
+      const docXml = await zip.file("word/document.xml")?.async("string");
+      if (!docXml) return "";
+
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(docXml, "application/xml");
+      const lines = [];
+
+      // Extract tables
+      const tables = xmlDoc.getElementsByTagName("w:tbl");
+      for (let t = 0; t < tables.length; t++) {
+        const rows = tables[t].getElementsByTagName("w:tr");
+        for (let r = 0; r < rows.length; r++) {
+          const cells = rows[r].getElementsByTagName("w:tc");
+          const cellTexts = [];
+          for (let c = 0; c < cells.length; c++) {
+            const texts = cells[c].getElementsByTagName("w:t");
+            let cellStr = "";
+            for (let k = 0; k < texts.length; k++) cellStr += texts[k].textContent;
+            cellTexts.push(cellStr.trim());
+          }
+          if (cellTexts.some(Boolean)) lines.push(cellTexts.join(" | "));
+        }
+      }
+
+      // Extract paragraphs
+      const paragraphs = xmlDoc.getElementsByTagName("w:p");
+      for (let p = 0; p < paragraphs.length; p++) {
+        const texts = paragraphs[p].getElementsByTagName("w:t");
+        let line = "";
+        for (let k = 0; k < texts.length; k++) line += texts[k].textContent;
+        if (line.trim()) lines.push(line.trim());
+      }
+
+      return lines.join("\n");
+    } catch (e) {
+      console.warn("DOCX parse error:", e);
+      return "";
+    }
+  },
+
+  // Ultra-smart Text / Document / WhatsApp Roster Parser
+  parseTeamTextFile(content, fallbackTeamName = "") {
+    if (!content) return [];
+    const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const phoneRegex = /(?:\+62|62|08)[\d\-\s]{8,15}/;
+
+    const teams = [];
+    let currentTeam = {
+      teamName: fallbackTeamName || "",
       coach: "",
       phone: "",
       manager: "",
@@ -3383,85 +3624,123 @@ const admin = {
       jerseyAway: "",
       players: []
     };
-    if (!content) return res;
 
-    const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    const phoneRegex = /(?:\+62|62|08)[\d\-\s]{8,15}/;
+    const flushTeam = () => {
+      if (currentTeam.players.length > 0 || currentTeam.coach || currentTeam.teamName) {
+        if (!currentTeam.teamName) currentTeam.teamName = fallbackTeamName || "Tim Turnamen";
+        teams.push(JSON.parse(JSON.stringify(currentTeam)));
+      }
+      currentTeam = {
+        teamName: "",
+        coach: "",
+        phone: "",
+        manager: "",
+        jerseyHome: "",
+        jerseyAway: "",
+        players: []
+      };
+    };
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
+      // Multi-team detection: line starting with TIM:, SEKOLAH:, or KLUB:
+      if (/^(?:nama\s*tim|nama\s*sekolah|nama\s*klub|tim|sekolah)\s*[\:\=]/i.test(line)) {
+        const val = line.replace(/^(?:nama\s*tim|nama\s*sekolah|nama\s*klub|tim|sekolah)\s*[\:\=]+/i, "").trim();
+        if (currentTeam.players.length > 0) {
+          flushTeam();
+        }
+        currentTeam.teamName = val;
+        continue;
+      }
+
+      // Check registered team match on standalone title line
+      const registeredMatch = this.findBestMatchingTeam(line);
+      if (registeredMatch && registeredMatch.name.toLowerCase() === line.toLowerCase()) {
+        if (currentTeam.players.length > 0) {
+          flushTeam();
+        }
+        currentTeam.teamName = registeredMatch.name;
+        continue;
+      }
+
       // Coach detection
-      if (/^(?:pelatih|coach|head\s*coach)\b/i.test(line) || /pelatih\s*:/i.test(line) || /coach\s*:/i.test(line)) {
+      if (/^(?:pelatih|coach|head\s*coach|pelatih\s*kepala)\b/i.test(line) || /pelatih\s*[\:\=]/i.test(line) || /coach\s*[\:\=]/i.test(line)) {
         const mPhone = line.match(phoneRegex);
-        if (mPhone) res.phone = mPhone[0].replace(/[\-\s]/g, "");
+        if (mPhone) currentTeam.phone = mPhone[0].replace(/[\-\s]/g, "");
         const namePart = line
-          .replace(/^(?:pelatih|coach|head\s*coach)[\s\:\-]+/i, "")
+          .replace(/^(?:pelatih|coach|head\s*coach|pelatih\s*kepala)[\s\:\=\-]+/i, "")
           .replace(phoneRegex, "")
           .replace(/[\(\)\[\]]/g, "")
           .trim();
-        if (namePart) res.coach = namePart;
+        if (namePart) currentTeam.coach = namePart;
         continue;
       }
 
       // Manager detection
-      if (/^(?:manager|manajer|ofisial|official)\b/i.test(line) || /manajer\s*:/i.test(line) || /manager\s*:/i.test(line)) {
+      if (/^(?:manager|manajer|ofisial|official|ketua\s*tim)\b/i.test(line) || /manajer\s*[\:\=]/i.test(line) || /manager\s*[\:\=]/i.test(line)) {
         const mPhone = line.match(phoneRegex);
-        if (mPhone && !res.phone) res.phone = mPhone[0].replace(/[\-\s]/g, "");
+        if (mPhone && !currentTeam.phone) currentTeam.phone = mPhone[0].replace(/[\-\s]/g, "");
         const namePart = line
-          .replace(/^(?:manager|manajer|ofisial|official)[\s\:\-]+/i, "")
+          .replace(/^(?:manager|manajer|ofisial|official|ketua\s*tim)[\s\:\=\-]+/i, "")
           .replace(phoneRegex, "")
           .replace(/[\(\)\[\]]/g, "")
           .trim();
-        if (namePart) res.manager = namePart;
+        if (namePart) currentTeam.manager = namePart;
         continue;
       }
 
       // Standalone phone detection
-      if (/^(?:no\.?\s*hp|telepon|wa|whatsapp)\s*[\:\-]/i.test(line)) {
+      if (/^(?:no\.?\s*hp|wa|whatsapp|telepon|kontak)\s*[\:\=\-]/i.test(line)) {
         const mPhone = line.match(phoneRegex);
-        if (mPhone) res.phone = mPhone[0].replace(/[\-\s]/g, "");
+        if (mPhone) currentTeam.phone = mPhone[0].replace(/[\-\s]/g, "");
         continue;
       }
 
       // Jersey detection
-      if (/^(?:jersey|kostum|seragam)\b/i.test(line)) {
-        const val = line.replace(/^(?:jersey|kostum|seragam)[\s\:\-]+/i, "").trim();
-        if (val) res.jerseyHome = val;
+      if (/^(?:jersey|kostum|seragam|baju)\b/i.test(line)) {
+        const val = line.replace(/^(?:jersey|kostum|seragam|baju)[\s\:\=\-]+/i, "").trim();
+        if (val) currentTeam.jerseyHome = val;
         continue;
       }
 
-      // Player line parsing
-      if (/^(?:daftar|list|nama|skuad|pemain|roster)\b/i.test(line) && line.length < 30) {
+      // Skip generic headers
+      if (/^(?:daftar|list|nama|skuad|pemain|roster|formulir|biodata|tanda\s*tangan|no\s*urut|ttd|al-fayyadh)\b/i.test(line) && line.length < 35 && !/\d{2,}/.test(line)) {
         continue;
       }
 
-      // Check position keywords
+      // Position check
       let pos = "Flank";
-      if (/\b(?:gk|kiper|goalie|penjaga\s*gawang)\b/i.test(line)) pos = "Kiper";
-      else if (/\b(?:anchor|bek|def|defender|bertahan|cb)\b/i.test(line)) pos = "Anchor";
-      else if (/\b(?:pivot|striker|penyerang|fw|ujung\s*tombak)\b/i.test(line)) pos = "Pivot";
-      else if (/\b(?:flank|sayap|winger|mf|gelandang)\b/i.test(line)) pos = "Flank";
+      if (/\b(?:gk|kiper|goalie|penjaga\s*gawang|keeper)\b/i.test(line)) pos = "Kiper";
+      else if (/\b(?:anchor|bek|def|defender|bertahan|cb|belakang)\b/i.test(line)) pos = "Anchor";
+      else if (/\b(?:pivot|striker|penyerang|fw|ujung\s*tombak|depan)\b/i.test(line)) pos = "Pivot";
+      else if (/\b(?:flank|sayap|winger|gelandang|mf|tengah)\b/i.test(line)) pos = "Flank";
 
-      // Check number
+      // Number check
       let pNo = null;
-      const numMatch = line.match(/^(?:no\.?\s*)?(\d{1,2})[\.\s\)\-\|\,]/i) || line.match(/#(\d{1,2})\b/) || line.match(/[\(\[\,\-\|]\s*(?:no\.?\s*)?(\d{1,2})\s*[\)\]\,\-\|]?$/i) || line.match(/\b(?:no\.?\s*)(\d{1,2})\b/i);
+      const numMatch = line.match(/^(?:no\.?\s*)?(\d{1,2})[\.\s\)\-\|\,\:]/i) ||
+                       line.match(/#(\d{1,2})\b/) ||
+                       line.match(/[\(\[\,\-\|]\s*(?:no\.?\s*)?(\d{1,2})\s*[\)\]\,\-\|]?$/i) ||
+                       line.match(/\b(?:no\.?\s*)(\d{1,2})\b/i);
       if (numMatch) {
         pNo = parseInt(numMatch[1], 10);
       }
 
       // Clean name
       let pName = line
-        .replace(/^(?:no\.?\s*)?\d{1,2}[\.\s\)\-\|\,]+/i, "")
+        .replace(/^(?:no\.?\s*)?\d{1,2}[\.\s\)\-\|\,\:]+/i, "")
         .replace(/#\d{1,2}/g, "")
-        .replace(/\b(?:gk|kiper|goalie|penjaga\s*gawang|anchor|bek|def|defender|bertahan|cb|pivot|striker|penyerang|fw|flank|sayap|winger|mf|gelandang)\b/gi, "")
-        .replace(/[\(\)\[\]\|\,\:\-]/g, " ")
+        .replace(/\b(?:gk|kiper|goalie|penjaga\s*gawang|keeper|anchor|bek|def|defender|bertahan|cb|belakang|pivot|striker|penyerang|fw|flank|sayap|winger|gelandang|mf|tengah)\b/gi, "")
+        .replace(/[\(\)\[\]\|\,\:\-\t]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
 
-      if (pName && !/^\d+$/.test(pName) && pName.length >= 2 && pName.length <= 40) {
-        if (!pNo) pNo = res.players.length + 1;
-        res.players.push({
+      if (pName && !/^\d+$/.test(pName) && pName.length >= 2 && pName.length <= 45) {
+        if (!pNo) {
+          pNo = currentTeam.players.length + 1;
+          if (pNo === 1 && pos === "Flank") pos = "Kiper";
+        }
+        currentTeam.players.push({
           no: pNo,
           name: pName,
           pos: pos,
@@ -3473,170 +3752,245 @@ const admin = {
       }
     }
 
-    return res;
+    if (currentTeam.players.length > 0 || currentTeam.coach || currentTeam.teamName) {
+      flushTeam();
+    }
+
+    return teams;
   },
 
   // Main processing pipeline from raw files
   async processBatchFiles(rawFiles) {
+    if (!rawFiles || rawFiles.length === 0) return;
     const statusEl = document.getElementById("batchUploadStatus");
     if (statusEl) {
       statusEl.style.display = "block";
       statusEl.innerHTML = `
         <div style="display:flex; align-items:center; gap:10px; color:#0284c7; font-weight:700;">
           <span class="pulse-dot" style="background:#0284c7;"></span>
-          <span>Sedang membaca dan mengekstrak ${rawFiles.length} berkas...</span>
+          <span>Sedang membaca dan mengekstrak ${rawFiles.length} berkas (Excel, Word, Teks, & Foto)...</span>
         </div>
       `;
     }
 
-    // 1. Group files by team folder
-    const folderMap = {};
+    const excelFiles = rawFiles.filter(f => /\.(xlsx|xls)$/i.test(f.name));
+    const docxFiles = rawFiles.filter(f => /\.(docx)$/i.test(f.name));
+    const textFiles = rawFiles.filter(f => /\.(txt|csv|tsv|json)$/i.test(f.name));
+    const imgFiles = rawFiles.filter(f => /\.(jpg|jpeg|png|webp|gif)$/i.test(f.name));
+
+    const teamsMap = {};
+
+    const registerTeamData = (teamObj) => {
+      if (!teamObj || !teamObj.teamName) return;
+      const key = teamObj.teamName.trim();
+      if (!teamsMap[key]) {
+        const matched = admin.findBestMatchingTeam(key);
+        teamsMap[key] = {
+          folderName: key,
+          matchedTeamId: matched ? matched.id : "",
+          teamName: matched ? matched.name : key,
+          shortName: matched ? matched.shortName : key.substring(0, 10).toUpperCase(),
+          category: matched ? matched.category : (/sd\b/i.test(key) ? "SD" : "SMP"),
+          group: matched ? matched.group : "A",
+          badgeColor: matched ? matched.badgeColor : "#0284c7",
+          city: matched ? matched.city : "Maros",
+          coach: teamObj.coach || (matched && matched.official && matched.official.coach) || "",
+          phone: teamObj.phone || (matched && matched.official && matched.official.phone) || "",
+          manager: teamObj.manager || (matched && matched.official && matched.official.manager) || "",
+          coachPhoto: teamObj.coachPhoto || (matched && matched.official && matched.official.coachPhoto) || "",
+          managerPhoto: teamObj.managerPhoto || (matched && matched.official && matched.official.managerPhoto) || "",
+          jerseyHome: teamObj.jerseyHome || (matched && matched.official && matched.official.jerseyHome) || "Hijau - Putih",
+          jerseyAway: teamObj.jerseyAway || (matched && matched.official && matched.official.jerseyAway) || "Hitam - Emas",
+          logo: teamObj.logo || (matched && matched.logo) || "",
+          players: teamObj.players && teamObj.players.length > 0 ? teamObj.players : (matched && matched.players ? JSON.parse(JSON.stringify(matched.players)) : []),
+          rawFilesCount: 1
+        };
+      } else {
+        if (teamObj.coach && !teamsMap[key].coach) teamsMap[key].coach = teamObj.coach;
+        if (teamObj.phone && !teamsMap[key].phone) teamsMap[key].phone = teamObj.phone;
+        if (teamObj.manager && !teamsMap[key].manager) teamsMap[key].manager = teamObj.manager;
+        if (teamObj.jerseyHome && !teamsMap[key].jerseyHome) teamsMap[key].jerseyHome = teamObj.jerseyHome;
+        if (teamObj.players && teamObj.players.length > 0) {
+          teamsMap[key].players = teamObj.players;
+        }
+      }
+    };
+
+    // 1. Process Excel files
+    for (const ef of excelFiles) {
+      try {
+        const ab = ef.readArrayBuffer ? await ef.readArrayBuffer() : (ef.file && ef.file.arrayBuffer ? await ef.file.arrayBuffer() : null);
+        if (ab) {
+          const parsed = await this.parseExcelFile(ab);
+          parsed.forEach(t => registerTeamData(t));
+        }
+      } catch (e) {
+        console.warn("Excel extraction notice:", e);
+      }
+    }
+
+    // 2. Process DOCX files
+    for (const df of docxFiles) {
+      try {
+        const ab = df.readArrayBuffer ? await df.readArrayBuffer() : (df.file && df.file.arrayBuffer ? await df.file.arrayBuffer() : null);
+        if (ab) {
+          const txt = await this.parseDocxFile(ab);
+          const fallbackName = df.name.replace(/\.docx$/i, "").replace(/^(?:data|berkas|formulir)[\s\-_]*/i, "");
+          const parsed = this.parseTeamTextFile(txt, fallbackName);
+          parsed.forEach(t => registerTeamData(t));
+        }
+      } catch (e) {
+        console.warn("DOCX extraction notice:", e);
+      }
+    }
+
+    // 3. Process Text / CSV files
+    for (const tf of textFiles) {
+      try {
+        const txt = await tf.readText();
+        const fallbackName = admin.extractTeamFolderFromPath(tf.path) || tf.name.replace(/\.[^.]+$/i, "").replace(/^(?:data|berkas|pemain)[\s\-_]*/i, "");
+        const parsed = this.parseTeamTextFile(txt, fallbackName);
+        parsed.forEach(t => registerTeamData(t));
+      } catch (e) {
+        console.warn("Text extraction notice:", e);
+      }
+    }
+
+    // Group files by relative folder if any folders were detected
     for (const item of rawFiles) {
-      const fullPath = (item.path || item.name || "").replace(/\\/g, "/");
-      const parts = fullPath.split("/").filter(Boolean);
-
-      let teamFolder = "Tim Umum";
-      if (parts.length >= 2) {
-        if (parts.length === 2) {
-          teamFolder = parts[0];
-        } else {
-          const ignored = ["berkas", "data", "upload", "turnamen", "acc", "acc2026", "foto", "photos", "gambar", "images"];
-          let candidate = parts[1];
-          if (ignored.includes(candidate.toLowerCase()) && parts.length > 2) {
-            candidate = parts[2];
-          } else if (ignored.includes(parts[0].toLowerCase())) {
-            candidate = parts[1];
-          } else {
-            candidate = parts[0];
-          }
-          teamFolder = candidate;
+      const folder = admin.extractTeamFolderFromPath(item.path);
+      if (folder) {
+        if (!teamsMap[folder]) {
+          const matched = admin.findBestMatchingTeam(folder);
+          teamsMap[folder] = {
+            folderName: folder,
+            matchedTeamId: matched ? matched.id : "",
+            teamName: matched ? matched.name : folder,
+            shortName: matched ? matched.shortName : folder.substring(0, 10).toUpperCase(),
+            category: matched ? matched.category : (/sd\b/i.test(folder) ? "SD" : "SMP"),
+            group: matched ? matched.group : "A",
+            badgeColor: matched ? matched.badgeColor : "#0284c7",
+            city: matched ? matched.city : "Maros",
+            coach: (matched && matched.official && matched.official.coach) || "",
+            phone: (matched && matched.official && matched.official.phone) || "",
+            manager: (matched && matched.official && matched.official.manager) || "",
+            coachPhoto: (matched && matched.official && matched.official.coachPhoto) || "",
+            managerPhoto: (matched && matched.official && matched.official.managerPhoto) || "",
+            jerseyHome: (matched && matched.official && matched.official.jerseyHome) || "Hijau - Putih",
+            jerseyAway: (matched && matched.official && matched.official.jerseyAway) || "Hitam - Emas",
+            logo: (matched && matched.logo) || "",
+            players: matched && matched.players ? JSON.parse(JSON.stringify(matched.players)) : [],
+            rawFilesCount: 0
+          };
         }
+        teamsMap[folder].rawFilesCount++;
       }
-
-      if (!folderMap[teamFolder]) folderMap[teamFolder] = [];
-      folderMap[teamFolder].push(item);
     }
 
-    const parsedResults = [];
-
-    // 2. Process each team folder
-    for (const folderName of Object.keys(folderMap)) {
-      const files = folderMap[folderName];
-      const matchedTeam = this.findBestMatchingTeam(folderName);
-
-      const teamData = {
-        folderName: folderName,
-        matchedTeamId: matchedTeam ? matchedTeam.id : "",
-        teamName: matchedTeam ? matchedTeam.name : folderName,
-        shortName: matchedTeam ? matchedTeam.shortName : folderName.substring(0, 12).toUpperCase(),
-        category: matchedTeam ? matchedTeam.category : (/sd\b/i.test(folderName) ? "SD" : "SMP"),
-        group: matchedTeam ? matchedTeam.group : "A",
-        badgeColor: matchedTeam ? matchedTeam.badgeColor : "#0284c7",
-        city: matchedTeam ? matchedTeam.city : "Maros",
-        coach: matchedTeam ? (matchedTeam.official && matchedTeam.official.coach) : "",
-        phone: matchedTeam ? (matchedTeam.official && matchedTeam.official.phone) : "",
-        manager: matchedTeam ? (matchedTeam.official && matchedTeam.official.manager) : "",
-        coachPhoto: matchedTeam ? (matchedTeam.official && matchedTeam.official.coachPhoto) : "",
-        managerPhoto: matchedTeam ? (matchedTeam.official && matchedTeam.official.managerPhoto) : "",
-        jerseyHome: matchedTeam ? (matchedTeam.official && matchedTeam.official.jerseyHome) : "Hijau - Putih",
-        jerseyAway: matchedTeam ? (matchedTeam.official && matchedTeam.official.jerseyAway) : "Hitam - Emas",
-        logo: matchedTeam ? matchedTeam.logo : "",
-        players: matchedTeam && matchedTeam.players && matchedTeam.players.length > 0 ? JSON.parse(JSON.stringify(matchedTeam.players)) : [],
-        rawFilesCount: files.length
-      };
-
-      // Read text / document files
-      const textFiles = files.filter(f => /\.(txt|csv|tsv|json)$/i.test(f.name));
-      for (const tf of textFiles) {
-        try {
-          const txt = await tf.readText();
-          const parsed = this.parseTeamTextFile(txt);
-          if (parsed.coach) teamData.coach = parsed.coach;
-          if (parsed.phone) teamData.phone = parsed.phone;
-          if (parsed.manager) teamData.manager = parsed.manager;
-          if (parsed.jerseyHome) teamData.jerseyHome = parsed.jerseyHome;
-          if (parsed.jerseyAway) teamData.jerseyAway = parsed.jerseyAway;
-          if (parsed.players && parsed.players.length > 0) {
-            teamData.players = parsed.players;
-          }
-        } catch (e) {
-          console.warn("Text file parse error:", e);
-        }
+    // If still no teams, create 1 team entry from first registered team or candidate
+    if (Object.keys(teamsMap).length === 0) {
+      let matchedCandidate = null;
+      for (const f of rawFiles) {
+        const m = admin.findBestMatchingTeam(f.name);
+        if (m) { matchedCandidate = m; break; }
       }
+      const initialTeam = matchedCandidate || (app.store && app.store.data && app.store.data.teams && app.store.data.teams[0]);
+      const initialName = initialTeam ? initialTeam.name : "Tim Turnamen";
+      registerTeamData({
+        teamName: initialName,
+        coach: initialTeam && initialTeam.official ? initialTeam.official.coach : "",
+        phone: initialTeam && initialTeam.official ? initialTeam.official.phone : "",
+        manager: initialTeam && initialTeam.official ? initialTeam.official.manager : "",
+        players: initialTeam && initialTeam.players ? JSON.parse(JSON.stringify(initialTeam.players)) : []
+      });
+    }
 
-      // Read image files
-      const imgFiles = files.filter(f => /\.(jpg|jpeg|png|webp|gif)$/i.test(f.name));
-      for (const imgF of imgFiles) {
-        try {
-          const dataUrl = await imgF.readDataUrl();
-          const fNameLow = imgF.name.toLowerCase();
+    // 4. Attach image files to matching teams
+    for (const imgF of imgFiles) {
+      try {
+        const dataUrl = await imgF.readDataUrl();
+        const fNameLow = imgF.name.toLowerCase();
+        const targetFolder = admin.extractTeamFolderFromPath(imgF.path);
 
-          // Coach photo
-          if (/pelatih|coach|headcoach/i.test(fNameLow)) {
-            teamData.coachPhoto = dataUrl;
-            const mPhone = fNameLow.match(/(?:\+62|62|08)[\d]{8,13}/);
-            if (mPhone && !teamData.phone) teamData.phone = mPhone[0];
-            continue;
+        let targetTeam = targetFolder && teamsMap[targetFolder] ? teamsMap[targetFolder] : null;
+        if (!targetTeam) {
+          for (const key of Object.keys(teamsMap)) {
+            const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+            if (cleanKey.length >= 3 && fNameLow.includes(cleanKey)) {
+              targetTeam = teamsMap[key];
+              break;
+            }
           }
+        }
+        if (!targetTeam) {
+          const keys = Object.keys(teamsMap);
+          if (keys.length === 1) targetTeam = teamsMap[keys[0]];
+        }
+        if (!targetTeam) continue;
 
-          // Manager photo
-          if (/manager|manajer|ofisial|official/i.test(fNameLow)) {
-            teamData.managerPhoto = dataUrl;
-            continue;
+        // Coach photo
+        if (/pelatih|coach|headcoach/i.test(fNameLow)) {
+          targetTeam.coachPhoto = dataUrl;
+          const mPhone = fNameLow.match(/(?:\+62|62|08)[\d]{8,13}/);
+          if (mPhone && !targetTeam.phone) targetTeam.phone = mPhone[0];
+          continue;
+        }
+
+        // Manager photo
+        if (/manager|manajer|ofisial|official/i.test(fNameLow)) {
+          targetTeam.managerPhoto = dataUrl;
+          continue;
+        }
+
+        // Logo
+        if (/logo|crest|lambang/i.test(fNameLow)) {
+          targetTeam.logo = dataUrl;
+          continue;
+        }
+
+        // Player photo matching
+        const pNumMatch = fNameLow.match(/^(?:no\.?\s*)?(\d{1,2})[\b_\-\s\.]/i) || fNameLow.match(/[\b_\-\s](\d{1,2})\.(?:jpg|jpeg|png|webp)$/i);
+        let assigned = false;
+        if (pNumMatch) {
+          const pNo = parseInt(pNumMatch[1], 10);
+          const pObj = targetTeam.players.find(p => p.no === pNo);
+          if (pObj) {
+            pObj.photo = dataUrl;
+            assigned = true;
           }
+        }
 
-          // Logo
-          if (/logo|crest|lambang/i.test(fNameLow)) {
-            teamData.logo = dataUrl;
-            continue;
-          }
-
-          // Player photo
-          const pNumMatch = fNameLow.match(/^(?:no\.?\s*)?(\d{1,2})[\b_\-\s\.]/i) || fNameLow.match(/[\b_\-\s](\d{1,2})\.(?:jpg|jpeg|png|webp)$/i);
-          let assigned = false;
-          if (pNumMatch) {
-            const pNo = parseInt(pNumMatch[1], 10);
-            const pObj = teamData.players.find(p => p.no === pNo);
-            if (pObj) {
-              pObj.photo = dataUrl;
+        if (!assigned) {
+          for (const p of targetTeam.players) {
+            const cleanPName = p.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+            if (cleanPName.length >= 3 && fNameLow.includes(cleanPName)) {
+              p.photo = dataUrl;
               assigned = true;
+              break;
             }
           }
-
-          if (!assigned) {
-            for (const p of teamData.players) {
-              const cleanPName = p.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-              if (cleanPName.length >= 3 && fNameLow.includes(cleanPName)) {
-                p.photo = dataUrl;
-                assigned = true;
-                break;
-              }
-            }
-          }
-
-          if (!assigned && teamData.players.length < 16) {
-            const numPart = pNumMatch ? parseInt(pNumMatch[1], 10) : (teamData.players.length + 1);
-            let namePart = imgF.name.replace(/\.[^/.]+$/, "").replace(/^\d+[\s\-_\.]+/, "").replace(/[\-_]/g, " ").trim();
-            if (!namePart) namePart = `Pemain #${numPart}`;
-            teamData.players.push({
-              no: numPart,
-              name: namePart,
-              pos: /gk|kiper/i.test(fNameLow) ? "Kiper" : (/pivot|striker/i.test(fNameLow) ? "Pivot" : (/bek|anchor/i.test(fNameLow) ? "Anchor" : "Flank")),
-              goals: 0,
-              yc: 0,
-              rc: 0,
-              photo: dataUrl
-            });
-          }
-        } catch (e) {
-          console.warn("Image file parse error:", e);
         }
-      }
 
-      parsedResults.push(teamData);
+        if (!assigned && targetTeam.players.length < 16) {
+          const numPart = pNumMatch ? parseInt(pNumMatch[1], 10) : (targetTeam.players.length + 1);
+          let namePart = imgF.name.replace(/\.[^/.]+$/, "").replace(/^\d+[\s\-_\.]+/, "").replace(/[\-_]/g, " ").trim();
+          if (!namePart || /^(?:foto|img|image|pemain|player)$/i.test(namePart)) namePart = `Pemain #${numPart}`;
+          targetTeam.players.push({
+            no: numPart,
+            name: namePart,
+            pos: /gk|kiper/i.test(fNameLow) ? "Kiper" : (/pivot|striker/i.test(fNameLow) ? "Pivot" : (/bek|anchor/i.test(fNameLow) ? "Anchor" : "Flank")),
+            goals: 0,
+            yc: 0,
+            rc: 0,
+            photo: dataUrl
+          });
+        }
+      } catch (e) {
+        console.warn("Image file parse notice:", e);
+      }
     }
 
-    this.batchParsedTeams = parsedResults;
+    this.batchParsedTeams = Object.values(teamsMap);
     this.renderBatchUploadPreview();
   },
 
@@ -3662,11 +4016,16 @@ const admin = {
       statusEl.innerHTML = `
         <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:var(--radius-md); padding:10px 14px; color:#065f46; font-size:0.84rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
-            <strong>✅ Berhasil Mengekstrak:</strong> Terdeteksi <strong>${totalTeams} Tim</strong> dan <strong>${totalPlayers} Pemain</strong> beserta foto & data ofisial.
+            <strong>✅ Berhasil Mengekstrak:</strong> Terdeteksi <strong>${totalTeams} Tim</strong> dan <strong>${totalPlayers} Pemain</strong>. Silakan periksa atau sesuaikan data di bawah ini sebelum disimpan:
           </div>
-          <button type="button" class="btn btn-outline btn-sm" onclick="admin.resetBatchUploadUI()" style="font-size:0.74rem; padding:3px 8px;">
-            🔄 Ganti Folder
-          </button>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.addBatchTeamManual()" style="font-size:0.74rem; padding:3px 8px; color:#0284c7; border-color:#0284c7;">
+              ➕ Tambah Tim
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.resetBatchUploadUI()" style="font-size:0.74rem; padding:3px 8px;">
+              🔄 Ganti Berkas
+            </button>
+          </div>
         </div>
       `;
     }
@@ -3680,14 +4039,31 @@ const admin = {
         return `<option value="${t.id}" ${isSel ? 'selected' : ''}>[${t.category}] ${t.name} (Grup ${t.group || '-'})</option>`;
       }).join("");
 
-      const playersTableRows = (tData.players || []).map(p => `
+      const playersTableRows = (tData.players || []).map((p, pIdx) => `
         <tr>
-          <td style="width:36px; text-align:center;">
-            ${p.photo ? `<img src="${p.photo}" class="batch-player-thumb" alt="${p.name}">` : `<span style="display:inline-block; width:24px; height:24px; border-radius:50%; background:#e2e8f0; text-align:center; line-height:24px; font-size:0.65rem;">⚽</span>`}
+          <td style="width:40px; text-align:center;">
+            <div style="position:relative; display:inline-block; cursor:pointer;" onclick="admin.triggerSinglePhotoUpload(${idx}, ${pIdx})" title="Klik untuk Ganti/Upload Foto Pemain">
+              ${p.photo ? `<img src="${p.photo}" class="batch-player-thumb" alt="${p.name}">` : `<span style="display:inline-block; width:26px; height:26px; border-radius:50%; background:#e2e8f0; text-align:center; line-height:26px; font-size:0.7rem;">📷</span>`}
+              <span style="position:absolute; bottom:-3px; right:-3px; background:#0284c7; color:#fff; font-size:0.55rem; border-radius:50%; width:12px; height:12px; display:flex; align-items:center; justify-content:center;">+</span>
+            </div>
           </td>
-          <td style="width:36px; font-weight:800; color:#0284c7;">#${p.no}</td>
-          <td style="font-weight:700;">${p.name}</td>
-          <td><span class="batch-pos-pill pos-${p.pos}">${p.pos}</span></td>
+          <td style="width:48px;">
+            <input type="number" class="batch-player-input" value="${p.no}" style="width:42px; text-align:center; font-weight:800; color:#0284c7;" onchange="admin.updateBatchPlayerField(${idx}, ${pIdx}, 'no', this.value)" min="1" max="99">
+          </td>
+          <td>
+            <input type="text" class="batch-player-input" value="${p.name}" style="width:100%; font-weight:700;" onchange="admin.updateBatchPlayerField(${idx}, ${pIdx}, 'name', this.value)" placeholder="Nama Lengkap Pemain">
+          </td>
+          <td style="width:90px;">
+            <select class="batch-player-input" style="width:100%; font-weight:700;" onchange="admin.updateBatchPlayerField(${idx}, ${pIdx}, 'pos', this.value)">
+              <option value="Kiper" ${p.pos === 'Kiper' ? 'selected' : ''}>Kiper</option>
+              <option value="Anchor" ${p.pos === 'Anchor' ? 'selected' : ''}>Anchor</option>
+              <option value="Flank" ${p.pos === 'Flank' ? 'selected' : ''}>Flank</option>
+              <option value="Pivot" ${p.pos === 'Pivot' ? 'selected' : ''}>Pivot</option>
+            </select>
+          </td>
+          <td style="width:30px; text-align:center;">
+            <button type="button" onclick="admin.removeBatchPlayer(${idx}, ${pIdx})" title="Hapus Pemain" style="background:none; border:none; cursor:pointer; color:#ef4444; font-size:0.85rem;">🗑️</button>
+          </td>
         </tr>
       `).join("");
 
@@ -3695,7 +4071,7 @@ const admin = {
         <div class="batch-team-card ${isMatched ? 'matched' : 'unmatched'}" id="batchTeamCard_${idx}">
           <div class="batch-team-header">
             <div>
-              <span class="batch-team-title">📁 Folder: ${tData.folderName}</span>
+              <span class="batch-team-title">📁 Tim: ${tData.teamName || tData.folderName}</span>
               <div style="margin-top: 4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                 <label style="font-size:0.74rem; font-weight:700; color:#475569;">Target Tim Turnamen:</label>
                 <select class="form-select" style="font-size:0.75rem; padding:3px 8px; width:auto; max-width:260px;" onchange="admin.updateBatchTeamMapping(${idx}, this.value)">
@@ -3704,44 +4080,63 @@ const admin = {
                 </select>
               </div>
             </div>
-            <span class="batch-team-badge ${isMatched ? 'badge-matched' : 'badge-new'}">
-              ${isMatched ? '✅ Terhubung ke Turnamen' : '⚠️ Tim Baru'}
-            </span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="batch-team-badge ${isMatched ? 'badge-matched' : 'badge-new'}">
+                ${isMatched ? '✅ Terhubung ke Turnamen' : '⚠️ Tim Baru'}
+              </span>
+              <button type="button" onclick="admin.removeBatchTeam(${idx})" title="Hapus Tim Ini" style="background:none; border:none; cursor:pointer; color:#ef4444; font-size:0.85rem;">❌</button>
+            </div>
           </div>
 
           <div class="batch-official-preview">
             <div class="batch-official-item">
-              ${tData.coachPhoto ? `<img src="${tData.coachPhoto}" class="batch-official-thumb" alt="Pelatih">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">👔</span>`}
-              <div>
+              <div style="position:relative; cursor:pointer;" onclick="admin.triggerCoachPhotoUpload(${idx})" title="Upload Foto Pelatih">
+                ${tData.coachPhoto ? `<img src="${tData.coachPhoto}" class="batch-official-thumb" alt="Pelatih">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">👔</span>`}
+                <span style="position:absolute; bottom:-3px; right:-3px; background:#0284c7; color:#fff; font-size:0.55rem; border-radius:50%; width:12px; height:12px; display:flex; align-items:center; justify-content:center;">+</span>
+              </div>
+              <div style="flex:1;">
                 <div style="font-size:0.68rem; color:#64748b;">Pelatih (Coach):</div>
-                <strong style="color:#0f172a;">${tData.coach || '-'}</strong>
-                ${tData.phone ? `<div style="font-size:0.7rem; color:#059669; font-weight:700;">📱 WA: ${tData.phone}</div>` : ''}
+                <input type="text" class="batch-player-input" value="${tData.coach || ''}" placeholder="Nama Pelatih" onchange="admin.batchParsedTeams[${idx}].coach = this.value" style="width:100%; margin-bottom:2px;">
+                <input type="text" class="batch-player-input" value="${tData.phone || ''}" placeholder="No WA (08xxx)" onchange="admin.batchParsedTeams[${idx}].phone = this.value" style="width:100%; color:#059669; font-weight:700;">
               </div>
             </div>
 
             <div class="batch-official-item">
-              ${tData.managerPhoto ? `<img src="${tData.managerPhoto}" class="batch-official-thumb" alt="Manajer">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">💼</span>`}
-              <div>
-                <div style="font-size:0.68rem; color:#64748b;">Manajer:</div>
-                <strong style="color:#0f172a;">${tData.manager || '-'}</strong>
-                <div style="font-size:0.7rem; color:#64748b;">🎽 Kostum: ${tData.jerseyHome || '-'}</div>
+              <div style="position:relative; cursor:pointer;" onclick="admin.triggerManagerPhotoUpload(${idx})" title="Upload Foto Manajer">
+                ${tData.managerPhoto ? `<img src="${tData.managerPhoto}" class="batch-official-thumb" alt="Manajer">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">💼</span>`}
+                <span style="position:absolute; bottom:-3px; right:-3px; background:#0284c7; color:#fff; font-size:0.55rem; border-radius:50%; width:12px; height:12px; display:flex; align-items:center; justify-content:center;">+</span>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:0.68rem; color:#64748b;">Manajer & Kostum:</div>
+                <input type="text" class="batch-player-input" value="${tData.manager || ''}" placeholder="Nama Manajer" onchange="admin.batchParsedTeams[${idx}].manager = this.value" style="width:100%; margin-bottom:2px;">
+                <input type="text" class="batch-player-input" value="${tData.jerseyHome || 'Hijau - Putih'}" placeholder="Warna Kostum" onchange="admin.batchParsedTeams[${idx}].jerseyHome = this.value" style="width:100%;">
               </div>
             </div>
           </div>
 
           <div style="margin-top: 8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="font-size:0.74rem; font-weight:800; color:#334155;">Daftar Skuad Pemain (${tData.players ? tData.players.length : 0} Pemain)</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:0.76rem; font-weight:800; color:#334155;">Daftar Skuad Pemain (${tData.players ? tData.players.length : 0} Pemain)</span>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn-batch-action" onclick="admin.addBatchPlayer(${idx})">
+                  <span>➕</span> Tambah Pemain
+                </button>
+                <button type="button" class="btn-batch-action" onclick="admin.openPasteTextForTeam(${idx})">
+                  <span>📝</span> Tempel Teks Skuad
+                </button>
+              </div>
             </div>
+
             ${tData.players && tData.players.length > 0 ? `
-              <div style="max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:var(--radius-sm);">
+              <div style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:var(--radius-sm);">
                 <table class="batch-players-table">
                   <thead>
                     <tr>
-                      <th>Foto</th>
-                      <th>No</th>
+                      <th style="width:40px; text-align:center;">Foto</th>
+                      <th style="width:48px;">No</th>
                       <th>Nama Pemain</th>
-                      <th>Posisi</th>
+                      <th style="width:90px;">Posisi</th>
+                      <th style="width:30px; text-align:center;">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3749,7 +4144,15 @@ const admin = {
                   </tbody>
                 </table>
               </div>
-            ` : `<div style="font-size:0.74rem; color:#94a3b8; font-style:italic;">Tidak ada data pemain terdeteksi di folder ini.</div>`}
+            ` : `
+              <div style="padding:14px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:var(--radius-sm); text-align:center; font-size:0.76rem; color:#64748b;">
+                <div>Belum ada pemain di tim ini.</div>
+                <div style="margin-top:6px; display:flex; justify-content:center; gap:8px;">
+                  <button type="button" class="btn btn-sm btn-primary" onclick="admin.addBatchPlayer(${idx})" style="font-size:0.72rem; padding:3px 10px;">➕ Tambah Pemain Manual</button>
+                  <button type="button" class="btn btn-sm btn-outline" onclick="admin.openPasteTextForTeam(${idx})" style="font-size:0.72rem; padding:3px 10px;">📝 Tempel Teks Daftar Pemain</button>
+                </div>
+              </div>
+            `}
           </div>
         </div>
       `;
@@ -3771,6 +4174,163 @@ const admin = {
       }
     }
     this.renderBatchUploadPreview();
+  },
+
+  updateBatchPlayerField(teamIdx, playerIdx, field, val) {
+    const t = this.batchParsedTeams[teamIdx];
+    if (!t || !t.players || !t.players[playerIdx]) return;
+    if (field === 'no') {
+      t.players[playerIdx].no = parseInt(val, 10) || (playerIdx + 1);
+    } else {
+      t.players[playerIdx][field] = val;
+    }
+  },
+
+  addBatchPlayer(teamIdx) {
+    const t = this.batchParsedTeams[teamIdx];
+    if (!t) return;
+    if (!t.players) t.players = [];
+    const nextNo = t.players.length + 1;
+    t.players.push({
+      no: nextNo,
+      name: `Pemain #${nextNo}`,
+      pos: nextNo === 1 ? "Kiper" : "Flank",
+      goals: 0,
+      yc: 0,
+      rc: 0,
+      photo: ""
+    });
+    this.renderBatchUploadPreview();
+  },
+
+  removeBatchPlayer(teamIdx, playerIdx) {
+    const t = this.batchParsedTeams[teamIdx];
+    if (!t || !t.players) return;
+    t.players.splice(playerIdx, 1);
+    this.renderBatchUploadPreview();
+  },
+
+  openPasteTextForTeam(teamIdx) {
+    const t = this.batchParsedTeams[teamIdx];
+    if (!t) return;
+    const currentList = (t.players || []).map(p => `${p.no}. ${p.name} - ${p.pos}`).join("\n");
+    const res = prompt(`Tempelkan daftar pemain untuk tim "${t.teamName}" (format: 1. Nama - Posisi):\n\nContoh:\n1. Haikal - Kiper\n3. Budi - Anchor\n8. Doni - Flank\n9. Andi - Pivot`, currentList);
+    if (res !== null && res.trim()) {
+      const parsed = this.parseTeamTextFile(res, t.teamName);
+      if (parsed && parsed.length > 0 && parsed[0].players.length > 0) {
+        t.players = parsed[0].players;
+        if (parsed[0].coach && !t.coach) t.coach = parsed[0].coach;
+        if (parsed[0].phone && !t.phone) t.phone = parsed[0].phone;
+        if (parsed[0].manager && !t.manager) t.manager = parsed[0].manager;
+        this.renderBatchUploadPreview();
+      }
+    }
+  },
+
+  addBatchTeamManual() {
+    const registered = (app.store && app.store.data && app.store.data.teams) || [];
+    const name = prompt("Masukkan Nama Tim / Sekolah Baru:");
+    if (!name || !name.trim()) return;
+    const clean = name.trim();
+    const matched = this.findBestMatchingTeam(clean);
+    this.batchParsedTeams.push({
+      folderName: clean,
+      matchedTeamId: matched ? matched.id : "",
+      teamName: matched ? matched.name : clean,
+      shortName: matched ? matched.shortName : clean.substring(0, 10).toUpperCase(),
+      category: matched ? matched.category : "SMP",
+      group: matched ? matched.group : "A",
+      badgeColor: matched ? matched.badgeColor : "#0284c7",
+      city: matched ? matched.city : "Maros",
+      coach: (matched && matched.official && matched.official.coach) || "",
+      phone: (matched && matched.official && matched.official.phone) || "",
+      manager: (matched && matched.official && matched.official.manager) || "",
+      coachPhoto: "",
+      managerPhoto: "",
+      jerseyHome: "Hijau - Putih",
+      jerseyAway: "Hitam - Emas",
+      logo: "",
+      players: matched && matched.players ? JSON.parse(JSON.stringify(matched.players)) : [],
+      rawFilesCount: 0
+    });
+    this.renderBatchUploadPreview();
+  },
+
+  removeBatchTeam(teamIdx) {
+    if (confirm("Hapus tim ini dari daftar yang akan diimpor?")) {
+      this.batchParsedTeams.splice(teamIdx, 1);
+      if (this.batchParsedTeams.length === 0) {
+        this.resetBatchUploadUI();
+      } else {
+        this.renderBatchUploadPreview();
+      }
+    }
+  },
+
+  // Photo Upload Helpers for Individual Players and Officials
+  _currentPhotoTarget: null,
+
+  triggerSinglePhotoUpload(teamIdx, playerIdx) {
+    this._currentPhotoTarget = { type: 'player', teamIdx, playerIdx };
+    const input = document.getElementById("batchSinglePhotoInput");
+    if (input) {
+      input.value = "";
+      input.click();
+    }
+  },
+
+  triggerCoachPhotoUpload(teamIdx) {
+    this._currentPhotoTarget = { type: 'coach', teamIdx };
+    const input = document.getElementById("batchCoachPhotoInput");
+    if (input) {
+      input.value = "";
+      input.click();
+    }
+  },
+
+  triggerManagerPhotoUpload(teamIdx) {
+    this._currentPhotoTarget = { type: 'manager', teamIdx };
+    const input = document.getElementById("batchManagerPhotoInput");
+    if (input) {
+      input.value = "";
+      input.click();
+    }
+  },
+
+  async handleSinglePhotoUpload(input) {
+    if (!input || !input.files || input.files.length === 0 || !this._currentPhotoTarget) return;
+    const file = input.files[0];
+    const dataUrl = await this.compressImageToDataUrl(file);
+    const { teamIdx, playerIdx } = this._currentPhotoTarget;
+    if (this.batchParsedTeams[teamIdx] && this.batchParsedTeams[teamIdx].players[playerIdx]) {
+      this.batchParsedTeams[teamIdx].players[playerIdx].photo = dataUrl;
+      this.renderBatchUploadPreview();
+    }
+    this._currentPhotoTarget = null;
+  },
+
+  async handleCoachPhotoUpload(input) {
+    if (!input || !input.files || input.files.length === 0 || !this._currentPhotoTarget) return;
+    const file = input.files[0];
+    const dataUrl = await this.compressImageToDataUrl(file);
+    const { teamIdx } = this._currentPhotoTarget;
+    if (this.batchParsedTeams[teamIdx]) {
+      this.batchParsedTeams[teamIdx].coachPhoto = dataUrl;
+      this.renderBatchUploadPreview();
+    }
+    this._currentPhotoTarget = null;
+  },
+
+  async handleManagerPhotoUpload(input) {
+    if (!input || !input.files || input.files.length === 0 || !this._currentPhotoTarget) return;
+    const file = input.files[0];
+    const dataUrl = await this.compressImageToDataUrl(file);
+    const { teamIdx } = this._currentPhotoTarget;
+    if (this.batchParsedTeams[teamIdx]) {
+      this.batchParsedTeams[teamIdx].managerPhoto = dataUrl;
+      this.renderBatchUploadPreview();
+    }
+    this._currentPhotoTarget = null;
   },
 
   // Save all parsed teams to local store and sync across devices & Supabase
@@ -3870,16 +4430,35 @@ const admin = {
     app.showToast(`🎉 Sukses! ${updatedCount} tim diperbarui & ${newCount} tim baru ditambahkan. Otomatis tersinkron ke Cloud & semua HP!`);
   },
 
-  // Handlers for Folder & Zip selection
+  // Handlers for Folder, Multi-Files, Zip & Text Paste selection
   async handleBatchFolderInput(input) {
     if (!input || !input.files || input.files.length === 0) return;
     const rawFiles = [];
     for (let i = 0; i < input.files.length; i++) {
       const f = input.files[i];
       rawFiles.push({
+        file: f,
         path: f.webkitRelativePath || f.name,
         name: f.name,
         readText: () => f.text(),
+        readArrayBuffer: () => f.arrayBuffer(),
+        readDataUrl: () => admin.compressImageToDataUrl(f)
+      });
+    }
+    await this.processBatchFiles(rawFiles);
+  },
+
+  async handleBatchDirectFilesInput(input) {
+    if (!input || !input.files || input.files.length === 0) return;
+    const rawFiles = [];
+    for (let i = 0; i < input.files.length; i++) {
+      const f = input.files[i];
+      rawFiles.push({
+        file: f,
+        path: f.webkitRelativePath || f.name,
+        name: f.name,
+        readText: () => f.text(),
+        readArrayBuffer: () => f.arrayBuffer(),
         readDataUrl: () => admin.compressImageToDataUrl(f)
       });
     }
@@ -3907,7 +4486,9 @@ const admin = {
         rawFiles.push({
           path: item.relPath,
           name: fName,
+          file: item.entry,
           readText: () => item.entry.async("string"),
+          readArrayBuffer: () => item.entry.async("arraybuffer"),
           readDataUrl: async () => {
             const b64 = await item.entry.async("base64");
             const ext = fName.split(".").pop().toLowerCase();
@@ -3925,6 +4506,23 @@ const admin = {
       console.error("ZIP extract error:", e);
       alert("Gagal membaca file ZIP: " + e.message);
     }
+  },
+
+  async handleBatchTextPaste() {
+    const input = document.getElementById("batchTextPasteInput");
+    const text = input ? input.value.trim() : "";
+    if (!text) {
+      alert("Silakan tempelkan teks pendaftaran terlebih dahulu.");
+      return;
+    }
+    const rawFiles = [{
+      name: "data_manual_paste.txt",
+      path: "data_manual_paste.txt",
+      readText: () => Promise.resolve(text),
+      readArrayBuffer: () => Promise.resolve(new TextEncoder().encode(text).buffer),
+      readDataUrl: () => Promise.resolve("")
+    }];
+    await this.processBatchFiles(rawFiles);
   },
 
   logout() {

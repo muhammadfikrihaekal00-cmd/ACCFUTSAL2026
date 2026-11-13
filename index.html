@@ -36,7 +36,7 @@
   <script>
     (function() {
       localStorage.setItem("pondok_futsal_theme", "light");
-      var CURRENT_VER = "8.15";
+      var CURRENT_VER = "8.16";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -99,7 +99,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.15">
+  <link rel="stylesheet" href="css/styles.css?v=8.16">
 </head>
 <body>
 
@@ -2222,48 +2222,60 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         <button type="button" class="modal-close" onclick="admin.closeBatchUploadModal()" style="color: #ffffff;">&times;</button>
       </div>
       <div class="modal-body" style="padding: 16px;">
-        <div class="batch-upload-dropzone" id="batchUploadDropzone" onclick="document.getElementById('batchFolderInput').click()">
+        <div class="batch-upload-dropzone" id="batchUploadDropzone" onclick="document.getElementById('batchFilesDirectInput').click()">
           <span class="batch-dropzone-icon">📁</span>
-          <div class="batch-dropzone-title">Tarik & Lepas 1 Folder Berkas Tim ke Sini</div>
+          <div class="batch-dropzone-title">Tarik & Lepas Berkas / Folder Tim ke Sini</div>
           <p class="batch-dropzone-desc">
-            Masukkan 1 folder turnamen yang berisi sub-folder masing-masing tim. Aplikasi akan otomatis mendeteksi nama tim, mengekstrak foto pemain & pelatih, nomor punggung, posisi, serta nomor WhatsApp pelatih.
+            Mendukung <strong>Folder</strong>, <strong>File Excel (.xlsx/.xls)</strong>, <strong>Dokumen Word (.docx)</strong>, <strong>Teks (.txt/.csv)</strong>, <strong>ZIP (.zip)</strong>, serta <strong>Foto Pemain/Pelatih</strong>. Aplikasi langsung otomatis mendeteksi nama tim, foto, nomor punggung, posisi, dan nomor WA pelatih.
           </p>
           <div class="batch-dropzone-actions" onclick="event.stopPropagation();">
             <button type="button" class="btn btn-primary" onclick="document.getElementById('batchFolderInput').click()" style="background: #0284c7; border: none; font-weight: 700;">
-              📂 Pilih 1 Folder Berkas Tim
+              📂 Pilih 1 Folder Tim (PC)
+            </button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('batchFilesDirectInput').click()" style="background: #0369a1; border: none; font-weight: 700;">
+              📄 Pilih File Sekaligus (Excel / Word / Foto / HP)
             </button>
             <button type="button" class="btn btn-outline" onclick="document.getElementById('batchZipInput').click()" style="border-color: #0284c7; color: #0284c7; font-weight: 700;">
-              📦 Atau Pilih File ZIP (.zip)
+              📦 Pilih File ZIP (.zip)
             </button>
           </div>
+          <!-- Hidden Inputs -->
           <input type="file" id="batchFolderInput" webkitdirectory directory multiple style="display:none;" onchange="admin.handleBatchFolderInput(this)">
+          <input type="file" id="batchFilesDirectInput" multiple accept=".xlsx,.xls,.docx,.doc,.txt,.csv,.tsv,.json,.jpg,.jpeg,.png,.webp,image/*" style="display:none;" onchange="admin.handleBatchDirectFilesInput(this)">
           <input type="file" id="batchZipInput" accept=".zip" style="display:none;" onchange="admin.handleBatchZipInput(this)">
+          <input type="file" id="batchSinglePhotoInput" accept="image/*" style="display:none;" onchange="admin.handleSinglePhotoUpload(this)">
+          <input type="file" id="batchCoachPhotoInput" accept="image/*" style="display:none;" onchange="admin.handleCoachPhotoUpload(this)">
+          <input type="file" id="batchManagerPhotoInput" accept="image/*" style="display:none;" onchange="admin.handleManagerPhotoUpload(this)">
+        </div>
+
+        <!-- QUICK PASTE TEXT BOX (SANGAT PRAKTIS UNTUK TEKS WHATSAPP & EXCEL) -->
+        <div class="batch-paste-box">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <label style="font-size: 0.82rem; font-weight: 800; color: #0284c7; display: flex; align-items: center; gap: 6px;">
+              <span>📝</span> Tempel Teks Pendaftaran Langsung (Format WhatsApp / Excel / Word / Catatan):
+            </label>
+            <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('batchTextPasteInput').value = ''" style="font-size: 0.7rem; padding: 1px 6px;">
+              Bersihkan
+            </button>
+          </div>
+          <textarea id="batchTextPasteInput" placeholder="Contoh teks yang bisa ditempel langsung:&#10;TIM: SMP 5 Mandai&#10;Pelatih: Coach Budi (08123456789)&#10;Kostum: Biru - Putih&#10;1. Gianluigi Donnarumma - Kiper&#10;3. Julian Ryerson - Anchor&#10;8. Martin Odegaard - Flank&#10;9. Erling Haaland - Pivot" style="width: 100%; height: 90px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; font-family: monospace; resize: vertical; box-sizing: border-box;"></textarea>
+          <button type="button" class="btn btn-sm btn-primary" onclick="admin.handleBatchTextPaste()" style="margin-top: 6px; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700; width: 100%; padding: 8px; cursor: pointer;">
+            ⚡ Proses & Ekstrak Teks Ini
+          </button>
         </div>
 
         <details class="batch-format-guide">
-          <summary>💡 Panduan Struktur Folder yang Didukung (Klik untuk melihat)</summary>
+          <summary>💡 Panduan Struktur File & Format yang Didukung (Klik untuk melihat)</summary>
           <p style="margin-top:6px; line-height: 1.4;">
-            Anda cukup menyiapkan 1 folder induk (contoh: <code>Berkas ACC 2026</code>), di dalamnya buat sub-folder sesuai nama tim/sekolah:
+            Sistem kami mendukung <strong>semua jenis file</strong> yang biasa digunakan:
           </p>
-          <pre>📁 Berkas Tim ACC 2026/
-  📁 SMP 5 Mandai/
-    📄 data_tim.txt (atau pemain.csv / daftar_pemain.txt)
-       Pelatih: Coach Pep Guardiola (081244112233)
-       Manajer: Ust. Syamsuddin
-       Kostum: Biru - Putih
-       1. Gianluigi Donnarumma - Kiper
-       3. Julian Ryerson - Anchor
-       8. Martin Odegaard - Flank
-       9. Erling Haaland - Pivot
-    🖼️ pelatih.jpg (foto pelatih)
-    🖼️ manajer.jpg (foto manajer)
-    🖼️ 1_Donnarumma.jpg (foto pemain nomor 1)
-    🖼️ 9_Haaland.jpg (foto pemain nomor 9)
-  📁 SMP 16 Mandai/
-    ... (dan tim lainnya)</pre>
-          <div style="margin-top: 6px; font-size: 0.72rem; color: #64748b;">
-            *Tips: Jika tidak ada file teks, sistem juga bisa membaca foto yang dinamai format <code>09_Erling_Haaland_Pivot.jpg</code> atau <code>pelatih_08123456789.jpg</code> secara otomatis!
-          </div>
+          <ul style="margin: 4px 0 8px 18px; font-size: 0.76rem; color: #334155;">
+            <li><strong>Microsoft Excel (.xlsx / .xls)</strong>: Tabel berisi kolom No, Nama Pemain, Posisi, dan Tim.</li>
+            <li><strong>Microsoft Word (.docx)</strong>: Formulir pendaftaran tim berupa tabel maupun paragraf teks.</li>
+            <li><strong>Teks / WhatsApp (.txt / .csv / paste)</strong>: Format teks daftar nama pemain 1 per baris.</li>
+            <li><strong>Foto Pemain / Pelatih (.jpg / .png)</strong>: Foto bernama <code>1_Donnarumma.jpg</code>, <code>pelatih.jpg</code>, dll.</li>
+            <li><strong>1 Folder / ZIP</strong>: Folder berisi sub-folder tim atau gabungan file turnamen.</li>
+          </ul>
         </details>
 
         <div id="batchUploadStatus" style="display: none; margin-bottom: 14px;"></div>
@@ -2324,11 +2336,12 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- JAVASCRIPT & SUPABASE MODULES (Non-blocking Defer) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script defer src="js/security.js?v=8.15"></script>
-  <script defer src="js/supabase-client.js?v=8.15"></script>
-  <script defer src="js/data.js?v=8.15"></script>
-  <script defer src="js/admin.js?v=8.15"></script>
-  <script defer src="js/app.js?v=8.15"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="js/security.js?v=8.16"></script>
+  <script defer src="js/supabase-client.js?v=8.16"></script>
+  <script defer src="js/data.js?v=8.16"></script>
+  <script defer src="js/admin.js?v=8.16"></script>
+  <script defer src="js/app.js?v=8.16"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2345,7 +2358,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=69')
+        navigator.serviceWorker.register('sw.js?v=70')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();
