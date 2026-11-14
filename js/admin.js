@@ -4567,7 +4567,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   }
 });
 
-window.admin = admin;
+window.admin = Object.assign(window.admin || {}, admin);
 
 // Initialize Admin
 if (document.readyState === "loading") {

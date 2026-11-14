@@ -4718,7 +4718,9 @@ const app = {
 };
 
 // Guarantee window.app is defined immediately before any event triggers
-window.app = app;
+app._realSwitchTab = app.switchTab.bind(app);
+app._realSetCategory = app.setCategory.bind(app);
+window.app = Object.assign(window.app || {}, app);
 if (window._pendingTab) {
   try { app.switchTab(window._pendingTab, false); } catch(e) {}
 }
