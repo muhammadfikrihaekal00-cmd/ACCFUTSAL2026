@@ -37,7 +37,7 @@
     (function() {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.22";
+        var CURRENT_VER = "8.23";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -185,7 +185,7 @@
             alert("✅ Berhasil Masuk Mode Panitia!");
           }
         } else {
-          alert("⚠️ PIN Panitia salah! Silakan gunakan PIN resmi: 1234");
+          alert("⚠️ PIN Panitia salah! Akses ditolak.");
         }
       },
       resetLockout: function() {
@@ -198,7 +198,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.22">
+  <link rel="stylesheet" href="css/styles.css?v=8.23">
 </head>
 <body>
 
@@ -958,26 +958,6 @@
       </div>
       <form id="adminLoginForm" onsubmit="event.preventDefault(); (window.admin || admin).doLogin(); return false;">
         <div class="modal-body">
-          <!-- Petunjuk PIN Resmi Panitia ACC 2026 -->
-          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.8rem; color: #166534; line-height: 1.45;">
-            <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; margin-bottom: 4px;">
-              <span>💡</span> <span>PIN Resmi Panitia ACC 2026:</span>
-            </div>
-            <span>Ketik PIN <strong>1234</strong> (atau <strong>2026</strong> / <strong>admin</strong>) atau klik tombol hijau di bawah untuk langsung masuk 1-klik tanpa mengetik.</span>
-          </div>
-
-          <!-- Tombol Masuk Cepat 1-Klik -->
-          <button type="button" style="width: 100%; margin-bottom: 12px; background: linear-gradient(135deg, #16a34a, #15803d); border: none; font-weight: 700; padding: 10px 14px; font-size: 0.88rem; border-radius: 8px; cursor: pointer; color: #ffffff; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(22, 163, 74, 0.35);" onclick="event.preventDefault(); (window.admin || admin).doLogin('1234');">
-            <span>⚡</span>
-            <span>Masuk Langsung Sebagai Panitia (1-Klik)</span>
-          </button>
-
-          <div style="display: flex; align-items: center; gap: 8px; margin: 10px 0;">
-            <div style="flex: 1; height: 1px; background: var(--border-color, #e2e8f0);"></div>
-            <span style="font-size: 0.72rem; color: var(--text-subtle, #64748b); font-weight: 600;">atau masukkan PIN manual</span>
-            <div style="flex: 1; height: 1px; background: var(--border-color, #e2e8f0);"></div>
-          </div>
-
           <div class="form-group" style="margin-bottom: 8px;">
             <label class="form-label">Masukkan PIN Panitia</label>
             <div style="position: relative; display: flex; align-items: center;">
@@ -986,7 +966,7 @@
             </div>
             <div id="adminLoginLockoutNote" style="display: none; color: #ef4444; font-size: 0.75rem; margin-top: 6px; font-weight: 700;"></div>
             <small style="color: var(--text-subtle); font-size: 0.72rem; display: flex; align-items: center; gap: 4px; margin-top: 6px;">
-              🛡️ Akses aman panitia: update skor, kartu, upload berkas tim, dan kelola turnamen.
+              🛡️ Akses aman panitia: update skor, kartu, jadwal, dan kelola turnamen.
             </small>
             <div style="text-align: right; margin-top: 4px;">
               <button type="button" onclick="event.preventDefault(); if(window.admin&&admin.resetLockout){admin.resetLockout();}else{localStorage.removeItem('acc_sec_lockout_until_v1');localStorage.removeItem('acc_sec_attempts_v1');alert('Status terkunci telah di-reset.');}" style="background: none; border: none; color: #0284c7; font-size: 0.72rem; text-decoration: underline; cursor: pointer; padding: 0;">
@@ -2390,11 +2370,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.22"></script>
-  <script src="js/supabase-client.js?v=8.22"></script>
-  <script src="js/data.js?v=8.22"></script>
-  <script src="js/admin.js?v=8.22"></script>
-  <script src="js/app.js?v=8.22"></script>
+  <script src="js/security.js?v=8.23"></script>
+  <script src="js/supabase-client.js?v=8.23"></script>
+  <script src="js/data.js?v=8.23"></script>
+  <script src="js/admin.js?v=8.23"></script>
+  <script src="js/app.js?v=8.23"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
