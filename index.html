@@ -36,7 +36,7 @@
   <script>
     (function() {
       localStorage.setItem("pondok_futsal_theme", "light");
-      var CURRENT_VER = "8.19";
+      var CURRENT_VER = "8.20";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -110,6 +110,22 @@
         var m = document.getElementById("modalBatchUploadTeams");
         if (m) m.classList.remove("active");
       },
+      openTeamEditorModal: function(teamId) {
+        if (window.admin && typeof window.admin.renderTeamEditor === 'function') {
+          window.admin.renderTeamEditor(teamId);
+        } else {
+          var m = document.getElementById("teamEditorModal");
+          if (m) m.classList.add("active");
+        }
+      },
+      openMatchEditor: function(matchId) {
+        var m = document.getElementById("matchEditorModal");
+        if (m) m.classList.add("active");
+      },
+      openQuickScore: function(matchId) {
+        var m = document.getElementById("quickScoreModal");
+        if (m) m.classList.add("active");
+      },
       doLogin: function(pin) {
         // Master PIN fast fallback jika file admin.js masih dalam proses loading
         var p = (pin || (document.getElementById("adminPinInput") ? document.getElementById("adminPinInput").value : "")).toString().trim().toLowerCase();
@@ -144,7 +160,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.19">
+  <link rel="stylesheet" href="css/styles.css?v=8.20">
 </head>
 <body>
 
@@ -2410,11 +2426,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="js/security.js?v=8.19"></script>
-  <script defer src="js/supabase-client.js?v=8.19"></script>
-  <script defer src="js/data.js?v=8.19"></script>
-  <script defer src="js/admin.js?v=8.19"></script>
-  <script defer src="js/app.js?v=8.19"></script>
+  <script defer src="js/security.js?v=8.20"></script>
+  <script defer src="js/supabase-client.js?v=8.20"></script>
+  <script defer src="js/data.js?v=8.20"></script>
+  <script defer src="js/admin.js?v=8.20"></script>
+  <script defer src="js/app.js?v=8.20"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2431,7 +2447,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=73')
+        navigator.serviceWorker.register('sw.js?v=74')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

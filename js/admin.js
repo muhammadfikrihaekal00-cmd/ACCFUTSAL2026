@@ -4565,7 +4565,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     document.getElementById("adminDashboardModal").classList.remove("active");
     app.showToast("Anda telah keluar dari Mode Panitia (kembali ke Mode Peserta).");
   }
-};
+});
 
 window.admin = admin;
 
