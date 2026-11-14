@@ -36,7 +36,7 @@
   <script>
     (function() {
       localStorage.setItem("pondok_futsal_theme", "light");
-      var CURRENT_VER = "8.18";
+      var CURRENT_VER = "8.19";
       if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
         localStorage.setItem("acc_app_version", CURRENT_VER);
         if ('caches' in window) {
@@ -144,7 +144,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.18">
+  <link rel="stylesheet" href="css/styles.css?v=8.19">
 </head>
 <body>
 
@@ -266,7 +266,7 @@
         </button>
 
         <!-- Quick Batch Upload 1 Folder Tim Button -->
-        <button id="btnHeaderBatchUpload" class="btn btn-sm" onclick="if(window.admin&&window.admin.openBatchUploadModal){window.admin.openBatchUploadModal();}else{document.getElementById('modalBatchUploadTeams').classList.add('active');}" title="Import 1 Folder Berkas Data Tim & Pemain Otomatis" style="display: inline-flex; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; font-weight: 700; border: none; border-radius: 999px; padding: 6px 14px; font-size: 0.78rem; gap: 6px; align-items: center; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35); cursor: pointer;">
+        <button id="btnHeaderBatchUpload" class="btn btn-sm" onclick="if(window.admin&&window.admin.openBatchUploadModal){window.admin.openBatchUploadModal();}else{document.getElementById('modalBatchUploadTeams').classList.add('active');}" title="Import 1 Folder Berkas Data Tim & Pemain Otomatis" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; font-weight: 700; border: none; border-radius: 999px; padding: 6px 14px; font-size: 0.78rem; gap: 6px; align-items: center; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35); cursor: pointer;">
           <span>📂</span>
           <span>Upload Folder Tim</span>
         </button>
@@ -811,11 +811,11 @@
           </span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <button id="btnBatchUploadTeams" class="btn btn-primary btn-sm" onclick="if(window.admin&&window.admin.openBatchUploadModal){window.admin.openBatchUploadModal();}else{document.getElementById('modalBatchUploadTeams').classList.add('active');}" style="display: inline-flex; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700;">
+          <button id="btnBatchUploadTeams" class="btn btn-primary btn-sm" onclick="if(window.admin&&window.admin.openBatchUploadModal){window.admin.openBatchUploadModal();}else{document.getElementById('modalBatchUploadTeams').classList.add('active');}" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700;">
             📂 Import 1 Folder Berkas Tim
           </button>
-          <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()" style="display: none;">
-            ➕ Tambah Tim Baru (Panitia)
+          <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()" style="display: none; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);">
+            ➕ Tambah Tim Baru
           </button>
         </div>
       </div>
@@ -1626,7 +1626,7 @@
     <div class="modal-box" style="max-width: 760px;">
       <div class="modal-header">
         <h3 class="modal-title" id="teamEditorModalTitle">✏️ Input & Edit Data Tim</h3>
-        <button class="modal-close">&times;</button>
+        <button type="button" class="modal-close" onclick="event.preventDefault(); document.getElementById('teamEditorModal').classList.remove('active');">&times;</button>
       </div>
       <div class="modal-body">
         <form id="teamEditorForm" onsubmit="event.preventDefault(); admin.saveTeamData();">
@@ -1782,7 +1782,7 @@
               🗑️ Hapus Tim Ini
             </button>
             <div style="display: flex; gap: 8px; margin-left: auto;">
-              <button type="button" class="btn btn-outline btn-modal-close">Batal</button>
+              <button type="button" class="btn btn-outline btn-modal-close" onclick="event.preventDefault(); document.getElementById('teamEditorModal').classList.remove('active');">Batal</button>
               <button type="submit" class="btn btn-primary">💾 Simpan Data Tim & Skuad</button>
             </div>
           </div>
@@ -2410,11 +2410,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="js/security.js?v=8.18"></script>
-  <script defer src="js/supabase-client.js?v=8.18"></script>
-  <script defer src="js/data.js?v=8.18"></script>
-  <script defer src="js/admin.js?v=8.18"></script>
-  <script defer src="js/app.js?v=8.18"></script>
+  <script defer src="js/security.js?v=8.19"></script>
+  <script defer src="js/supabase-client.js?v=8.19"></script>
+  <script defer src="js/data.js?v=8.19"></script>
+  <script defer src="js/admin.js?v=8.19"></script>
+  <script defer src="js/app.js?v=8.19"></script>
 
   <!-- Service Worker for PWA with Instant Auto-Refresh -->
   <script>
@@ -2431,7 +2431,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=72')
+        navigator.serviceWorker.register('sw.js?v=73')
           .then(reg => {
             console.log('PWA ServiceWorker registered', reg.scope);
             if (reg.update) reg.update();

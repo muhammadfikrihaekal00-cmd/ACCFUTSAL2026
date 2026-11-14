@@ -1768,12 +1768,12 @@ const app = {
       item.style.display = "flex";
     });
 
-    // Tombol Import 1 Folder Berkas Tim selalu dapat diakses langsung
+    // Sembunyikan tombol batch upload agar antarmuka bersih & fokus pada penginputan manual
     const btnBatchUpload = document.getElementById("btnBatchUploadTeams");
-    if (btnBatchUpload) btnBatchUpload.style.display = "inline-flex";
+    if (btnBatchUpload) btnBatchUpload.style.display = "none";
 
     const btnHeaderBatch = document.getElementById("btnHeaderBatchUpload");
-    if (btnHeaderBatch) btnHeaderBatch.style.display = "inline-flex";
+    if (btnHeaderBatch) btnHeaderBatch.style.display = "none";
 
     const btnQuickBanner = document.getElementById("btnChangeBannerQuick");
     if (btnQuickBanner) btnQuickBanner.style.display = isPanitia ? "inline-flex" : "none";
@@ -3578,8 +3578,8 @@ const app = {
               <div class="draw-role-badge">MODE PANITIA PELAKSANA (PANPEL)</div>
               <div class="draw-role-desc">Anda memiliki wewenang penuh mengundi 1 per 1 atau otomatis. Setiap hasil undian otomatis terhubung langsung ke Klasemen, Jadwal Pertandingan, & Cloud Supabase.</div>
               <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button type="button" class="btn btn-sm btn-primary" onclick="admin.openBatchUploadModal()" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none; font-weight: 700; padding: 4px 12px; font-size: 0.76rem; border-radius: 999px; cursor: pointer;">
-                  📂 Upload 1 Folder Berkas Data Tim & Pemain
+                <button type="button" class="btn btn-sm btn-primary" onclick="app.switchTab('teams')" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; padding: 4px 14px; font-size: 0.76rem; border-radius: 999px; cursor: pointer; color: #ffffff;">
+                  👥 Buka Tab Tim untuk Kelola & Edit Data Pemain ➔
                 </button>
               </div>
             </div>
@@ -3594,7 +3594,7 @@ const app = {
               <div class="draw-role-desc">Pengundian grup resmi dipimpin & ditetapkan oleh Panitia Pelaksana (Panpel). Pembagian grup di bawah ini sah & otomatis tersambung ke Jadwal dan Klasemen.</div>
               <div style="margin-top: 8px;">
                 <button type="button" class="btn btn-sm" onclick="admin.openLoginModal()" style="background: rgba(3, 105, 161, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700; padding: 4px 12px; font-size: 0.74rem; border-radius: 999px; cursor: pointer;">
-                  🔑 Panitia? Masuk untuk Unggah Folder Tim / Atur Undian ➔
+                  🔑 Panitia? Masuk untuk Jalankan Undian & Kelola Tim ➔
                 </button>
               </div>
             </div>
