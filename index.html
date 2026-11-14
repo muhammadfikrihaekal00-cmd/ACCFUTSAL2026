@@ -35,25 +35,27 @@
   <!-- Auto-Purge Stale Cache & Force Refresh for Instant Mobile & Laptop Updates -->
   <script>
     (function() {
-      localStorage.setItem("pondok_futsal_theme", "light");
-      var CURRENT_VER = "8.21";
-      if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
-        localStorage.setItem("acc_app_version", CURRENT_VER);
-        if ('caches' in window) {
-          caches.keys().then(function(names) {
-            names.forEach(function(name) { caches.delete(name); });
-          });
+      try {
+        localStorage.setItem("pondok_futsal_theme", "light");
+        var CURRENT_VER = "8.22";
+        if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
+          localStorage.setItem("acc_app_version", CURRENT_VER);
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              names.forEach(function(name) { caches.delete(name); });
+            });
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              regs.forEach(function(reg) { reg.unregister(); });
+            });
+          }
+          if (!sessionStorage.getItem("acc_ver_flushed_" + CURRENT_VER)) {
+            sessionStorage.setItem("acc_ver_flushed_" + CURRENT_VER, "1");
+            window.location.reload();
+          }
         }
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            regs.forEach(function(reg) { reg.unregister(); });
-          });
-        }
-        if (!sessionStorage.getItem("acc_ver_flushed_" + CURRENT_VER)) {
-          sessionStorage.setItem("acc_ver_flushed_" + CURRENT_VER, "1");
-          window.location.reload();
-        }
-      }
+      } catch(e) {}
     })();
   </script>
 
@@ -196,83 +198,9 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.21">
+  <link rel="stylesheet" href="css/styles.css?v=8.22">
 </head>
 <body>
-
-  <!-- ==================== 0. OPENING / SPLASH SCREEN APK ==================== -->
-  <script>
-    function enterPortalFromSplash(isPanitiaLogin) {
-      try { sessionStorage.setItem("acc_splash_dismissed", "true"); } catch(e) {}
-      var splash = document.getElementById("appSplashScreen");
-      if (splash) {
-        splash.style.pointerEvents = "none";
-        splash.classList.add("splash-fade-out");
-        setTimeout(function() {
-          splash.style.display = "none";
-        }, 350);
-      }
-      if (window.app && typeof window.app.dismissSplashScreen === "function") {
-        try { window.app.dismissSplashScreen(); } catch(e) {}
-      }
-      if (isPanitiaLogin) {
-        setTimeout(function() {
-          if (window.admin) {
-            if (window.admin.isAuthenticated) {
-              window.admin.openAdminDashboard();
-            } else {
-              window.admin.openLoginModal();
-            }
-          }
-        }, 380);
-      }
-    }
-    if (sessionStorage.getItem("acc_splash_dismissed") === "true") {
-      document.write('<style>#appSplashScreen { display: none !important; pointer-events: none !important; }</style>');
-    }
-  </script>
-  <div id="appSplashScreen" class="app-splash-screen" onclick="enterPortalFromSplash(false)">
-    <div class="splash-backdrop-glow"></div>
-    <div class="splash-content" onclick="event.stopPropagation()">
-      <!-- SISI KIRI: LOGO BESAR (TENGAH VERTIKAL) -->
-      <div class="splash-logo-container">
-        <div class="splash-logo-pulse-ring"></div>
-        <div class="splash-logo-pulse-ring delay"></div>
-        <img src="assets/acc_logo.png" alt="Logo Al-Fayyadh Champions Cup" class="splash-logo-img" width="220" height="312" fetchpriority="high">
-      </div>
-
-      <!-- SISI KANAN: TULISAN SELAMAT DATANG & TOMBOL LOG IN (MASUK) -->
-      <div class="splash-right-col">
-        <h1 class="splash-title">
-          <span class="splash-title-sub">Selamat Datang di Portal Resmi</span>
-          <span class="splash-title-brand">AL-FAYYADH</span>
-          <span class="splash-title-cup">CHAMPIONS CUP 2026</span>
-        </h1>
-
-        <div class="splash-status-hint">
-          <span>🏆</span> Turnamen Futsal Antar-Sekolah & Pesantren
-        </div>
-
-        <div class="splash-btn-group">
-          <button type="button" class="btn-splash-enter" id="btnSplashEnter" onclick="enterPortalFromSplash(false);" aria-label="Masuk ke Aplikasi">
-            <span class="btn-splash-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                <polyline points="10 17 15 12 10 7"></polyline>
-                <line x1="15" y1="12" x2="3" y2="12"></line>
-              </svg>
-            </span>
-            <span class="btn-splash-text">Masuk / Log In</span>
-            <span class="btn-splash-arrow">➔</span>
-          </button>
-
-          <button type="button" class="btn-splash-panitia" id="btnSplashPanitia" onclick="enterPortalFromSplash(true);" aria-label="Masuk Mode Panitia">
-            <span>🔒</span> Mode Panitia / Input Skor
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- TOP RUNNING ANNOUNCEMENT TICKER (RUNNING TEXT) -->
   <div class="ticker-bar">
@@ -2462,40 +2390,28 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.21"></script>
-  <script src="js/supabase-client.js?v=8.21"></script>
-  <script src="js/data.js?v=8.21"></script>
-  <script src="js/admin.js?v=8.21"></script>
-  <script src="js/app.js?v=8.21"></script>
+  <script src="js/security.js?v=8.22"></script>
+  <script src="js/supabase-client.js?v=8.22"></script>
+  <script src="js/data.js?v=8.22"></script>
+  <script src="js/admin.js?v=8.22"></script>
+  <script src="js/app.js?v=8.22"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <!-- Service Worker for PWA with Instant Auto-Refresh -->
+  <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!window._swReloaded) {
-          window._swReloaded = true;
-          window.location.reload();
-        }
-      });
-      navigator.serviceWorker.addEventListener('message', (e) => {
-        if (e.data && e.data.type === 'SW_UPDATED') {
-          window.location.reload();
-        }
-      });
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=75')
-          .then(reg => {
-            console.log('PWA ServiceWorker registered', reg.scope);
-            if (reg.update) reg.update();
-          })
-          .catch(err => console.log('PWA ServiceWorker failed', err));
-      });
-    }
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var i = 0; i < regs.length; i++) {
+            regs[i].unregister();
+          }
+        });
+      }
+    } catch(e) {}
   </script>
 </body>
 </html>

@@ -4606,16 +4606,11 @@ body.dark-theme .fixture-team-row:hover {
 /* 1. APP SPLASH / OPENING SCREEN (ANIMASI BERGERAK & LOGO)   */
 /* ========================================================= */
 .app-splash-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 999999;
-  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 55%, #e2e8f0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  overflow: hidden;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  z-index: -99999 !important;
+  opacity: 0 !important;
 }
 
 .app-splash-screen.splash-fade-out {
