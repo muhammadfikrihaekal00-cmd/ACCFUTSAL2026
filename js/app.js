@@ -218,7 +218,14 @@ class TournamentStore {
   }
 
   getTeam(id) {
-    return this.data.teams.find(t => t.id === id);
+    if (!id || !this.data || !this.data.teams) return null;
+    const strId = String(id).trim().toLowerCase();
+    return this.data.teams.find(t => 
+      t.id === id || 
+      String(t.id).trim().toLowerCase() === strId || 
+      (t.name && t.name.trim().toLowerCase() === strId) || 
+      (t.shortName && t.shortName.trim().toLowerCase() === strId)
+    ) || null;
   }
 
   getMatch(id) {
@@ -3188,7 +3195,7 @@ const app = {
               <div class="official-row" style="align-items: center; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
                   ${t.official.coachPhoto ? `<img src="${t.official.coachPhoto}" alt="Foto Pelatih" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); flex-shrink: 0;">` : '<span>👔</span>'}
-                  <span style="font-size: 0.72rem; color: #64748b; white-space: nowrap;">Coach / Manajer:</span>
+                  <span style="font-size: 0.72rem; color: #64748b; white-space: nowrap;">Pelatih / Asisten:</span>
                 </div>
                 <strong style="color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58%; text-align: right;" title="${t.official.coach || t.official.manager}">${t.official.coach && t.official.manager && t.official.coach !== t.official.manager ? `${t.official.coach} / ${t.official.manager}` : (t.official.coach || t.official.manager || '-')}</strong>
               </div>
@@ -4381,6 +4388,12 @@ const app = {
     document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("active"));
   },
 
+  openTeamEditorModal(teamId) {
+    if (window.admin && typeof window.admin.openTeamEditorModal === 'function') {
+      window.admin.openTeamEditorModal(teamId);
+    }
+  },
+
   // MODAL: Show Team Details & Full Roster
   openTeamModal(teamId) {
     if (this.store && typeof this.store.syncPlayerStatsFromMatches === 'function') {
@@ -4413,16 +4426,16 @@ const app = {
       <div class="team-modal-officials-box">
         <h4 class="team-modal-officials-title">Struktur Tim & Official Manajemen</h4>
         
-        <!-- Combined COACH / MANAGER Card (Mobile Friendly & Ringkas) -->
+        <!-- Combined PELATIH / ASISTEN PELATIH Card (Mobile Friendly & Ringkas) -->
         <div class="team-official-card unified-coach-manager">
-          <img src="${team.official.coachPhoto || team.official.managerPhoto || 'assets/coach_bayu.jpg'}" alt="Foto Coach / Manager" class="team-official-avatar" onerror="this.onerror=null; this.src='assets/coach_bayu.jpg'">
+          <img src="${team.official.coachPhoto || team.official.managerPhoto || 'assets/coach_bayu.jpg'}" alt="Foto Pelatih / Asisten Pelatih" class="team-official-avatar" onerror="this.onerror=null; this.src='assets/coach_bayu.jpg'">
           <div style="flex: 1; min-width: 0;">
-            <span class="team-official-role">👔 COACH / MANAGER</span>
+            <span class="team-official-role">👔 PELATIH / ASISTEN PELATIH</span>
             <div class="team-official-name">
               ${team.official.coach && team.official.manager && team.official.coach !== team.official.manager ? `${team.official.coach} / ${team.official.manager}` : (team.official.coach || team.official.manager || 'Official Tim')}
             </div>
             <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
-              Pelatih: <strong>${team.official.coach || '-'}</strong> • Manajer: <strong>${team.official.manager || '-'}</strong>
+              Pelatih: <strong>${team.official.coach || '-'}</strong> • Asisten Pelatih: <strong>${team.official.manager || '-'}</strong>
             </div>
           </div>
         </div>

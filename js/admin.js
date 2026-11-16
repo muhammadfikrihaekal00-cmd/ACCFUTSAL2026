@@ -1896,6 +1896,10 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   // ==========================================
   // TIM & SKUAD PEMAIN MANAGEMENT
   // ==========================================
+  renderTeamEditor(teamId) {
+    return this.openTeamEditorModal(teamId);
+  },
+
   openTeamEditorModal(teamId = null) {
     if (!this.isAuthenticated) {
       this.openLoginModal();
@@ -1919,29 +1923,42 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     const btnDelete = document.getElementById("btnDeleteTeam");
 
     if (teamId) {
-      const team = app.store.getTeam(teamId);
-      if (!team) return;
+      let team = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(teamId) : null;
+      if (!team && app.store && app.store.data && app.store.data.teams) {
+        const query = String(teamId).trim().toLowerCase();
+        team = app.store.data.teams.find(t => 
+          String(t.id).trim().toLowerCase() === query ||
+          (t.name && t.name.trim().toLowerCase() === query) ||
+          (t.shortName && t.shortName.trim().toLowerCase() === query)
+        );
+      }
+
+      if (!team) {
+        console.warn("Tim tidak ditemukan untuk ID:", teamId);
+        app.showToast("⚠️ Data tim tidak ditemukan!");
+        return;
+      }
 
       if (titleEl) titleEl.textContent = `✏️ Edit Tim: ${team.name}`;
-      if (idInput) idInput.value = team.id;
-      if (nameInput) nameInput.value = team.name;
-      if (shortInput) shortInput.value = team.shortName;
-      if (groupSelect) groupSelect.value = team.group;
+      if (idInput) idInput.value = team.id || "";
+      if (nameInput) nameInput.value = team.name || "";
+      if (shortInput) shortInput.value = team.shortName || "";
+      if (groupSelect) groupSelect.value = team.group || "A";
       if (cityInput) cityInput.value = team.city || "";
       if (colorInput) colorInput.value = team.badgeColor || "#10b981";
       if (pickerInput) pickerInput.value = team.badgeColor || "#10b981";
 
       const off = team.official || {};
-      if (coachInput) coachInput.value = off.coach || "";
-      if (managerInput) managerInput.value = off.manager || "";
-      if (medicInput) medicInput.value = off.medic || "";
-      if (phoneInput) phoneInput.value = off.phone || "";
-      if (jHomeInput) jHomeInput.value = off.jerseyHome || "";
-      if (jAwayInput) jAwayInput.value = off.jerseyAway || "";
+      if (coachInput) coachInput.value = off.coach || team.official_coach || team.coach || "";
+      if (managerInput) managerInput.value = off.manager || team.official_manager || team.manager || "";
+      if (medicInput) medicInput.value = off.medic || team.official_medic || team.medic || "";
+      if (phoneInput) phoneInput.value = off.phone || team.official_phone || team.phone || "";
+      if (jHomeInput) jHomeInput.value = off.jerseyHome || team.official_jersey_home || team.jerseyHome || "";
+      if (jAwayInput) jAwayInput.value = off.jerseyAway || team.official_jersey_away || team.jerseyAway || "";
 
       // Official Photos
-      const coachPhoto = off.coachPhoto || "";
-      const managerPhoto = off.managerPhoto || "";
+      const coachPhoto = off.coachPhoto || team.coach_photo || team.coachPhoto || "";
+      const managerPhoto = off.managerPhoto || team.manager_photo || team.managerPhoto || "";
       const coachPhotoInput = document.getElementById("editTeamCoachPhoto");
       const managerPhotoInput = document.getElementById("editTeamManagerPhoto");
       const coachThumb = document.getElementById("coachPhotoThumb");
@@ -1954,6 +1971,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           coachThumb.src = coachPhoto;
           coachThumb.style.display = "block";
         } else {
+          coachThumb.src = "";
           coachThumb.style.display = "none";
         }
       }
@@ -1962,6 +1980,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           managerThumb.src = managerPhoto;
           managerThumb.style.display = "block";
         } else {
+          managerThumb.src = "";
           managerThumb.style.display = "none";
         }
       }
@@ -1976,7 +1995,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
       if (btnDelete) btnDelete.style.display = "inline-flex";
 
-      this.renderPlayerRows(team.players || []);
+      const teamPlayers = Array.isArray(team.players) ? team.players : [];
+      this.renderPlayerRows(teamPlayers);
     } else {
       if (titleEl) titleEl.textContent = "➕ Input Tim Baru";
       if (idInput) idInput.value = "";
@@ -2008,8 +2028,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       const managerThumb = document.getElementById("managerPhotoThumb");
       if (coachPhotoInput) coachPhotoInput.value = "";
       if (managerPhotoInput) managerPhotoInput.value = "";
-      if (coachThumb) coachThumb.style.display = "none";
-      if (managerThumb) managerThumb.style.display = "none";
+      if (coachThumb) { coachThumb.src = ""; coachThumb.style.display = "none"; }
+      if (managerThumb) { managerThumb.src = ""; managerThumb.style.display = "none"; }
 
       if (btnDelete) btnDelete.style.display = "none";
 
@@ -2070,6 +2090,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     } catch (err) {
       console.error("Coach photo upload error:", err);
     }
+    if (event.target) event.target.value = "";
   },
 
   async handleManagerPhotoUpload(event) {
@@ -2094,14 +2115,15 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           }
         }).catch(() => {});
       }
-      app.showToast("✅ Foto manajer siap disimpan!");
+      app.showToast("✅ Foto asisten pelatih siap disimpan!");
     } catch (err) {
       console.error("Manager photo upload error:", err);
     }
+    if (event.target) event.target.value = "";
   },
 
   handlePlayerPhotoUpload(event, inputEl) {
-    const file = event.target.files[0];
+    const file = event.target ? (event.target.files && event.target.files[0]) : (inputEl && inputEl.files && inputEl.files[0]);
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -2138,20 +2160,25 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   createPlayerRowHtml(p = {}) {
     const pos = p.pos || "Flank";
     const photo = p.photo || "";
+    const pNo = (p.no !== undefined && p.no !== null) ? p.no : "";
+    const pName = (p.name || "").replace(/"/g, '&quot;');
+    const pGoals = parseInt(p.goals, 10) || 0;
+    const pYc = parseInt(p.yc, 10) || 0;
+    const pRc = parseInt(p.rc, 10) || 0;
     return `
       <tr class="player-input-row">
         <td>
-          <input type="number" class="form-input player-no-input" value="${p.no || ''}" placeholder="No" style="padding: 4px; font-weight:700; width: 45px;" required>
+          <input type="number" class="form-input player-no-input" value="${pNo}" placeholder="No" style="padding: 4px; font-weight:700; width: 45px;">
         </td>
         <td style="text-align: center;">
-          <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block;">
+          <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block; position: relative;" onclick="const fi = this.querySelector('input[type=file]'); if (fi) fi.click();">
             <img src="${photo || 'assets/mvp_player.jpg'}" class="player-row-photo-preview" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border-color); display: block;" onerror="this.onerror=null; this.src='assets/mvp_player.jpg'">
-            <input type="file" accept="image/*" style="display: none;" onchange="admin.handlePlayerPhotoUpload(event, this)">
+            <input type="file" accept="image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;" onchange="admin.handlePlayerPhotoUpload(event, this)">
             <input type="hidden" class="player-photo-input" value="${photo}">
           </label>
         </td>
         <td>
-          <input type="text" class="form-input player-name-input" value="${p.name || ''}" placeholder="Nama Pemain" style="padding: 4px;" required>
+          <input type="text" class="form-input player-name-input" value="${pName}" placeholder="Nama Pemain" style="padding: 4px;">
         </td>
         <td>
           <select class="form-select player-pos-select" style="padding: 4px; font-size: 0.75rem;">
@@ -2162,13 +2189,13 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           </select>
         </td>
         <td>
-          <input type="number" class="form-input player-goals-input" value="${p.goals || 0}" min="0" style="padding: 4px; width: 45px;">
+          <input type="number" class="form-input player-goals-input" value="${pGoals}" min="0" style="padding: 4px; width: 45px;">
         </td>
         <td>
-          <input type="number" class="form-input player-yc-input" value="${p.yc || 0}" min="0" style="padding: 4px; width: 45px;">
+          <input type="number" class="form-input player-yc-input" value="${pYc}" min="0" style="padding: 4px; width: 45px;">
         </td>
         <td>
-          <input type="number" class="form-input player-rc-input" value="${p.rc || 0}" min="0" style="padding: 4px; width: 45px;">
+          <input type="number" class="form-input player-rc-input" value="${pRc}" min="0" style="padding: 4px; width: 45px;">
         </td>
         <td style="text-align: center;">
           <button type="button" class="btn btn-outline btn-sm" onclick="admin.removePlayerRow(this)" style="color: #ef4444; padding: 2px 6px; font-size: 0.72rem;" title="Hapus Pemain">🗑️</button>
@@ -2185,17 +2212,17 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     tr.className = "player-input-row";
     tr.innerHTML = `
       <td>
-        <input type="number" class="form-input player-no-input" value="${currentRows + 1}" placeholder="No" style="padding: 4px; font-weight:700; width: 45px;" required>
+        <input type="number" class="form-input player-no-input" value="${currentRows + 1}" placeholder="No" style="padding: 4px; font-weight:700; width: 45px;">
       </td>
       <td style="text-align: center;">
-        <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block;">
+        <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block; position: relative;" onclick="const fi = this.querySelector('input[type=file]'); if (fi) fi.click();">
           <img src="assets/mvp_player.jpg" class="player-row-photo-preview" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border-color); display: block;">
-          <input type="file" accept="image/*" style="display: none;" onchange="admin.handlePlayerPhotoUpload(event, this)">
+          <input type="file" accept="image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;" onchange="admin.handlePlayerPhotoUpload(event, this)">
           <input type="hidden" class="player-photo-input" value="">
         </label>
       </td>
       <td>
-        <input type="text" class="form-input player-name-input" value="" placeholder="Nama Pemain" style="padding: 4px;" required>
+        <input type="text" class="form-input player-name-input" value="" placeholder="Nama Pemain" style="padding: 4px;">
       </td>
       <td>
         <select class="form-select player-pos-select" style="padding: 4px; font-size: 0.75rem;">
@@ -2231,26 +2258,28 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
       return;
     }
-    const id = document.getElementById("editTeamId").value.trim();
-    const name = document.getElementById("editTeamName").value.trim();
-    const shortName = document.getElementById("editTeamShortName").value.trim();
-    const group = document.getElementById("editTeamGroup").value;
-    const city = document.getElementById("editTeamCity").value.trim();
-    const badgeColor = document.getElementById("editTeamColor").value.trim() || "#10b981";
+    const id = (document.getElementById("editTeamId")?.value || "").trim();
+    const name = (document.getElementById("editTeamName")?.value || "").trim();
+    const shortName = (document.getElementById("editTeamShortName")?.value || "").trim();
+    const group = document.getElementById("editTeamGroup")?.value || "A";
+    const city = (document.getElementById("editTeamCity")?.value || "").trim();
+    const badgeColor = (document.getElementById("editTeamColor")?.value || "").trim() || "#10b981";
 
-    const coach = document.getElementById("editTeamCoach").value.trim();
-    const manager = document.getElementById("editTeamManager").value.trim();
-    const medic = document.getElementById("editTeamMedic").value.trim();
-    const phone = document.getElementById("editTeamPhone").value.trim();
-    const jerseyHome = document.getElementById("editTeamJerseyHome").value.trim();
-    const jerseyAway = document.getElementById("editTeamJerseyAway").value.trim();
+    const coach = (document.getElementById("editTeamCoach")?.value || "").trim();
+    const manager = (document.getElementById("editTeamManager")?.value || "").trim();
+    const medic = (document.getElementById("editTeamMedic")?.value || "").trim();
+    const phone = (document.getElementById("editTeamPhone")?.value || "").trim();
+    const jerseyHome = (document.getElementById("editTeamJerseyHome")?.value || "").trim();
+    const jerseyAway = (document.getElementById("editTeamJerseyAway")?.value || "").trim();
 
     if (!name) {
-      alert("Nama Tim / Sekolah wajib diisi!");
+      alert("⚠️ Nama Lengkap Tim / Sekolah wajib diisi!");
+      const nEl = document.getElementById("editTeamName");
+      if (nEl) nEl.focus();
       return;
     }
 
-    const btnSubmit = document.querySelector("#teamEditorForm button[type='submit']");
+    const btnSubmit = document.getElementById("btnSaveTeamEditor") || document.querySelector("#teamEditorForm button[type='submit']");
     const origBtnText = btnSubmit ? btnSubmit.innerHTML : "";
     if (btnSubmit) {
       btnSubmit.disabled = true;
@@ -2317,25 +2346,45 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
     let targetTeamId = id;
     if (id) {
-      // Edit existing
-      const existing = app.store.getTeam(id);
+      // Robust lookup existing team
+      let existing = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(id) : null;
+      if (!existing && app.store && app.store.data && app.store.data.teams) {
+        const query = String(id).trim().toLowerCase();
+        existing = app.store.data.teams.find(t => 
+          String(t.id).trim().toLowerCase() === query ||
+          (t.name && t.name.trim().toLowerCase() === query) ||
+          (t.shortName && t.shortName.trim().toLowerCase() === query)
+        );
+      }
       if (existing) {
         Object.assign(existing, teamPayload);
+      } else {
+        teamPayload.id = id;
+        if (app.store && app.store.data && app.store.data.teams) {
+          app.store.data.teams.push(teamPayload);
+        }
       }
     } else {
       // Add new
-      const newId = "T" + String(app.store.data.teams.length + 1).padStart(2, "0");
+      const currentTeams = (app.store && app.store.data && app.store.data.teams) ? app.store.data.teams : [];
+      const newId = "T" + String(currentTeams.length + 1).padStart(2, "0");
       teamPayload.id = newId;
       targetTeamId = newId;
-      app.store.data.teams.push(teamPayload);
+      if (app.store && app.store.data && app.store.data.teams) {
+        app.store.data.teams.push(teamPayload);
+      }
     }
 
     try {
       if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
         app.store.syncPlayerStatsFromMatches();
       }
-      app.store.saveData();
-      app.store.syncKnockoutFromStandings();
+      if (app.store && typeof app.store.saveData === 'function') {
+        app.store.saveData();
+      }
+      if (app.store && typeof app.store.syncKnockoutFromStandings === 'function') {
+        app.store.syncKnockoutFromStandings();
+      }
     } catch (saveErr) {
       console.warn("Storage sync warning:", saveErr);
     }
@@ -2370,8 +2419,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
     // Silently synchronize to Supabase
     if (window.SupabaseService) {
-      const savedTeam = app.store.getTeam(targetTeamId) || teamPayload;
-      if (savedTeam) {
+      const savedTeam = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(targetTeamId) : teamPayload;
+      if (savedTeam && window.SupabaseService.syncTeam) {
         window.SupabaseService.syncTeam(savedTeam).catch(() => {});
       }
     }
@@ -2539,14 +2588,21 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
       return;
     }
-    const id = document.getElementById("editTeamId").value.trim();
+    const id = (document.getElementById("editTeamId")?.value || "").trim();
     if (!id) return;
 
-    const team = app.store.getTeam(id);
+    let team = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(id) : null;
+    if (!team && app.store && app.store.data && app.store.data.teams) {
+      const query = String(id).trim().toLowerCase();
+      team = app.store.data.teams.find(t => 
+        String(t.id).trim().toLowerCase() === query ||
+        (t.name && t.name.trim().toLowerCase() === query)
+      );
+    }
     if (!team) return;
 
     if (confirm(`Yakin ingin menghapus tim "${team.name}" beserta seluruh daftar pemainnya?`)) {
-      app.store.data.teams = app.store.data.teams.filter(t => t.id !== id);
+      app.store.data.teams = app.store.data.teams.filter(t => t.id !== team.id);
       app.store.saveData();
       app.store.syncKnockoutFromStandings();
 
@@ -2555,7 +2611,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       app.renderScorers();
       app.renderDiscipline();
 
-      document.getElementById("teamEditorModal").classList.remove("active");
+      document.getElementById("teamEditorModal")?.classList.remove("active");
       app.showToast(`Tim ${team.name} telah dihapus.`);
     }
   },
@@ -4199,13 +4255,13 @@ const admin = window.admin = Object.assign(window.admin || {}, {
             </div>
 
             <div class="batch-official-item">
-              <div style="position:relative; cursor:pointer;" onclick="admin.triggerManagerPhotoUpload(${idx})" title="Upload Foto Manajer">
-                ${tData.managerPhoto ? `<img src="${tData.managerPhoto}" class="batch-official-thumb" alt="Manajer">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">💼</span>`}
+              <div style="position:relative; cursor:pointer;" onclick="admin.triggerManagerPhotoUpload(${idx})" title="Upload Foto Asisten Pelatih">
+                ${tData.managerPhoto ? `<img src="${tData.managerPhoto}" class="batch-official-thumb" alt="Asisten Pelatih">` : `<span class="batch-official-thumb" style="display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;">💼</span>`}
                 <span style="position:absolute; bottom:-3px; right:-3px; background:#0284c7; color:#fff; font-size:0.55rem; border-radius:50%; width:12px; height:12px; display:flex; align-items:center; justify-content:center;">+</span>
               </div>
               <div style="flex:1;">
-                <div style="font-size:0.68rem; color:#64748b;">Manajer & Kostum:</div>
-                <input type="text" class="batch-player-input" value="${tData.manager || ''}" placeholder="Nama Manajer" onchange="admin.batchParsedTeams[${idx}].manager = this.value" style="width:100%; margin-bottom:2px;">
+                <div style="font-size:0.68rem; color:#64748b;">Asisten Pelatih & Kostum:</div>
+                <input type="text" class="batch-player-input" value="${tData.manager || ''}" placeholder="Nama Asisten Pelatih" onchange="admin.batchParsedTeams[${idx}].manager = this.value" style="width:100%; margin-bottom:2px;">
                 <input type="text" class="batch-player-input" value="${tData.jerseyHome || 'Hijau - Putih'}" placeholder="Warna Kostum" onchange="admin.batchParsedTeams[${idx}].jerseyHome = this.value" style="width:100%;">
               </div>
             </div>
