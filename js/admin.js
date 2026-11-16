@@ -1666,7 +1666,11 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       parsed = JSON.parse(raw);
     } catch (e1) {
       try {
-        parsed = JSON.parse(decodeURIComponent(escape(atob(raw))));
+        try {
+          parsed = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(raw), c => c.charCodeAt(0))));
+        } catch (_) {
+          parsed = JSON.parse(decodeURIComponent(encodeURIComponent(atob(raw))));
+        }
       } catch (e2) {
         alert("Format kode tidak valid. Pastikan Anda menyalin seluruh teks kode tanpa terpotong.");
         return;
@@ -2576,7 +2580,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     const sponsorObj = {
-      id: id || ("sp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5)),
+      id: id || ("sp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7)),
       name,
       type: role,
       role,
