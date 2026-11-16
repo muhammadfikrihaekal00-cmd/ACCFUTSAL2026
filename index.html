@@ -43,7 +43,7 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.25";
+        var CURRENT_VER = "8.26";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -204,7 +204,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.25">
+  <link rel="stylesheet" href="css/styles.css?v=8.26">
 </head>
 
 <body>
@@ -2570,9 +2570,9 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
           <input type="file" id="batchSinglePhotoInput" accept="image/*" style="display:none;"
             onchange="admin.handleSinglePhotoUpload(this)">
           <input type="file" id="batchCoachPhotoInput" accept="image/*" style="display:none;"
-            onchange="admin.handleCoachPhotoUpload(this)">
+            onchange="admin.handleBatchCoachPhotoUpload(this)">
           <input type="file" id="batchManagerPhotoInput" accept="image/*" style="display:none;"
-            onchange="admin.handleManagerPhotoUpload(this)">
+            onchange="admin.handleBatchManagerPhotoUpload(this)">
         </div>
 
         <!-- QUICK PASTE TEXT BOX (SANGAT PRAKTIS UNTUK TEKS WHATSAPP & EXCEL) -->
@@ -2716,11 +2716,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.25"></script>
-  <script src="js/supabase-client.js?v=8.25"></script>
-  <script src="js/data.js?v=8.25"></script>
-  <script src="js/admin.js?v=8.25"></script>
-  <script src="js/app.js?v=8.25"></script>
+  <script src="js/security.js?v=8.26"></script>
+  <script src="js/supabase-client.js?v=8.26"></script>
+  <script src="js/data.js?v=8.26"></script>
+  <script src="js/admin.js?v=8.26"></script>
+  <script src="js/app.js?v=8.26"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

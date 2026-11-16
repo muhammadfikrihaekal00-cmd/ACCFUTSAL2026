@@ -3169,14 +3169,15 @@ const app = {
 
       return `
         <div class="school-card ${swipeClass}" onclick="app.openTeamModal('${t.id}')">
-          <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor || '#10b981'}, #0f172a);">
+          ${t.logo ? `<div class="school-card-watermark" style="background-image: url('${t.logo}');"></div>` : ''}
+          <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor || '#0284c7'}, #0f172a);">
             <span class="group-tag-corner">
               ${(t.category || 'SMP') === 'SD' ? '🎒 SD' : '🏆 SMP'} • ${t.group && t.group !== '-' ? 'GRUP ' + t.group : 'Belum Diundi'}
             </span>
           </div>
 
           <div class="school-card-body">
-            <div class="school-avatar" style="background: ${t.badgeColor || '#10b981'};">
+            <div class="school-avatar" style="background: ${t.badgeColor || '#0284c7'};">
               ${t.logo ? `<img src="${t.logo}" class="team-logo-img" alt="${t.name}">` : t.shortName.substring(0, 3)}
             </div>
 
@@ -3184,13 +3185,16 @@ const app = {
             <div class="school-card-city">📍 ${t.city || '-'}</div>
 
             <div class="official-info-box">
-              <div class="official-row">
-                <span>👔 Coach / Manager:</span>
-                <strong title="${t.official.coach || t.official.manager}">${t.official.coach && t.official.manager && t.official.coach !== t.official.manager ? `${t.official.coach} / ${t.official.manager}` : (t.official.coach || t.official.manager || '-')}</strong>
+              <div class="official-row" style="align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
+                  ${t.official.coachPhoto ? `<img src="${t.official.coachPhoto}" alt="Foto Pelatih" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); flex-shrink: 0;">` : '<span>👔</span>'}
+                  <span style="font-size: 0.72rem; color: #64748b; white-space: nowrap;">Coach / Manajer:</span>
+                </div>
+                <strong style="color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58%; text-align: right;" title="${t.official.coach || t.official.manager}">${t.official.coach && t.official.manager && t.official.coach !== t.official.manager ? `${t.official.coach} / ${t.official.manager}` : (t.official.coach || t.official.manager || '-')}</strong>
               </div>
               <div class="official-row">
                 <span>🎽 Jersey:</span>
-                <strong style="font-size: 0.72rem;">${t.official.jerseyHome || '-'}</strong>
+                <strong style="font-size: 0.72rem; color: #0f172a;">${t.official.jerseyHome || '-'}</strong>
               </div>
             </div>
 

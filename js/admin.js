@@ -2019,12 +2019,11 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     document.getElementById("teamEditorModal").classList.add("active");
   },
 
-  handleTeamLogoUpload(event) {
-    const file = event.target.files[0];
+  async handleTeamLogoUpload(event) {
+    const file = event.target ? (event.target.files && event.target.files[0]) : (event.files && event.files[0]);
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const dataUrl = e.target.result;
+    try {
+      const dataUrl = await this.compressImageToDataUrl(file);
       const hiddenInput = document.getElementById("editTeamLogo");
       const thumb = document.getElementById("teamLogoThumb");
       if (hiddenInput) hiddenInput.value = dataUrl;
@@ -2032,23 +2031,24 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
       // Try uploading to Supabase Storage in background
       if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
-        const cloudUrl = await window.SupabaseService.uploadImage(file, "team_logo");
-        if (cloudUrl && hiddenInput) {
-          hiddenInput.value = cloudUrl;
-          if (thumb) thumb.src = cloudUrl;
-        }
+        window.SupabaseService.uploadImage(file, "team_logo").then(cloudUrl => {
+          if (cloudUrl && hiddenInput) {
+            hiddenInput.value = cloudUrl;
+            if (thumb) thumb.src = cloudUrl;
+          }
+        }).catch(() => {});
       }
-      app.showToast("Logo tim siap disimpan!");
-    };
-    reader.readAsDataURL(file);
+      app.showToast("✅ Logo tim siap disimpan!");
+    } catch (err) {
+      console.error("Team logo upload error:", err);
+    }
   },
 
-  handleCoachPhotoUpload(event) {
-    const file = event.target.files[0];
+  async handleCoachPhotoUpload(event) {
+    const file = event.target ? (event.target.files && event.target.files[0]) : (event.files && event.files[0]);
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target.result;
+    try {
+      const dataUrl = await this.compressImageToDataUrl(file);
       const hiddenInput = document.getElementById("editTeamCoachPhoto");
       const thumb = document.getElementById("coachPhotoThumb");
       if (hiddenInput) hiddenInput.value = dataUrl;
@@ -2056,17 +2056,27 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         thumb.src = dataUrl;
         thumb.style.display = "block";
       }
-      app.showToast("Foto pelatih siap disimpan!");
-    };
-    reader.readAsDataURL(file);
+
+      // Try uploading to Supabase Storage in background
+      if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
+        window.SupabaseService.uploadImage(file, "coach_photo").then(cloudUrl => {
+          if (cloudUrl && hiddenInput) {
+            hiddenInput.value = cloudUrl;
+            if (thumb) thumb.src = cloudUrl;
+          }
+        }).catch(() => {});
+      }
+      app.showToast("✅ Foto pelatih siap disimpan!");
+    } catch (err) {
+      console.error("Coach photo upload error:", err);
+    }
   },
 
-  handleManagerPhotoUpload(event) {
-    const file = event.target.files[0];
+  async handleManagerPhotoUpload(event) {
+    const file = event.target ? (event.target.files && event.target.files[0]) : (event.files && event.files[0]);
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target.result;
+    try {
+      const dataUrl = await this.compressImageToDataUrl(file);
       const hiddenInput = document.getElementById("editTeamManagerPhoto");
       const thumb = document.getElementById("managerPhotoThumb");
       if (hiddenInput) hiddenInput.value = dataUrl;
@@ -2074,9 +2084,20 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         thumb.src = dataUrl;
         thumb.style.display = "block";
       }
-      app.showToast("Foto manajer siap disimpan!");
-    };
-    reader.readAsDataURL(file);
+
+      // Try uploading to Supabase Storage in background
+      if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
+        window.SupabaseService.uploadImage(file, "manager_photo").then(cloudUrl => {
+          if (cloudUrl && hiddenInput) {
+            hiddenInput.value = cloudUrl;
+            if (thumb) thumb.src = cloudUrl;
+          }
+        }).catch(() => {});
+      }
+      app.showToast("✅ Foto manajer siap disimpan!");
+    } catch (err) {
+      console.error("Manager photo upload error:", err);
+    }
   },
 
   handlePlayerPhotoUpload(event, inputEl) {
@@ -2229,17 +2250,31 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
 
+    const btnSubmit = document.querySelector("#teamEditorForm button[type='submit']");
+    const origBtnText = btnSubmit ? btnSubmit.innerHTML : "";
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = "<span>⏳</span> Menyimpan Data...";
+    }
+
     // Collect players
     const rows = document.querySelectorAll("#teamEditorPlayersTbody .player-input-row");
     const players = [];
     rows.forEach(r => {
-      const pName = r.querySelector(".player-name-input").value.trim();
-      const pNo = parseInt(r.querySelector(".player-no-input").value, 10);
-      const pPos = r.querySelector(".player-pos-select").value;
-      const pGoals = parseInt(r.querySelector(".player-goals-input").value, 10) || 0;
-      const pYc = parseInt(r.querySelector(".player-yc-input").value, 10) || 0;
-      const pRc = parseInt(r.querySelector(".player-rc-input").value, 10) || 0;
-      const pPhoto = r.querySelector(".player-photo-input")?.value || "";
+      const pNameInput = r.querySelector(".player-name-input");
+      const pName = pNameInput ? pNameInput.value.trim() : "";
+      const pNoInput = r.querySelector(".player-no-input");
+      const pNo = pNoInput ? parseInt(pNoInput.value, 10) : NaN;
+      const pPosSelect = r.querySelector(".player-pos-select");
+      const pPos = pPosSelect ? pPosSelect.value : "Flank";
+      const pGoalsInput = r.querySelector(".player-goals-input");
+      const pGoals = pGoalsInput ? (parseInt(pGoalsInput.value, 10) || 0) : 0;
+      const pYcInput = r.querySelector(".player-yc-input");
+      const pYc = pYcInput ? (parseInt(pYcInput.value, 10) || 0) : 0;
+      const pRcInput = r.querySelector(".player-rc-input");
+      const pRc = pRcInput ? (parseInt(pRcInput.value, 10) || 0) : 0;
+      const pPhotoInput = r.querySelector(".player-photo-input");
+      const pPhoto = pPhotoInput ? pPhotoInput.value : "";
 
       if (pName) {
         players.push({
@@ -2280,6 +2315,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       players
     };
 
+    let targetTeamId = id;
     if (id) {
       // Edit existing
       const existing = app.store.getTeam(id);
@@ -2290,28 +2326,55 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       // Add new
       const newId = "T" + String(app.store.data.teams.length + 1).padStart(2, "0");
       teamPayload.id = newId;
+      targetTeamId = newId;
       app.store.data.teams.push(teamPayload);
     }
 
-    if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
-      app.store.syncPlayerStatsFromMatches();
+    try {
+      if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
+        app.store.syncPlayerStatsFromMatches();
+      }
+      app.store.saveData();
+      app.store.syncKnockoutFromStandings();
+    } catch (saveErr) {
+      console.warn("Storage sync warning:", saveErr);
     }
-    app.store.saveData();
-    app.store.syncKnockoutFromStandings();
+
+    // Tutup modal form editor segera agar responsif
+    const editorModal = document.getElementById("teamEditorModal");
+    if (editorModal) editorModal.classList.remove("active");
+
+    // Jika modal detail tim sedang aktif di belakangnya, segarkan tampilannya
+    const teamModal = document.getElementById("teamModal");
+    if (teamModal && teamModal.classList.contains("active")) {
+      try { app.openTeamModal(targetTeamId); } catch (_) {}
+    }
+
+    // Refresh seluruh tampilan
+    try {
+      if (typeof app.renderTeams === 'function') app.renderTeams();
+      if (typeof app.renderStandings === 'function') app.renderStandings();
+      if (typeof app.renderScorers === 'function') app.renderScorers();
+      if (typeof app.renderDiscipline === 'function') app.renderDiscipline();
+    } catch (renderErr) {
+      console.error("Render error after team save:", renderErr);
+    }
+
+    // Pulihkan status tombol submit
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = origBtnText || "💾 Simpan Data Tim & Skuad";
+    }
+
+    app.showToast(`✅ Data tim ${name} berhasil disimpan!`);
 
     // Silently synchronize to Supabase
     if (window.SupabaseService) {
-      const savedTeam = id ? app.store.getTeam(id) : teamPayload;
-      if (savedTeam) window.SupabaseService.syncTeam(savedTeam);
+      const savedTeam = app.store.getTeam(targetTeamId) || teamPayload;
+      if (savedTeam) {
+        window.SupabaseService.syncTeam(savedTeam).catch(() => {});
+      }
     }
-
-    app.renderTeams();
-    app.renderStandings();
-    app.renderScorers();
-    app.renderDiscipline();
-
-    document.getElementById("teamEditorModal").classList.remove("active");
-    app.showToast(`Data tim ${name} berhasil disimpan!`);
   },
 
   // ==========================================
@@ -4343,7 +4406,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     this._currentPhotoTarget = null;
   },
 
-  async handleCoachPhotoUpload(input) {
+  async handleBatchCoachPhotoUpload(input) {
     if (!input || !input.files || input.files.length === 0 || !this._currentPhotoTarget) return;
     const file = input.files[0];
     const dataUrl = await this.compressImageToDataUrl(file);
@@ -4355,7 +4418,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     this._currentPhotoTarget = null;
   },
 
-  async handleManagerPhotoUpload(input) {
+  async handleBatchManagerPhotoUpload(input) {
     if (!input || !input.files || input.files.length === 0 || !this._currentPhotoTarget) return;
     const file = input.files[0];
     const dataUrl = await this.compressImageToDataUrl(file);
