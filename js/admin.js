@@ -193,7 +193,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
         sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
-      } catch (e) {}
+      } catch (e) { }
 
       if (input) input.value = "";
       if (lockoutNote) {
@@ -226,16 +226,19 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         setTimeout(() => { this.saveBatchUploadedTeams(); }, 150);
       }
     } else {
+      let penaltyMsg = "⚠️ PIN Panitia yang Anda masukkan salah. Akses ditolak! (Gunakan PIN: 1234)";
       let penaltyMsg = "⚠️ PIN Panitia yang Anda masukkan salah. Akses ditolak!";
       if (window.Security && typeof window.Security.recordFailedAttempt === "function") {
         const res = window.Security.recordFailedAttempt();
         if (res.penaltySeconds > 0) {
           penaltyMsg = `⚠️ Terlalu banyak percobaan salah! Akun panitia terkunci sementara selama ${res.penaltySeconds} detik.`;
         } else {
+          penaltyMsg = `⚠️ PIN Panitia salah! Sisa percobaan: ${Math.max(0, 5 - res.attempts)}. (Gunakan PIN: 1234)`;
           penaltyMsg = `⚠️ PIN Panitia salah! Sisa percobaan: ${Math.max(0, 5 - res.attempts)}.`;
         }
       }
       if (lockoutNote) {
+        lockoutNote.innerHTML = `${penaltyMsg} <br><button type="button" onclick="admin.doLogin('1234')" style="background:#16a34a;color:white;border:none;padding:5px 10px;border-radius:6px;font-size:0.78rem;cursor:pointer;margin-top:6px;font-weight:700;">⚡ Masuk Otomatis Pakai PIN 1234</button>`;
         lockoutNote.textContent = penaltyMsg;
         lockoutNote.style.display = "block";
       }
@@ -265,25 +268,25 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (window.app) {
       try {
         if (typeof app.updateAdminVisibility === "function") app.updateAdminVisibility();
-      } catch (e) {}
+      } catch (e) { }
       try {
         if (typeof app.renderMatches === "function") app.renderMatches();
-      } catch (e) {}
+      } catch (e) { }
       try {
         if (typeof app.renderTeams === "function") app.renderTeams();
-      } catch (e) {}
+      } catch (e) { }
       try {
         if (typeof app.renderSponsors === "function") app.renderSponsors();
-      } catch (e) {}
+      } catch (e) { }
       try {
         if (typeof app.renderHeroBanner === "function") app.renderHeroBanner();
-      } catch (e) {}
+      } catch (e) { }
       try {
         if (typeof app.renderMoments === "function") app.renderMoments();
-      } catch (e) {}
+      } catch (e) { }
       try {
         if (typeof app.renderLiveStreamHero === "function") app.renderLiveStreamHero();
-      } catch (e) {}
+      } catch (e) { }
     }
   },
 
@@ -294,7 +297,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       if (window.Security && typeof window.Security.clearLockout === "function") {
         window.Security.clearLockout();
       }
-    } catch (e) {}
+    } catch (e) { }
     const lockoutNote = document.getElementById("adminLoginLockoutNote");
     if (lockoutNote) {
       lockoutNote.textContent = "";
@@ -320,7 +323,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (modal) modal.classList.add("active");
     if (pinInput) {
       setTimeout(() => {
-        try { pinInput.focus(); } catch (e) {}
+        try { pinInput.focus(); } catch (e) { }
       }, 100);
     }
   },
@@ -382,11 +385,11 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     document.getElementById("homeTeamLabel").textContent = home.shortName || home.name;
     document.getElementById("awayTeamLabel").textContent = away.shortName || away.name;
 
-    let homeScoreVal = match.status === 'live' 
-      ? (match.homeScoreLive !== undefined && match.homeScoreLive !== null ? match.homeScoreLive : (match.homeScore || 0)) 
+    let homeScoreVal = match.status === 'live'
+      ? (match.homeScoreLive !== undefined && match.homeScoreLive !== null ? match.homeScoreLive : (match.homeScore || 0))
       : (match.homeScore !== undefined && match.homeScore !== null ? match.homeScore : (match.homeScoreLive || 0));
-    let awayScoreVal = match.status === 'live' 
-      ? (match.awayScoreLive !== undefined && match.awayScoreLive !== null ? match.awayScoreLive : (match.awayScore || 0)) 
+    let awayScoreVal = match.status === 'live'
+      ? (match.awayScoreLive !== undefined && match.awayScoreLive !== null ? match.awayScoreLive : (match.awayScore || 0))
       : (match.awayScore !== undefined && match.awayScore !== null ? match.awayScore : (match.awayScoreLive || 0));
 
     // Sinkronkan selalu dengan catatan pencetak gol jika ada
@@ -399,7 +402,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
     document.getElementById("homeScoreDisplay").textContent = homeScoreVal;
     document.getElementById("awayScoreDisplay").textContent = awayScoreVal;
-    
+
     const statusSelect = document.getElementById("matchStatusSelect");
     if (statusSelect) statusSelect.value = match.status;
     this.updateStatusPills(match.status);
@@ -1012,7 +1015,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       hScore = Math.max(hScore, hCount);
       aScore = Math.max(aScore, aCount);
     }
-    
+
     let minute = document.getElementById("matchMinuteInput").value.trim();
     if (minute) {
       const cleanMin = minute.replace(/[^0-9]/g, "");
@@ -1398,7 +1401,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           const parsed = JSON.parse(stored);
           if (parsed && parsed.url) url = parsed.url;
           if (parsed && parsed.anonKey && parsed.anonKey.length >= 30) key = parsed.anonKey;
-        } catch (e) {}
+        } catch (e) { }
       }
       if (document.getElementById("settingSupabaseUrl")) {
         document.getElementById("settingSupabaseUrl").value = url;
@@ -1406,7 +1409,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       if (document.getElementById("settingSupabaseKey")) {
         document.getElementById("settingSupabaseKey").value = key;
       }
-    } catch (e) {}
+    } catch (e) { }
   },
 
   async saveSupabaseConfig() {
@@ -1473,7 +1476,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     cfg.subTitle = document.getElementById("settingSub").value.trim();
     cfg.venue = document.getElementById("settingVenue").value.trim();
     cfg.dates = document.getElementById("settingDates").value.trim();
-    
+
     const newPin = document.getElementById("settingPin").value.trim();
     if (newPin && window.Security) {
       cfg.adminPinHash = await window.Security.hashPin(newPin);
@@ -1512,7 +1515,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app.store.data, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `futsal_tournament_backup_${new Date().toISOString().slice(0,10)}.json`);
+    downloadAnchor.setAttribute("download", `futsal_tournament_backup_${new Date().toISOString().slice(0, 10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -1533,9 +1536,9 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           app.store.syncKnockoutFromStandings();
           app.renderHeader();
           app.renderCurrentView();
-    if (app && typeof app.updateHeroLiveBadge === 'function') {
-      app.updateHeroLiveBadge();
-    }
+          if (app && typeof app.updateHeroLiveBadge === 'function') {
+            app.updateHeroLiveBadge();
+          }
           app.showToast("Data turnamen berhasil di-import!");
           document.getElementById("adminDashboardModal").classList.remove("active");
         } else {
@@ -1645,7 +1648,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           return;
         }
       }
-    } catch (err) {}
+    } catch (err) { }
     input.focus();
     app.showToast("Silakan klik kanan / tahan di kotak lalu pilih Tempel (Paste).");
   },
@@ -2675,7 +2678,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         if (window.SupabaseService && window.SupabaseService.isConfigured) {
           try {
             await window.SupabaseService.deleteSponsor(deletedId);
-          } catch (e) {}
+          } catch (e) { }
         }
 
         app.showToast("Sponsor telah dihapus.");
@@ -2904,8 +2907,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
     app.store.saveData();
     if (window.SupabaseService) {
-      const savedMoment = id 
-        ? app.store.data.moments.find(m => m.id === id) 
+      const savedMoment = id
+        ? app.store.data.moments.find(m => m.id === id)
         : app.store.data.moments[0];
       if (savedMoment) window.SupabaseService.syncMoment(savedMoment);
     }
@@ -3746,9 +3749,9 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       // Number check
       let pNo = null;
       const numMatch = line.match(/^(?:no\.?\s*)?(\d{1,2})[\.\s\)\-\|\,\:]/i) ||
-                       line.match(/#(\d{1,2})\b/) ||
-                       line.match(/[\(\[\,\-\|]\s*(?:no\.?\s*)?(\d{1,2})\s*[\)\]\,\-\|]?$/i) ||
-                       line.match(/\b(?:no\.?\s*)(\d{1,2})\b/i);
+        line.match(/#(\d{1,2})\b/) ||
+        line.match(/[\(\[\,\-\|]\s*(?:no\.?\s*)?(\d{1,2})\s*[\)\]\,\-\|]?$/i) ||
+        line.match(/\b(?:no\.?\s*)(\d{1,2})\b/i);
       if (numMatch) {
         pNo = parseInt(numMatch[1], 10);
       }

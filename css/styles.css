@@ -370,20 +370,6 @@ body.dark-theme .brand-text h1 {
     padding: 8px 10px;
     border-radius: 50%;
   }
-  #btnHeaderBatchUpload span:last-child {
-    display: none;
-  }
-  #btnHeaderBatchUpload {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    padding: 0 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 50% !important;
-    font-size: 0.95rem !important;
-  }
 }
 .header-v-divider {
   width: 1px;
