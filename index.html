@@ -43,7 +43,7 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.27";
+        var CURRENT_VER = "8.28";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -147,10 +147,8 @@
         if (m) m.classList.remove("active");
       },
       openTeamEditorModal: function (teamId) {
-        if (window.admin && typeof window.admin.openTeamEditorModal === 'function') {
+        if (window.admin && window.admin.openTeamEditorModal !== this.openTeamEditorModal && typeof window.admin.openTeamEditorModal === 'function') {
           window.admin.openTeamEditorModal(teamId);
-        } else if (window.admin && typeof window.admin.renderTeamEditor === 'function') {
-          window.admin.renderTeamEditor(teamId);
         } else {
           var m = document.getElementById("teamEditorModal");
           if (m) m.classList.add("active");
@@ -206,7 +204,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.27">
+  <link rel="stylesheet" href="css/styles.css?v=8.28">
 </head>
 
 <body>
@@ -846,7 +844,7 @@
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()"
-            style="display: none; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);">
+            style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); cursor: pointer;">
             ➕ Tambah Tim Baru
           </button>
         </div>
@@ -2727,11 +2725,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.27"></script>
-  <script src="js/supabase-client.js?v=8.27"></script>
-  <script src="js/data.js?v=8.27"></script>
-  <script src="js/admin.js?v=8.27"></script>
-  <script src="js/app.js?v=8.27"></script>
+  <script src="js/security.js?v=8.28"></script>
+  <script src="js/supabase-client.js?v=8.28"></script>
+  <script src="js/data.js?v=8.28"></script>
+  <script src="js/admin.js?v=8.28"></script>
+  <script src="js/app.js?v=8.28"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

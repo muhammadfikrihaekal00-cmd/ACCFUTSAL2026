@@ -211,6 +211,11 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         app.showToast("✅ Berhasil Masuk Mode Panitia! Akses Pengaturan & Berkas Tim Aktif.");
       }
 
+      if (this.pendingTeamEditorId !== undefined && this.pendingTeamEditorId !== null) {
+        const tId = this.pendingTeamEditorId;
+        this.pendingTeamEditorId = null;
+        setTimeout(() => { this.openTeamEditorModal(tId); }, 200);
+      }
       if (this.pendingScoreMatchId) {
         const mId = this.pendingScoreMatchId;
         this.pendingScoreMatchId = null;
@@ -226,19 +231,16 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         setTimeout(() => { this.saveBatchUploadedTeams(); }, 150);
       }
     } else {
-      let penaltyMsg = "⚠️ PIN Panitia yang Anda masukkan salah. Akses ditolak! (Gunakan PIN: 1234)";
       let penaltyMsg = "⚠️ PIN Panitia yang Anda masukkan salah. Akses ditolak!";
       if (window.Security && typeof window.Security.recordFailedAttempt === "function") {
         const res = window.Security.recordFailedAttempt();
         if (res.penaltySeconds > 0) {
           penaltyMsg = `⚠️ Terlalu banyak percobaan salah! Akun panitia terkunci sementara selama ${res.penaltySeconds} detik.`;
         } else {
-          penaltyMsg = `⚠️ PIN Panitia salah! Sisa percobaan: ${Math.max(0, 5 - res.attempts)}. (Gunakan PIN: 1234)`;
           penaltyMsg = `⚠️ PIN Panitia salah! Sisa percobaan: ${Math.max(0, 5 - res.attempts)}.`;
         }
       }
       if (lockoutNote) {
-        lockoutNote.innerHTML = `${penaltyMsg} <br><button type="button" onclick="admin.doLogin('1234')" style="background:#16a34a;color:white;border:none;padding:5px 10px;border-radius:6px;font-size:0.78rem;cursor:pointer;margin-top:6px;font-weight:700;">⚡ Masuk Otomatis Pakai PIN 1234</button>`;
         lockoutNote.textContent = penaltyMsg;
         lockoutNote.style.display = "block";
       }
@@ -1902,7 +1904,11 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
   openTeamEditorModal(teamId = null) {
     if (!this.isAuthenticated) {
+      this.pendingTeamEditorId = teamId;
       this.openLoginModal();
+      if (window.app && typeof app.showToast === 'function') {
+        app.showToast("🔒 Silakan masukkan PIN Panitia untuk mengedit tim!");
+      }
       return;
     }
 

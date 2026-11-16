@@ -1786,7 +1786,7 @@ const app = {
     if (btnQuickBanner) btnQuickBanner.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnAddTeam = document.getElementById("btnAddTeamBtn");
-    if (btnAddTeam) btnAddTeam.style.display = isPanitia ? "inline-flex" : "none";
+    if (btnAddTeam) btnAddTeam.style.display = "inline-flex";
 
     const btnManageSponsors = document.getElementById("btnManageSponsors");
     if (btnManageSponsors) btnManageSponsors.style.display = isPanitia ? "inline-flex" : "none";
@@ -3208,11 +3208,9 @@ const app = {
             <div class="school-card-footer" onclick="event.stopPropagation();">
               <span class="roster-count">👥 ${t.players.length} Pemain</span>
               <div style="display: flex; gap: 6px; align-items: center;">
-                ${isPanitia ? `
-                  <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); admin.openTeamEditorModal('${t.id}')" title="Edit Data Tim & Pemain" style="font-size: 0.72rem; padding: 3px 8px; border-color: var(--primary); color: var(--primary);">
-                    ✏️ Edit
-                  </button>
-                ` : ''}
+                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); admin.openTeamEditorModal('${t.id}')" title="Edit Data Tim & Pemain" style="font-size: 0.72rem; padding: 3px 8px; border-color: var(--primary); color: var(--primary); font-weight: 600;">
+                  ✏️ Edit
+                </button>
                 <a href="${waLink}" target="_blank" class="btn-wa-direct" title="Hubungi Official via WA">
                   💬 WA Official
                 </a>
@@ -4416,13 +4414,11 @@ const app = {
     const waLink = this.getWhatsAppUrl(team.official.phone, `Halo Official ${team.name}, informasi ACC 2026`);
 
     body.innerHTML = `
-      ${isPanitia ? `
-        <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="app.closeAllModals(); admin.openTeamEditorModal('${team.id}')">
-            ✏️ Edit Data Tim & Skuad Pemain
-          </button>
-        </div>
-      ` : ''}
+      <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="app.closeAllModals(); admin.openTeamEditorModal('${team.id}')">
+          ✏️ Edit Data Tim & Skuad Pemain
+        </button>
+      </div>
       <div class="team-modal-officials-box">
         <h4 class="team-modal-officials-title">Struktur Tim & Official Manajemen</h4>
         
