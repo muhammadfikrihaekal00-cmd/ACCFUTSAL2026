@@ -2724,6 +2724,14 @@ body:has(.modal-overlay.active) .mobile-nav {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
+@keyframes modalShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.modal-shake {
+  animation: modalShake 0.3s ease-in-out !important;
+}
 .modal-header {
   padding: 18px 24px;
   border-bottom: 1px solid var(--border-color);

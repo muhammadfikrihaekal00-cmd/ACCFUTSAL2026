@@ -1140,6 +1140,18 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
     const modal = document.getElementById("matchEditorModal");
     if (modal) modal.classList.add("active");
+
+    const matchForm = document.getElementById("matchEditorForm");
+    if (matchForm && !matchForm._enterKeyGuarded) {
+      matchForm._enterKeyGuarded = true;
+      matchForm.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.type !== "submit") {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      });
+    }
   },
 
   switchEditorMatch(matchId, populateSelect = false) {
@@ -2083,6 +2095,18 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     document.getElementById("teamEditorModal").classList.add("active");
+
+    const teamForm = document.getElementById("teamEditorForm");
+    if (teamForm && !teamForm._enterKeyGuarded) {
+      teamForm._enterKeyGuarded = true;
+      teamForm.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && e.target.tagName === "INPUT" && e.target.type !== "submit") {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      });
+    }
   },
 
   async handleTeamLogoUpload(event) {

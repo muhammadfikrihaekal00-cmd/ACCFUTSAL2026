@@ -1461,6 +1461,14 @@ const app = {
     let lastPollTimestamp = 0;
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
+      // PROTEKSI ANTI-KELUAR: Jangan polling atau re-render jika sedang aktif mengedit data di modal!
+      const isEditing = Boolean(
+        document.querySelector("#teamEditorModal.active") ||
+        document.querySelector("#matchEditorModal.active") ||
+        document.querySelector("#batchUploadModal.active")
+      );
+      if (isEditing) return;
+
       const isPanitia = Boolean(window.admin && window.admin.isAuthenticated);
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
       const hasLiveMatch = matches.some(m => m.status === "live");
@@ -2369,6 +2377,17 @@ const app = {
     document.querySelectorAll(".modal-overlay").forEach(overlay => {
       overlay.addEventListener("click", (e) => {
         if (e.target === overlay) {
+          // PROTEKSI ANTI-KELUAR: Jangan pernah tutup modal editor yang sedang diisi data jika klik luar tidak sengaja!
+          const nonDismissableModals = ["teamEditorModal", "matchEditorModal", "quickScoreModal", "batchUploadModal", "adminLoginModal", "deviceSyncModal"];
+          if (nonDismissableModals.includes(overlay.id)) {
+            const box = overlay.querySelector(".modal-box");
+            if (box) {
+              box.classList.remove("modal-shake");
+              void box.offsetWidth;
+              box.classList.add("modal-shake");
+            }
+            return;
+          }
           overlay.classList.remove("active");
           document.body.classList.remove("modal-open");
         }
@@ -2397,6 +2416,12 @@ const app = {
       // 1. Jika ada popup modal aktif, tutup modal (jangan keluar aplikasi)
       const activeModal = document.querySelector(".modal-overlay.active");
       if (activeModal) {
+        // Jangan tutup modal editor jika pengguna tidak sengaja swipe back
+        const nonDismissableModals = ["teamEditorModal", "matchEditorModal", "quickScoreModal", "batchUploadModal"];
+        if (nonDismissableModals.includes(activeModal.id)) {
+          try { history.pushState({ tab: this.currentTab }, ""); } catch (err) {}
+          return;
+        }
         activeModal.classList.remove("active");
         try {
           history.pushState({ tab: this.currentTab }, "");
