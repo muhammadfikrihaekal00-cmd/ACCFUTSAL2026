@@ -818,6 +818,14 @@ const app = {
     try { this.renderCurrentView(); } catch(e) { console.warn("View init:", e); }
     try { this.initPwa(); } catch(e) { console.warn("PWA init:", e); }
     try { this.initSupabaseSync(); } catch(e) { console.warn("Supabase init:", e); }
+    // Otomatis pulihkan dan selaraskan foto cache lama secara realtime di latar belakang tanpa tombol
+    setTimeout(() => {
+      try {
+        if (window.admin && typeof window.admin.recoverDataFromLocalCache === 'function') {
+          window.admin.recoverDataFromLocalCache(true);
+        }
+      } catch (_) {}
+    }, 1000);
     try { this.initGlobalLiveMatchTimer(); } catch(e) { console.warn("LiveTimer init:", e); }
     try { this.initNetworkStatusListeners(); } catch(e) { console.warn("Network init:", e); }
     try { this.initScrollReveal(); } catch(e) { console.warn("ScrollReveal init:", e); }
@@ -1446,24 +1454,24 @@ const app = {
       syncFromRemote();
     });
 
-    // Smart Responsive Polling:
-    // Jika Mode Panitia aktif: sinkron setiap 8 detik agar input antar-laptop sinkron instan!
-    // Jika ada match LIVE: sinkron setiap 10 detik.
-    // Jika penonton biasa: sinkron setiap 20 detik.
+    // Realtime Background Auto-Sync:
+    // Jika Mode Panitia aktif: sinkron otomatis setiap 4 detik agar input antar-laptop sinkron instan!
+    // Jika ada match LIVE: sinkron setiap 5 detik.
+    // Jika penonton biasa: sinkron setiap 12 detik.
     let lastPollTimestamp = 0;
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
       const isPanitia = Boolean(window.admin && window.admin.isAuthenticated);
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
       const hasLiveMatch = matches.some(m => m.status === "live");
-      const requiredIntervalMs = isPanitia ? 8000 : (hasLiveMatch ? 10000 : 20000);
+      const requiredIntervalMs = isPanitia ? 4000 : (hasLiveMatch ? 5000 : 12000);
 
       const now = Date.now();
       if ((now - lastPollTimestamp) >= requiredIntervalMs - 100) {
         lastPollTimestamp = now;
         syncFromRemote();
       }
-    }, 4000);
+    }, 2000);
   },
 
   applyRemoteData(data) {

@@ -465,7 +465,18 @@
           updated_at: new Date().toISOString()
         };
 
+        if (logo) payload.logo = logo;
+        if (team.category) payload.category = team.category;
+
         let { error } = await this.client.from('teams').upsert(payload);
+
+        // Fallback jika kolom logo atau category belum ada di tabel teams Postgres
+        if (error && (error.code === '42703' || (error.message && (error.message.includes('logo') || error.message.includes('category'))))) {
+          delete payload.logo;
+          delete payload.category;
+          const retry = await this.client.from('teams').upsert(payload);
+          error = retry.error;
+        }
 
         if (error) {
           console.warn("Supabase syncTeam notice:", error.message);
@@ -602,6 +613,7 @@
               official_jersey_away: jerseyAway,
               coach_photo: coachPhoto,
               manager_photo: managerPhoto,
+              logo: logo,
               players: players,
               updated_at: new Date().toISOString()
             };

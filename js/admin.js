@@ -2511,7 +2511,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   // ==========================================
   // FITUR PENYELAMAT: PULIHKAN DATA & FOTO DARI CACHE LAPTOP
   // ==========================================
-  async recoverDataFromLocalCache() {
+  async recoverDataFromLocalCache(silent = false) {
     let restoredPhotosCount = 0;
     let restoredTeamsCount = 0;
     const storagePrefixes = [
@@ -2621,7 +2621,11 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (restoredPhotosCount > 0 || restoredTeamsCount > 0) {
       if (app.store) app.store.saveData();
       if (typeof app.renderTeams === 'function') app.renderTeams();
-      app.showToast(`🛡️ Berhasil memulihkan ${restoredPhotosCount} foto & ${restoredTeamsCount} tim! Menyinkronkan ke Cloud...`);
+      if (!silent) {
+        app.showToast(`🛡️ Berhasil memulihkan ${restoredPhotosCount} foto & ${restoredTeamsCount} tim! Menyinkronkan ke Cloud...`);
+      } else {
+        console.log(`🛡️ Auto-recovery: Berhasil memulihkan ${restoredPhotosCount} foto & ${restoredTeamsCount} tim ke Cloud.`);
+      }
 
       // Push recovered teams to Supabase Cloud
       if (window.SupabaseService) {
@@ -2632,9 +2636,13 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           } catch (_) {}
         }
       }
-      alert(`🎉 PEMULIHAN SUKSES!\n\nSebanyak ${restoredPhotosCount} foto & ${restoredTeamsCount} data tim berhasil diselamatkan dari memori laptop ini dan telah otomatis diunggah ke Cloud Supabase!`);
+      if (!silent) {
+        alert(`🎉 PEMULIHAN SUKSES!\n\nSebanyak ${restoredPhotosCount} foto & ${restoredTeamsCount} data tim berhasil diselamatkan dari memori laptop ini dan telah otomatis diunggah ke Cloud Supabase!`);
+      }
     } else {
-      alert("ℹ️ Memori lokal laptop ini sudah selaras atau belum menemukan file backup lama. Jika Anda memiliki folder atau file ZIP foto, silakan gunakan fitur 'Unggah Berkas Tim Sekaligus (ZIP / Folder)' agar langsung masuk Cloud permanen!");
+      if (!silent) {
+        alert("ℹ️ Memori lokal laptop ini sudah selaras atau belum menemukan file backup lama. Jika Anda memiliki folder atau file ZIP foto, silakan gunakan fitur 'Unggah Berkas Tim Sekaligus (ZIP / Folder)' agar langsung masuk Cloud permanen!");
+      }
     }
   },
 
