@@ -221,8 +221,8 @@
       if (!this.client || !this.isConfigured) return null;
 
       try {
-        const [configRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
-          this.client.from('tournament_config').select('*').limit(1).maybeSingle(),
+        const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
+          this.client.from('tournament_config').select('*'),
           this.client.from('teams').select('*'),
           this.client.from('matches').select('*'),
           this.client.from('moments').select('*').order('sort_order', { ascending: true }),
@@ -233,8 +233,21 @@
           return null; // Database tables might not be migrated yet, fallback to local
         }
 
+        let mainConfig = null;
+        let teamLogos = {};
+        if (configListRes && configListRes.data && Array.isArray(configListRes.data)) {
+          mainConfig = configListRes.data.find(c => c.id === 'config_main') || configListRes.data[0] || null;
+          const logosRow = configListRes.data.find(c => c.id === 'team_logos_registry');
+          if (logosRow && logosRow.rules_text) {
+            try {
+              teamLogos = JSON.parse(logosRow.rules_text) || {};
+            } catch (_) {}
+          }
+        }
+
         return {
-          config: configRes.data || null,
+          config: mainConfig,
+          teamLogos: teamLogos,
           teams: teamsRes.data || null,
           matches: matchesRes.data || null,
           moments: momentsRes.data || null,
@@ -364,11 +377,42 @@
       }
     }
 
+    // Push Team Logo to Dedicated Registry Table
+    async syncTeamLogo(teamId, logoUrl) {
+      if (!this.client || !this.isConfigured || !teamId) return false;
+      try {
+        const { data } = await this.client
+          .from('tournament_config')
+          .select('rules_text')
+          .eq('id', 'team_logos_registry')
+          .maybeSingle();
+
+        let registry = {};
+        if (data && data.rules_text) {
+          try { registry = JSON.parse(data.rules_text) || {}; } catch (_) {}
+        }
+        registry[teamId] = logoUrl || '';
+
+        const { error } = await this.client
+          .from('tournament_config')
+          .upsert({
+            id: 'team_logos_registry',
+            tournament_name: 'Team Logos Registry',
+            rules_text: JSON.stringify(registry),
+            updated_at: new Date().toISOString()
+          });
+        return !error;
+      } catch (e) {
+        console.warn("syncTeamLogo notice:", e);
+        return false;
+      }
+    }
+
     // Push Team Data
     async syncTeam(team) {
       if (!this.client || !this.isConfigured) return false;
       try {
-        const { error } = await this.client.from('teams').upsert({
+        const payload = {
           id: team.id,
           name: team.name,
           short_name: team.shortName,
@@ -385,11 +429,31 @@
           manager_photo: team.official ? team.official.managerPhoto : '',
           players: team.players || [],
           updated_at: new Date().toISOString()
-        });
+        };
+
+        if (team.logo) payload.logo = team.logo;
+        if (team.category) payload.category = team.category;
+
+        let { error } = await this.client.from('teams').upsert(payload);
+
+        // Fallback jika kolom logo atau category belum ada di tabel teams Postgres
+        if (error && (error.code === '42703' || (error.message && (error.message.includes('logo') || error.message.includes('category'))))) {
+          delete payload.logo;
+          delete payload.category;
+          const retry = await this.client.from('teams').upsert(payload);
+          error = retry.error;
+        }
+
         if (error) {
           console.warn("Supabase syncTeam notice:", error.message);
           this.lastError = error.message;
         }
+
+        // Simpan logo ke team_logos_registry agar sinkron 100% di semua device (HP, Laptop, PC)
+        if (team.logo) {
+          this.syncTeamLogo(team.id, team.logo).catch(() => {});
+        }
+
         return !error;
       } catch (e) {
         return false;
@@ -404,6 +468,20 @@
       try {
         // 1. Teams
         if (data.teams && Array.isArray(data.teams)) {
+          // Sync logos registry
+          const logosRegistry = {};
+          data.teams.forEach(t => {
+            if (t.id && t.logo) logosRegistry[t.id] = t.logo;
+          });
+          if (Object.keys(logosRegistry).length > 0) {
+            this.client.from('tournament_config').upsert({
+              id: 'team_logos_registry',
+              tournament_name: 'Team Logos Registry',
+              rules_text: JSON.stringify(logosRegistry),
+              updated_at: new Date().toISOString()
+            }).then(() => {}).catch(() => {});
+          }
+
           const teamsPayload = data.teams.map(t => ({
             id: t.id,
             name: t.name,
@@ -423,7 +501,7 @@
             updated_at: new Date().toISOString()
           }));
 
-          const { error: teamErr } = await this.client.from('teams').upsert(teamsPayload);
+          let { error: teamErr } = await this.client.from('teams').upsert(teamsPayload);
           if (teamErr) {
             const isRls = teamErr.code === '42501' || (teamErr.message && teamErr.message.includes('row-level security'));
             return { ok: false, message: teamErr.message, isRls: isRls, table: 'teams' };

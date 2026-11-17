@@ -732,14 +732,14 @@ const DEFAULT_DATA = {
     },
     {
       id: "T28",
-      name: "UPTD SDN 22 Maros",
-      shortName: "SDN 22 MAROS",
+      name: "SDN 234 BARAMBANG 2",
+      shortName: "BRADA FC",
       category: "SD",
-      logo: "",
+      logo: "assets/brada_fc_logo.png",
       group: "C",
       badgeColor: "#b91c1c",
       city: "Maros",
-      official: { manager: "H. Syamsir, S.Pd", coach: "Coach Marco Rossi", phone: "0852-2232-3242", jerseyHome: "Merah - Putih - Hijau", jerseyAway: "Putih - Merah" },
+      official: { manager: "Muhammad Ansar, S.Pd.", coach: "A. Muh Alif Rakasiwi, S.Pd", medic: "Pamadeng Rukka, S.Pd.", phone: "081998494011", jerseyHome: "UNGU", jerseyAway: "" },
       players: [
         { no: 1, name: "Peter Gulacsi", pos: "Kiper", goals: 0, yc: 0, rc: 0 },
         { no: 6, name: "Willi Orban", pos: "Anchor", goals: 0, yc: 0, rc: 0 },

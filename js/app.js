@@ -1438,6 +1438,15 @@ const app = {
         });
       }
 
+      if (data.teamLogos && typeof data.teamLogos === 'object') {
+        Object.entries(data.teamLogos).forEach(([tId, lUrl]) => {
+          const t = this.store.data.teams.find(tm => tm.id === tId);
+          if (t && lUrl) {
+            t.logo = lUrl;
+          }
+        });
+      }
+
       if (data.teams && data.teams.length > 0) {
         data.teams.forEach(remoteTeam => {
           const idx = this.store.data.teams.findIndex(t => t.id === remoteTeam.id);
@@ -1449,6 +1458,8 @@ const app = {
               city: remoteTeam.city !== undefined ? remoteTeam.city : this.store.data.teams[idx].city,
               group: remoteTeam.group_letter || remoteTeam.group || this.store.data.teams[idx].group
             };
+            if (remoteTeam.logo) mapped.logo = remoteTeam.logo;
+            if (remoteTeam.category) mapped.category = remoteTeam.category;
             if (remoteTeam.players && Array.isArray(remoteTeam.players) && remoteTeam.players.length > 0) {
               mapped.players = remoteTeam.players;
             }
@@ -1469,6 +1480,32 @@ const app = {
           }
         });
       }
+
+      // Auto-upload local logos to Supabase registry if local device has logos not yet in cloud
+      try {
+        if (window.SupabaseService && window.SupabaseService.isConfigured) {
+          const localLogos = {};
+          let needsRegistrySync = false;
+          const cloudLogos = data.teamLogos || {};
+          this.store.data.teams.forEach(t => {
+            if (t.id && t.logo) {
+              localLogos[t.id] = t.logo;
+              if (!cloudLogos[t.id] || cloudLogos[t.id] !== t.logo) {
+                needsRegistrySync = true;
+              }
+            }
+          });
+          if (needsRegistrySync && Object.keys(localLogos).length > 0) {
+            const merged = { ...cloudLogos, ...localLogos };
+            window.SupabaseService.client.from('tournament_config').upsert({
+              id: 'team_logos_registry',
+              tournament_name: 'Team Logos Registry',
+              rules_text: JSON.stringify(merged),
+              updated_at: new Date().toISOString()
+            }).then(() => {}).catch(() => {});
+          }
+        }
+      } catch (_) {}
 
       if (data.moments && data.moments.length > 0) this.store.data.moments = data.moments;
       if (data.sponsors && (Array.isArray(data.sponsors) ? data.sponsors.length > 0 : true)) {
@@ -1613,6 +1650,8 @@ const app = {
           city: payload.city !== undefined ? payload.city : this.store.data.teams[idx].city,
           group: payload.group_letter || payload.group || this.store.data.teams[idx].group
         };
+        if (payload.logo) mapped.logo = payload.logo;
+        if (payload.category) mapped.category = payload.category;
         if (payload.players && Array.isArray(payload.players)) {
           mapped.players = payload.players;
         }
@@ -1647,6 +1686,21 @@ const app = {
       this.store.saveData();
       this.renderMoments();
     } else if (table === 'tournament_config' || table === 'config') {
+      if (payload.id === 'team_logos_registry' && payload.rules_text) {
+        try {
+          const reg = JSON.parse(payload.rules_text);
+          if (reg && typeof reg === 'object') {
+            Object.entries(reg).forEach(([tId, lUrl]) => {
+              const teamObj = this.store.getTeam(tId);
+              if (teamObj && lUrl) teamObj.logo = lUrl;
+            });
+            this.store.saveData();
+            this.renderTeams();
+            this.renderStandings();
+          }
+        } catch (_) {}
+        return;
+      }
       if (!this.store.data.config) this.store.data.config = {};
       if (payload.youtube_live_url !== undefined) {
         this.store.data.config.youtubeLiveUrl = payload.youtube_live_url;
@@ -4407,7 +4461,9 @@ const app = {
     const body = document.getElementById("teamModalBody");
 
     title.innerHTML = `
-      <span class="mini-badge" style="background: ${team.badgeColor};">${team.shortName.substring(0,2)}</span>
+      <span class="mini-badge" style="background: ${team.badgeColor || '#0284c7'}; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; padding: 0;">
+        ${team.logo ? `<img src="${team.logo}" alt="${team.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : team.shortName.substring(0,2)}
+      </span>
       <span>${team.name} (${team.group && team.group !== '-' ? 'Grup ' + team.group : 'Belum Diundi'})</span>
     `;
 

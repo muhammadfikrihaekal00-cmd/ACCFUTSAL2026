@@ -40,9 +40,15 @@ CREATE TABLE IF NOT EXISTS public.teams (
   official_jersey_away TEXT DEFAULT 'Hitam - Emas',
   coach_photo TEXT DEFAULT '',
   manager_photo TEXT DEFAULT '',
+  logo TEXT DEFAULT '',
+  category TEXT DEFAULT 'SMP',
   players JSONB DEFAULT '[]'::jsonb,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Idempotent column migrations for teams
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS logo TEXT DEFAULT '';
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'SMP';
 
 -- 4. MATCHES & SCHEDULE TABLE
 CREATE TABLE IF NOT EXISTS public.matches (
