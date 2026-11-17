@@ -25,7 +25,7 @@ class TournamentStore {
       }
     }
 
-    if (!data || !data.teams || data.teams.length < 32 || data.teams[0].name !== "SMP 5 Mandai") {
+    if (!data || !data.teams || data.teams.length < 32) {
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
     }
 
