@@ -1747,14 +1747,18 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     app.showToast("☁️ Mengunduh data terbaru dari Supabase...");
     const data = await window.SupabaseService.fetchAllData();
     if (data && (data.matches || data.teams)) {
-      if (data.matches && data.matches.length > 0) app.store.data.matches = data.matches;
-      if (data.teams && data.teams.length > 0) app.store.data.teams = data.teams;
-      if (data.config) Object.assign(app.store.data.config, data.config);
-      app.store.saveData();
+      if (typeof app.applyRemoteData === 'function') {
+        app.applyRemoteData(data);
+      } else {
+        if (data.matches && data.matches.length > 0) app.store.data.matches = data.matches;
+        if (data.teams && data.teams.length > 0) app.store.data.teams = data.teams;
+        if (data.config) Object.assign(app.store.data.config, data.config);
+        app.store.saveData();
+      }
       app.store.syncKnockoutFromStandings();
       if (typeof app.renderHeader === 'function') app.renderHeader();
       if (typeof app.renderCurrentView === 'function') app.renderCurrentView();
-      app.showToast("🎉 Data terbaru dari Cloud Supabase berhasil diterapkan!");
+      app.showToast("🎉 Data terbaru dari Cloud Supabase berhasil diterapkan dengan aman!");
       const modal = document.getElementById("deviceSyncModal");
       if (modal) modal.classList.remove("active");
     } else {
@@ -2219,7 +2223,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           <input type="number" class="form-input player-no-input" value="${pNo}" placeholder="No" style="padding: 4px; font-weight:700; width: 45px;">
         </td>
         <td style="text-align: center;">
-          <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block; position: relative;" onclick="const fi = this.querySelector('input[type=file]'); if (fi) fi.click();">
+          <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block; position: relative;">
             <img src="${photo || 'assets/mvp_player.jpg'}" class="player-row-photo-preview" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border-color); display: block;" onerror="this.onerror=null; this.src='assets/mvp_player.jpg'">
             <input type="file" accept="image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;" onchange="admin.handlePlayerPhotoUpload(event, this)">
             <input type="hidden" class="player-photo-input" value="${photo}">
@@ -2501,6 +2505,136 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = origBtnText || "💾 Simpan Data Tim & Skuad";
       }
+    }
+  },
+
+  // ==========================================
+  // FITUR PENYELAMAT: PULIHKAN DATA & FOTO DARI CACHE LAPTOP
+  // ==========================================
+  async recoverDataFromLocalCache() {
+    let restoredPhotosCount = 0;
+    let restoredTeamsCount = 0;
+    const storagePrefixes = [
+      "acc_futsal_tournament_2026_clean_zero_v5",
+      "acc_futsal_tournament_2026_clean_zero_v4",
+      "acc_futsal_tournament_2026_clean_zero_v3",
+      "acc_futsal_tournament_2026_clean_zero_v2",
+      "acc_futsal_tournament_2026_clean_zero_v1",
+      "acc_futsal_tournament_2026_clean_zero",
+      "acc_futsal_tournament_2026_clean_v6",
+      "acc_futsal_tournament_2026_clean_v5",
+      "acc_futsal_tournament_2026_v1",
+      "acc_tournament_data_v1"
+    ];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && !storagePrefixes.includes(k) && (k.includes("acc_") || k.includes("futsal") || k.includes("tournament"))) {
+        storagePrefixes.push(k);
+      }
+    }
+
+    const currentTeams = (app.store && app.store.data && app.store.data.teams) ? app.store.data.teams : [];
+    const recoveredTeams = [];
+
+    storagePrefixes.forEach(oldKey => {
+      try {
+        const raw = localStorage.getItem(oldKey);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.teams)) {
+          parsed.teams.forEach(oldTeam => {
+            if (!oldTeam || !oldTeam.id) return;
+            const curTeam = currentTeams.find(ct => ct.id === oldTeam.id);
+            if (!curTeam) return;
+
+            let teamModified = false;
+            // Logo
+            if (oldTeam.logo && oldTeam.logo.length > 20 && (!curTeam.logo || curTeam.logo.length < oldTeam.logo.length)) {
+              curTeam.logo = oldTeam.logo;
+              restoredPhotosCount++;
+              teamModified = true;
+            }
+            // Officials
+            if (oldTeam.official) {
+              if (!curTeam.official) curTeam.official = {};
+              const oldC = oldTeam.official.coachPhoto || oldTeam.coach_photo || oldTeam.coachPhoto || "";
+              if (oldC && oldC.length > 30 && (!curTeam.official.coachPhoto || curTeam.official.coachPhoto.length < oldC.length)) {
+                curTeam.official.coachPhoto = oldC;
+                restoredPhotosCount++;
+                teamModified = true;
+              }
+              const oldM = oldTeam.official.managerPhoto || oldTeam.manager_photo || oldTeam.managerPhoto || "";
+              if (oldM && oldM.length > 30 && (!curTeam.official.managerPhoto || curTeam.official.managerPhoto.length < oldM.length)) {
+                curTeam.official.managerPhoto = oldM;
+                restoredPhotosCount++;
+                teamModified = true;
+              }
+              if (oldTeam.official.coach && !oldTeam.official.coach.includes("Guardiola") && !oldTeam.official.coach.includes("Deschamps")) {
+                curTeam.official.coach = oldTeam.official.coach;
+                teamModified = true;
+              }
+              if (oldTeam.official.manager) {
+                curTeam.official.manager = oldTeam.official.manager;
+                teamModified = true;
+              }
+              if (oldTeam.official.phone && !curTeam.official.phone) {
+                curTeam.official.phone = oldTeam.official.phone;
+                teamModified = true;
+              }
+              if (oldTeam.official.jerseyHome && !curTeam.official.jerseyHome) {
+                curTeam.official.jerseyHome = oldTeam.official.jerseyHome;
+                teamModified = true;
+              }
+            }
+            // Players
+            if (Array.isArray(oldTeam.players) && oldTeam.players.length > 0) {
+              const oldHasPhotos = oldTeam.players.some(p => p.photo && p.photo.length > 40);
+              const oldHasRealNames = oldTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
+              const curHasRealNames = curTeam.players && curTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
+              const curHasPhotos = curTeam.players && curTeam.players.some(p => p.photo && p.photo.length > 40);
+
+              if ((oldHasPhotos && !curHasPhotos) || (oldHasRealNames && !curHasRealNames)) {
+                curTeam.players = JSON.parse(JSON.stringify(oldTeam.players));
+                restoredPhotosCount += oldTeam.players.filter(p => p.photo && p.photo.length > 30).length;
+                teamModified = true;
+              } else if (curTeam.players) {
+                curTeam.players.forEach((p, pIdx) => {
+                  const m = oldTeam.players[pIdx] || oldTeam.players.find(x => x.no === p.no || (x.name && x.name === p.name));
+                  if (m && m.photo && m.photo.length > 30 && (!p.photo || p.photo.length < m.photo.length)) {
+                    p.photo = m.photo;
+                    restoredPhotosCount++;
+                    teamModified = true;
+                  }
+                });
+              }
+            }
+
+            if (teamModified && !recoveredTeams.includes(curTeam)) {
+              recoveredTeams.push(curTeam);
+              restoredTeamsCount++;
+            }
+          });
+        }
+      } catch (_) {}
+    });
+
+    if (restoredPhotosCount > 0 || restoredTeamsCount > 0) {
+      if (app.store) app.store.saveData();
+      if (typeof app.renderTeams === 'function') app.renderTeams();
+      app.showToast(`🛡️ Berhasil memulihkan ${restoredPhotosCount} foto & ${restoredTeamsCount} tim! Menyinkronkan ke Cloud...`);
+
+      // Push recovered teams to Supabase Cloud
+      if (window.SupabaseService) {
+        for (const t of recoveredTeams) {
+          try {
+            if (window.SupabaseService.syncTeam) await window.SupabaseService.syncTeam(t);
+            if (t.logo && window.SupabaseService.syncTeamLogo) await window.SupabaseService.syncTeamLogo(t.id, t.logo);
+          } catch (_) {}
+        }
+      }
+      alert(`🎉 PEMULIHAN SUKSES!\n\nSebanyak ${restoredPhotosCount} foto & ${restoredTeamsCount} data tim berhasil diselamatkan dari memori laptop ini dan telah otomatis diunggah ke Cloud Supabase!`);
+    } else {
+      alert("ℹ️ Memori lokal laptop ini sudah selaras atau belum menemukan file backup lama. Jika Anda memiliki folder atau file ZIP foto, silakan gunakan fitur 'Unggah Berkas Tim Sekaligus (ZIP / Folder)' agar langsung masuk Cloud permanen!");
     }
   },
 
@@ -3549,8 +3683,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   async compressImageToDataUrl(fileOrBlob, maxDim = 320, quality = 0.72) {
     if (!fileOrBlob) return "";
     return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      const processImage = (src) => {
+        if (!src) return resolve("");
         const img = new Image();
         img.onload = () => {
           let w = img.width;
@@ -3572,17 +3706,23 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           resolve(canvas.toDataURL("image/jpeg", quality));
         };
         img.onerror = () => {
-          const res = e.target ? e.target.result : "";
-          if (res && res.length < 250000) {
-            resolve(res);
+          if (typeof src === 'string' && src.length < 250000) {
+            resolve(src);
           } else {
             resolve("");
           }
         };
-        img.src = e.target.result;
+        img.src = src;
       };
-      reader.onerror = () => resolve("");
-      reader.readAsDataURL(fileOrBlob);
+
+      if (typeof fileOrBlob === 'string') {
+        processImage(fileOrBlob);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => processImage(e.target ? e.target.result : "");
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(fileOrBlob);
+      }
     });
   },
 
@@ -4796,6 +4936,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 });
 
 window.admin = Object.assign(window.admin || {}, admin);
+window.recoverLocalData = () => admin.recoverDataFromLocalCache();
 
 // Initialize Admin
 if (document.readyState === "loading") {

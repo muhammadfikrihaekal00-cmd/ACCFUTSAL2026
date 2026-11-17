@@ -2650,6 +2650,9 @@ body.dark-theme .player-rating-pill.rating-great {
   pointer-events: auto !important;
   visibility: visible !important;
 }
+#adminLoginModal.active {
+  z-index: 3500 !important;
+}
 .modal-overlay:not(.active) {
   display: none !important;
   pointer-events: none !important;

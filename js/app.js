@@ -23,35 +23,160 @@ class TournamentStore {
       } catch (e) {
         console.error("Gagal memuat data dari localStorage, menggunakan default", e);
       }
-    } else {
-      // Migrasi aman hasil pertandingan dari v5 jika ada
-      const prevSaved = localStorage.getItem("acc_futsal_tournament_2026_clean_zero_v5");
-      if (prevSaved) {
+    }
+
+    if (!data || !data.teams || data.teams.length < 32 || data.teams[0].name !== "SMP 5 Mandai") {
+      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+
+    // ------------------------------------------------------------------
+    // UNIVERSAL AUTO-RECOVERY ENGINE: Pulihkan otomatis seluruh tim, skuad & foto dari cache lokal lama
+    // ------------------------------------------------------------------
+    let needsSaveHealing = false;
+    try {
+      const storagePrefixes = [
+        "acc_futsal_tournament_2026_clean_zero_v5",
+        "acc_futsal_tournament_2026_clean_zero_v4",
+        "acc_futsal_tournament_2026_clean_zero_v3",
+        "acc_futsal_tournament_2026_clean_zero_v2",
+        "acc_futsal_tournament_2026_clean_zero_v1",
+        "acc_futsal_tournament_2026_clean_zero",
+        "acc_futsal_tournament_2026_clean_v6",
+        "acc_futsal_tournament_2026_clean_v5",
+        "acc_futsal_tournament_2026_v1",
+        "acc_tournament_data_v1"
+      ];
+      // Cari seluruh key localStorage yang pernah tersimpan di browser ini
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k !== this.STORAGE_KEY && (k.includes("acc_") || k.includes("futsal") || k.includes("tournament"))) {
+          if (!storagePrefixes.includes(k)) storagePrefixes.push(k);
+        }
+      }
+
+      let restoredPhotosCount = 0;
+      let restoredTeamsCount = 0;
+
+      storagePrefixes.forEach(oldKey => {
         try {
-          const oldData = JSON.parse(prevSaved);
-          data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-          if (oldData.matches && Array.isArray(oldData.matches)) {
-            data.matches.forEach((m, idx) => {
-              if (oldData.matches[idx]) {
-                if (oldData.matches[idx].homeScore !== undefined) m.homeScore = oldData.matches[idx].homeScore;
-                if (oldData.matches[idx].awayScore !== undefined) m.awayScore = oldData.matches[idx].awayScore;
-                if (oldData.matches[idx].status) m.status = oldData.matches[idx].status;
-                if (oldData.matches[idx].scorers) m.scorers = oldData.matches[idx].scorers;
-                if (oldData.matches[idx].cards) m.cards = oldData.matches[idx].cards;
+          const raw = localStorage.getItem(oldKey);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+
+          // Pulihkan hasil pertandingan jika belum ada di data aktif
+          if (parsed && Array.isArray(parsed.matches) && (!data.matches || data.matches.every(m => m.homeScore === null))) {
+            parsed.matches.forEach((m, idx) => {
+              if (data.matches && data.matches[idx]) {
+                if (m.homeScore !== undefined && m.homeScore !== null) data.matches[idx].homeScore = m.homeScore;
+                if (m.awayScore !== undefined && m.awayScore !== null) data.matches[idx].awayScore = m.awayScore;
+                if (m.status) data.matches[idx].status = m.status;
+                if (m.scorers) data.matches[idx].scorers = m.scorers;
+                if (m.cards) data.matches[idx].cards = m.cards;
               }
             });
           }
-        } catch(_) {}
-      }
-    }
-    // Pastikan jika belum ada data, kurang dari 32 tim, atau masih data lama, muat ulang dari DEFAULT_DATA
-    if (!data || !data.teams || data.teams.length < 32 || data.teams[0].name !== "SMP 5 Mandai") {
-      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-    }
 
-    // Auto-repair encoding teks rusak dari cache localStorage sebelumnya
-    let needsSaveHealing = false;
+          if (parsed && Array.isArray(parsed.teams) && parsed.teams.length > 0) {
+            parsed.teams.forEach(oldTeam => {
+              if (!oldTeam || !oldTeam.id) return;
+              const curTeam = data.teams.find(ct => ct.id === oldTeam.id);
+              if (!curTeam) return;
+
+              // A. Pulihkan Nama Tim Asli
+              if (oldTeam.name && oldTeam.name !== curTeam.name && !oldTeam.name.includes("SMA ") && !oldTeam.name.includes("TAIPA")) {
+                if (curTeam.name.startsWith("SMP ") || curTeam.name.startsWith("SD ") || curTeam.name.startsWith("UPTD") || curTeam.name.includes("Mandai")) {
+                  curTeam.name = oldTeam.name;
+                  if (oldTeam.shortName) curTeam.shortName = oldTeam.shortName;
+                  restoredTeamsCount++;
+                  needsSaveHealing = true;
+                }
+              }
+
+              // B. Pulihkan Logo Tim
+              if (oldTeam.logo && oldTeam.logo.length > 20 && (!curTeam.logo || curTeam.logo.length < oldTeam.logo.length)) {
+                curTeam.logo = oldTeam.logo;
+                restoredPhotosCount++;
+                needsSaveHealing = true;
+              }
+
+              // C. Pulihkan Struktur Official & Foto Pelatih / Asisten
+              if (oldTeam.official) {
+                if (!curTeam.official) curTeam.official = {};
+                if (oldTeam.official.coach && !oldTeam.official.coach.includes("Guardiola") && !oldTeam.official.coach.includes("Deschamps")) {
+                  curTeam.official.coach = oldTeam.official.coach;
+                  needsSaveHealing = true;
+                }
+                if (oldTeam.official.manager && (!curTeam.official.manager || curTeam.official.manager.length < oldTeam.official.manager.length)) {
+                  curTeam.official.manager = oldTeam.official.manager;
+                  needsSaveHealing = true;
+                }
+                if (oldTeam.official.medic && !curTeam.official.medic) {
+                  curTeam.official.medic = oldTeam.official.medic;
+                  needsSaveHealing = true;
+                }
+                if (oldTeam.official.phone && !curTeam.official.phone) {
+                  curTeam.official.phone = oldTeam.official.phone;
+                  needsSaveHealing = true;
+                }
+                if (oldTeam.official.jerseyHome && !curTeam.official.jerseyHome) {
+                  curTeam.official.jerseyHome = oldTeam.official.jerseyHome;
+                  needsSaveHealing = true;
+                }
+                if (oldTeam.official.jerseyAway && !curTeam.official.jerseyAway) {
+                  curTeam.official.jerseyAway = oldTeam.official.jerseyAway;
+                  needsSaveHealing = true;
+                }
+
+                // Foto Pelatih
+                const oldCPhoto = oldTeam.official.coachPhoto || oldTeam.coach_photo || oldTeam.coachPhoto || "";
+                if (oldCPhoto && oldCPhoto.length > 30 && (!curTeam.official.coachPhoto || curTeam.official.coachPhoto.length < oldCPhoto.length)) {
+                  curTeam.official.coachPhoto = oldCPhoto;
+                  restoredPhotosCount++;
+                  needsSaveHealing = true;
+                }
+                // Foto Asisten Pelatih
+                const oldMPhoto = oldTeam.official.managerPhoto || oldTeam.manager_photo || oldTeam.managerPhoto || "";
+                if (oldMPhoto && oldMPhoto.length > 30 && (!curTeam.official.managerPhoto || curTeam.official.managerPhoto.length < oldMPhoto.length)) {
+                  curTeam.official.managerPhoto = oldMPhoto;
+                  restoredPhotosCount++;
+                  needsSaveHealing = true;
+                }
+              }
+
+              // D. Pulihkan Skuad Pemain Resmi & Foto Pemain
+              if (Array.isArray(oldTeam.players) && oldTeam.players.length > 0) {
+                const oldHasPhotos = oldTeam.players.some(p => p.photo && p.photo.length > 40);
+                const oldHasRealNames = oldTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
+                const curHasRealNames = curTeam.players && curTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
+                const curHasPhotos = curTeam.players && curTeam.players.some(p => p.photo && p.photo.length > 40);
+
+                if ((oldHasPhotos && !curHasPhotos) || (oldHasRealNames && !curHasRealNames)) {
+                  curTeam.players = JSON.parse(JSON.stringify(oldTeam.players));
+                  restoredPhotosCount += (oldTeam.players.filter(p => p.photo && p.photo.length > 30).length);
+                  needsSaveHealing = true;
+                } else if (curTeam.players && oldTeam.players) {
+                  // Merge foto per pemain
+                  curTeam.players.forEach((p, pIdx) => {
+                    const matchedOldP = oldTeam.players[pIdx] || oldTeam.players.find(op => op.no === p.no || (op.name && op.name === p.name));
+                    if (matchedOldP && matchedOldP.photo && matchedOldP.photo.length > 30 && (!p.photo || p.photo.length < matchedOldP.photo.length)) {
+                      p.photo = matchedOldP.photo;
+                      restoredPhotosCount++;
+                      needsSaveHealing = true;
+                    }
+                  });
+                }
+              }
+            });
+          }
+        } catch (_) {}
+      });
+
+      if (restoredPhotosCount > 0 || restoredTeamsCount > 0) {
+        console.log(`🛡️ Auto-Recovery sukses memulihkan ${restoredPhotosCount} foto & ${restoredTeamsCount} data tim dari cache lokal!`);
+      }
+    } catch (e) {
+      console.warn("Auto-recovery engine error:", e);
+    }
     if (data && data.config) {
       if (!data.config.subTitle || data.config.subTitle.includes("â") || data.config.subTitle.includes("€") || !data.config.subTitle.includes("•")) {
         data.config.subTitle = DEFAULT_DATA.config.subTitle;
@@ -1485,40 +1610,87 @@ const app = {
         data.teams.forEach(remoteTeam => {
           const idx = this.store.data.teams.findIndex(t => t.id === remoteTeam.id);
           if (idx !== -1) {
+            const localTeam = this.store.data.teams[idx];
+            const curOff = localTeam.official || {};
+
             const mapped = {
-              name: remoteTeam.name || this.store.data.teams[idx].name,
-              shortName: remoteTeam.short_name || remoteTeam.shortName || this.store.data.teams[idx].shortName,
-              badgeColor: remoteTeam.badge_color || remoteTeam.badgeColor || this.store.data.teams[idx].badgeColor,
-              city: remoteTeam.city !== undefined ? remoteTeam.city : this.store.data.teams[idx].city,
-              group: remoteTeam.group_letter || remoteTeam.group || this.store.data.teams[idx].group
+              name: remoteTeam.name || localTeam.name,
+              shortName: remoteTeam.short_name || remoteTeam.shortName || localTeam.shortName,
+              badgeColor: remoteTeam.badge_color || remoteTeam.badgeColor || localTeam.badgeColor,
+              city: remoteTeam.city !== undefined ? remoteTeam.city : localTeam.city,
+              group: remoteTeam.group_letter || remoteTeam.group || localTeam.group,
+              // Data Shield: Pertahankan logo lokal jika remote kosong
+              logo: (remoteTeam.logo && remoteTeam.logo.length > 10) ? remoteTeam.logo : (localTeam.logo || '')
             };
-            if (remoteTeam.logo) mapped.logo = remoteTeam.logo;
             if (remoteTeam.category) mapped.category = remoteTeam.category;
+
+            // DATA SHIELD PEMAIN: Jangan pernah menimpa foto atau pemain asli lokal dengan data kosong
             if (remoteTeam.players && Array.isArray(remoteTeam.players) && remoteTeam.players.length > 0) {
               const remoteIsDummy = remoteTeam.players.some(p => p.name && (p.name.includes("Ramsdale") || p.name.includes("Donnarumma") || p.name.includes("Verbruggen") || p.name.includes("Oblak") || p.name.includes("Courtois")));
-              const curIsReal = this.store.data.teams[idx].players && this.store.data.teams[idx].players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain"));
-              
-              if (!remoteIsDummy || !curIsReal) {
-                mapped.players = remoteTeam.players;
+              const curIsReal = localTeam.players && localTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
+
+              if (remoteIsDummy && curIsReal) {
+                // Pertahankan pemain asli lokal
+                mapped.players = localTeam.players;
+              } else {
+                // Gabungkan pemain: PERTAHANKAN foto pemain lokal jika remote kosong
+                const localPlayers = localTeam.players || [];
+                mapped.players = remoteTeam.players.map((rP, pIdx) => {
+                  const lP = localPlayers[pIdx] || localPlayers.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
+                  return {
+                    ...rP,
+                    // KUNCI: Jangan pernah menghapus foto yang sudah ada jika remote kosong!
+                    photo: (rP.photo && rP.photo.length > 30) ? rP.photo : (lP.photo || ""),
+                    goals: (rP.goals !== undefined && rP.goals !== null) ? rP.goals : (lP.goals || 0),
+                    yc: (rP.yc !== undefined && rP.yc !== null) ? rP.yc : (lP.yc || 0),
+                    rc: (rP.rc !== undefined && rP.rc !== null) ? rP.rc : (lP.rc || 0)
+                  };
+                });
               }
+            } else if (localTeam.players) {
+              mapped.players = localTeam.players;
             }
-            if (remoteTeam.official_coach || remoteTeam.official_manager || remoteTeam.official) {
-              mapped.official = {
-                ...this.store.data.teams[idx].official,
-                coach: remoteTeam.official_coach || (remoteTeam.official && remoteTeam.official.coach) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coach) || '',
-                manager: remoteTeam.official_manager || (remoteTeam.official && remoteTeam.official.manager) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.manager) || '',
-                medic: remoteTeam.official_medic || (remoteTeam.official && remoteTeam.official.medic) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.medic) || '',
-                phone: remoteTeam.official_phone || (remoteTeam.official && remoteTeam.official.phone) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.phone) || '',
-                jerseyHome: remoteTeam.official_jersey_home || (remoteTeam.official && remoteTeam.official.jerseyHome) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyHome) || '',
-                jerseyAway: remoteTeam.official_jersey_away || (remoteTeam.official && remoteTeam.official.jerseyAway) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyAway) || '',
-                coachPhoto: remoteTeam.coach_photo || (remoteTeam.official && remoteTeam.official.coachPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coachPhoto) || '',
-                managerPhoto: remoteTeam.manager_photo || (remoteTeam.official && remoteTeam.official.managerPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.managerPhoto) || ''
-              };
-            }
+
+            // DATA SHIELD OFFICIAL & FOTO PELATIH / ASISTEN
+            const rCoachPhoto = remoteTeam.coach_photo || (remoteTeam.official && remoteTeam.official.coachPhoto) || "";
+            const rManagerPhoto = remoteTeam.manager_photo || (remoteTeam.official && remoteTeam.official.managerPhoto) || "";
+
+            mapped.official = {
+              ...curOff,
+              coach: remoteTeam.official_coach || (remoteTeam.official && remoteTeam.official.coach) || curOff.coach || '',
+              manager: remoteTeam.official_manager || (remoteTeam.official && remoteTeam.official.manager) || curOff.manager || '',
+              medic: remoteTeam.official_medic || (remoteTeam.official && remoteTeam.official.medic) || curOff.medic || '',
+              phone: remoteTeam.official_phone || (remoteTeam.official && remoteTeam.official.phone) || curOff.phone || '',
+              jerseyHome: remoteTeam.official_jersey_home || (remoteTeam.official && remoteTeam.official.jerseyHome) || curOff.jerseyHome || '',
+              jerseyAway: remoteTeam.official_jersey_away || (remoteTeam.official && remoteTeam.official.jerseyAway) || curOff.jerseyAway || '',
+              // KUNCI: Jangan pernah menghapus foto pelatih / asisten jika remote kosong!
+              coachPhoto: (rCoachPhoto && rCoachPhoto.length > 30) ? rCoachPhoto : (curOff.coachPhoto || ''),
+              managerPhoto: (rManagerPhoto && rManagerPhoto.length > 30) ? rManagerPhoto : (curOff.managerPhoto || '')
+            };
+
             Object.assign(this.store.data.teams[idx], mapped);
           }
         });
       }
+
+      // Auto-upload local real photos/rosters to Supabase Cloud if local device has photos that cloud lacks
+      try {
+        if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.syncTeam) {
+          this.store.data.teams.forEach(locTeam => {
+            const remTeam = data.teams ? data.teams.find(rt => rt.id === locTeam.id) : null;
+            if (remTeam) {
+              const locHasCoachPhoto = locTeam.official && locTeam.official.coachPhoto && locTeam.official.coachPhoto.length > 50;
+              const remHasCoachPhoto = remTeam.coach_photo && remTeam.coach_photo.length > 50;
+              const locHasPlayerPhotos = locTeam.players && locTeam.players.some(p => p.photo && p.photo.length > 50);
+              const remHasPlayerPhotos = remTeam.players && remTeam.players.some(p => p.photo && p.photo.length > 50);
+
+              if ((locHasCoachPhoto && !remHasCoachPhoto) || (locHasPlayerPhotos && !remHasPlayerPhotos)) {
+                window.SupabaseService.syncTeam(locTeam).catch(() => {});
+              }
+            }
+          });
+        }
+      } catch (_) {}
 
       // Terapkan logo dari registry cloud lintas-perangkat (prioritas tertinggi)
       if (data.teamLogos && typeof data.teamLogos === 'object') {
@@ -1699,31 +1871,59 @@ const app = {
     } else if (table === 'teams') {
       const idx = this.store.data.teams.findIndex(t => t.id === payload.id);
       if (idx !== -1) {
+        const localTeam = this.store.data.teams[idx];
+        const curOff = localTeam.official || {};
+
         const mapped = {
-          name: payload.name || this.store.data.teams[idx].name,
-          shortName: payload.short_name || payload.shortName || this.store.data.teams[idx].shortName,
-          badgeColor: payload.badge_color || payload.badgeColor || this.store.data.teams[idx].badgeColor,
-          city: payload.city !== undefined ? payload.city : this.store.data.teams[idx].city,
-          group: payload.group_letter || payload.group || this.store.data.teams[idx].group
+          name: payload.name || localTeam.name,
+          shortName: payload.short_name || payload.shortName || localTeam.shortName,
+          badgeColor: payload.badge_color || payload.badgeColor || localTeam.badgeColor,
+          city: payload.city !== undefined ? payload.city : localTeam.city,
+          group: payload.group_letter || payload.group || localTeam.group,
+          logo: (payload.logo && payload.logo.length > 10) ? payload.logo : (localTeam.logo || '')
         };
-        if (payload.logo) mapped.logo = payload.logo;
         if (payload.category) mapped.category = payload.category;
-        if (payload.players && Array.isArray(payload.players)) {
-          mapped.players = payload.players;
+
+        // DATA SHIELD PEMAIN REALTIME: Lindungi foto & data pemain asli
+        if (payload.players && Array.isArray(payload.players) && payload.players.length > 0) {
+          const remoteIsDummy = payload.players.some(p => p.name && (p.name.includes("Ramsdale") || p.name.includes("Donnarumma") || p.name.includes("Verbruggen") || p.name.includes("Oblak") || p.name.includes("Courtois")));
+          const curIsReal = localTeam.players && localTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
+
+          if (remoteIsDummy && curIsReal) {
+            mapped.players = localTeam.players;
+          } else {
+            const localPlayers = localTeam.players || [];
+            mapped.players = payload.players.map((rP, pIdx) => {
+              const lP = localPlayers[pIdx] || localPlayers.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
+              return {
+                ...rP,
+                photo: (rP.photo && rP.photo.length > 30) ? rP.photo : (lP.photo || ""),
+                goals: (rP.goals !== undefined && rP.goals !== null) ? rP.goals : (lP.goals || 0),
+                yc: (rP.yc !== undefined && rP.yc !== null) ? rP.yc : (lP.yc || 0),
+                rc: (rP.rc !== undefined && rP.rc !== null) ? rP.rc : (lP.rc || 0)
+              };
+            });
+          }
+        } else if (localTeam.players) {
+          mapped.players = localTeam.players;
         }
-        if (payload.official_coach || payload.official_manager || payload.official) {
-          mapped.official = {
-            ...this.store.data.teams[idx].official,
-            coach: payload.official_coach || (payload.official && payload.official.coach) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coach) || '',
-            manager: payload.official_manager || (payload.official && payload.official.manager) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.manager) || '',
-            medic: payload.official_medic || (payload.official && payload.official.medic) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.medic) || '',
-            phone: payload.official_phone || (payload.official && payload.official.phone) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.phone) || '',
-            jerseyHome: payload.official_jersey_home || (payload.official && payload.official.jerseyHome) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyHome) || '',
-            jerseyAway: payload.official_jersey_away || (payload.official && payload.official.jerseyAway) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.jerseyAway) || '',
-            coachPhoto: payload.coach_photo || (payload.official && payload.official.coachPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.coachPhoto) || '',
-            managerPhoto: payload.manager_photo || (payload.official && payload.official.managerPhoto) || (this.store.data.teams[idx].official && this.store.data.teams[idx].official.managerPhoto) || ''
-          };
-        }
+
+        // DATA SHIELD OFFICIAL & FOTO PELATIH / ASISTEN
+        const rCoachPhoto = payload.coach_photo || (payload.official && payload.official.coachPhoto) || "";
+        const rManagerPhoto = payload.manager_photo || (payload.official && payload.official.managerPhoto) || "";
+
+        mapped.official = {
+          ...curOff,
+          coach: payload.official_coach || (payload.official && payload.official.coach) || curOff.coach || '',
+          manager: payload.official_manager || (payload.official && payload.official.manager) || curOff.manager || '',
+          medic: payload.official_medic || (payload.official && payload.official.medic) || curOff.medic || '',
+          phone: payload.official_phone || (payload.official && payload.official.phone) || curOff.phone || '',
+          jerseyHome: payload.official_jersey_home || (payload.official && payload.official.jerseyHome) || curOff.jerseyHome || '',
+          jerseyAway: payload.official_jersey_away || (payload.official && payload.official.jerseyAway) || curOff.jerseyAway || '',
+          coachPhoto: (rCoachPhoto && rCoachPhoto.length > 30) ? rCoachPhoto : (curOff.coachPhoto || ''),
+          managerPhoto: (rManagerPhoto && rManagerPhoto.length > 30) ? rManagerPhoto : (curOff.managerPhoto || '')
+        };
+
         Object.assign(this.store.data.teams[idx], mapped);
       } else {
         this.store.data.teams.push(payload);

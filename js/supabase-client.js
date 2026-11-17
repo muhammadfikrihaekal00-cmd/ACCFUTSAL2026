@@ -409,9 +409,43 @@
     }
 
     // Push Team Data
+    // Granular Team Update with Non-Destructive Shield
     async syncTeam(team) {
       if (!this.client || !this.isConfigured) return false;
       try {
+        let existingRem = null;
+        try {
+          const { data: rem } = await this.client.from('teams').select('*').eq('id', team.id).maybeSingle();
+          if (rem) existingRem = rem;
+        } catch (_) {}
+
+        // Non-destructive photo & logo preservation
+        let coachPhoto = team.official ? (team.official.coachPhoto || team.coach_photo || '') : '';
+        if ((!coachPhoto || coachPhoto.length < 30) && existingRem && existingRem.coach_photo && existingRem.coach_photo.length > 30) {
+          coachPhoto = existingRem.coach_photo;
+        }
+        let managerPhoto = team.official ? (team.official.managerPhoto || team.manager_photo || '') : '';
+        if ((!managerPhoto || managerPhoto.length < 30) && existingRem && existingRem.manager_photo && existingRem.manager_photo.length > 30) {
+          managerPhoto = existingRem.manager_photo;
+        }
+        let logo = team.logo || '';
+        if ((!logo || logo.length < 20) && existingRem && existingRem.logo && existingRem.logo.length > 20) {
+          logo = existingRem.logo;
+        }
+        let players = Array.isArray(team.players) ? [...team.players] : [];
+        if (existingRem && Array.isArray(existingRem.players) && existingRem.players.length > 0) {
+          const remHasPhotos = existingRem.players.some(p => p.photo && p.photo.length > 30);
+          if (remHasPhotos) {
+            players = players.map((p, pIdx) => {
+              const rP = existingRem.players[pIdx] || existingRem.players.find(x => x.no === p.no || (x.name && x.name === p.name));
+              return {
+                ...p,
+                photo: (p.photo && p.photo.length > 30) ? p.photo : (rP && rP.photo ? rP.photo : '')
+              };
+            });
+          }
+        }
+
         const payload = {
           id: team.id,
           name: team.name,
@@ -425,13 +459,13 @@
           official_phone: team.official ? team.official.phone : '',
           official_jersey_home: team.official ? team.official.jerseyHome : '',
           official_jersey_away: team.official ? team.official.jerseyAway : '',
-          coach_photo: team.official ? team.official.coachPhoto : '',
-          manager_photo: team.official ? team.official.managerPhoto : '',
-          players: team.players || [],
+          coach_photo: coachPhoto,
+          manager_photo: managerPhoto,
+          players: players,
           updated_at: new Date().toISOString()
         };
 
-        if (team.logo) payload.logo = team.logo;
+        if (logo) payload.logo = logo;
         if (team.category) payload.category = team.category;
 
         let { error } = await this.client.from('teams').upsert(payload);
@@ -450,8 +484,8 @@
         }
 
         // Simpan logo ke team_logos_registry agar sinkron 100% di semua device (HP, Laptop, PC)
-        if (team.logo) {
-          this.syncTeamLogo(team.id, team.logo).catch(() => {});
+        if (logo) {
+          this.syncTeamLogo(team.id, logo).catch(() => {});
         }
 
         return !error;
@@ -460,7 +494,7 @@
       }
     }
 
-    // Push Entire Tournament Dataset to Supabase
+    // Push Entire Tournament Dataset to Supabase with Intelligent Cooperative Merging
     async syncAllData(data) {
       if (!this.client || !this.isConfigured) {
         return { ok: false, message: "Klien Supabase belum terkonfigurasi." };
@@ -468,6 +502,13 @@
       try {
         // 1. Teams
         if (data.teams && Array.isArray(data.teams)) {
+          // Fetch existing remote teams first to prevent clobbering other devices' work!
+          let existingRemoteTeams = [];
+          try {
+            const { data: remList } = await this.client.from('teams').select('*');
+            if (remList && Array.isArray(remList)) existingRemoteTeams = remList;
+          } catch (_) {}
+
           // Safely merge logos registry without overwriting existing cloud logos!
           try {
             const { data: regRow } = await this.client
@@ -496,24 +537,87 @@
             console.warn("Logos registry merge error:", regErr);
           }
 
-          const teamsPayload = data.teams.map(t => ({
-            id: t.id,
-            name: t.name,
-            short_name: t.shortName,
-            badge_color: t.badgeColor,
-            city: t.city,
-            group_letter: t.group,
-            official_coach: t.official ? t.official.coach : '',
-            official_manager: t.official ? t.official.manager : '',
-            official_medic: t.official ? t.official.medic : '',
-            official_phone: t.official ? t.official.phone : '',
-            official_jersey_home: t.official ? t.official.jerseyHome : '',
-            official_jersey_away: t.official ? t.official.jerseyAway : '',
-            coach_photo: t.official ? t.official.coachPhoto : '',
-            manager_photo: t.official ? t.official.managerPhoto : '',
-            players: t.players || [],
-            updated_at: new Date().toISOString()
-          }));
+          const teamsPayload = data.teams.map(t => {
+            const rem = existingRemoteTeams.find(r => r.id === t.id);
+
+            // Cek apakah tim lokal masih default placeholder, sedangkan cloud sudah ada data asli
+            let teamName = t.name;
+            let shortName = t.shortName;
+            if (rem && rem.name && rem.name !== teamName) {
+              const locIsPlaceholder = (teamName.startsWith("SMP ") || teamName.startsWith("SD ") || teamName.startsWith("TAIPA") || teamName.includes("Mandai"));
+              const remIsReal = (!rem.name.startsWith("SMP ") && !rem.name.startsWith("TAIPA") && !rem.name.includes("Mandai"));
+              if (locIsPlaceholder && remIsReal) {
+                teamName = rem.name;
+                if (rem.short_name) shortName = rem.short_name;
+              }
+            }
+
+            // Pertahankan foto pelatih & asisten jika lokal kosong
+            let coachPhoto = t.official ? (t.official.coachPhoto || t.coach_photo || '') : '';
+            if ((!coachPhoto || coachPhoto.length < 30) && rem && rem.coach_photo && rem.coach_photo.length > 30) {
+              coachPhoto = rem.coach_photo;
+            }
+            let managerPhoto = t.official ? (t.official.managerPhoto || t.manager_photo || '') : '';
+            if ((!managerPhoto || managerPhoto.length < 30) && rem && rem.manager_photo && rem.manager_photo.length > 30) {
+              managerPhoto = rem.manager_photo;
+            }
+
+            // Pertahankan logo jika lokal kosong
+            let logo = t.logo || '';
+            if ((!logo || logo.length < 20) && rem && rem.logo && rem.logo.length > 20) {
+              logo = rem.logo;
+            }
+
+            // Pertahankan official contact jika lokal kosong
+            let coach = t.official ? t.official.coach : '';
+            if (!coach && rem && rem.official_coach) coach = rem.official_coach;
+            let manager = t.official ? t.official.manager : '';
+            if (!manager && rem && rem.official_manager) manager = rem.official_manager;
+            let phone = t.official ? t.official.phone : '';
+            if (!phone && rem && rem.official_phone) phone = rem.official_phone;
+            let jerseyHome = t.official ? t.official.jerseyHome : '';
+            if (!jerseyHome && rem && rem.official_jersey_home) jerseyHome = rem.official_jersey_home;
+            let jerseyAway = t.official ? t.official.jerseyAway : '';
+            if (!jerseyAway && rem && rem.official_jersey_away) jerseyAway = rem.official_jersey_away;
+
+            // Merge pemain & foto
+            let players = Array.isArray(t.players) ? [...t.players] : [];
+            if (rem && Array.isArray(rem.players) && rem.players.length > 0) {
+              const locIsDummy = players.some(p => p.name && (p.name.includes("Ramsdale") || p.name.includes("Donnarumma") || p.name.includes("Pemain")));
+              const remIsReal = rem.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain"));
+              if (locIsDummy && remIsReal) {
+                players = rem.players;
+              } else {
+                players = players.map((p, pIdx) => {
+                  const rP = rem.players[pIdx] || rem.players.find(x => x.no === p.no || (x.name && x.name === p.name));
+                  return {
+                    ...p,
+                    photo: (p.photo && p.photo.length > 30) ? p.photo : (rP && rP.photo ? rP.photo : '')
+                  };
+                });
+              }
+            }
+
+            return {
+              id: t.id,
+              name: teamName,
+              short_name: shortName,
+              badge_color: t.badgeColor || (rem ? rem.badge_color : '#10b981'),
+              city: t.city || (rem ? rem.city : ''),
+              group_letter: t.group || (rem ? rem.group_letter : 'A'),
+              official_coach: coach,
+              official_manager: manager,
+              official_medic: (t.official ? t.official.medic : '') || (rem ? rem.official_medic : ''),
+              official_phone: phone,
+              official_jersey_home: jerseyHome,
+              official_jersey_away: jerseyAway,
+              coach_photo: coachPhoto,
+              manager_photo: managerPhoto,
+              logo: logo,
+              players: players,
+              updated_at: new Date().toISOString()
+            };
+          });
 
           let { error: teamErr } = await this.client.from('teams').upsert(teamsPayload);
           if (teamErr) {
