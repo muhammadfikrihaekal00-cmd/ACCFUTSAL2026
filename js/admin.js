@@ -1902,9 +1902,41 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     return this.openTeamEditorModal(teamId);
   },
 
+  onSelectTeamToEdit(selectedId) {
+    this.openTeamEditorModal(selectedId || null);
+  },
+
+  populateTeamEditorSelect(selectedTeamId = "") {
+    const sel = document.getElementById("teamEditorSelectTarget");
+    if (!sel) return;
+    const teams = (app.store && app.store.data && app.store.data.teams) ? app.store.data.teams : [];
+    const smpTeams = teams.filter(t => (t.category || "SMP") === "SMP");
+    const sdTeams = teams.filter(t => (t.category || "SMP") === "SD");
+
+    let html = `<option value="">➕ [ BUAT / TAMBAH TIM BARU ]</option>`;
+    if (smpTeams.length > 0) {
+      html += `<optgroup label="🏆 KATEGORI SMP (U-15)">`;
+      smpTeams.forEach(t => {
+        const grp = t.group && t.group !== '-' ? ` • Grup ${t.group}` : ' • Belum Diundi';
+        html += `<option value="${t.id}">${t.id} - ${t.name}${grp}</option>`;
+      });
+      html += `</optgroup>`;
+    }
+    if (sdTeams.length > 0) {
+      html += `<optgroup label="⚽ KATEGORI SD (U-12)">`;
+      sdTeams.forEach(t => {
+        const grp = t.group && t.group !== '-' ? ` • Grup ${t.group}` : ' • Belum Diundi';
+        html += `<option value="${t.id}">${t.id} - ${t.name}${grp}</option>`;
+      });
+      html += `</optgroup>`;
+    }
+    sel.innerHTML = html;
+    sel.value = selectedTeamId || "";
+  },
+
   openTeamEditorModal(teamId = null) {
     if (!this.isAuthenticated) {
-      this.pendingTeamEditorId = teamId;
+      this.pendingTeamEditorId = teamId || "";
       this.openLoginModal();
       if (window.app && typeof app.showToast === 'function') {
         app.showToast("🔒 Silakan masukkan PIN Panitia untuk mengedit tim!");
@@ -1944,6 +1976,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         app.showToast("⚠️ Data tim tidak ditemukan!");
         return;
       }
+
+      this.populateTeamEditorSelect(team.id);
 
       if (titleEl) titleEl.textContent = `✏️ Edit Tim: ${team.name}`;
       if (idInput) idInput.value = team.id || "";
@@ -2004,6 +2038,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       const teamPlayers = Array.isArray(team.players) ? team.players : [];
       this.renderPlayerRows(teamPlayers);
     } else {
+      this.populateTeamEditorSelect("");
+
       if (titleEl) titleEl.textContent = "➕ Input Tim Baru";
       if (idInput) idInput.value = "";
       if (nameInput) nameInput.value = "";
@@ -2128,22 +2164,28 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (event.target) event.target.value = "";
   },
 
-  handlePlayerPhotoUpload(event, inputEl) {
+  async handlePlayerPhotoUpload(event, inputEl) {
     const file = event.target ? (event.target.files && event.target.files[0]) : (inputEl && inputEl.files && inputEl.files[0]);
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target.result;
-      const label = inputEl.closest("label");
-      if (label) {
-        const preview = label.querySelector(".player-row-photo-preview");
-        const hidden = label.querySelector(".player-photo-input");
-        if (preview) preview.src = dataUrl;
+    try {
+      const dataUrl = await this.compressImageToDataUrl(file, 200, 0.65);
+      const targetLabel = inputEl ? inputEl.closest("label") : (event.target ? event.target.closest("label") : null);
+      if (targetLabel) {
+        const preview = targetLabel.querySelector(".player-row-photo-preview");
+        const hidden = targetLabel.querySelector(".player-photo-input");
+        if (preview) {
+          preview.src = dataUrl;
+          preview.style.display = "block";
+        }
         if (hidden) hidden.value = dataUrl;
       }
-      app.showToast("Foto pemain siap!");
-    };
-    reader.readAsDataURL(file);
+      if (window.app && typeof app.showToast === 'function') {
+        app.showToast("✅ Foto pemain siap disimpan!");
+      }
+    } catch (err) {
+      console.error("Player photo compression error:", err);
+    }
+    if (event.target) event.target.value = "";
   },
 
   renderPlayerRows(players = []) {
@@ -2259,12 +2301,17 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (row) row.remove();
   },
 
-  saveTeamData() {
+  async saveTeamData() {
+    const id = (document.getElementById("editTeamId")?.value || "").trim();
     if (!this.isAuthenticated) {
-      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
+      this.pendingTeamEditorId = id || "";
+      this.openLoginModal();
+      if (window.app && typeof app.showToast === 'function') {
+        app.showToast("🔒 Silakan masukkan PIN Panitia untuk menyimpan data tim!");
+      }
       return;
     }
-    const id = (document.getElementById("editTeamId")?.value || "").trim();
+
     const name = (document.getElementById("editTeamName")?.value || "").trim();
     const shortName = (document.getElementById("editTeamShortName")?.value || "").trim();
     const group = document.getElementById("editTeamGroup")?.value || "A";
@@ -2289,99 +2336,117 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     const origBtnText = btnSubmit ? btnSubmit.innerHTML : "";
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.innerHTML = "<span>⏳</span> Menyimpan Data...";
+      btnSubmit.innerHTML = "<span>⏳</span> Menyimpan & Menyinkronkan...";
     }
 
-    // Collect players
-    const rows = document.querySelectorAll("#teamEditorPlayersTbody .player-input-row");
-    const players = [];
-    rows.forEach(r => {
-      const pNameInput = r.querySelector(".player-name-input");
-      const pName = pNameInput ? pNameInput.value.trim() : "";
-      const pNoInput = r.querySelector(".player-no-input");
-      const pNo = pNoInput ? parseInt(pNoInput.value, 10) : NaN;
-      const pPosSelect = r.querySelector(".player-pos-select");
-      const pPos = pPosSelect ? pPosSelect.value : "Flank";
-      const pGoalsInput = r.querySelector(".player-goals-input");
-      const pGoals = pGoalsInput ? (parseInt(pGoalsInput.value, 10) || 0) : 0;
-      const pYcInput = r.querySelector(".player-yc-input");
-      const pYc = pYcInput ? (parseInt(pYcInput.value, 10) || 0) : 0;
-      const pRcInput = r.querySelector(".player-rc-input");
-      const pRc = pRcInput ? (parseInt(pRcInput.value, 10) || 0) : 0;
-      const pPhotoInput = r.querySelector(".player-photo-input");
-      const pPhoto = pPhotoInput ? pPhotoInput.value : "";
+    try {
+      // Collect players
+      const rows = document.querySelectorAll("#teamEditorPlayersTbody .player-input-row");
+      const players = [];
+      for (const r of rows) {
+        const pNameInput = r.querySelector(".player-name-input");
+        const pName = pNameInput ? pNameInput.value.trim() : "";
+        const pNoInput = r.querySelector(".player-no-input");
+        const pNo = pNoInput ? parseInt(pNoInput.value, 10) : NaN;
+        const pPosSelect = r.querySelector(".player-pos-select");
+        const pPos = pPosSelect ? pPosSelect.value : "Flank";
+        const pGoalsInput = r.querySelector(".player-goals-input");
+        const pGoals = pGoalsInput ? (parseInt(pGoalsInput.value, 10) || 0) : 0;
+        const pYcInput = r.querySelector(".player-yc-input");
+        const pYc = pYcInput ? (parseInt(pYcInput.value, 10) || 0) : 0;
+        const pRcInput = r.querySelector(".player-rc-input");
+        const pRc = pRcInput ? (parseInt(pRcInput.value, 10) || 0) : 0;
+        const pPhotoInput = r.querySelector(".player-photo-input");
+        let pPhoto = pPhotoInput ? pPhotoInput.value : "";
 
-      if (pName) {
-        players.push({
-          no: isNaN(pNo) ? (players.length + 1) : pNo,
-          name: pName,
-          pos: pPos,
-          goals: pGoals,
-          yc: pYc,
-          rc: pRc,
-          photo: pPhoto
-        });
+        // Auto-compress large base64 photos if somehow uncompressed
+        if (pPhoto && pPhoto.startsWith("data:image") && pPhoto.length > 150000) {
+          try {
+            pPhoto = await this.compressImageToDataUrl(pPhoto, 200, 0.65);
+          } catch (_) {}
+        }
+
+        if (pName) {
+          players.push({
+            no: isNaN(pNo) ? (players.length + 1) : pNo,
+            name: pName,
+            pos: pPos,
+            goals: pGoals,
+            yc: pYc,
+            rc: pRc,
+            photo: pPhoto
+          });
+        }
       }
-    });
 
-    const coachPhoto = document.getElementById("editTeamCoachPhoto")?.value || "";
-    const managerPhoto = document.getElementById("editTeamManagerPhoto")?.value || "";
-    const category = document.getElementById("editTeamCategory")?.value || "SMP";
-    const logo = document.getElementById("editTeamLogo")?.value || "";
+      let coachPhoto = document.getElementById("editTeamCoachPhoto")?.value || "";
+      let managerPhoto = document.getElementById("editTeamManagerPhoto")?.value || "";
+      const category = document.getElementById("editTeamCategory")?.value || "SMP";
+      let logo = document.getElementById("editTeamLogo")?.value || "";
 
-    const teamPayload = {
-      name,
-      shortName: shortName || name.substring(0, 10).toUpperCase(),
-      category,
-      logo,
-      group,
-      badgeColor,
-      city,
-      official: {
-        coach,
-        coachPhoto,
-        manager,
-        managerPhoto,
-        medic,
-        phone,
-        jerseyHome,
-        jerseyAway
-      },
-      players
-    };
-
-    let targetTeamId = id;
-    if (id) {
-      // Robust lookup existing team
-      let existing = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(id) : null;
-      if (!existing && app.store && app.store.data && app.store.data.teams) {
-        const query = String(id).trim().toLowerCase();
-        existing = app.store.data.teams.find(t => 
-          String(t.id).trim().toLowerCase() === query ||
-          (t.name && t.name.trim().toLowerCase() === query) ||
-          (t.shortName && t.shortName.trim().toLowerCase() === query)
-        );
+      // Compress official photos & logo if large
+      if (coachPhoto && coachPhoto.startsWith("data:image") && coachPhoto.length > 200000) {
+        try { coachPhoto = await this.compressImageToDataUrl(coachPhoto, 280, 0.7); } catch (_) {}
       }
-      if (existing) {
-        Object.assign(existing, teamPayload);
+      if (managerPhoto && managerPhoto.startsWith("data:image") && managerPhoto.length > 200000) {
+        try { managerPhoto = await this.compressImageToDataUrl(managerPhoto, 280, 0.7); } catch (_) {}
+      }
+      if (logo && logo.startsWith("data:image") && logo.length > 250000) {
+        try { logo = await this.compressImageToDataUrl(logo, 300, 0.75); } catch (_) {}
+      }
+
+      const teamPayload = {
+        name,
+        shortName: shortName || name.substring(0, 10).toUpperCase(),
+        category,
+        logo,
+        group,
+        badgeColor,
+        city,
+        official: {
+          coach,
+          coachPhoto,
+          manager,
+          managerPhoto,
+          medic,
+          phone,
+          jerseyHome,
+          jerseyAway
+        },
+        players
+      };
+
+      let targetTeamId = id;
+      if (id) {
+        // Robust lookup existing team
+        let existing = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(id) : null;
+        if (!existing && app.store && app.store.data && app.store.data.teams) {
+          const query = String(id).trim().toLowerCase();
+          existing = app.store.data.teams.find(t => 
+            String(t.id).trim().toLowerCase() === query ||
+            (t.name && t.name.trim().toLowerCase() === query) ||
+            (t.shortName && t.shortName.trim().toLowerCase() === query)
+          );
+        }
+        if (existing) {
+          Object.assign(existing, teamPayload);
+        } else {
+          teamPayload.id = id;
+          if (app.store && app.store.data && app.store.data.teams) {
+            app.store.data.teams.push(teamPayload);
+          }
+        }
       } else {
-        teamPayload.id = id;
+        // Add new
+        const currentTeams = (app.store && app.store.data && app.store.data.teams) ? app.store.data.teams : [];
+        const newId = "T" + String(currentTeams.length + 1).padStart(2, "0");
+        teamPayload.id = newId;
+        targetTeamId = newId;
         if (app.store && app.store.data && app.store.data.teams) {
           app.store.data.teams.push(teamPayload);
         }
       }
-    } else {
-      // Add new
-      const currentTeams = (app.store && app.store.data && app.store.data.teams) ? app.store.data.teams : [];
-      const newId = "T" + String(currentTeams.length + 1).padStart(2, "0");
-      teamPayload.id = newId;
-      targetTeamId = newId;
-      if (app.store && app.store.data && app.store.data.teams) {
-        app.store.data.teams.push(teamPayload);
-      }
-    }
 
-    try {
       if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
         app.store.syncPlayerStatsFromMatches();
       }
@@ -2391,46 +2456,50 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       if (app.store && typeof app.store.syncKnockoutFromStandings === 'function') {
         app.store.syncKnockoutFromStandings();
       }
-    } catch (saveErr) {
-      console.warn("Storage sync warning:", saveErr);
-    }
 
-    // Tutup modal form editor segera agar responsif
-    const editorModal = document.getElementById("teamEditorModal");
-    if (editorModal) editorModal.classList.remove("active");
+      // Tutup modal form editor segera agar responsif
+      const editorModal = document.getElementById("teamEditorModal");
+      if (editorModal) editorModal.classList.remove("active");
 
-    // Jika modal detail tim sedang aktif di belakangnya, segarkan tampilannya
-    const teamModal = document.getElementById("teamModal");
-    if (teamModal && teamModal.classList.contains("active")) {
-      try { app.openTeamModal(targetTeamId); } catch (_) {}
-    }
-
-    // Refresh seluruh tampilan
-    try {
-      if (typeof app.renderTeams === 'function') app.renderTeams();
-      if (typeof app.renderStandings === 'function') app.renderStandings();
-      if (typeof app.renderScorers === 'function') app.renderScorers();
-      if (typeof app.renderDiscipline === 'function') app.renderDiscipline();
-    } catch (renderErr) {
-      console.error("Render error after team save:", renderErr);
-    }
-
-    // Pulihkan status tombol submit
-    if (btnSubmit) {
-      btnSubmit.disabled = false;
-      btnSubmit.innerHTML = origBtnText || "💾 Simpan Data Tim & Skuad";
-    }
-
-    app.showToast(`✅ Data tim ${name} berhasil disimpan!`);
-
-    // Silently synchronize to Supabase
-    if (window.SupabaseService) {
-      const savedTeam = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(targetTeamId) : teamPayload;
-      if (savedTeam && window.SupabaseService.syncTeam) {
-        window.SupabaseService.syncTeam(savedTeam).catch(() => {});
+      // Jika modal detail tim sedang aktif di belakangnya, segarkan tampilannya
+      const teamModal = document.getElementById("teamModal");
+      if (teamModal && teamModal.classList.contains("active")) {
+        try { app.openTeamModal(targetTeamId); } catch (_) {}
       }
-      if (logo && window.SupabaseService.syncTeamLogo) {
-        window.SupabaseService.syncTeamLogo(targetTeamId, logo).catch(() => {});
+
+      // Refresh seluruh tampilan UI
+      try {
+        if (typeof app.renderTeams === 'function') app.renderTeams();
+        if (typeof app.renderStandings === 'function') app.renderStandings();
+        if (typeof app.renderScorers === 'function') app.renderScorers();
+        if (typeof app.renderDiscipline === 'function') app.renderDiscipline();
+      } catch (renderErr) {
+        console.error("Render error after team save:", renderErr);
+      }
+
+      app.showToast(`✅ Data tim ${name} berhasil disimpan & disinkronkan!`);
+
+      // Granular synchronization to Supabase Cloud
+      if (window.SupabaseService) {
+        const savedTeam = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(targetTeamId) : teamPayload;
+        if (savedTeam && window.SupabaseService.syncTeam) {
+          window.SupabaseService.syncTeam(savedTeam).then(res => {
+            if (res) console.log(`☁️ Supabase Cloud: Tim ${savedTeam.name} berhasil tersinkron!`);
+          }).catch(err => {
+            console.warn("Supabase team sync notice:", err);
+          });
+        }
+        if (logo && window.SupabaseService.syncTeamLogo) {
+          window.SupabaseService.syncTeamLogo(targetTeamId, logo).catch(() => {});
+        }
+      }
+    } catch (saveError) {
+      console.error("Error saving team:", saveError);
+      alert("Terjadi kesalahan saat menyimpan data tim: " + saveError.message);
+    } finally {
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = origBtnText || "💾 Simpan Data Tim & Skuad";
       }
     }
   },
@@ -2548,8 +2617,13 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         const team = app.store.getTeam(teamId);
         if (team) {
           team.logo = photoUrl;
-          if (window.SupabaseService && window.SupabaseService.syncTeam) {
-            window.SupabaseService.syncTeam(team);
+          if (window.SupabaseService) {
+            if (window.SupabaseService.syncTeamLogo) {
+              window.SupabaseService.syncTeamLogo(teamId, photoUrl).catch(() => {});
+            }
+            if (window.SupabaseService.syncTeam) {
+              window.SupabaseService.syncTeam(team).catch(() => {});
+            }
           }
         }
       } else if (type === "banner") {
@@ -3471,14 +3545,14 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (zipInput) zipInput.value = "";
   },
 
-  // Compress image to lightweight data URL (max 400x400)
-  async compressImageToDataUrl(fileOrBlob) {
+  // Compress image to lightweight data URL (custom max dimension & quality for fast cloud sync)
+  async compressImageToDataUrl(fileOrBlob, maxDim = 320, quality = 0.72) {
+    if (!fileOrBlob) return "";
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const maxDim = 400;
           let w = img.width;
           let h = img.height;
           if (w > maxDim || h > maxDim) {
@@ -3491,13 +3565,20 @@ const admin = window.admin = Object.assign(window.admin || {}, {
             }
           }
           const canvas = document.createElement("canvas");
-          canvas.width = w;
-          canvas.height = h;
+          canvas.width = Math.max(1, w);
+          canvas.height = Math.max(1, h);
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL("image/jpeg", 0.78));
+          resolve(canvas.toDataURL("image/jpeg", quality));
         };
-        img.onerror = () => resolve(e.target.result);
+        img.onerror = () => {
+          const res = e.target ? e.target.result : "";
+          if (res && res.length < 250000) {
+            resolve(res);
+          } else {
+            resolve("");
+          }
+        };
         img.src = e.target.result;
       };
       reader.onerror = () => resolve("");
@@ -4578,10 +4659,22 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     if (typeof app.renderTopScorer === "function") app.renderTopScorer();
     if (typeof app.renderDisciplinary === "function") app.renderDisciplinary();
 
-    // Push to Supabase Cloud so all participant phones receive update in real time
-    if (window.SupabaseService && typeof window.SupabaseService.syncAllData === "function") {
+    // Push to Supabase Cloud granularly so other devices' edits aren't overwritten
+    if (window.SupabaseService && this.batchParsedTeams && this.batchParsedTeams.length > 0) {
       try {
-        await window.SupabaseService.syncAllData(app.store.data);
+        for (const bTeam of this.batchParsedTeams) {
+          const targetId = bTeam.matchedTeamId || bTeam.id;
+          const teamObj = targetId ? app.store.getTeam(targetId) : null;
+          if (teamObj) {
+            if (window.SupabaseService.syncTeam) {
+              await window.SupabaseService.syncTeam(teamObj);
+            }
+            if (teamObj.logo && window.SupabaseService.syncTeamLogo) {
+              await window.SupabaseService.syncTeamLogo(teamObj.id, teamObj.logo);
+            }
+          }
+        }
+        console.log(`☁️ Supabase Cloud: ${this.batchParsedTeams.length} tim batch berhasil tersinkron!`);
       } catch (e) {
         console.warn("Supabase batch sync notice:", e);
       }

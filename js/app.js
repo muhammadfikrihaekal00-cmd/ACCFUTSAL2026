@@ -1269,7 +1269,7 @@ const app = {
             `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers||[]).length}:${(m.cards||[]).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
           ).join("|") : "") +
           "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
-          "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.official_coach}:${t.official_manager}:${t.updated_at}:${(t.players||[]).length}`).join("|") : "") +
+          "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.official_coach}:${t.official_manager}:${t.updated_at}:${(t.players||[]).length}:${(t.players||[]).map(p => p.name||'').join(',')}:${(t.coach_photo||'').length}:${(t.manager_photo||'').length}`).join("|") : "") +
           "#" + (data.teamLogos ? Object.keys(data.teamLogos).map(k => `${k}:${(data.teamLogos[k]||'').length}`).join("|") : "");
 
           if (isInitialLoad || signature !== lastDataSignature) {
@@ -1321,26 +1321,24 @@ const app = {
       syncFromRemote();
     });
 
-    // Smart Fallback Polling (WebSocket realtime sudah menangani push instan).
-    // Polling hanya berjalan sebagai pengaman koneksi:
-    // 15 detik jika ada match LIVE, dan 45 detik jika tidak ada match LIVE.
+    // Smart Responsive Polling:
+    // Jika Mode Panitia aktif: sinkron setiap 8 detik agar input antar-laptop sinkron instan!
+    // Jika ada match LIVE: sinkron setiap 10 detik.
+    // Jika penonton biasa: sinkron setiap 20 detik.
+    let lastPollTimestamp = 0;
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
+      const isPanitia = Boolean(window.admin && window.admin.isAuthenticated);
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
       const hasLiveMatch = matches.some(m => m.status === "live");
-      if (hasLiveMatch) {
-        syncFromRemote();
-      }
-    }, 15000);
+      const requiredIntervalMs = isPanitia ? 8000 : (hasLiveMatch ? 10000 : 20000);
 
-    setInterval(() => {
-      if (document.visibilityState !== "visible") return;
-      const matches = (this.store && this.store.data && this.store.data.matches) || [];
-      const hasLiveMatch = matches.some(m => m.status === "live");
-      if (!hasLiveMatch) {
+      const now = Date.now();
+      if ((now - lastPollTimestamp) >= requiredIntervalMs - 100) {
+        lastPollTimestamp = now;
         syncFromRemote();
       }
-    }, 45000);
+    }, 4000);
   },
 
   applyRemoteData(data) {
@@ -1497,7 +1495,12 @@ const app = {
             if (remoteTeam.logo) mapped.logo = remoteTeam.logo;
             if (remoteTeam.category) mapped.category = remoteTeam.category;
             if (remoteTeam.players && Array.isArray(remoteTeam.players) && remoteTeam.players.length > 0) {
-              mapped.players = remoteTeam.players;
+              const remoteIsDummy = remoteTeam.players.some(p => p.name && (p.name.includes("Ramsdale") || p.name.includes("Donnarumma") || p.name.includes("Verbruggen") || p.name.includes("Oblak") || p.name.includes("Courtois")));
+              const curIsReal = this.store.data.teams[idx].players && this.store.data.teams[idx].players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain"));
+              
+              if (!remoteIsDummy || !curIsReal) {
+                mapped.players = remoteTeam.players;
+              }
             }
             if (remoteTeam.official_coach || remoteTeam.official_manager || remoteTeam.official) {
               mapped.official = {
@@ -4250,8 +4253,23 @@ const app = {
       }
     } catch(e) {}
 
-    if (window.SupabaseService && typeof window.SupabaseService.syncAllData === "function") {
-      window.SupabaseService.syncAllData(this.store.data).catch(() => {});
+    // Update group_letter in Supabase Cloud without touching team rosters or photos
+    if (window.SupabaseService && window.SupabaseService.client) {
+      try {
+        const catTeams = (this.store.data.teams || []).filter(t => (t.category || "SMP") === cat);
+        for (const t of catTeams) {
+          window.SupabaseService.client.from('teams').update({ group_letter: '-' }).eq('id', t.id).then(() => {}).catch(() => {});
+        }
+        const catMatches = (this.store.data.matches || []).filter(m => {
+          const hTeam = this.store.getTeam(m.homeId);
+          return hTeam && (hTeam.category || "SMP") === cat;
+        });
+        for (const m of catMatches) {
+          window.SupabaseService.syncMatch(m).catch(() => {});
+        }
+      } catch (drawSyncErr) {
+        console.warn("Draw reset sync notice:", drawSyncErr);
+      }
     }
 
     this.renderDrawView();
@@ -4388,10 +4406,22 @@ const app = {
       }
     } catch (e) {}
 
-    // 6. Sinkronisasi ke Cloud Supabase jika diminta atau selesai 16 tim
-    if (syncCloud && window.SupabaseService) {
-      if (typeof window.SupabaseService.syncAllData === "function") {
-        window.SupabaseService.syncAllData(this.store.data).catch(() => {});
+    // 6. Sinkronisasi grup drawing ke Cloud Supabase tanpa menimpa data pemain atau foto tim
+    if (syncCloud && window.SupabaseService && window.SupabaseService.client) {
+      try {
+        const catTeams = (this.store.data.teams || []).filter(t => (t.category || "SMP") === cat);
+        for (const t of catTeams) {
+          window.SupabaseService.client.from('teams').update({ group_letter: t.group }).eq('id', t.id).then(() => {}).catch(() => {});
+        }
+        const catMatches = (this.store.data.matches || []).filter(m => {
+          const hTeam = this.store.getTeam(m.homeId);
+          return hTeam && (hTeam.category || "SMP") === cat;
+        });
+        for (const m of catMatches) {
+          window.SupabaseService.syncMatch(m).catch(() => {});
+        }
+      } catch (drawSyncErr) {
+        console.warn("Draw apply sync notice:", drawSyncErr);
       }
     }
   },

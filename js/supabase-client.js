@@ -468,18 +468,32 @@
       try {
         // 1. Teams
         if (data.teams && Array.isArray(data.teams)) {
-          // Sync logos registry
-          const logosRegistry = {};
-          data.teams.forEach(t => {
-            if (t.id && t.logo) logosRegistry[t.id] = t.logo;
-          });
-          if (Object.keys(logosRegistry).length > 0) {
-            this.client.from('tournament_config').upsert({
-              id: 'team_logos_registry',
-              tournament_name: 'Team Logos Registry',
-              rules_text: JSON.stringify(logosRegistry),
-              updated_at: new Date().toISOString()
-            }).then(() => {}).catch(() => {});
+          // Safely merge logos registry without overwriting existing cloud logos!
+          try {
+            const { data: regRow } = await this.client
+              .from('tournament_config')
+              .select('rules_text')
+              .eq('id', 'team_logos_registry')
+              .maybeSingle();
+            let remoteReg = {};
+            if (regRow && regRow.rules_text) {
+              try { remoteReg = JSON.parse(regRow.rules_text) || {}; } catch (_) {}
+            }
+            const localLogos = {};
+            data.teams.forEach(t => {
+              if (t.id && t.logo) localLogos[t.id] = t.logo;
+            });
+            const mergedReg = { ...remoteReg, ...localLogos };
+            if (Object.keys(mergedReg).length > 0) {
+              await this.client.from('tournament_config').upsert({
+                id: 'team_logos_registry',
+                tournament_name: 'Team Logos Registry',
+                rules_text: JSON.stringify(mergedReg),
+                updated_at: new Date().toISOString()
+              });
+            }
+          } catch (regErr) {
+            console.warn("Logos registry merge error:", regErr);
           }
 
           const teamsPayload = data.teams.map(t => ({
