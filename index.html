@@ -10,10 +10,10 @@
   <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.30">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.30">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.30">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.30">
+  <link rel="manifest" href="manifest.json?v=8.31">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.31">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.31">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.31">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -204,7 +204,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.30">
+  <link rel="stylesheet" href="css/styles.css?v=8.31">
 </head>
 
 <body>
@@ -843,6 +843,11 @@
           </span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button id="btnSyncCloudTeams" class="btn btn-outline btn-sm" onclick="app.forceSyncFromRemote(true)"
+            title="Tarik data terbaru dari Supabase Cloud (Tim, Skuad Pemain, Pelatih & Skor)"
+            style="border-color: #0284c7; color: #0284c7; font-weight: 700; padding: 6px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: rgba(2, 132, 199, 0.08);">
+            <span>🔄</span> Sinkronkan Cloud
+          </button>
           <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()"
             style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); cursor: pointer;">
             ➕ Tambah Tim Baru
@@ -2725,11 +2730,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.30"></script>
-  <script src="js/supabase-client.js?v=8.30"></script>
-  <script src="js/data.js?v=8.30"></script>
-  <script src="js/admin.js?v=8.30"></script>
-  <script src="js/app.js?v=8.30"></script>
+  <script src="js/security.js?v=8.31"></script>
+  <script src="js/supabase-client.js?v=8.31"></script>
+  <script src="js/data.js?v=8.31"></script>
+  <script src="js/admin.js?v=8.31"></script>
+  <script src="js/app.js?v=8.31"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

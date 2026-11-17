@@ -2429,6 +2429,9 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       if (savedTeam && window.SupabaseService.syncTeam) {
         window.SupabaseService.syncTeam(savedTeam).catch(() => {});
       }
+      if (logo && window.SupabaseService.syncTeamLogo) {
+        window.SupabaseService.syncTeamLogo(targetTeamId, logo).catch(() => {});
+      }
     }
   },
 

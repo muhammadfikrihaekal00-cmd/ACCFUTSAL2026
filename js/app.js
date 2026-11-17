@@ -8,7 +8,7 @@ window.admin = window.admin || {
 
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026_clean_zero_v5";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_clean_zero_v6";
     this.data = this.loadData();
     this.syncPlayerStatsFromMatches();
     this.syncKnockoutFromStandings();
@@ -22,6 +22,26 @@ class TournamentStore {
         data = JSON.parse(saved);
       } catch (e) {
         console.error("Gagal memuat data dari localStorage, menggunakan default", e);
+      }
+    } else {
+      // Migrasi aman hasil pertandingan dari v5 jika ada
+      const prevSaved = localStorage.getItem("acc_futsal_tournament_2026_clean_zero_v5");
+      if (prevSaved) {
+        try {
+          const oldData = JSON.parse(prevSaved);
+          data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+          if (oldData.matches && Array.isArray(oldData.matches)) {
+            data.matches.forEach((m, idx) => {
+              if (oldData.matches[idx]) {
+                if (oldData.matches[idx].homeScore !== undefined) m.homeScore = oldData.matches[idx].homeScore;
+                if (oldData.matches[idx].awayScore !== undefined) m.awayScore = oldData.matches[idx].awayScore;
+                if (oldData.matches[idx].status) m.status = oldData.matches[idx].status;
+                if (oldData.matches[idx].scorers) m.scorers = oldData.matches[idx].scorers;
+                if (oldData.matches[idx].cards) m.cards = oldData.matches[idx].cards;
+              }
+            });
+          }
+        } catch(_) {}
       }
     }
     // Pastikan jika belum ada data, kurang dari 32 tim, atau masih data lama, muat ulang dari DEFAULT_DATA
@@ -110,6 +130,25 @@ class TournamentStore {
         const defTeam = DEFAULT_DATA.teams.find(dt => dt.id === t.id);
         if (defTeam) {
           if (!t.logo && defTeam.logo) t.logo = defTeam.logo;
+          // Auto-heal nama tim yang masih template dummy
+          if (defTeam.name && (t.name === "SDN 215 INPRES TAIPA" || t.name === "SMP Urwah" || t.name.includes("TAIPA"))) {
+            t.name = defTeam.name;
+            t.shortName = defTeam.shortName;
+            t.players = JSON.parse(JSON.stringify(defTeam.players));
+            if (defTeam.official) t.official = JSON.parse(JSON.stringify(defTeam.official));
+            if (defTeam.logo) t.logo = defTeam.logo;
+          }
+          // Auto-heal jika skuad pemain masih nama dummy Eropa (seperti Aaron Ramsdale, Jordan Pickford, dsb.)
+          if (t.players && defTeam.players && t.players.length > 0) {
+            const firstP = (t.players[0] && t.players[0].name) ? t.players[0].name.trim() : "";
+            if (firstP === "Aaron Ramsdale" || firstP === "Jordan Pickford" || firstP === "Guglielmo Vicario" || firstP === "Peter Gulacsi" || firstP === "Koen Casteels") {
+              t.players = JSON.parse(JSON.stringify(defTeam.players));
+              if (defTeam.official) t.official = JSON.parse(JSON.stringify(defTeam.official));
+              if (defTeam.name) t.name = defTeam.name;
+              if (defTeam.shortName) t.shortName = defTeam.shortName;
+              if (defTeam.logo) t.logo = defTeam.logo;
+            }
+          }
           if (defTeam.official) {
             if (!t.official) t.official = {};
             if (!t.official.coachPhoto && defTeam.official.coachPhoto) {
@@ -759,6 +798,9 @@ const app = {
         if (dot) { dot.style.background = "#10b981"; dot.style.boxShadow = "0 0 8px #10b981, 0 0 14px rgba(16, 185, 129, 0.5)"; }
         if (text) text.textContent = "Cloud Aktif";
         if (showToast) this.showToast("🟢 Indikator Hijau: Cloud Terhubung! Sinkronisasi skor Supabase aktif sempurna.");
+        if (typeof this.forceSyncFromRemote === 'function') {
+          this.forceSyncFromRemote(false);
+        }
       } else {
         if (badge) {
           badge.classList.add("offline");
@@ -1222,11 +1264,13 @@ const app = {
       window.SupabaseService.fetchAllData().then(data => {
         isSyncing = false;
         if (data) {
-          // Generate signature dari seluruh field penting: skor, menit, kartu, pencetak gol, status
+          // Generate signature lengkap: pertandingan, skor, menit, kartu, config, DAN DATA TIM BESERTA SKUAD & LOGO
           const signature = (data.matches ? data.matches.map(m => 
             `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers||[]).length}:${(m.cards||[]).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
           ).join("|") : "") +
-          "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "");
+          "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
+          "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.official_coach}:${t.official_manager}:${t.updated_at}:${(t.players||[]).length}`).join("|") : "") +
+          "#" + (data.teamLogos ? Object.keys(data.teamLogos).map(k => `${k}:${(data.teamLogos[k]||'').length}`).join("|") : "");
 
           if (isInitialLoad || signature !== lastDataSignature) {
             lastDataSignature = signature;
@@ -1245,16 +1289,17 @@ const app = {
       });
     };
 
-    // Defer initial remote fetch sampai halaman selesai di-render sempurna (window load + delay)
-    // Data lokal (memory/localStorage) langsung tampil instan tanpa antrean Supabase di critical path FCP/LCP
+    // Public method untuk force sync instan dari tombol UI atau tap badge
+    this.forceSyncFromRemote = (showToast = true) => {
+      if (showToast) this.showToast("🔄 Menyinkronkan data turnamen dari Cloud...");
+      syncFromRemote();
+    };
+
+    // Initial remote fetch segera setelah DOM siap (300ms) tanpa delay berat
     const startInitialSync = () => {
       setTimeout(() => {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(() => syncFromRemote(), { timeout: 3500 });
-        } else {
-          syncFromRemote();
-        }
-      }, 2500);
+        syncFromRemote();
+      }, 300);
     };
 
     if (document.readyState === "complete") {
@@ -1438,15 +1483,6 @@ const app = {
         });
       }
 
-      if (data.teamLogos && typeof data.teamLogos === 'object') {
-        Object.entries(data.teamLogos).forEach(([tId, lUrl]) => {
-          const t = this.store.data.teams.find(tm => tm.id === tId);
-          if (t && lUrl) {
-            t.logo = lUrl;
-          }
-        });
-      }
-
       if (data.teams && data.teams.length > 0) {
         data.teams.forEach(remoteTeam => {
           const idx = this.store.data.teams.findIndex(t => t.id === remoteTeam.id);
@@ -1477,6 +1513,16 @@ const app = {
               };
             }
             Object.assign(this.store.data.teams[idx], mapped);
+          }
+        });
+      }
+
+      // Terapkan logo dari registry cloud lintas-perangkat (prioritas tertinggi)
+      if (data.teamLogos && typeof data.teamLogos === 'object') {
+        Object.entries(data.teamLogos).forEach(([tId, lUrl]) => {
+          const t = this.store.data.teams.find(tm => tm.id === tId);
+          if (t && lUrl) {
+            t.logo = lUrl;
           }
         });
       }
@@ -1519,6 +1565,7 @@ const app = {
         this.syncDrawStateFromTournament("SD", true);
       } catch (e) {}
       this.renderCurrentView();
+      this.renderTeams();
       this.renderMatches();
       this.renderStandings();
       this.renderBracket();
@@ -1530,6 +1577,12 @@ const app = {
       this.renderLiveStreamHero();
       this.renderHeroBanner();
       this.refreshActiveMatchDetail();
+
+      // Jika modal tim sedang terbuka, perbarui tampilannya langsung dengan data terbaru
+      const activeTeamModal = document.getElementById("teamModal");
+      if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId) {
+        try { this.openTeamModal(this.activeTeamModalId); } catch (_) {}
+      }
     }
   },
 
@@ -1675,6 +1728,10 @@ const app = {
       this.store.saveData();
       this.renderTeams();
       this.renderStandings();
+      const activeTeamModal = document.getElementById("teamModal");
+      if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId === payload.id) {
+        try { this.openTeamModal(payload.id); } catch (_) {}
+      }
     } else if (table === 'moments') {
       if (!this.store.data.moments) this.store.data.moments = [];
       const idx = this.store.data.moments.findIndex(m => m.id === payload.id);
@@ -1697,6 +1754,10 @@ const app = {
             this.store.saveData();
             this.renderTeams();
             this.renderStandings();
+            const activeTeamModal = document.getElementById("teamModal");
+            if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId) {
+              try { this.openTeamModal(this.activeTeamModalId); } catch (_) {}
+            }
           }
         } catch (_) {}
         return;
@@ -4437,6 +4498,7 @@ const app = {
   },
 
   closeAllModals() {
+    this.activeTeamModalId = null;
     document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("active"));
   },
 
@@ -4448,6 +4510,7 @@ const app = {
 
   // MODAL: Show Team Details & Full Roster
   openTeamModal(teamId) {
+    this.activeTeamModalId = teamId;
     if (this.store && typeof this.store.syncPlayerStatsFromMatches === 'function') {
       this.store.syncPlayerStatsFromMatches();
     }
