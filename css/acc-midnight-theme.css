@@ -461,8 +461,17 @@ main.container {
 }
 
 @keyframes accGoldPulse {
-  0%, 100% { transform: scale(0.95); opacity: 0.72; }
-  50% { transform: scale(1.08); opacity: 1; }
+
+  0%,
+  100% {
+    transform: scale(0.95);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 
 .hero-emblem-badge {
@@ -481,8 +490,15 @@ main.container {
 }
 
 @keyframes accFloatEmblem {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .hero-details {
@@ -733,12 +749,12 @@ main.container {
 /* ============================================================================
    7. SECTION SPACING & LIVE BROADCAST + PERTANDINGAN BERIKUTNYA
    ============================================================================ */
-#pane-home > section,
-#pane-home > div {
+#pane-home>section,
+#pane-home>div {
   margin-bottom: 80px !important;
 }
 
-#pane-home > :last-child {
+#pane-home> :last-child {
   margin-bottom: 16px !important;
 }
 
@@ -1028,7 +1044,7 @@ main.container {
 .sponsor-logo-box-sm,
 .sponsor-logo-wrapper,
 .sponsor-card-secondary .sponsor-logo-box,
-.sponsor-card-secondary > div:first-child {
+.sponsor-card-secondary>div:first-child {
   background: rgba(255, 255, 255, 0.06) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 14px !important;
@@ -1374,14 +1390,17 @@ tr.zone-qualify {
   .header-nav-center {
     display: none !important;
   }
+
   .header-inner {
     border-radius: 20px !important;
     padding: 8px 14px !important;
     min-height: 56px !important;
   }
+
   .mobile-nav {
     display: none !important;
   }
+
   body {
     padding-bottom: 24px !important;
   }
@@ -1392,6 +1411,7 @@ tr.zone-qualify {
   background: rgba(15, 23, 42, 0.72) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
 }
+
 .mobile-hamburger-btn.active {
   background: rgba(245, 158, 11, 0.22) !important;
   border-color: rgba(245, 158, 11, 0.65) !important;
@@ -1423,6 +1443,7 @@ tr.zone-qualify {
   border-color: #fbbf24 !important;
   box-shadow: 0 0 18px rgba(245, 158, 11, 0.45) !important;
 }
+
 .mob-cat-btn.active#mobCatSD {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
   color: #ffffff !important;
@@ -1434,20 +1455,24 @@ tr.zone-qualify {
   background: rgba(15, 23, 42, 0.72) !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
 }
+
 .mobile-nav-link:hover,
 .mobile-nav-link:active {
   background: rgba(29, 78, 216, 0.22) !important;
   border-color: rgba(245, 158, 11, 0.45) !important;
 }
+
 .mobile-nav-link.active {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.24), rgba(29, 78, 216, 0.22)) !important;
   border-color: rgba(245, 158, 11, 0.65) !important;
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
+
 .mobile-nav-link.active .mobile-nav-link-icon {
   background: rgba(245, 158, 11, 0.22) !important;
   border-color: rgba(245, 158, 11, 0.55) !important;
 }
+
 .mobile-nav-link.active .mobile-nav-link-title {
   color: #fbbf24 !important;
 }
@@ -1457,11 +1482,13 @@ tr.zone-qualify {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
+
   .header {
     top: 8px !important;
     padding: 0 12px !important;
     margin-top: 8px !important;
   }
+
   .header-inner {
     width: 100% !important;
     max-width: 100% !important;
@@ -1469,70 +1496,86 @@ tr.zone-qualify {
     gap: 8px !important;
     overflow: hidden !important;
   }
+
   .brand-group {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     max-width: calc(100% - 92px) !important;
   }
+
   .brand-text h1 {
     font-size: 0.86rem !important;
     max-width: 100% !important;
   }
+
   .hero-kicker-pill {
     font-size: 0.64rem !important;
     padding: 5px 12px !important;
     letter-spacing: 0.07em !important;
     white-space: nowrap !important;
   }
+
   .hero-card {
     padding: 24px 4px 12px !important;
     gap: 24px !important;
     margin-bottom: 32px !important;
   }
+
   .hero-emblem-badge {
     width: 74px !important;
   }
+
   .hero-quick-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 12px !important;
   }
+
   .hero-quick-stats .stat-pill {
     padding: 18px 12px !important;
   }
+
   .hero-quick-stats .stat-val {
     font-size: 1.75rem !important;
   }
+
   .category-selector-bar {
     margin-bottom: 40px !important;
   }
+
   .category-selector-inner {
     border-radius: 20px !important;
     padding: 10px 12px !important;
     gap: 10px !important;
     width: 100% !important;
   }
-  #pane-home > section,
-  #pane-home > div {
+
+  #pane-home>section,
+  #pane-home>div {
     margin-bottom: 48px !important;
   }
+
   .live-stream-card,
   .acc-moments-section,
   .sponsors-showcase-bar {
     padding: 18px 16px !important;
     border-radius: 20px !important;
   }
+
   .sponsors-grid-primary {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 12px !important;
   }
+
   .home-hero-banner {
     min-height: 240px !important;
     border-radius: 20px !important;
   }
+
   .ambient-orbit-ring.ring-1 {
     width: 380px;
     height: 380px;
   }
+
   .ambient-orbit-ring.ring-2 {
     width: 580px;
     height: 580px;

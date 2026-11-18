@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -142,14 +142,14 @@
         if (window.admin && typeof window.admin.openTeamEditorModal === 'function' && window.admin.openTeamEditorModal !== this.openTeamEditorModal) {
           window.admin.openTeamEditorModal(teamId);
         } else {
-          setTimeout(function() {
+          setTimeout(function () {
             if (window.admin && typeof window.admin.openTeamEditorModal === 'function') {
               window.admin.openTeamEditorModal(teamId);
             }
           }, 300);
         }
       },
-      saveTeamData: function() {
+      saveTeamData: function () {
         if (window.admin && typeof window.admin.saveTeamData === 'function' && window.admin.saveTeamData !== this.saveTeamData) {
           window.admin.saveTeamData();
         }
@@ -166,7 +166,7 @@
         if (window.admin && typeof window.admin.doLogin === 'function' && window.admin.doLogin !== this.doLogin) {
           return window.admin.doLogin(pin);
         }
-        setTimeout(function() {
+        setTimeout(function () {
           if (window.admin && typeof window.admin.doLogin === 'function') {
             window.admin.doLogin(pin);
           }
@@ -207,7 +207,8 @@
   <!-- FLOATING GLASS STICKY NAVBAR -->
   <header class="header">
     <div class="container header-inner">
-      <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap)admin.handleLogoSecretTap();" style="cursor: pointer;">
+      <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap)admin.handleLogoSecretTap();"
+        style="cursor: pointer;">
         <img src="assets/acc_logo.png" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo"
           width="48" height="68" decoding="async">
         <div class="brand-text">
@@ -243,8 +244,7 @@
         </div>
 
         <!-- Quick Media & Photo Upload Button (Khusus Panitia) -->
-        <button id="btnQuickMediaHub" class="header-icon-btn" onclick="admin.openMediaHubModal()"
-          style="display: none;"
+        <button id="btnQuickMediaHub" class="header-icon-btn" onclick="admin.openMediaHubModal()" style="display: none;"
           title="Upload Foto & Media (Logo Tim, Pemain, Momen)" aria-label="Upload Foto & Media">
           <span>📸</span>
         </button>
@@ -267,8 +267,8 @@
         </button>
 
         <!-- Mobile Animated Hamburger Menu Button (Fixed/Sticky Pojok Kanan Atas) -->
-        <button id="btnMobileMenu" class="mobile-hamburger-btn" type="button"
-          aria-label="Buka Menu Navigasi Turnamen" onclick="app.toggleMobileMenu()">
+        <button id="btnMobileMenu" class="mobile-hamburger-btn" type="button" aria-label="Buka Menu Navigasi Turnamen"
+          onclick="app.toggleMobileMenu()">
           <span class="hamburger-line line-1"></span>
           <span class="hamburger-line line-2"></span>
           <span class="hamburger-line line-3"></span>
@@ -291,7 +291,8 @@
             <div class="mobile-menu-heading">Portal Resmi Turnamen</div>
           </div>
         </div>
-        <button type="button" class="mobile-menu-close-btn" onclick="app.closeMobileMenu()" aria-label="Tutup Menu Navigasi">
+        <button type="button" class="mobile-menu-close-btn" onclick="app.closeMobileMenu()"
+          aria-label="Tutup Menu Navigasi">
           ✕
         </button>
       </div>
@@ -300,10 +301,12 @@
       <div class="mobile-menu-division-bar">
         <span class="mobile-division-label">KELAS:</span>
         <div class="mobile-division-buttons">
-          <button type="button" class="mob-cat-btn" id="mobCatSMP" onclick="app.setCategory('SMP'); app.closeMobileMenu();">
+          <button type="button" class="mob-cat-btn" id="mobCatSMP"
+            onclick="app.setCategory('SMP'); app.closeMobileMenu();">
             🏆 SMP (13-15)
           </button>
-          <button type="button" class="mob-cat-btn" id="mobCatSD" onclick="app.setCategory('SD'); app.closeMobileMenu();">
+          <button type="button" class="mob-cat-btn" id="mobCatSD"
+            onclick="app.setCategory('SD'); app.closeMobileMenu();">
             ⚽ SD (9-12)
           </button>
         </div>
@@ -333,7 +336,8 @@
           <span class="mobile-nav-link-arrow">➔</span>
         </button>
 
-        <button type="button" class="mobile-nav-link" data-tab="standings" onclick="app.navigateTo('/klasemen', 'standings')">
+        <button type="button" class="mobile-nav-link" data-tab="standings"
+          onclick="app.navigateTo('/klasemen', 'standings')">
           <div class="mobile-nav-link-left">
             <span class="mobile-nav-link-icon">📊</span>
             <div class="mobile-nav-link-meta">
@@ -377,7 +381,8 @@
           <span class="mobile-nav-link-arrow">➔</span>
         </button>
 
-        <button type="button" class="mobile-nav-link" data-tab="scorers" onclick="app.navigateTo('/top-skor', 'scorers')">
+        <button type="button" class="mobile-nav-link" data-tab="scorers"
+          onclick="app.navigateTo('/top-skor', 'scorers')">
           <div class="mobile-nav-link-left">
             <span class="mobile-nav-link-icon">⚽</span>
             <div class="mobile-nav-link-meta">
@@ -388,7 +393,8 @@
           <span class="mobile-nav-link-arrow">➔</span>
         </button>
 
-        <button type="button" class="mobile-nav-link" data-tab="discipline" onclick="app.navigateTo('/disiplin', 'discipline')">
+        <button type="button" class="mobile-nav-link" data-tab="discipline"
+          onclick="app.navigateTo('/disiplin', 'discipline')">
           <div class="mobile-nav-link-left">
             <span class="mobile-nav-link-icon">🟨</span>
             <div class="mobile-nav-link-meta">
@@ -482,7 +488,8 @@
             </div>
             <div class="hero-title" id="heroTitle">ACC "Al-Fayyadh Champions Cup" 2026</div>
             <p id="heroSub">
-              Turnamen Futsal Antar-Sekolah &amp; Pesantren se-Sulawesi Selatan • Ma'had Tahfizhul Qur'an Al Fayyadh Maros
+              Turnamen Futsal Antar-Sekolah &amp; Pesantren se-Sulawesi Selatan • Ma'had Tahfizhul Qur'an Al Fayyadh
+              Maros
             </p>
             <div class="hero-meta">
               <span>📍 <strong id="heroVenue">GOR Futsal MTQ Al-Fayyadh Maros</strong></span>
@@ -592,8 +599,8 @@
 
         <div class="mvp-spotlight-card">
           <div class="mvp-photo-wrapper">
-            <img src="assets/acc_logo.png" alt="Foto MVP Pemain" class="mvp-photo-img" id="mvpPhoto"
-              width="160" height="200" loading="lazy" decoding="async">
+            <img src="assets/acc_logo.png" alt="Foto MVP Pemain" class="mvp-photo-img" id="mvpPhoto" width="160"
+              height="200" loading="lazy" decoding="async">
             <div class="mvp-badge-overlay">
               <span>🏆</span> <span>MVP MATCHDAY</span>
             </div>
@@ -771,9 +778,11 @@
             Sistem pengundian grup turnamen interaktif dengan efek nama berputar (roulette spin) dan terisi secara acak
             satu per satu ke dalam 4 grup (Grup A, B, C, D).
           </p>
-          <div style="margin-top: 8px; padding: 8px 12px; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 8px; font-size: 0.78rem; color: #065f46; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <div
+            style="margin-top: 8px; padding: 8px 12px; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 8px; font-size: 0.78rem; color: #065f46; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
             <span>🛡️</span>
-            <span>Aturan Anti-Satu-Grup Aktif: Tim dengan kolom <strong>Instansi</strong> yang sama otomatis dipisahkan ke grup berbeda!</span>
+            <span>Aturan Anti-Satu-Grup Aktif: Tim dengan kolom <strong>Instansi</strong> yang sama otomatis dipisahkan
+              ke grup berbeda!</span>
           </div>
         </div>
 
@@ -1013,7 +1022,10 @@
       </div>
 
       <div style="margin-bottom: 14px;">
-        <input type="text" id="juknisSearchInput" class="form-input" placeholder="🔍 Cari pasal, aturan poin, adu penalti, sanksi, atau kontak..." oninput="app.filterJuknis(this.value)" style="width: 100%; border-radius: var(--radius-md); font-size: 0.88rem; padding: 10px 14px;">
+        <input type="text" id="juknisSearchInput" class="form-input"
+          placeholder="🔍 Cari pasal, aturan poin, adu penalti, sanksi, atau kontak..."
+          oninput="app.filterJuknis(this.value)"
+          style="width: 100%; border-radius: var(--radius-md); font-size: 0.88rem; padding: 10px 14px;">
       </div>
 
       <div class="juknis-card">
@@ -1833,7 +1845,9 @@
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <h3 class="modal-title" id="teamEditorModalTitle" style="margin: 0;">✏️ Input & Edit Data Tim</h3>
-          <span style="font-size: 0.68rem; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 999px;">🛡️ Auto-Draft Aktif</span>
+          <span
+            style="font-size: 0.68rem; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 999px;">🛡️
+            Auto-Draft Aktif</span>
         </div>
         <button type="button" class="modal-close"
           onclick="event.preventDefault(); admin.closeTeamEditorModal();">&times;</button>
@@ -1843,16 +1857,24 @@
           <input type="hidden" id="editTeamId">
 
           <!-- Selector Cepat Pilih Tim untuk Diedit (Auto-fill Data Lama) -->
-          <div style="background: #f8fafc; border: 2px solid #0284c7; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.1);">
-            <label class="form-label" style="font-weight: 800; color: #0369a1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+          <div
+            style="background: #f8fafc; border: 2px solid #0284c7; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.1);">
+            <label class="form-label"
+              style="font-weight: 800; color: #0369a1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
               <span>🎯 PILIH TIM UNTUK DIEDIT:</span>
-              <span style="font-size: 0.72rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 8px; border-radius: 999px;">⚡ Seluruh data lama langsung muncul</span>
+              <span
+                style="font-size: 0.72rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 8px; border-radius: 999px;">⚡
+                Seluruh data lama langsung muncul</span>
             </label>
-            <select id="teamEditorSelectTarget" class="form-select" style="font-weight: 700; background-color: #ffffff; border: 1.5px solid #0284c7; font-size: 0.88rem; color: #0f172a;" onchange="admin.onSelectTeamToEdit(this.value)">
+            <select id="teamEditorSelectTarget" class="form-select"
+              style="font-weight: 700; background-color: #ffffff; border: 1.5px solid #0284c7; font-size: 0.88rem; color: #0f172a;"
+              onchange="admin.onSelectTeamToEdit(this.value)">
               <option value="">➕ [ BUAT / TAMBAH TIM BARU ]</option>
             </select>
             <p style="margin: 6px 0 0 0; font-size: 0.72rem; color: #64748b; line-height: 1.3;">
-              💡 <em>Pilih nama tim dari menu di atas agar nama sekolah, grup, foto pelatih/asisten, dan skuad pemain langsung terisi otomatis. Anda cukup mengedit data yang ingin diganti saja tanpa harus mengisi ulang dari awal!</em>
+              💡 <em>Pilih nama tim dari menu di atas agar nama sekolah, grup, foto pelatih/asisten, dan skuad pemain
+                langsung terisi otomatis. Anda cukup mengedit data yang ingin diganti saja tanpa harus mengisi ulang
+                dari awal!</em>
             </p>
           </div>
 
@@ -1899,12 +1921,14 @@
           <div class="form-row">
             <div class="form-group" style="flex: 1;">
               <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
-                <span>🏫 Instansi <span style="font-size: 0.7rem; color: #059669; font-weight: 700;">(Aturan Pemisah Draw Grup)</span></span>
+                <span>🏫 Instansi <span style="font-size: 0.7rem; color: #059669; font-weight: 700;">(Aturan Pemisah
+                    Draw Grup)</span></span>
               </label>
               <input type="text" id="editTeamInstansi" class="form-input"
                 placeholder="contoh: SDIT Qurratu'ayun (samakan nama Instansi untuk Tim A & Tim B)">
               <span style="display: block; font-size: 0.68rem; color: var(--text-muted); margin-top: 3px;">
-                💡 Jika 1 sekolah mengirim 2 tim, isi nama <strong>Instansi</strong> yang sama agar sistem Draw Grup otomatis memastikan keduanya tidak berada dalam 1 grup.
+                💡 Jika 1 sekolah mengirim 2 tim, isi nama <strong>Instansi</strong> yang sama agar sistem Draw Grup
+                otomatis memastikan keduanya tidak berada dalam 1 grup.
               </span>
             </div>
           </div>
@@ -1951,7 +1975,8 @@
               <label class="form-label">Nama Pelatih (Coach)</label>
               <input type="text" id="editTeamCoach" class="form-input" placeholder="contoh: Coach Bayu Saputra">
               <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
-                <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 3px 8px; cursor: pointer;"
+                <button type="button" class="btn btn-outline btn-sm"
+                  style="font-size: 0.72rem; padding: 3px 8px; cursor: pointer;"
                   onclick="document.getElementById('coachPhotoFileInput').click();">
                   📷 Upload Foto Pelatih
                 </button>
@@ -1967,7 +1992,8 @@
               <label class="form-label">Nama Asisten Pelatih</label>
               <input type="text" id="editTeamManager" class="form-input" placeholder="contoh: Ust. M. Ridwan, S.Pd">
               <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
-                <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 3px 8px; cursor: pointer;"
+                <button type="button" class="btn btn-outline btn-sm"
+                  style="font-size: 0.72rem; padding: 3px 8px; cursor: pointer;"
                   onclick="document.getElementById('managerPhotoFileInput').click();">
                   📷 Upload Foto Asisten Pelatih
                 </button>
@@ -2630,8 +2656,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
     <div class="modal-box" style="max-width: 820px;">
       <div class="modal-header" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff;">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <h3 class="modal-title" style="color: #ffffff; margin: 0;">📂 Import Berkas Data Pemain & Tim (Batch Otomatis)</h3>
-          <span style="font-size: 0.68rem; font-weight: 700; color: #ffffff; background: rgba(16, 185, 129, 0.35); border: 1px solid rgba(255,255,255,0.4); padding: 2px 8px; border-radius: 999px;">🛡️ Auto-Draft Aktif</span>
+          <h3 class="modal-title" style="color: #ffffff; margin: 0;">📂 Import Berkas Data Pemain & Tim (Batch Otomatis)
+          </h3>
+          <span
+            style="font-size: 0.68rem; font-weight: 700; color: #ffffff; background: rgba(16, 185, 129, 0.35); border: 1px solid rgba(255,255,255,0.4); padding: 2px 8px; border-radius: 999px;">🛡️
+            Auto-Draft Aktif</span>
         </div>
         <button type="button" class="modal-close" onclick="admin.closeBatchUploadModal()"
           style="color: #ffffff;">&times;</button>
@@ -2718,7 +2747,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
             </li>
             <li><strong>Teks / WhatsApp (.txt / .csv / paste)</strong>: Format teks daftar nama pemain 1 per baris.</li>
             <li><strong>Foto Pemain / Pelatih (.jpg / .png)</strong>: Foto bernama <code>1_NamaPemain.jpg</code>,
-              <code>pelatih.jpg</code>, dll.</li>
+              <code>pelatih.jpg</code>, dll.
+            </li>
             <li><strong>1 Folder / ZIP</strong>: Folder berisi sub-folder tim atau gabungan file turnamen.</li>
           </ul>
         </details>
