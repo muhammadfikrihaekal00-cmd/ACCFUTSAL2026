@@ -60,6 +60,7 @@ class TournamentStore {
       group: t.group || t.group_letter || "A",
       badgeColor: t.badgeColor || t.badge_color || "#0284c7",
       city: (typeof t.city === "string") ? t.city : "",
+      instansi: (typeof t.instansi === "string") ? t.instansi.trim() : "",
       logo: (typeof t.logo === "string") ? t.logo : "",
       official,
       players
@@ -1519,6 +1520,7 @@ var app = window.app = Object.assign(window.app || {}, {
           ).join("|") : "") +
           "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
           "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.official_coach}:${t.official_manager}:${t.updated_at}:${(t.players||[]).length}:${(t.players||[]).map(p => p.name||'').join(',')}:${(t.coach_photo||'').length}:${(t.manager_photo||'').length}`).join("|") : "") +
+          "#" + (data.teamMeta ? Object.keys(data.teamMeta).sort().map(k => `${k}:${data.teamMeta[k]?.category||''}:${data.teamMeta[k]?.instansi||''}`).join("|") : "") +
           "#" + (data.teamLogos ? Object.keys(data.teamLogos).map(k => `${k}:${(data.teamLogos[k]||'').length}`).join("|") : "");
 
           if (isInitialLoad || signature !== lastDataSignature) {
@@ -1758,6 +1760,7 @@ var app = window.app = Object.assign(window.app || {}, {
               badgeColor: remoteTeam.badge_color || remoteTeam.badgeColor || localTeam.badgeColor,
               city: remoteTeam.city !== undefined ? remoteTeam.city : localTeam.city,
               group: remoteTeam.group_letter || remoteTeam.group || localTeam.group,
+              instansi: (remoteTeam.instansi && remoteTeam.instansi.trim()) ? remoteTeam.instansi.trim() : (localTeam.instansi || ''),
               // Data Shield: Pertahankan logo lokal jika remote kosong
               logo: isValidPhoto(remoteTeam.logo) ? remoteTeam.logo : (localTeam.logo || '')
             };
@@ -1808,6 +1811,23 @@ var app = window.app = Object.assign(window.app || {}, {
             };
 
             Object.assign(this.store.data.teams[idx], mapped);
+          } else if (remoteTeam && remoteTeam.id && remoteTeam.name && remoteTeam.name !== "Tim Umum") {
+            // Tim baru yang ditambahkan dari perangkat lain di Database Online!
+            const norm = (this.store && typeof this.store.normalizeTeam === "function")
+              ? this.store.normalizeTeam(remoteTeam, this.store.data.teams.length)
+              : remoteTeam;
+            if (norm) this.store.data.teams.push(norm);
+          }
+        });
+      }
+
+      // Terapkan metadata (category & instansi) dari registry cloud lintas-perangkat
+      if (data.teamMeta && typeof data.teamMeta === 'object') {
+        Object.entries(data.teamMeta).forEach(([tId, meta]) => {
+          const t = this.store.data.teams.find(tm => tm.id === tId);
+          if (t && meta) {
+            if (meta.category) t.category = meta.category;
+            if (meta.instansi !== undefined) t.instansi = String(meta.instansi || '').trim();
           }
         });
       }
@@ -2054,6 +2074,28 @@ var app = window.app = Object.assign(window.app || {}, {
       this.store.saveData();
       this.renderMoments();
     } else if (table === 'tournament_config' || table === 'config') {
+      if (payload.id === 'team_meta_registry' && payload.rules_text) {
+        try {
+          const metaReg = JSON.parse(payload.rules_text);
+          if (metaReg && typeof metaReg === 'object') {
+            Object.entries(metaReg).forEach(([tId, meta]) => {
+              const teamObj = this.store.getTeam(tId);
+              if (teamObj && meta) {
+                if (meta.category) teamObj.category = meta.category;
+                if (meta.instansi !== undefined) teamObj.instansi = String(meta.instansi || '').trim();
+              }
+            });
+            this.store.saveData();
+            if (!this.isUserEditing()) {
+              this.renderTeams();
+              if (this.currentTab === "draw" && typeof this.renderDrawView === "function") {
+                this.renderDrawView();
+              }
+            }
+          }
+        } catch (_) {}
+        return;
+      }
       if (payload.id === 'team_logos_registry' && payload.rules_text) {
         try {
           const reg = JSON.parse(payload.rules_text);
@@ -2221,8 +2263,24 @@ var app = window.app = Object.assign(window.app || {}, {
     const btnAddMoment = document.getElementById("btnAddMomentBtn");
     if (btnAddMoment) btnAddMoment.style.display = isPanitia ? "inline-flex" : "none";
 
+    // Fitur Draw Grup HANYA tampil & aktif di akses Panitia (tersembunyi total dari pengunjung!)
+    document.querySelectorAll('.tab-btn[data-tab="draw"]').forEach(btn => {
+      btn.style.display = isPanitia ? "inline-flex" : "none";
+    });
+    document.querySelectorAll('.mobile-nav-item[data-tab="draw"]').forEach(item => {
+      item.style.display = isPanitia ? "flex" : "none";
+    });
+
+    if (!isPanitia && this.currentTab === "draw") {
+      this.switchTab("home", false);
+    }
+
     const btnHeaderAturLawan = document.getElementById("btnHeaderAturLawan");
     if (btnHeaderAturLawan) btnHeaderAturLawan.style.display = isPanitia ? "inline-flex" : "none";
+
+    if (isPanitia && this.currentTab === "draw" && typeof this.renderDrawView === "function") {
+      this.renderDrawView();
+    }
   },
 
   renderHeroBanner() {
@@ -2575,8 +2633,8 @@ var app = window.app = Object.assign(window.app || {}, {
 
   switchTab(tabId, pushHistory = true) {
     try {
-      if (tabId === "draw") {
-        tabId = "standings";
+      if (tabId === "draw" && !this.isAdmin()) {
+        tabId = "home";
       }
 
       if (pushHistory && tabId !== this.currentTab) {
@@ -4243,6 +4301,8 @@ var app = window.app = Object.assign(window.app || {}, {
             ? `<img src="${teamInSlot.logo}" alt="${teamInSlot.name}">`
             : (teamInSlot.shortName ? teamInSlot.shortName.substring(0, 2) : "⚽");
 
+          const liveFullTeam = (teamInSlot.teamId && this.store && typeof this.store.getTeam === "function") ? this.store.getTeam(teamInSlot.teamId) : null;
+          const slotInstansi = (liveFullTeam && liveFullTeam.instansi) || teamInSlot.instansi || "";
           slotsHtml += `
             <div class="draw-slot-item filled" id="drawSlot_${cat}_${g}_${slot}">
               <div class="draw-slot-num">${slot}</div>
@@ -4251,7 +4311,7 @@ var app = window.app = Object.assign(window.app || {}, {
               </div>
               <div class="draw-slot-info">
                 <div class="draw-slot-name" title="${teamInSlot.name}">${teamInSlot.name}</div>
-                <div class="draw-slot-city">${teamInSlot.city || 'Sulawesi Selatan'}</div>
+                <div class="draw-slot-city">${slotInstansi ? `🏫 ${slotInstansi}` : (teamInSlot.city || 'Sulawesi Selatan')}</div>
               </div>
             </div>
           `;
@@ -4321,16 +4381,130 @@ var app = window.app = Object.assign(window.app || {}, {
       const pillClass = isDrawn ? "draw-pool-pill is-drawn" : "draw-pool-pill available";
       const icon = isDrawn ? "✓" : "🎲";
 
+      const instBadge = (t.instansi && t.instansi.trim())
+        ? `<span style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.14); color: #047857; padding: 1px 6px; border-radius: 999px; font-weight: 700;">🏫 ${t.instansi.trim()}</span>`
+        : '';
+
       html += `
-        <div class="${pillClass}" title="${t.name}">
+        <div class="${pillClass}" title="${t.name}${t.instansi ? ' • Instansi: ' + t.instansi : ''}">
           <span class="draw-pool-avatar" style="background: ${t.badgeColor || '#64748b'};"></span>
           <span>${t.name}</span>
+          ${instBadge}
           <span style="font-size: 0.72rem; opacity: 0.75;">${icon}</span>
         </div>
       `;
     });
 
     container.innerHTML = html;
+  },
+
+  // Pemilih Tim Draw Grup yang 100% Patuh Aturan Instansi (Exact Backtracking Anti-Satu-Grup + Anti-Deadlock)
+  pickInstansiSafeDrawTeam(cat, targetGroup, undrawn) {
+    if (!undrawn || undrawn.length === 0) return null;
+    const state = this.getDrawState()[cat];
+    const groupKeys = ["A", "B", "C", "D"];
+    const totalCatTeams = this.getDrawCategoryTeams(cat).length;
+    const maxSlotsPerGroup = Math.max(4, Math.ceil(totalCatTeams / 4));
+
+    const getInst = (item) => {
+      if (!item) return "";
+      let raw = item.instansi || "";
+      const tid = item.teamId || item.id;
+      if (tid && this.store && typeof this.store.getTeam === "function") {
+        const liveT = this.store.getTeam(tid);
+        if (liveT && liveT.instansi) raw = liveT.instansi;
+      }
+      return String(raw || "").trim().toLowerCase().replace(/\s+/g, " ");
+    };
+
+    // Instansi yang sudah ada di targetGroup saat ini
+    const usedInTarget = new Set(
+      (state.groups[targetGroup] || []).map(getInst).filter(Boolean)
+    );
+
+    // 1. Saring kandidat yang TIDAK memiliki Instansi yang sama dengan tim yang sudah masuk di targetGroup
+    let candidates = undrawn.filter(t => {
+      const inst = getInst(t);
+      return !inst || !usedInTarget.has(inst);
+    });
+
+    if (candidates.length === 0) {
+      candidates = undrawn;
+    }
+
+    // 2. Exact Feasibility Solver (Anti-Deadlock 100%):
+    // Hanya pilih kandidat yang menjamin SELURUH tim tersisa masih bisa dibagi ke 4 grup tanpa 1 pun bentrok Instansi!
+    const isFeasibleChoice = (cand) => {
+      const remCap = {};
+      const groupSets = {};
+      groupKeys.forEach(gk => {
+        const arr = state.groups[gk] || [];
+        remCap[gk] = Math.max(0, maxSlotsPerGroup - arr.length);
+        groupSets[gk] = new Set(arr.map(getInst).filter(Boolean));
+      });
+
+      const candInst = getInst(cand);
+      if (remCap[targetGroup] <= 0) return false;
+      remCap[targetGroup] -= 1;
+      if (candInst) groupSets[targetGroup].add(candInst);
+
+      // Hitung frekuensi instansi pada sisa tim yang belum diundi
+      const counts = {};
+      undrawn.forEach(t => {
+        if (t.id === cand.id) return;
+        const inst = getInst(t);
+        if (inst) counts[inst] = (counts[inst] || 0) + 1;
+      });
+
+      // Hanya instansi yang muncul >1x di sisa pot ATAU sudah muncul di grup yang masih punya slot kosong yang perlu diselesaikan
+      const constrained = [];
+      Object.entries(counts).forEach(([inst, count]) => {
+        const existsInOpenGroup = groupKeys.some(gk => remCap[gk] > 0 && groupSets[gk].has(inst));
+        if (count > 1 || existsInOpenGroup) {
+          constrained.push({ inst, count });
+        }
+      });
+
+      if (constrained.length === 0) return true;
+
+      // Urutkan yang paling ketat lebih dulu agar pencarian selesai dalam mikrodetik
+      constrained.sort((a, b) => b.count - a.count);
+
+      let steps = 0;
+      const MAX_STEPS = 4000;
+
+      const solve = (idx) => {
+        if (idx >= constrained.length) return true;
+        if (++steps > MAX_STEPS) return true;
+        const { inst, count } = constrained[idx];
+        const validGroups = groupKeys.filter(gk => remCap[gk] > 0 && !groupSets[gk].has(inst));
+        if (validGroups.length < count) return false;
+
+        // Pilih `count` grup berbeda dari `validGroups` (maksimal C(4,2)=6 kombinasi)
+        const pickCombo = (start, chosen) => {
+          if (chosen.length === count) {
+            chosen.forEach(gk => { remCap[gk] -= 1; groupSets[gk].add(inst); });
+            const ok = solve(idx + 1);
+            chosen.forEach(gk => { remCap[gk] += 1; groupSets[gk].delete(inst); });
+            return ok;
+          }
+          for (let i = start; i <= validGroups.length - (count - chosen.length); i++) {
+            chosen.push(validGroups[i]);
+            if (pickCombo(i + 1, chosen)) return true;
+            chosen.pop();
+          }
+          return false;
+        };
+
+        return pickCombo(0, []);
+      };
+
+      return solve(0);
+    };
+
+    const feasibleCandidates = candidates.filter(isFeasibleChoice);
+    const finalPool = feasibleCandidates.length > 0 ? feasibleCandidates : candidates;
+    return finalPool[Math.floor(Math.random() * finalPool.length)];
   },
 
   spinSingleDraw(onFinished = null) {
@@ -4356,8 +4530,8 @@ var app = window.app = Object.assign(window.app || {}, {
       return;
     }
 
-    // Pemenang dipilih secara acak murni dari pot tim yang tersisa
-    const winnerTeam = undrawn[Math.floor(Math.random() * undrawn.length)];
+    // Pemenang dipilih secara acak dengan aturan wajib: 2 tim ber-Instansi sama TIDAK BOLEH 1 grup!
+    const winnerTeam = this.pickInstansiSafeDrawTeam(cat, nextTarget.group, undrawn);
     this.isDrawingSpinning = true;
 
     // Audio & UI setup
@@ -4428,6 +4602,7 @@ var app = window.app = Object.assign(window.app || {}, {
           shortName: winnerTeam.shortName || winnerTeam.name,
           badgeColor: winnerTeam.badgeColor || "#0284c7",
           city: winnerTeam.city || "",
+          instansi: winnerTeam.instansi || "",
           logo: winnerTeam.logo || "",
           slot: nextTarget.slotIndex
         });

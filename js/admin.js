@@ -2063,6 +2063,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const shortInput = document.getElementById("editTeamShortName");
     const groupSelect = document.getElementById("editTeamGroup");
     const cityInput = document.getElementById("editTeamCity");
+    const instansiInput = document.getElementById("editTeamInstansi");
     const colorInput = document.getElementById("editTeamColor");
     const pickerInput = document.getElementById("editTeamColorPicker");
     const coachInput = document.getElementById("editTeamCoach");
@@ -2098,6 +2099,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       if (shortInput) shortInput.value = team.shortName || "";
       if (groupSelect) groupSelect.value = team.group || "A";
       if (cityInput) cityInput.value = team.city || "";
+      if (instansiInput) instansiInput.value = team.instansi || "";
       if (colorInput) colorInput.value = team.badgeColor || "#10b981";
       if (pickerInput) pickerInput.value = team.badgeColor || "#10b981";
 
@@ -2159,6 +2161,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       if (shortInput) shortInput.value = "";
       if (groupSelect) groupSelect.value = "A";
       if (cityInput) cityInput.value = "";
+      if (instansiInput) instansiInput.value = "";
       if (colorInput) colorInput.value = "#10b981";
       if (pickerInput) pickerInput.value = "#10b981";
 
@@ -2460,6 +2463,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const shortName = (document.getElementById("editTeamShortName")?.value || "").trim();
     const group = document.getElementById("editTeamGroup")?.value || "A";
     const city = (document.getElementById("editTeamCity")?.value || "").trim();
+    const instansi = (document.getElementById("editTeamInstansi")?.value || "").trim();
     const badgeColor = (document.getElementById("editTeamColor")?.value || "").trim() || "#10b981";
 
     const coach = (document.getElementById("editTeamCoach")?.value || "").trim();
@@ -2543,6 +2547,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         name,
         shortName: shortName || name.substring(0, 10).toUpperCase(),
         category,
+        instansi,
         logo,
         group,
         badgeColor,
@@ -2581,9 +2586,14 @@ var admin = window.admin = Object.assign(window.admin || {}, {
           }
         }
       } else {
-        // Add new
+        // Add new with collision-free ID (max numeric T-id + 1)
         const currentTeams = (app.store && app.store.data && app.store.data.teams) ? app.store.data.teams : [];
-        const newId = "T" + String(currentTeams.length + 1).padStart(2, "0");
+        let maxNum = currentTeams.length;
+        currentTeams.forEach(t => {
+          const n = parseInt(String(t.id || '').replace(/\D/g, ''), 10);
+          if (!isNaN(n) && n > maxNum) maxNum = n;
+        });
+        const newId = "T" + String(maxNum + 1).padStart(2, "0");
         teamPayload.id = newId;
         targetTeamId = newId;
         if (app.store && app.store.data && app.store.data.teams) {
@@ -2599,6 +2609,30 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       }
       if (app.store && typeof app.store.syncKnockoutFromStandings === 'function') {
         app.store.syncKnockoutFromStandings();
+      }
+
+      // WAJIB: Simpan & tunggu konfirmasi langsung dari Database Online Supabase!
+      let cloudSynced = false;
+      let cloudErrMsg = "";
+      if (window.SupabaseService && typeof window.SupabaseService.syncTeam === "function") {
+        if (btnSubmit) btnSubmit.innerHTML = "<span>☁️</span> Menyimpan ke Database Online...";
+        const savedTeam = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(targetTeamId) : teamPayload;
+        try {
+          if (!window.SupabaseService.isConfigured && window.supabase && typeof window.SupabaseService.init === "function") {
+            window.SupabaseService.init();
+          }
+          cloudSynced = await window.SupabaseService.syncTeam(savedTeam);
+          if (!cloudSynced) {
+            // Retry 1x jika koneksi sempat lambat
+            await new Promise(r => setTimeout(r, 600));
+            cloudSynced = await window.SupabaseService.syncTeam(savedTeam);
+          }
+          if (!cloudSynced) {
+            cloudErrMsg = window.SupabaseService.lastError || "Periksa koneksi internet";
+          }
+        } catch (err) {
+          cloudErrMsg = err && err.message ? err.message : "Koneksi terputus";
+        }
       }
 
       // Bersihkan draft karena data sudah tersimpan permanen, lalu tutup modal
@@ -2618,25 +2652,15 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         if (typeof app.renderStandings === 'function') app.renderStandings();
         if (typeof app.renderScorers === 'function') app.renderScorers();
         if (typeof app.renderDiscipline === 'function') app.renderDiscipline();
+        if (app.currentTab === "draw" && typeof app.renderDrawView === 'function') app.renderDrawView();
       } catch (renderErr) {
         console.error("Render error after team save:", renderErr);
       }
 
-      app.showToast(`✅ Data tim ${name} berhasil disimpan & disinkronkan!`);
-
-      // Granular synchronization to Supabase Cloud
-      if (window.SupabaseService) {
-        const savedTeam = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(targetTeamId) : teamPayload;
-        if (savedTeam && window.SupabaseService.syncTeam) {
-          window.SupabaseService.syncTeam(savedTeam).then(res => {
-            if (res) console.log(`☁️ Supabase Cloud: Tim ${savedTeam.name} berhasil tersinkron!`);
-          }).catch(err => {
-            console.warn("Supabase team sync notice:", err);
-          });
-        }
-        if (logo && window.SupabaseService.syncTeamLogo) {
-          window.SupabaseService.syncTeamLogo(targetTeamId, logo).catch(() => {});
-        }
+      if (cloudSynced) {
+        app.showToast(`☁️✅ Tim "${name}" berhasil disimpan permanen ke Database Online!`);
+      } else {
+        app.showToast(`⚠️ Tim "${name}" tersimpan lokal (Database Online: ${cloudErrMsg || 'offline'}).`);
       }
     } catch (saveError) {
       console.error("Error saving team:", saveError);
@@ -2949,7 +2973,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     app.showToast("🎉 Foto berhasil disimpan!");
   },
 
-  deleteTeam() {
+  async deleteTeam() {
     if (!this.isAuthenticated) {
       app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
       return;
@@ -2967,18 +2991,33 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     if (!team) return;
 
-    if (confirm(`Yakin ingin menghapus tim "${team.name}" beserta seluruh daftar pemainnya?`)) {
+    if (confirm(`Yakin ingin menghapus tim "${team.name}" beserta seluruh daftar pemainnya dari Database Online?`)) {
       app.store.data.teams = app.store.data.teams.filter(t => t.id !== team.id);
       app.store.saveData();
       app.store.syncKnockoutFromStandings();
+
+      let cloudDeleted = false;
+      if (window.SupabaseService && typeof window.SupabaseService.deleteTeam === "function") {
+        app.showToast(`⏳ Menghapus ${team.name} dari Database Online...`);
+        cloudDeleted = await window.SupabaseService.deleteTeam(team.id);
+      }
 
       app.renderTeams();
       app.renderStandings();
       app.renderScorers();
       app.renderDiscipline();
+      if (typeof app.renderDrawPool === "function") app.renderDrawPool();
 
+      this.clearTeamEditorDraft();
       document.getElementById("teamEditorModal")?.classList.remove("active");
-      app.showToast(`Tim ${team.name} telah dihapus.`);
+      if (!document.querySelector(".modal-overlay.active")) {
+        document.body.classList.remove("modal-open");
+      }
+      if (cloudDeleted) {
+        app.showToast(`☁️ Tim ${team.name} telah dihapus dari Database Online!`);
+      } else {
+        app.showToast(`Tim ${team.name} dihapus di perangkat ini.`);
+      }
     }
   },
 
@@ -5159,6 +5198,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         id: (document.getElementById("editTeamId")?.value || "").trim(),
         name: (document.getElementById("editTeamName")?.value || ""),
         shortName: (document.getElementById("editTeamShortName")?.value || ""),
+        instansi: (document.getElementById("editTeamInstansi")?.value || ""),
         category: document.getElementById("editTeamCategory")?.value || "SMP",
         group: document.getElementById("editTeamGroup")?.value || "A",
         city: (document.getElementById("editTeamCity")?.value || ""),
@@ -5339,6 +5379,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         setVal("editTeamId", draft.id);
         setVal("editTeamName", draft.name);
         setVal("editTeamShortName", draft.shortName);
+        setVal("editTeamInstansi", draft.instansi);
         setVal("editTeamCategory", draft.category || "SMP");
         setVal("editTeamGroup", draft.group || "A");
         setVal("editTeamCity", draft.city);

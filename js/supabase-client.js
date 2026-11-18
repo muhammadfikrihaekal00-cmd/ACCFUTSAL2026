@@ -235,6 +235,7 @@
 
         let mainConfig = null;
         let teamLogos = {};
+        let teamMeta = {};
         if (configListRes && configListRes.data && Array.isArray(configListRes.data)) {
           mainConfig = configListRes.data.find(c => c.id === 'config_main') || configListRes.data[0] || null;
           const logosRow = configListRes.data.find(c => c.id === 'team_logos_registry');
@@ -243,12 +244,30 @@
               teamLogos = JSON.parse(logosRow.rules_text) || {};
             } catch (_) {}
           }
+          const metaRow = configListRes.data.find(c => c.id === 'team_meta_registry');
+          if (metaRow && metaRow.rules_text) {
+            try {
+              teamMeta = JSON.parse(metaRow.rules_text) || {};
+            } catch (_) {}
+          }
         }
+
+        // Lampirkan metadata (category, instansi, logo) ke setiap baris tim
+        const teamsList = Array.isArray(teamsRes.data) ? teamsRes.data.map(t => {
+          const m = teamMeta[t.id] || {};
+          return {
+            ...t,
+            category: t.category || m.category || undefined,
+            instansi: t.instansi || m.instansi || '',
+            logo: t.logo || teamLogos[t.id] || ''
+          };
+        }) : null;
 
         return {
           config: mainConfig,
           teamLogos: teamLogos,
-          teams: teamsRes.data || null,
+          teamMeta: teamMeta,
+          teams: teamsList,
           matches: matchesRes.data || null,
           moments: momentsRes.data || null,
           sponsors: sponsorsRes.data || null
@@ -408,10 +427,93 @@
       }
     }
 
-    // Push Team Data
-    // Granular Team Update with Non-Destructive Shield
-    async syncTeam(team) {
+    // Push Team Metadata (Category & Instansi) to Dedicated Registry Row in tournament_config
+    async syncTeamMeta(teamId, category, instansi) {
+      if ((!this.client || !this.isConfigured) && window.supabase) this.init();
       if (!this.client || !this.isConfigured) return false;
+      try {
+        const { data: existing } = await this.client
+          .from('tournament_config')
+          .select('rules_text')
+          .eq('id', 'team_meta_registry')
+          .maybeSingle();
+
+        let registry = {};
+        if (existing && existing.rules_text) {
+          try { registry = JSON.parse(existing.rules_text) || {}; } catch (_) {}
+        }
+        registry[teamId] = {
+          category: category || (registry[teamId] && registry[teamId].category) || 'SMP',
+          instansi: instansi !== undefined ? String(instansi || '').trim() : ((registry[teamId] && registry[teamId].instansi) || '')
+        };
+
+        const { error } = await this.client
+          .from('tournament_config')
+          .upsert({
+            id: 'team_meta_registry',
+            tournament_name: 'Team Metadata Registry (Category & Instansi)',
+            rules_text: JSON.stringify(registry),
+            updated_at: new Date().toISOString()
+          });
+        if (error) {
+          console.warn("syncTeamMeta notice:", error.message);
+          this.lastError = error.message;
+        }
+        return !error;
+      } catch (e) {
+        console.warn("syncTeamMeta notice:", e);
+        return false;
+      }
+    }
+
+    // Delete Team from Supabase Online Database (+ cleanup team_meta_registry)
+    async deleteTeam(teamId) {
+      if ((!this.client || !this.isConfigured) && window.supabase) this.init();
+      if (!this.client || !this.isConfigured || !teamId) return false;
+      try {
+        const { error } = await this.client.from('teams').delete().eq('id', teamId);
+        if (error) {
+          console.warn("Supabase deleteTeam notice:", error.message);
+          this.lastError = error.message;
+          return false;
+        }
+        // Bersihkan entri metadata tim dari team_meta_registry
+        try {
+          const { data: existing } = await this.client
+            .from('tournament_config')
+            .select('rules_text')
+            .eq('id', 'team_meta_registry')
+            .maybeSingle();
+          if (existing && existing.rules_text) {
+            const registry = JSON.parse(existing.rules_text) || {};
+            if (registry[teamId] !== undefined) {
+              delete registry[teamId];
+              await this.client
+                .from('tournament_config')
+                .upsert({
+                  id: 'team_meta_registry',
+                  tournament_name: 'Team Metadata Registry (Category & Instansi)',
+                  rules_text: JSON.stringify(registry),
+                  updated_at: new Date().toISOString()
+                });
+            }
+          }
+        } catch (_) {}
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Push Team Data (100% Online Sync: public.teams + team_meta_registry + team_logos_registry)
+    async syncTeam(team) {
+      if ((!this.client || !this.isConfigured) && window.supabase) {
+        this.init();
+      }
+      if (!this.client || !this.isConfigured) {
+        this.lastError = "Supabase belum terhubung";
+        return false;
+      }
       try {
         let existingRem = null;
         try {
@@ -430,9 +532,6 @@
           managerPhoto = existingRem.manager_photo;
         }
         let logo = team.logo || '';
-        if (!hasImg(logo) && existingRem && hasImg(existingRem.logo)) {
-          logo = existingRem.logo;
-        }
         let players = Array.isArray(team.players) ? [...team.players] : [];
         if (existingRem && Array.isArray(existingRem.players) && existingRem.players.length > 0) {
           const remHasPhotos = existingRem.players.some(p => hasImg(p.photo));
@@ -447,50 +546,45 @@
           }
         }
 
+        // Kirim tepat 16 kolom resmi tabel public.teams di Postgres (zero HTTP 400 error!)
         const payload = {
           id: team.id,
           name: team.name,
-          short_name: team.shortName,
-          badge_color: team.badgeColor,
-          city: team.city,
-          group_letter: team.group,
-          official_coach: team.official ? team.official.coach : '',
-          official_manager: team.official ? team.official.manager : '',
-          official_medic: team.official ? team.official.medic : '',
-          official_phone: team.official ? team.official.phone : '',
-          official_jersey_home: team.official ? team.official.jerseyHome : '',
-          official_jersey_away: team.official ? team.official.jerseyAway : '',
+          short_name: team.shortName || (team.name || '').substring(0, 10).toUpperCase(),
+          badge_color: team.badgeColor || '#10b981',
+          city: team.city || '',
+          group_letter: team.group || 'A',
+          official_coach: team.official ? (team.official.coach || '') : '',
+          official_manager: team.official ? (team.official.manager || '') : '',
+          official_medic: team.official ? (team.official.medic || '') : '',
+          official_phone: team.official ? (team.official.phone || '') : '',
+          official_jersey_home: team.official ? (team.official.jerseyHome || '') : '',
+          official_jersey_away: team.official ? (team.official.jerseyAway || '') : '',
           coach_photo: coachPhoto,
           manager_photo: managerPhoto,
           players: players,
           updated_at: new Date().toISOString()
         };
 
-        if (logo) payload.logo = logo;
-        if (team.category) payload.category = team.category;
-
-        let { error } = await this.client.from('teams').upsert(payload);
-
-        // Fallback jika kolom logo atau category belum ada di tabel teams Postgres
-        if (error && (error.code === '42703' || (error.message && (error.message.includes('logo') || error.message.includes('category'))))) {
-          delete payload.logo;
-          delete payload.category;
-          const retry = await this.client.from('teams').upsert(payload);
-          error = retry.error;
-        }
+        const { error } = await this.client.from('teams').upsert(payload);
 
         if (error) {
-          console.warn("Supabase syncTeam notice:", error.message);
+          console.warn("Supabase syncTeam error:", error.message);
           this.lastError = error.message;
+          return false;
         }
+
+        // Simpan kategori & instansi ke team_meta_registry (online & sinkron lintas perangkat)
+        await this.syncTeamMeta(team.id, team.category || 'SMP', team.instansi || '');
 
         // Simpan logo ke team_logos_registry agar sinkron 100% di semua device (HP, Laptop, PC)
         if (logo) {
-          this.syncTeamLogo(team.id, logo).catch(() => {});
+          await this.syncTeamLogo(team.id, logo);
         }
 
-        return !error;
+        return true;
       } catch (e) {
+        this.lastError = e && e.message ? e.message : String(e);
         return false;
       }
     }
@@ -614,11 +708,37 @@
               official_jersey_away: jerseyAway,
               coach_photo: coachPhoto,
               manager_photo: managerPhoto,
-              logo: logo,
               players: players,
               updated_at: new Date().toISOString()
             };
           });
+
+          // Simpan juga metadata (category & instansi) ke team_meta_registry
+          try {
+            const { data: metaRow } = await this.client
+              .from('tournament_config')
+              .select('rules_text')
+              .eq('id', 'team_meta_registry')
+              .maybeSingle();
+            let remoteMeta = {};
+            if (metaRow && metaRow.rules_text) {
+              try { remoteMeta = JSON.parse(metaRow.rules_text) || {}; } catch (_) {}
+            }
+            data.teams.forEach(t => {
+              if (!t || !t.id) return;
+              const prev = remoteMeta[t.id] || {};
+              remoteMeta[t.id] = {
+                category: t.category || prev.category || 'SMP',
+                instansi: (t.instansi && t.instansi.trim()) ? t.instansi.trim() : (prev.instansi || '')
+              };
+            });
+            await this.client.from('tournament_config').upsert({
+              id: 'team_meta_registry',
+              tournament_name: 'Team Metadata Registry (Category & Instansi)',
+              rules_text: JSON.stringify(remoteMeta),
+              updated_at: new Date().toISOString()
+            });
+          } catch (_) {}
 
           let { error: teamErr } = await this.client.from('teams').upsert(teamsPayload);
           if (teamErr) {
