@@ -345,12 +345,12 @@ class TournamentStore {
     const groupMatches = this.data.matches.filter(
       m => m.stage === "group" && m.group === groupLetter &&
            (!category || category === "all" || (m.category || "SMP") === category) &&
-           (m.status === "finished" || m.status === "live")
+           m.status === "finished"
     );
 
     groupMatches.forEach(m => {
-      const hScore = m.status === "live" ? (m.homeScoreLive ?? m.homeScore ?? 0) : (m.homeScore ?? m.homeScoreLive ?? 0);
-      const aScore = m.status === "live" ? (m.awayScoreLive ?? m.awayScore ?? 0) : (m.awayScore ?? m.awayScoreLive ?? 0);
+      const hScore = m.homeScore ?? 0;
+      const aScore = m.awayScore ?? 0;
 
       const h = stats[m.homeId];
       const a = stats[m.awayId];
@@ -389,16 +389,54 @@ class TournamentStore {
       a.gd = a.gf - a.ga;
     });
 
-    // Sort by: Pts DESC, GD DESC, GF DESC
+    // Sort by: Pts DESC, GD DESC, GF DESC, H2H, Fair-Play
     return Object.values(stats).sort((a, b) => {
       if (b.pts !== a.pts) return b.pts - a.pts;
       if (b.gd !== a.gd) return b.gd - a.gd;
-      return b.gf - a.gf;
+      if (b.gf !== a.gf) return b.gf - a.gf;
+      // Head-to-Head: skor di pertandingan langsung antara kedua tim
+      const h2h = groupMatches.find(m =>
+        (m.homeId === a.team.id && m.awayId === b.team.id) ||
+        (m.homeId === b.team.id && m.awayId === a.team.id)
+      );
+      if (h2h && h2h.status === "finished") {
+        const aGoals = h2h.homeId === a.team.id ? (h2h.homeScore || 0) : (h2h.awayScore || 0);
+        const bGoals = h2h.homeId === b.team.id ? (h2h.homeScore || 0) : (h2h.awayScore || 0);
+        if (bGoals !== aGoals) return bGoals - aGoals;
+      }
+      // Fair-play: kuning*1 + merah*3, lebih rendah = lebih baik
+      const getCards = (st) => {
+        let yellow = 0, red = 0;
+        this.data.matches.forEach(m => {
+          if (m.stage !== "group" || m.group !== groupLetter) return;
+          if (m.status !== "finished") return;
+          if (m.homeId !== st.team.id && m.awayId !== st.team.id) return;
+          (m.cards || []).forEach(c => {
+            if (c.team !== st.team.id && c.team !== st.team.name) return;
+            if (c.type === "yellow") yellow++;
+            else if (c.type === "red") red++;
+          });
+        });
+        return yellow * 1 + red * 3;
+      };
+      const fpA = getCards(a);
+      const fpB = getCards(b);
+      if (fpA !== fpB) return fpA - fpB; // lebih sedikit = lebih baik
+      return 0; // undian koin
     });
   }
 
   // Automatically sync Group Winners & Runners-Up to Knockout (4 Grup SMP & 4 Grup SD)
   syncKnockoutFromStandings() {
+    // Helper: hanya isi QF jika SEMUA pertandingan grup sudah "finished"
+    const isGroupCompleted = (groupLetter, category) => {
+      const gm = this.data.matches.filter(m =>
+        m.stage === "group" && m.group === groupLetter &&
+        (!category || category === "all" || (m.category || "SMP") === category)
+      );
+      return gm.length > 0 && gm.every(m => m.status === "finished");
+    };
+
     // SMP Standings (Grup A, B, C, D)
     const stA_SMP = this.calculateGroupStandings("A", "SMP");
     const stB_SMP = this.calculateGroupStandings("B", "SMP");
@@ -415,7 +453,7 @@ class TournamentStore {
     const qf1_smp = this.data.matches.find(m => m.id === "QF1_SMP" || m.id === "QF1");
     if (qf1_smp) {
       qf1_smp.category = "SMP";
-      if (stA_SMP[0] && stB_SMP[1]) {
+      if (isGroupCompleted("A", "SMP") && isGroupCompleted("B", "SMP") && stA_SMP[0] && stB_SMP[1]) {
         qf1_smp.homeId = stA_SMP[0].team.id;
         qf1_smp.awayId = stB_SMP[1].team.id;
       }
@@ -423,7 +461,7 @@ class TournamentStore {
     const qf2_smp = this.data.matches.find(m => m.id === "QF2_SMP");
     if (qf2_smp) {
       qf2_smp.category = "SMP";
-      if (stC_SMP[0] && stD_SMP[1]) {
+      if (isGroupCompleted("C", "SMP") && isGroupCompleted("D", "SMP") && stC_SMP[0] && stD_SMP[1]) {
         qf2_smp.homeId = stC_SMP[0].team.id;
         qf2_smp.awayId = stD_SMP[1].team.id;
       }
@@ -431,7 +469,7 @@ class TournamentStore {
     const qf3_smp = this.data.matches.find(m => m.id === "QF3_SMP" || m.id === "QF3");
     if (qf3_smp) {
       qf3_smp.category = "SMP";
-      if (stB_SMP[0] && stA_SMP[1]) {
+      if (isGroupCompleted("B", "SMP") && isGroupCompleted("A", "SMP") && stB_SMP[0] && stA_SMP[1]) {
         qf3_smp.homeId = stB_SMP[0].team.id;
         qf3_smp.awayId = stA_SMP[1].team.id;
       }
@@ -439,7 +477,7 @@ class TournamentStore {
     const qf4_smp = this.data.matches.find(m => m.id === "QF4_SMP");
     if (qf4_smp) {
       qf4_smp.category = "SMP";
-      if (stD_SMP[0] && stC_SMP[1]) {
+      if (isGroupCompleted("D", "SMP") && isGroupCompleted("C", "SMP") && stD_SMP[0] && stC_SMP[1]) {
         qf4_smp.homeId = stD_SMP[0].team.id;
         qf4_smp.awayId = stC_SMP[1].team.id;
       }
@@ -449,7 +487,7 @@ class TournamentStore {
     const qf1_sd = this.data.matches.find(m => m.id === "QF1_SD" || m.id === "QF2");
     if (qf1_sd) {
       qf1_sd.category = "SD";
-      if (stA_SD[0] && stB_SD[1]) {
+      if (isGroupCompleted("A", "SD") && isGroupCompleted("B", "SD") && stA_SD[0] && stB_SD[1]) {
         qf1_sd.homeId = stA_SD[0].team.id;
         qf1_sd.awayId = stB_SD[1].team.id;
       }
@@ -457,7 +495,7 @@ class TournamentStore {
     const qf2_sd = this.data.matches.find(m => m.id === "QF2_SD");
     if (qf2_sd) {
       qf2_sd.category = "SD";
-      if (stC_SD[0] && stD_SD[1]) {
+      if (isGroupCompleted("C", "SD") && isGroupCompleted("D", "SD") && stC_SD[0] && stD_SD[1]) {
         qf2_sd.homeId = stC_SD[0].team.id;
         qf2_sd.awayId = stD_SD[1].team.id;
       }
@@ -465,7 +503,7 @@ class TournamentStore {
     const qf3_sd = this.data.matches.find(m => m.id === "QF3_SD" || m.id === "QF4");
     if (qf3_sd) {
       qf3_sd.category = "SD";
-      if (stB_SD[0] && stA_SD[1]) {
+      if (isGroupCompleted("B", "SD") && isGroupCompleted("A", "SD") && stB_SD[0] && stA_SD[1]) {
         qf3_sd.homeId = stB_SD[0].team.id;
         qf3_sd.awayId = stA_SD[1].team.id;
       }
@@ -473,7 +511,7 @@ class TournamentStore {
     const qf4_sd = this.data.matches.find(m => m.id === "QF4_SD");
     if (qf4_sd) {
       qf4_sd.category = "SD";
-      if (stD_SD[0] && stC_SD[1]) {
+      if (isGroupCompleted("D", "SD") && isGroupCompleted("C", "SD") && stD_SD[0] && stC_SD[1]) {
         qf4_sd.homeId = stD_SD[0].team.id;
         qf4_sd.awayId = stC_SD[1].team.id;
       }
@@ -616,7 +654,8 @@ class TournamentStore {
               const stat = playerStats[k];
               const isTeam = !c.team || c.team === stat.teamId || c.team === stat.teamName;
               const pName = (stat.playerName || '').toLowerCase().trim();
-              return isTeam && (cardName === pName || cardName === `${pName} (#${stat.playerNo})` || (stat.playerNo && cardName.includes(`#${stat.playerNo}`)) || cardName.includes(pName) || pName.includes(cardName));
+              const byNo = stat.playerNo && (cardName === `#${stat.playerNo}` || cardName.endsWith(`(#${stat.playerNo})`));
+              return isTeam && (cardName === pName || cardName === `${pName} (#${stat.playerNo})` || byNo);
             });
             if (foundKey) target = playerStats[foundKey];
           }
@@ -2064,10 +2103,10 @@ var app = window.app = Object.assign(window.app || {}, {
     document.getElementById("heroTitle").textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName;
     const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
     let cleanSub = (rawSub || "")
-      .replace(/â€¢/g, "•")
+      .replace(/•/g, "•")
       .replace(/â\S*¢/g, "•")
       .replace(/Â/g, "")
-      .replace(/Ã¢/g, "")
+      .replace(/â/g, "")
       .trim();
     if (!cleanSub.includes("•")) {
       cleanSub = cleanSub.replace(/\s+Ma'had/i, " • Ma'had");
@@ -3708,9 +3747,26 @@ var app = window.app = Object.assign(window.app || {}, {
       .replace(/\n\n/g, '<br/>');
 
     container.innerHTML = html;
+    this._juknisFullHtml = html; // simpan untuk fitur pencarian
     if (contactEl) {
       contactEl.textContent = this.store.data.config.contactCommittee;
     }
+  },
+
+  filterJuknis(query) {
+    const container = document.getElementById("juknisContent");
+    if (!container) return;
+    if (!query || !query.trim()) {
+      container.innerHTML = this._juknisFullHtml || container.innerHTML;
+      return;
+    }
+    const q = query.toLowerCase();
+    const full = this._juknisFullHtml || container.innerHTML;
+    // Pisah per section <h3>, tampilkan hanya yang cocok
+    const sections = full.split(/(?=<h3>)/);
+    const filtered = sections.filter(s => s.toLowerCase().includes(q)).join('');
+    container.innerHTML = filtered ||
+      `<p style="color:var(--text-muted);text-align:center;padding:24px;">Tidak ada hasil untuk "<strong>${typeof Security !== 'undefined' ? Security.sanitize(query) : query}</strong>"</p>`;
   },
 
   // =========================================================

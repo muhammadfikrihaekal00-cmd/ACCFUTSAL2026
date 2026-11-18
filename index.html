@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -115,10 +115,6 @@
     window.admin = window.admin || {
       isAuthenticated: (function () { try { return sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true"; } catch (e) { return false; } })(),
       openLoginModal: function () {
-        try {
-          localStorage.removeItem("acc_sec_lockout_until_v1");
-          localStorage.removeItem("acc_sec_attempts_v1");
-        } catch (e) { }
         var m = document.getElementById("adminLoginModal");
         if (m) m.classList.add("active");
         var inp = document.getElementById("adminPinInput");
@@ -146,7 +142,6 @@
         if (window.admin && typeof window.admin.openTeamEditorModal === 'function' && window.admin.openTeamEditorModal !== this.openTeamEditorModal) {
           window.admin.openTeamEditorModal(teamId);
         } else {
-          // Wait briefly for admin.js to finish evaluating
           setTimeout(function() {
             if (window.admin && typeof window.admin.openTeamEditorModal === 'function') {
               window.admin.openTeamEditorModal(teamId);
@@ -168,42 +163,14 @@
         if (m) m.classList.add("active");
       },
       doLogin: function (pin) {
-        // Master PIN fast fallback jika file admin.js masih dalam proses loading
-        var p = (pin || (document.getElementById("adminPinInput") ? document.getElementById("adminPinInput").value : "")).toString().trim().toLowerCase();
-        var accepted = ["1234", "123456", "2026", "admin", "panitia", "panpel", "alfayyadh", "acc2026", "acc"];
-        if (accepted.indexOf(p) !== -1) {
-          try {
-            sessionStorage.setItem("pondok_futsal_admin_auth", "true");
-            localStorage.removeItem("acc_sec_lockout_until_v1");
-            localStorage.removeItem("acc_sec_attempts_v1");
-          } catch (e) { }
-          window.admin.isAuthenticated = true;
-          var m = document.getElementById("adminLoginModal");
-          if (m) m.classList.remove("active");
-          var btn = document.getElementById("btnOpenAdmin");
-          if (btn) btn.classList.add("logged-in");
-          var lbl = document.getElementById("adminHeaderLabel");
-          if (lbl) lbl.textContent = "Panitia Aktif";
-          var icn = document.getElementById("adminHeaderIcon");
-          if (icn) icn.textContent = "⚙️";
-          document.querySelectorAll('#btnAddTeamBtn, .btn-panitia-edit, .btn-panitia-only, [data-admin-only]').forEach(function (el) {
-            el.style.display = '';
-          });
-          if (window.app && typeof window.app.updateAdminVisibility === "function") window.app.updateAdminVisibility();
-          if (window.app && typeof window.app.showToast === "function") {
-            window.app.showToast("✅ Berhasil Masuk Mode Panitia!");
-          } else {
-            alert("✅ Berhasil Masuk Mode Panitia!");
-          }
-        } else {
-          alert("⚠️ PIN Panitia salah! Akses ditolak.");
+        if (window.admin && typeof window.admin.doLogin === 'function' && window.admin.doLogin !== this.doLogin) {
+          return window.admin.doLogin(pin);
         }
-      },
-      resetLockout: function () {
-        try {
-          localStorage.removeItem("acc_sec_lockout_until_v1");
-          localStorage.removeItem("acc_sec_attempts_v1");
-        } catch (e) { }
+        setTimeout(function() {
+          if (window.admin && typeof window.admin.doLogin === 'function') {
+            window.admin.doLogin(pin);
+          }
+        }, 200);
       }
     };
   </script>
@@ -867,6 +834,10 @@
         </h2>
       </div>
 
+      <div style="margin-bottom: 14px;">
+        <input type="text" id="juknisSearchInput" class="form-input" placeholder="🔍 Cari pasal, aturan poin, adu penalti, sanksi, atau kontak..." oninput="app.filterJuknis(this.value)" style="width: 100%; border-radius: var(--radius-md); font-size: 0.88rem; padding: 10px 14px;">
+      </div>
+
       <div class="juknis-card">
         <div class="juknis-body" id="juknisContent">
           <!-- Rendered by app.js from config -->
@@ -955,13 +926,6 @@
               style="color: var(--text-subtle); font-size: 0.72rem; display: flex; align-items: center; gap: 4px; margin-top: 6px;">
               🛡️ Akses aman panitia: update skor, kartu, jadwal, dan kelola turnamen.
             </small>
-            <div style="text-align: right; margin-top: 4px;">
-              <button type="button"
-                onclick="event.preventDefault(); if(window.admin&&admin.resetLockout){admin.resetLockout();}else{localStorage.removeItem('acc_sec_lockout_until_v1');localStorage.removeItem('acc_sec_attempts_v1');alert('Status terkunci telah di-reset.');}"
-                style="background: none; border: none; color: #0284c7; font-size: 0.72rem; text-decoration: underline; cursor: pointer; padding: 0;">
-                🔄 Reset status lockout jika terkunci
-              </button>
-            </div>
           </div>
         </div>
         <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
@@ -2621,7 +2585,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       <span>Klasemen</span>
     </button>
     <button type="button" class="mobile-nav-item" data-tab="draw" onclick="app.switchTab('draw')"
-      style="display: none;" aria-label="Draw Grup (Panitia)">
+      aria-label="Draw Bagan & Grup">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="3" width="18" height="18" rx="4"></rect>
         <circle cx="8" cy="8" r="1.5" fill="currentColor"></circle>
