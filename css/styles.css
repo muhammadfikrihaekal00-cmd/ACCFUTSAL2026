@@ -6200,18 +6200,20 @@ body.dark-theme .fixture-team-row:hover {
 /* SCROLL REVEAL / SAFE VISIBILITY ANIMATIONS                */
 /* ========================================================= */
 .scroll-reveal {
-  opacity: 1 !important;
-  transform: none !important;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
 
 .scroll-reveal.reveal-right {
-  opacity: 1 !important;
-  transform: none !important;
+  opacity: 0;
+  transform: translateY(24px);
 }
 
 .scroll-reveal.is-revealed {
   opacity: 1 !important;
-  transform: none !important;
+  transform: translateY(0) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

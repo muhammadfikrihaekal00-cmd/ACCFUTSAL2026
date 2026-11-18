@@ -1057,16 +1057,17 @@ main.container {
 }
 
 /* ============================================================================
-   9. SPONSORS & MITRA RESMI (UNIFORM DARK GLASSMORPHISM GRID)
+   9. SPONSORS & MITRA RESMI (HORIZONTAL STREAMLINED SHOWCASE)
    ============================================================================ */
 .sponsors-showcase-bar {
   background: rgba(15, 23, 42, 0.65) !important;
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 26px !important;
-  padding: 32px !important;
+  border-radius: 24px !important;
+  padding: 24px 20px !important;
   box-shadow: var(--shadow-card) !important;
+  overflow: hidden !important;
 }
 
 .sponsors-main-title,
@@ -1076,31 +1077,86 @@ main.container {
   font-weight: 800 !important;
 }
 
-.sponsors-grid-primary {
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 20px !important;
-  margin-bottom: 20px !important;
+.section-hint-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 9999px !important;
+  padding: 5px 14px !important;
 }
 
+.section-meta-strip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.sponsors-grid-primary,
 .sponsors-grid-secondary {
   display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch !important;
   gap: 16px !important;
+  padding: 6px 4px 14px 4px !important;
+  margin: 0 0 12px 0 !important;
+  scroll-snap-type: x proximity !important;
 }
 
-.sponsor-card-primary,
-.sponsor-card-secondary {
-  background: rgba(6, 10, 23, 0.58) !important;
+.sponsors-grid-primary::-webkit-scrollbar,
+.sponsors-grid-secondary::-webkit-scrollbar {
+  display: none !important;
+}
+
+.sponsor-card-primary {
+  flex: 0 0 210px !important;
+  min-width: 210px !important;
+  max-width: 230px !important;
+  scroll-snap-align: start !important;
+  background: rgba(6, 10, 23, 0.65) !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 20px !important;
-  padding: 24px 20px !important;
+  border-radius: 18px !important;
+  padding: 18px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
   color: #f8fafc !important;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-  transition: var(--transition-smooth) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease !important;
+}
+
+.sponsor-card-secondary {
+  flex: 0 0 160px !important;
+  min-width: 160px !important;
+  max-width: 180px !important;
+  scroll-snap-align: start !important;
+  background: rgba(6, 10, 23, 0.55) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  padding: 14px 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  color: #f8fafc !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease !important;
 }
 
 .sponsor-card-primary:hover,
@@ -1717,15 +1773,36 @@ tr.zone-qualify {
   }
 
   .live-stream-card,
-  .acc-moments-section,
-  .sponsors-showcase-bar {
+  .acc-moments-section {
     padding: 18px 16px !important;
     border-radius: 20px !important;
   }
 
-  .sponsors-grid-primary {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  .sponsors-showcase-bar {
+    padding: 16px 12px !important;
+    border-radius: 20px !important;
+  }
+
+  .sponsors-grid-primary,
+  .sponsors-grid-secondary {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
     gap: 12px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .sponsor-card-primary {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+    padding: 14px 10px !important;
+  }
+
+  .sponsor-card-secondary {
+    flex: 0 0 125px !important;
+    min-width: 125px !important;
+    padding: 12px 8px !important;
   }
 
   .home-hero-banner {
@@ -2034,5 +2111,212 @@ tr.zone-qualify {
 
   .cat-select-sub {
     font-size: 0.65rem !important;
+  }
+}
+
+/* ============================================================================
+   16. MOBILE TEXT LAYOUT & ANTI-CLUTTER SPACING OPTIMIZATION
+   ============================================================================ */
+@media (max-width: 768px) {
+  /* Hero section text breathing space */
+  .hero-card {
+    padding: 22px 14px 18px 14px !important;
+    gap: 14px !important;
+  }
+
+  .hero-details {
+    gap: 8px !important;
+    width: 100% !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .hero-title {
+    font-size: clamp(1.15rem, 4.8vw, 1.45rem) !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    word-break: break-word !important;
+  }
+
+  .hero-sub {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+    max-width: 100% !important;
+    margin: 2px 0 0 0 !important;
+    color: #94a3b8 !important;
+  }
+
+  .hero-meta {
+    gap: 6px !important;
+    margin-top: 6px !important;
+  }
+
+  .hero-meta span {
+    font-size: 0.70rem !important;
+    padding: 4px 10px !important;
+    line-height: 1.3 !important;
+  }
+
+  /* 2x2 grid for stats on mobile so text never overlaps */
+  .hero-quick-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-top: 14px !important;
+    width: 100% !important;
+  }
+
+  .hero-quick-stats .stat-pill {
+    padding: 12px 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .hero-quick-stats .stat-val {
+    font-size: 1.55rem !important;
+    line-height: 1.1 !important;
+    margin-bottom: 3px !important;
+  }
+
+  .hero-quick-stats .stat-lbl {
+    font-size: 0.68rem !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+  }
+
+  /* Feature Hero Cards per tab */
+  .feature-hero-card {
+    padding: 18px 14px !important;
+    border-radius: 18px !important;
+    margin-bottom: 14px !important;
+    gap: 12px !important;
+  }
+
+  .feature-hero-title {
+    font-size: 1.15rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .feature-hero-desc {
+    font-size: 0.75rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .feature-hero-badge {
+    font-size: 1.85rem !important;
+  }
+
+  /* Match Cards: prevent team names and scores from colliding */
+  .uefa-fixture-card {
+    padding: 12px 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .fixture-team-row {
+    gap: 8px !important;
+    padding: 4px !important;
+  }
+
+  .fixture-team-fullname {
+    font-size: 0.88rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .fixture-score-number {
+    font-size: 1.45rem !important;
+  }
+
+  .fixture-team-events {
+    padding-left: 36px !important;
+    gap: 4px !important;
+  }
+
+  .fixture-event-chip {
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Section header meta badge */
+  .section-hint-badge {
+    font-size: 0.72rem !important;
+    padding: 4px 10px !important;
+  }
+}
+
+/* ============================================================================
+   17. DYNAMIC SCROLL REVEAL & STAGGERED ENTRANCE ANIMATIONS
+   ============================================================================ */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Staggered Box Reveal for child elements */
+.scroll-reveal.is-revealed .match-card:nth-child(1),
+.scroll-reveal.is-revealed .sponsor-card-primary:nth-child(1),
+.scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(1),
+.scroll-reveal.is-revealed .stat-pill:nth-child(1) {
+  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
+}
+
+.scroll-reveal.is-revealed .match-card:nth-child(2),
+.scroll-reveal.is-revealed .sponsor-card-primary:nth-child(2),
+.scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(2),
+.scroll-reveal.is-revealed .stat-pill:nth-child(2) {
+  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+}
+
+.scroll-reveal.is-revealed .match-card:nth-child(3),
+.scroll-reveal.is-revealed .sponsor-card-primary:nth-child(3),
+.scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(3),
+.scroll-reveal.is-revealed .stat-pill:nth-child(3) {
+  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+}
+
+.scroll-reveal.is-revealed .match-card:nth-child(4),
+.scroll-reveal.is-revealed .sponsor-card-primary:nth-child(4),
+.scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(4),
+.scroll-reveal.is-revealed .stat-pill:nth-child(4) {
+  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+}
+
+.scroll-reveal.is-revealed .match-card:nth-child(n+5) {
+  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+}
+
+@keyframes cardStaggerUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Initial Open Entrance Animation for Top Content */
+.hero-card {
+  animation: heroCardEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+.hero-quick-stats {
+  animation: heroCardEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+}
+
+@keyframes heroCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

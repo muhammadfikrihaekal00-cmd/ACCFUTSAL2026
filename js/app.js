@@ -2235,14 +2235,8 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   initScrollReveal() {
-    const revealAll = () => {
-      document.querySelectorAll(".scroll-reveal:not(.is-revealed)").forEach(el => {
-        el.classList.add("is-revealed");
-      });
-    };
-
     if (!("IntersectionObserver" in window)) {
-      revealAll();
+      document.querySelectorAll(".scroll-reveal").forEach(el => el.classList.add("is-revealed"));
       return;
     }
 
@@ -2250,23 +2244,25 @@ var app = window.app = Object.assign(window.app || {}, {
       this._scrollObserver.disconnect();
     }
 
-    this._scrollObserver = new IntersectionObserver((entries) => {
+    this._scrollObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add("is-revealed");
+          observer.unobserve(entry.target);
         }
       });
     }, {
-      threshold: 0.02,
-      rootMargin: "60px 0px 60px 0px"
+      threshold: 0.04,
+      rootMargin: "0px 0px -25px 0px"
     });
 
-    document.querySelectorAll(".scroll-reveal:not(.is-revealed)").forEach(el => {
+    // Observe all scroll-reveal containers and cards for dynamic staggered entrance
+    document.querySelectorAll(".scroll-reveal:not(.is-revealed), .match-card:not(.is-revealed), .sponsor-card-primary:not(.is-revealed), .sponsor-card-secondary:not(.is-revealed), .moment-card:not(.is-revealed), .group-card:not(.is-revealed), .team-card:not(.is-revealed)").forEach(el => {
+      if (!el.classList.contains("scroll-reveal")) {
+        el.classList.add("scroll-reveal");
+      }
       this._scrollObserver.observe(el);
     });
-
-    // Safety fallback: Never allow content to stay invisible longer than 600ms
-    setTimeout(revealAll, 600);
   },
 
   scrollToLiveStream() {
