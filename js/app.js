@@ -2103,10 +2103,10 @@ var app = window.app = Object.assign(window.app || {}, {
     document.getElementById("heroTitle").textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName;
     const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
     let cleanSub = (rawSub || "")
-      .replace(/â€¢/g, "•")
+      .replace(/•/g, "•")
       .replace(/â\S*¢/g, "•")
       .replace(/Â/g, "")
-      .replace(/Ã¢/g, "")
+      .replace(/â/g, "")
       .trim();
     if (!cleanSub.includes("•")) {
       cleanSub = cleanSub.replace(/\s+Ma'had/i, " • Ma'had");
