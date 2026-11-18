@@ -4,7 +4,7 @@
 
 const DEFAULT_DATA = {
   config: {
-    tournamentName: 'ACC 2026',
+    tournamentName: 'ACC "Al-Fayyadh Champions Cup" 2026',
     subTitle: "",
     edition: "",
     venue: "",

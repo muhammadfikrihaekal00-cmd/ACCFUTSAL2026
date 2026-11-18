@@ -2102,13 +2102,15 @@ var app = window.app = Object.assign(window.app || {}, {
 
   renderHeader() {
     const config = this.store.data.config || {};
-    const tournamentTitle = (config.tournamentName && !config.tournamentName.includes("Al-Fayyadh Champion"))
-      ? config.tournamentName
-      : "ACC 2026";
+    // Navbar header: Selalu ringkas "ACC 2026"
     const headerTitleEl = document.getElementById("headerTitle");
-    if (headerTitleEl) headerTitleEl.textContent = tournamentTitle;
+    if (headerTitleEl) headerTitleEl.textContent = "ACC 2026";
+
+    // Hero section di beranda: Nama lengkap turnamen
     const heroTitleEl = document.getElementById("heroTitle");
-    if (heroTitleEl) heroTitleEl.textContent = tournamentTitle;
+    if (heroTitleEl) {
+      heroTitleEl.textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName || 'ACC "Al-Fayyadh Champions Cup" 2026';
+    }
     const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
     let cleanSub = (rawSub || "")
       .replace(/•/g, "•")
