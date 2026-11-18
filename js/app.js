@@ -1357,15 +1357,13 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   updateCategoryUI() {
-    const btnSMP = document.getElementById("btnCatSMP");
-    const btnSD = document.getElementById("btnCatSD");
-    if (btnSMP) btnSMP.classList.toggle("active", this.currentCategory === "SMP");
-    if (btnSD) btnSD.classList.toggle("active", this.currentCategory === "SD");
-
-    const mobSMP = document.getElementById("mobCatSMP");
-    const mobSD = document.getElementById("mobCatSD");
-    if (mobSMP) mobSMP.classList.toggle("active", this.currentCategory === "SMP");
-    if (mobSD) mobSD.classList.toggle("active", this.currentCategory === "SD");
+    const isSMP = this.currentCategory === "SMP";
+    document.querySelectorAll(".btn-cat-smp, #btnCatSMP, #mobCatSMP").forEach(el => {
+      el.classList.toggle("active", isSMP);
+    });
+    document.querySelectorAll(".btn-cat-sd, #btnCatSD, #mobCatSD").forEach(el => {
+      el.classList.toggle("active", !isSMP);
+    });
   },
 
   initSupabaseSync() {
@@ -2126,7 +2124,8 @@ var app = window.app = Object.assign(window.app || {}, {
     } else {
       cleanTicker = cleanTicker.replace(/ð[^\s]*\s*†?/g, "🏆 ").replace(/ðŸ\S*/g, "🏆 ");
     }
-    document.getElementById("tickerText").textContent = cleanTicker;
+    const tickerEl = document.getElementById("tickerText");
+    if (tickerEl) tickerEl.textContent = cleanTicker;
     this.renderHeroBanner();
     this.updateHeroLiveBadge();
     this.updateFloatingLiveNotice();

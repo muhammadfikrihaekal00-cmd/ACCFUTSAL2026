@@ -96,10 +96,10 @@
       setCategory: function (cat) {
         window._pendingCat = cat;
         try {
-          var btnSMP = document.getElementById('btnCatSMP');
-          var btnSD = document.getElementById('btnCatSD');
-          if (btnSMP) btnSMP.classList.toggle('active', cat === 'SMP');
-          if (btnSD) btnSD.classList.toggle('active', cat === 'SD');
+          var smpBtns = document.querySelectorAll('.btn-cat-smp, #btnCatSMP');
+          for (var i = 0; i < smpBtns.length; i++) smpBtns[i].classList.toggle('active', cat === 'SMP');
+          var sdBtns = document.querySelectorAll('.btn-cat-sd, #btnCatSD');
+          for (var j = 0; j < sdBtns.length; j++) sdBtns[j].classList.toggle('active', cat === 'SD');
         } catch (e) { }
         if (window.app && typeof window.app._realSetCategory === 'function') {
           window.app._realSetCategory(cat);
@@ -192,18 +192,6 @@
     <div class="ambient-grid-overlay"></div>
   </div>
 
-  <!-- TOP RUNNING ANNOUNCEMENT TICKER (RUNNING TEXT) -->
-  <div class="ticker-bar">
-    <div class="ticker-tag">📢 INFO RESMI ACC 2026</div>
-    <div class="ticker-track">
-      <div class="ticker-content" id="tickerText">
-        🏆 Selamat Datang Official & Peserta ACC "Al-Fayyadh Champions Cup" 2026 Ma'had Tahfizhul Qur'an Al Fayyadh!
-        Harap registrasi line-up maksimal 30 menit sebelum kick-off di Meja Pertandingan. Junjung tinggi sportivitas,
-        ukhuwah Islamiyah, dan fair play!
-      </div>
-    </div>
-  </div>
-
   <!-- FLOATING GLASS STICKY NAVBAR -->
   <header class="header">
     <div class="container header-inner">
@@ -247,12 +235,6 @@
         <button id="btnQuickMediaHub" class="header-icon-btn" onclick="admin.openMediaHubModal()" style="display: none;"
           title="Upload Foto & Media (Logo Tim, Pemain, Momen)" aria-label="Upload Foto & Media">
           <span>📸</span>
-        </button>
-
-        <!-- Share to WhatsApp (Icon Only) -->
-        <button id="btnShareWa" class="header-icon-btn btn-share-header" onclick="app.shareToWhatsApp()"
-          title="Bagikan ke WhatsApp Official" aria-label="Bagikan ke WhatsApp">
-          <span>📤</span>
         </button>
 
         <span id="adminHeaderDivider" class="header-v-divider" style="display: none;"></span>
@@ -442,29 +424,6 @@
   <!-- MAIN CONTENT CONTAINER (WHITE SPACE & USER FRIENDLY) -->
   <main class="container" style="padding-top: 14px;">
 
-    <!-- ========================================================= -->
-    <!-- DIVISION / KELAS SELECTOR (SMP 13-15 | SD 9-12)           -->
-    <!-- ========================================================= -->
-    <div class="category-selector-bar scroll-reveal">
-      <div class="category-selector-inner">
-        <span class="category-selector-label">
-          <span class="pulse-dot-green"></span> KELAS:
-        </span>
-        <div class="category-pill-group">
-          <button type="button" class="category-pill active" id="btnCatSMP" onclick="app.setCategory('SMP')">
-            <span class="pill-icon">🏆</span>
-            <span class="pill-title">SMP</span>
-            <span class="pill-badge">13-15</span>
-          </button>
-          <button type="button" class="category-pill" id="btnCatSD" onclick="app.setCategory('SD')">
-            <span class="pill-icon">⚽</span>
-            <span class="pill-title">SD</span>
-            <span class="pill-badge">9-12</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
     <section id="pane-home" class="tab-pane active">
 
@@ -514,6 +473,35 @@
           <div class="stat-pill">
             <div class="stat-val">64</div>
             <div class="stat-lbl">Total Laga</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
+      <div class="category-selector-space scroll-reveal">
+        <div class="category-selector-box">
+          <div class="category-selector-header">
+            <div class="category-selector-kicker">
+              <span class="pulse-dot-green"></span>
+              <span>PILIH KELAS PERTANDINGAN</span>
+            </div>
+            <span class="category-selector-hint">Ketuk untuk beralih data kategori turnamen</span>
+          </div>
+          <div class="category-button-grid">
+            <button type="button" class="cat-select-btn btn-cat-smp active" id="btnCatSMP" onclick="app.setCategory('SMP')">
+              <span class="cat-select-icon">🏆</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SMP (U-15)</span>
+                <span class="cat-select-sub">Usia 13 - 15 Tahun</span>
+              </div>
+            </button>
+            <button type="button" class="cat-select-btn btn-cat-sd" id="btnCatSD" onclick="app.setCategory('SD')">
+              <span class="cat-select-icon">⚽</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SD (U-12)</span>
+                <span class="cat-select-sub">Usia 9 - 12 Tahun</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -692,6 +680,49 @@
 
     <!-- TAB 1: JADWAL & SKOR (MATCH CENTER) -->
     <section id="pane-matches" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: JADWAL & SKOR -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>MATCHDAY & REAL-TIME SCORES</span>
+          </div>
+          <h2 class="feature-hero-title">Jadwal & Hasil Pertandingan</h2>
+          <p class="feature-hero-desc">Pantau jadwal kick-off, hasil pertandingan fase grup hingga babak gugur, dan pembaruan skor langsung.</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">🏟️</div>
+      </div>
+
+      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
+      <div class="category-selector-space scroll-reveal">
+        <div class="category-selector-box">
+          <div class="category-selector-header">
+            <div class="category-selector-kicker">
+              <span class="pulse-dot-green"></span>
+              <span>PILIH KELAS PERTANDINGAN</span>
+            </div>
+            <span class="category-selector-hint">Ketuk untuk beralih jadwal kelas turnamen</span>
+          </div>
+          <div class="category-button-grid">
+            <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
+              <span class="cat-select-icon">🏆</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SMP (U-15)</span>
+                <span class="cat-select-sub">Usia 13 - 15 Tahun</span>
+              </div>
+            </button>
+            <button type="button" class="cat-select-btn btn-cat-sd" onclick="app.setCategory('SD')">
+              <span class="cat-select-icon">⚽</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SD (U-12)</span>
+                <span class="cat-select-sub">Usia 9 - 12 Tahun</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="section-header" style="flex-wrap: wrap; gap: 10px;">
         <div>
           <h2 class="section-title">
@@ -757,6 +788,48 @@
 
     <!-- TAB 2: KLASEMEN GRUP (STANDINGS) -->
     <section id="pane-standings" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: KLASEMEN -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>GROUP STAGE STANDINGS</span>
+          </div>
+          <h2 class="feature-hero-title">Klasemen Fase Grup</h2>
+          <p class="feature-hero-desc">Peringkat perolehan poin, selisih gol, dan status penentuan lolos ke babak perempat final (8 Besar).</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">📊</div>
+      </div>
+
+      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
+      <div class="category-selector-space scroll-reveal">
+        <div class="category-selector-box">
+          <div class="category-selector-header">
+            <div class="category-selector-kicker">
+              <span class="pulse-dot-green"></span>
+              <span>PILIH KELAS PERTANDINGAN</span>
+            </div>
+            <span class="category-selector-hint">Ketuk untuk beralih klasemen kelas turnamen</span>
+          </div>
+          <div class="category-button-grid">
+            <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
+              <span class="cat-select-icon">🏆</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SMP (U-15)</span>
+                <span class="cat-select-sub">Usia 13 - 15 Tahun</span>
+              </div>
+            </button>
+            <button type="button" class="cat-select-btn btn-cat-sd" onclick="app.setCategory('SD')">
+              <span class="cat-select-icon">⚽</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SD (U-12)</span>
+                <span class="cat-select-sub">Usia 9 - 12 Tahun</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="section-header">
         <h2 class="section-title">
           <span>📊</span> Klasemen Babak Penyisihan (4 Grup)
@@ -769,6 +842,19 @@
 
     <!-- TAB: DRAWING & PENGUNDIAN GRUP INTERAKTIF 1 PER 1 (KHUSUS PANITIA) -->
     <section id="pane-draw" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: DRAWING GRUP -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>PANITIA TOURNAMENT DRAW</span>
+          </div>
+          <h2 class="feature-hero-title">Drawing & Pengundian Grup</h2>
+          <p class="feature-hero-desc">Simulator pengundian pot grup turnamen resmi dengan mekanisme undian otomatis & anti satu grup.</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">🎲</div>
+      </div>
       <div class="draw-header-wrapper">
         <div class="draw-header-main">
           <h2 class="section-title">
@@ -881,6 +967,48 @@
 
     <!-- TAB 3: BAGAN FASE GUGUR (BRACKET) -->
     <section id="pane-bracket" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: BAGAN FASE GUGUR -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>KNOCKOUT BRACKET STAGE</span>
+          </div>
+          <h2 class="feature-hero-title">Bagan Babak Gugur</h2>
+          <p class="feature-hero-desc">Skema jalur eliminasi turnamen: Babak 8 Besar, Semifinal, perebutan Juara 3, hingga Grand Final.</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">🏆</div>
+      </div>
+
+      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
+      <div class="category-selector-space scroll-reveal">
+        <div class="category-selector-box">
+          <div class="category-selector-header">
+            <div class="category-selector-kicker">
+              <span class="pulse-dot-green"></span>
+              <span>PILIH KELAS PERTANDINGAN</span>
+            </div>
+            <span class="category-selector-hint">Ketuk untuk beralih bagan kelas turnamen</span>
+          </div>
+          <div class="category-button-grid">
+            <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
+              <span class="cat-select-icon">🏆</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SMP (U-15)</span>
+                <span class="cat-select-sub">Usia 13 - 15 Tahun</span>
+              </div>
+            </button>
+            <button type="button" class="cat-select-btn btn-cat-sd" onclick="app.setCategory('SD')">
+              <span class="cat-select-icon">⚽</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SD (U-12)</span>
+                <span class="cat-select-sub">Usia 9 - 12 Tahun</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="section-header">
         <h2 class="section-title">
           <span>🏆</span> Bagan Babak Gugur (Perempat Final s/d Final)
@@ -898,6 +1026,48 @@
 
     <!-- TAB 4: PORTAL TIM & OFFICIAL (ROSTER & CONTACTS) -->
     <section id="pane-teams" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: DAFTAR TIM -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>OFFICIAL TEAM ROSTER</span>
+          </div>
+          <h2 class="feature-hero-title">Daftar Tim Peserta</h2>
+          <p class="feature-hero-desc">Katalog profil tim, ofisial sekolah/pesantren, jersey kebanggaan, dan daftar lengkap pemain turnamen.</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">👥</div>
+      </div>
+
+      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
+      <div class="category-selector-space scroll-reveal">
+        <div class="category-selector-box">
+          <div class="category-selector-header">
+            <div class="category-selector-kicker">
+              <span class="pulse-dot-green"></span>
+              <span>PILIH KELAS PERTANDINGAN</span>
+            </div>
+            <span class="category-selector-hint">Ketuk untuk beralih daftar tim turnamen</span>
+          </div>
+          <div class="category-button-grid">
+            <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
+              <span class="cat-select-icon">🏆</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SMP (U-15)</span>
+                <span class="cat-select-sub">Usia 13 - 15 Tahun</span>
+              </div>
+            </button>
+            <button type="button" class="cat-select-btn btn-cat-sd" onclick="app.setCategory('SD')">
+              <span class="cat-select-icon">⚽</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SD (U-12)</span>
+                <span class="cat-select-sub">Usia 9 - 12 Tahun</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="section-header" style="flex-wrap: wrap; gap: 10px;">
         <div>
           <h2 class="section-title">
@@ -935,6 +1105,48 @@
 
     <!-- TAB 5: PAPAN DISIPLIN & SANKSI KARTU -->
     <section id="pane-discipline" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: DISIPLIN -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>FAIR PLAY & DISCIPLINE</span>
+          </div>
+          <h2 class="feature-hero-title">Papan Disiplin & Fair Play</h2>
+          <p class="feature-hero-desc">Rekapitulasi kartu kuning, kartu merah, denda kedisiplinan, dan sanksi larangan bertanding turnamen.</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">🟨</div>
+      </div>
+
+      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
+      <div class="category-selector-space scroll-reveal">
+        <div class="category-selector-box">
+          <div class="category-selector-header">
+            <div class="category-selector-kicker">
+              <span class="pulse-dot-green"></span>
+              <span>PILIH KELAS PERTANDINGAN</span>
+            </div>
+            <span class="category-selector-hint">Ketuk untuk beralih data disiplin turnamen</span>
+          </div>
+          <div class="category-button-grid">
+            <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
+              <span class="cat-select-icon">🏆</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SMP (U-15)</span>
+                <span class="cat-select-sub">Usia 13 - 15 Tahun</span>
+              </div>
+            </button>
+            <button type="button" class="cat-select-btn btn-cat-sd" onclick="app.setCategory('SD')">
+              <span class="cat-select-icon">⚽</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SD (U-12)</span>
+                <span class="cat-select-sub">Usia 9 - 12 Tahun</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="section-header">
         <h2 class="section-title">
           <span>🟨</span> Papan Rekapitulasi Disiplin & Akumulasi Kartu
@@ -979,6 +1191,48 @@
 
     <!-- TAB 6: TOP SCORER (GOLDEN BOOT) -->
     <section id="pane-scorers" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: TOP SKOR -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>GOLDEN BOOT RACE</span>
+          </div>
+          <h2 class="feature-hero-title">Papan Top Skor</h2>
+          <p class="feature-hero-desc">Peringkat pencetak gol terbanyak dan persaingan sepatu emas (Golden Boot) turnamen ACC 2026.</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">⚽</div>
+      </div>
+
+      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
+      <div class="category-selector-space scroll-reveal">
+        <div class="category-selector-box">
+          <div class="category-selector-header">
+            <div class="category-selector-kicker">
+              <span class="pulse-dot-green"></span>
+              <span>PILIH KELAS PERTANDINGAN</span>
+            </div>
+            <span class="category-selector-hint">Ketuk untuk beralih top skor turnamen</span>
+          </div>
+          <div class="category-button-grid">
+            <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
+              <span class="cat-select-icon">🏆</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SMP (U-15)</span>
+                <span class="cat-select-sub">Usia 13 - 15 Tahun</span>
+              </div>
+            </button>
+            <button type="button" class="cat-select-btn btn-cat-sd" onclick="app.setCategory('SD')">
+              <span class="cat-select-icon">⚽</span>
+              <div class="cat-select-info">
+                <span class="cat-select-name">KELAS SD (U-12)</span>
+                <span class="cat-select-sub">Usia 9 - 12 Tahun</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="section-header">
         <div>
           <h2 class="section-title">
@@ -1015,6 +1269,19 @@
 
     <!-- TAB 7: JUKNIS & TATA TERTIB -->
     <section id="pane-juknis" class="tab-pane">
+
+      <!-- FEATURE HERO SECTION: REGULASI & JUKNIS -->
+      <div class="feature-hero-card scroll-reveal">
+        <div class="feature-hero-content">
+          <div class="feature-hero-kicker">
+            <span class="pulse-dot"></span>
+            <span>OFFICIAL RULES & REGULATIONS</span>
+          </div>
+          <h2 class="feature-hero-title">Regulasi & Petunjuk Teknis</h2>
+          <p class="feature-hero-desc">Tata tertib turnamen, aturan penentuan juara grup, regulasi pemutihan kartu, dan pedoman teknis ACC 2026.</p>
+        </div>
+        <div class="feature-hero-badge" aria-hidden="true">📋</div>
+      </div>
       <div class="section-header">
         <h2 class="section-title">
           <span>📋</span> Petunjuk Teknis & Regulasi Resmi Turnamen
