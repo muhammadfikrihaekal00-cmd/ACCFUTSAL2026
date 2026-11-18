@@ -418,147 +418,6 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN LUXURY MOBILE MENU OVERLAY (ANIMATED SMOOTH TRANSITION) -->
-  <div id="mobileMenuOverlay" class="mobile-menu-overlay" onclick="app.closeMobileMenu(event)">
-    <div class="mobile-menu-content" onclick="event.stopPropagation()">
-      <div class="mobile-menu-header">
-        <div class="mobile-menu-brand">
-          <img src="assets/acc_logo.png" alt="Logo ACC 2026" class="mobile-menu-logo" width="34" height="48">
-          <div>
-            <div class="mobile-menu-kicker">
-              <span class="pulse-dot-green"></span>
-              <span>MENU UTAMA ACC 2026</span>
-            </div>
-            <div class="mobile-menu-heading">Portal Resmi Turnamen</div>
-          </div>
-        </div>
-        <button type="button" class="mobile-menu-close-btn" onclick="app.closeMobileMenu()" aria-label="Tutup Menu Navigasi">
-          ✕
-        </button>
-      </div>
-
-      <!-- Quick Division / Kategori Switcher inside Mobile Drawer -->
-      <div class="mobile-menu-division-bar">
-        <span class="mobile-division-label">KELAS:</span>
-        <div class="mobile-division-buttons">
-          <button type="button" class="mob-cat-btn" id="mobCatSMP" onclick="app.setCategory('SMP'); app.closeMobileMenu();">
-            🏆 SMP (13-15)
-          </button>
-          <button type="button" class="mob-cat-btn" id="mobCatSD" onclick="app.setCategory('SD'); app.closeMobileMenu();">
-            ⚽ SD (9-12)
-          </button>
-        </div>
-      </div>
-
-      <!-- 9 Dynamic Navigation Links -->
-      <nav class="mobile-menu-nav" aria-label="Navigasi Menu Mobile">
-        <button type="button" class="mobile-nav-link" data-tab="home" onclick="app.navigateTo('/beranda', 'home')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🏠</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Beranda</span>
-              <span class="mobile-nav-link-sub">Pusat Informasi & Sambutan</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="matches" onclick="app.navigateTo('/jadwal', 'matches')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🏟️</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Jadwal & Skor</span>
-              <span class="mobile-nav-link-sub">Hasil Pertandingan & Live Score</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="standings" onclick="app.navigateTo('/klasemen', 'standings')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">📊</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Klasemen</span>
-              <span class="mobile-nav-link-sub">Peringkat Grup & Head-to-Head</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="draw" onclick="app.navigateTo('/draw', 'draw')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🎲</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Draw Grup</span>
-              <span class="mobile-nav-link-sub">Simulator Undian Pot & Grup</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="bracket" onclick="app.navigateTo('/bagan', 'bracket')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🏆</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Bagan Fase Gugur</span>
-              <span class="mobile-nav-link-sub">Jalur Knockout Menuju Final</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="teams" onclick="app.navigateTo('/tim', 'teams')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">👥</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Daftar Tim</span>
-              <span class="mobile-nav-link-sub">Katalog Peserta & Profil Lengkap</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="scorers" onclick="app.navigateTo('/top-skor', 'scorers')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">⚽</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Top Skor</span>
-              <span class="mobile-nav-link-sub">Peringkat Pencetak Gol Terbanyak</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="discipline" onclick="app.navigateTo('/disiplin', 'discipline')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🟨</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Disiplin</span>
-              <span class="mobile-nav-link-sub">Akumulasi Kartu & Sanksi Laga</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="juknis" onclick="app.navigateTo('/regulasi', 'juknis')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">📋</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Regulasi</span>
-              <span class="mobile-nav-link-sub">Juknis & Tata Tertib Pertandingan</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
-        </button>
-      </nav>
-
-      <div class="mobile-menu-footer">
-        <p class="mobile-menu-venue">📍 GOR MTQ Al-Fayyadh Maros • 22 - 26 Nov 2026</p>
-        <div class="mobile-menu-quote">Ukhuwah Islamiyah • Sportivitas • Fair Play</div>
-      </div>
-    </div>
-  </div>
-
   <!-- FLOATING LIVE MATCH NOTIFICATION (AUTO-POPUP WHEN MATCH IS LIVE) -->
   <div id="floatingLiveNotice" class="floating-live-bar" style="display: none;" onclick="app.jumpToLiveMatch()"
     role="button" tabindex="0" title="Ada laga yang sedang berlangsung! Klik untuk langsung menuju papan skor">
@@ -576,55 +435,6 @@
 
   <!-- MAIN CONTENT CONTAINER (WHITE SPACE & USER FRIENDLY) -->
   <main class="container" style="padding-top: 14px;">
-
-    <!-- BORDERLESS FUTURISTIC HERO SECTION (TANPA KOTAK PUTIH + AURA GLOW) -->
-    <div class="hero-card">
-      <div class="hero-identity-stack">
-        <div class="hero-emblem-wrap">
-          <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="96" height="135"
-            fetchpriority="high">
-        </div>
-        <div class="hero-details">
-          <div class="hero-kicker-pill">
-            <span class="hero-kicker-dot"></span>
-            <span>OFFICIAL TOURNAMENT PORTAL • ACC 2026</span>
-          </div>
-          <div class="hero-badge-live" id="heroLiveBadge" onclick="app.scrollToLiveStream()"
-            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.scrollToLiveStream();}"
-            role="button" tabindex="0" title="Klik untuk menuju siaran langsung YouTube Live" style="display: none;">
-            <span class="pulse-dot"></span>
-            <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
-          </div>
-          <div class="hero-title" id="heroTitle">ACC "Al-Fayyadh Champions Cup" 2026</div>
-          <p id="heroSub">
-            Turnamen Futsal Antar-Sekolah &amp; Pesantren se-Sulawesi Selatan • Ma'had Tahfizhul Qur'an Al Fayyadh Maros
-          </p>
-          <div class="hero-meta">
-            <span>📍 <strong id="heroVenue">GOR Futsal MTQ Al-Fayyadh Maros</strong></span>
-            <span>📅 <strong id="heroDates">22 - 26 November 2026</strong></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-quick-stats scroll-reveal">
-        <div class="stat-pill">
-          <div class="stat-val">32</div>
-          <div class="stat-lbl">Tim (16 SMP + 16 SD)</div>
-        </div>
-        <div class="stat-pill">
-          <div class="stat-val">8</div>
-          <div class="stat-lbl">Grup (4 SMP + 4 SD)</div>
-        </div>
-        <div class="stat-pill">
-          <div class="stat-val">1</div>
-          <div class="stat-lbl">Lapangan Utama</div>
-        </div>
-        <div class="stat-pill">
-          <div class="stat-val">64</div>
-          <div class="stat-lbl">Total Laga</div>
-        </div>
-      </div>
-    </div>
 
     <!-- ========================================================= -->
     <!-- DIVISION / KELAS SELECTOR (SMP 13-15 | SD 9-12)           -->
@@ -651,6 +461,55 @@
 
     <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
     <section id="pane-home" class="tab-pane active">
+
+      <!-- BORDERLESS FUTURISTIC HERO SECTION (ACC AL-FAYYADH KHUSUS BERANDA) -->
+      <div class="hero-card">
+        <div class="hero-identity-stack">
+          <div class="hero-emblem-wrap">
+            <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="96" height="135"
+              fetchpriority="high">
+          </div>
+          <div class="hero-details">
+            <div class="hero-kicker-pill">
+              <span class="hero-kicker-dot"></span>
+              <span>OFFICIAL TOURNAMENT PORTAL • ACC 2026</span>
+            </div>
+            <div class="hero-badge-live" id="heroLiveBadge" onclick="app.scrollToLiveStream()"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.scrollToLiveStream();}"
+              role="button" tabindex="0" title="Klik untuk menuju siaran langsung YouTube Live" style="display: none;">
+              <span class="pulse-dot"></span>
+              <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
+            </div>
+            <div class="hero-title" id="heroTitle">ACC "Al-Fayyadh Champions Cup" 2026</div>
+            <p id="heroSub">
+              Turnamen Futsal Antar-Sekolah &amp; Pesantren se-Sulawesi Selatan • Ma'had Tahfizhul Qur'an Al Fayyadh Maros
+            </p>
+            <div class="hero-meta">
+              <span>📍 <strong id="heroVenue">GOR Futsal MTQ Al-Fayyadh Maros</strong></span>
+              <span>📅 <strong id="heroDates">22 - 26 November 2026</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-quick-stats scroll-reveal">
+          <div class="stat-pill">
+            <div class="stat-val">32</div>
+            <div class="stat-lbl">Tim (16 SMP + 16 SD)</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-val">8</div>
+            <div class="stat-lbl">Grup (4 SMP + 4 SD)</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-val">1</div>
+            <div class="stat-lbl">Lapangan Utama</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-val">64</div>
+            <div class="stat-lbl">Total Laga</div>
+          </div>
+        </div>
+      </div>
 
       <!-- 0. SIARAN LANGSUNG YOUTUBE & LIVE MATCH CENTER (PALING ATAS BERANDA) -->
       <section class="live-stream-hero-section scroll-reveal" id="liveStreamHero">
@@ -2877,90 +2736,6 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       </div>
     </div>
   </div>
-
-  <!-- MOBILE BOTTOM NAVIGATION (RAMAH HP & PRAKTIS) -->
-  <nav class="mobile-nav" id="mobileNav" aria-label="Navigasi Bawah Khusus HP">
-    <button type="button" class="mobile-nav-item active" data-tab="home" onclick="app.switchTab('home')"
-      aria-label="Beranda">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-      </svg>
-      <span>Beranda</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="matches" onclick="app.switchTab('matches')"
-      aria-label="Jadwal & Skor">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"></circle>
-        <polyline points="12 6 12 12 16 14"></polyline>
-      </svg>
-      <span>Jadwal</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="standings" onclick="app.switchTab('standings')"
-      aria-label="Klasemen Grup">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M18 20V10M12 20V4M6 20v-6"></path>
-      </svg>
-      <span>Klasemen</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="draw" onclick="app.switchTab('draw')"
-      aria-label="Draw Bagan & Grup">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="18" height="18" rx="4"></rect>
-        <circle cx="8" cy="8" r="1.5" fill="currentColor"></circle>
-        <circle cx="16" cy="8" r="1.5" fill="currentColor"></circle>
-        <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
-        <circle cx="8" cy="16" r="1.5" fill="currentColor"></circle>
-        <circle cx="16" cy="16" r="1.5" fill="currentColor"></circle>
-      </svg>
-      <span>Draw</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="bracket" onclick="app.switchTab('bracket')"
-      aria-label="Bagan Fase Gugur">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="6" cy="6" r="3"></circle>
-        <circle cx="6" cy="18" r="3"></circle>
-        <path d="M9 6h6a3 3 0 0 1 3 3v6M9 18h6a3 3 0 0 0 3-3"></path>
-        <circle cx="18" cy="12" r="3"></circle>
-      </svg>
-      <span>Bagan</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="teams" onclick="app.switchTab('teams')"
-      aria-label="Daftar Tim">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-      </svg>
-      <span>Tim</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="scorers" onclick="app.switchTab('scorers')"
-      aria-label="Top Skor">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"></circle>
-        <polygon points="12 6 15 10 13 15 11 15 9 10"></polygon>
-      </svg>
-      <span>Top Skor</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="discipline" onclick="app.switchTab('discipline')"
-      aria-label="Papan Disiplin">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="5" y="3" width="14" height="18" rx="2"></rect>
-      </svg>
-      <span>Disiplin</span>
-    </button>
-    <button type="button" class="mobile-nav-item" data-tab="juknis" onclick="app.switchTab('juknis')"
-      aria-label="Regulasi & Tata Tertib">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-      </svg>
-      <span>Regulasi</span>
-    </button>
-  </nav>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="appToast" class="toast"></div>

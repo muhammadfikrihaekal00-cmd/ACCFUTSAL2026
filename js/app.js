@@ -2077,7 +2077,7 @@ var app = window.app = Object.assign(window.app || {}, {
     document.querySelectorAll('.tab-btn[data-tab="draw"]').forEach(btn => {
       btn.style.display = isPanitia ? "inline-flex" : "none";
     });
-    document.querySelectorAll('.mobile-nav-item[data-tab="draw"]').forEach(item => {
+    document.querySelectorAll('.mobile-nav-link[data-tab="draw"]').forEach(item => {
       item.style.display = isPanitia ? "flex" : "none";
     });
 
