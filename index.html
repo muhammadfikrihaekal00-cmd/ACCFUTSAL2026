@@ -10,10 +10,10 @@
   <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.39">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.39">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.39">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.39">
+  <link rel="manifest" href="manifest.json?v=8.40">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.40">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.40">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.40">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -43,7 +43,7 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.39";
+        var CURRENT_VER = "8.40";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -209,7 +209,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.39">
+  <link rel="stylesheet" href="css/styles.css?v=8.40">
 </head>
 
 <body>
@@ -229,7 +229,7 @@
   <!-- MAIN HEADER -->
   <header class="header">
     <div class="container header-inner">
-      <div class="brand-group">
+      <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap)admin.handleLogoSecretTap();" style="cursor: pointer;">
         <img src="assets/acc_logo.png" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo"
           width="48" height="68" decoding="async">
         <div class="brand-text">
@@ -246,8 +246,9 @@
           <span id="cloudStatusDot" class="status-indicator-dot"></span>
         </div>
 
-        <!-- Quick Media & Photo Upload Button -->
+        <!-- Quick Media & Photo Upload Button (Khusus Panitia) -->
         <button id="btnQuickMediaHub" class="header-icon-btn" onclick="admin.openMediaHubModal()"
+          style="display: none;"
           title="Upload Foto & Media (Logo Tim, Pemain, Momen)" aria-label="Upload Foto & Media">
           <span>📸</span>
         </button>
@@ -258,12 +259,12 @@
           <span>📤</span>
         </button>
 
-        <span class="header-v-divider"></span>
+        <span id="adminHeaderDivider" class="header-v-divider" style="display: none;"></span>
 
-        <!-- Panitia / Admin Access Button -->
-        <button id="btnOpenAdmin" class="btn-admin-header"
+        <!-- Panitia / Admin Access Button (Tersembunyi untuk Pengunjung, tampil saat Mode Panitia aktif) -->
+        <button id="btnOpenAdmin" class="btn-admin-header" style="display: none;"
           onclick="if(window.admin){if(window.admin.isAuthenticated){window.admin.openAdminDashboard();}else{window.admin.openLoginModal();}}"
-          title="Login Khusus Panitia / Input Skor & Kelola Turnamen" aria-label="Mode Panitia">
+          title="Panel Kontrol Panitia / Input Skor & Kelola Turnamen" aria-label="Mode Panitia">
           <span id="adminHeaderIcon">🔒</span>
           <span id="adminHeaderLabel">Mode Panitia</span>
           <span id="adminActiveBadge" class="admin-live-pulse-dot" style="display: none;"></span>
@@ -365,7 +366,6 @@
         <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
         <button type="button" class="tab-btn" data-tab="standings"
           onclick="app.switchTab('standings')">Klasemen</button>
-        <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')">🎲 Draw Grup</button>
         <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
         <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
         <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
@@ -398,11 +398,6 @@
               style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
               onclick="app.switchTab('standings')">
               📊 Klasemen Sementara
-            </button>
-            <button class="btn btn-outline"
-              style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
-              onclick="app.switchTab('draw')" title="Undian Grup 1 per 1 dengan Efek Nama Berputar">
-              🎲 Live Draw Grup
             </button>
             <button class="btn btn-outline"
               style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
@@ -713,112 +708,6 @@
       </div>
     </section>
 
-    <!-- TAB: DRAWING & PENGUNDIAN GRUP INTERAKTIF 1 PER 1 -->
-    <section id="pane-draw" class="tab-pane">
-      <div class="draw-header-wrapper">
-        <div class="draw-header-main">
-          <h2 class="section-title">
-            <span>🎲</span> Drawing & Pengundian Grup Resmi ACC 2026
-          </h2>
-          <p class="draw-header-desc">
-            Sistem pengundian grup turnamen interaktif dengan efek nama berputar (roulette spin) dan terisi secara acak
-            satu per satu (1 per 1) ke dalam 4 grup (Grup A, B, C, D).
-          </p>
-        </div>
-
-        <div class="draw-cat-switch">
-          <button type="button" class="btn-draw-cat active" data-cat="SMP" onclick="app.setDrawCategory('SMP')">SMP
-            (U-15)</button>
-          <button type="button" class="btn-draw-cat" data-cat="SD" onclick="app.setDrawCategory('SD')">SD
-            (U-12)</button>
-        </div>
-      </div>
-
-      <!-- ROLE BANNER: INFORMASI MODE PESERTA VS KONTROL PANITIA -->
-      <div class="draw-role-banner" id="drawRoleBanner"></div>
-
-      <!-- MAIN DRAW STAGE / ARENA DISPLAY -->
-      <div class="draw-stage-card">
-        <div class="draw-stage-glow"></div>
-
-        <div class="draw-target-banner">
-          <span class="draw-target-icon">🎯</span>
-          <span class="draw-target-label">Target Pengundian:</span>
-          <span class="draw-target-slot" id="drawTargetSlotText">GRUP A — SLOT 1</span>
-        </div>
-
-        <!-- REEL BOX: TAMPILAN NAMA BERPUTAR -->
-        <div class="draw-reel-container" id="drawReelContainer">
-          <div class="draw-reel-border-glow"></div>
-          <div class="draw-reel-window" id="drawReelWindow">
-            <div class="draw-reel-item" id="drawReelItem">
-              <div class="draw-reel-badge" id="drawReelBadge">🎲</div>
-              <div class="draw-reel-info">
-                <div class="draw-reel-name" id="drawReelName">Klik 'Putar Undian' untuk Mulai</div>
-                <div class="draw-reel-sub" id="drawReelSub">16 Tim Tersedia di Pot Undian</div>
-              </div>
-            </div>
-          </div>
-          <div class="draw-reel-scanline"></div>
-          <div class="draw-confetti-container" id="drawConfettiContainer"></div>
-        </div>
-
-        <!-- ACTION BUTTONS -->
-        <div class="draw-actions-bar">
-          <button type="button" class="btn btn-draw-spin" id="btnDrawSingle" onclick="app.spinSingleDraw()">
-            <span class="btn-spin-icon">🎲</span>
-            <span class="btn-spin-text" id="btnDrawSingleText">Putar & Undi 1 Tim (Berikutnya)</span>
-          </button>
-
-          <button type="button" class="btn btn-draw-auto" id="btnDrawAuto" onclick="app.toggleAutoDraw()">
-            <span class="btn-auto-icon">⚡</span>
-            <span class="btn-auto-text" id="btnDrawAutoText">Undi Otomatis 1 per 1</span>
-          </button>
-
-          <button type="button" class="btn btn-draw-reset" id="btnDrawReset" onclick="app.resetDraw()">
-            <span>🔄</span> Reset Undian
-          </button>
-
-          <button type="button" class="btn btn-draw-copy" id="btnDrawCopy" onclick="app.copyDrawResults()">
-            <span>📋</span> Salin Hasil
-          </button>
-
-          <button type="button" class="btn btn-draw-apply" id="btnDrawApply" onclick="app.applyDrawToTournament()"
-            style="display: none;">
-            <span>💾</span> Simpan Hasil ke Turnamen (Panitia)
-          </button>
-        </div>
-
-        <!-- STATUS COUNTER & LIVE LOG -->
-        <div class="draw-status-strip">
-          <div class="draw-progress-badge">
-            Progres: <strong id="drawCountText">0 / 16</strong> Tim Terundi
-          </div>
-          <div class="draw-last-result" id="drawAnnouncement">
-            Siap melakukan drawing resmi 1 per 1. Tekan tombol putar untuk mengundi tim pertama!
-          </div>
-        </div>
-      </div>
-
-      <!-- 4 GRUP DISPLAY CARDS (GRUP A, B, C, D) -->
-      <div class="draw-groups-grid" id="drawGroupsGrid">
-        <!-- Rendered by app.renderDrawSlots() -->
-      </div>
-
-      <!-- POT TIM YANG BELUM TERUNDI (UNDRAWN POOL) -->
-      <div class="draw-pool-card">
-        <div class="draw-pool-header">
-          <h3 class="draw-pool-title">
-            <span>🗳️</span> Pot Tim Menunggu Undian (<span id="drawPoolCount">16</span> Tim Tersisa)
-          </h3>
-          <span class="draw-pool-hint">Daftar tim yang belum terundi ke dalam grup</span>
-        </div>
-        <div class="draw-pool-badges" id="drawPoolBadges">
-          <!-- Rendered by app.renderDrawPool() -->
-        </div>
-      </div>
-    </section>
-
     <!-- TAB 3: BAGAN FASE GUGUR (BRACKET) -->
     <section id="pane-bracket" class="tab-pane">
       <div class="section-header">
@@ -849,7 +738,7 @@
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()"
-            style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); cursor: pointer;">
+            style="display: none; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); cursor: pointer;">
             ➕ Tambah Tim Baru
           </button>
         </div>
@@ -2687,18 +2576,6 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       </svg>
       <span>Klasemen</span>
     </button>
-    <button type="button" class="mobile-nav-item" data-tab="draw" onclick="app.switchTab('draw')"
-      aria-label="Draw Grup">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="18" height="18" rx="4"></rect>
-        <circle cx="8" cy="8" r="1.5" fill="currentColor"></circle>
-        <circle cx="16" cy="8" r="1.5" fill="currentColor"></circle>
-        <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
-        <circle cx="8" cy="16" r="1.5" fill="currentColor"></circle>
-        <circle cx="16" cy="16" r="1.5" fill="currentColor"></circle>
-      </svg>
-      <span>Draw</span>
-    </button>
     <button type="button" class="mobile-nav-item" data-tab="bracket" onclick="app.switchTab('bracket')"
       aria-label="Bagan Fase Gugur">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2750,11 +2627,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.39"></script>
-  <script src="js/supabase-client.js?v=8.39"></script>
-  <script src="js/data.js?v=8.39"></script>
-  <script src="js/admin.js?v=8.39"></script>
-  <script src="js/app.js?v=8.39"></script>
+  <script src="js/security.js?v=8.40"></script>
+  <script src="js/supabase-client.js?v=8.40"></script>
+  <script src="js/data.js?v=8.40"></script>
+  <script src="js/admin.js?v=8.40"></script>
+  <script src="js/app.js?v=8.40"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

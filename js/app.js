@@ -2193,15 +2193,16 @@ var app = window.app = Object.assign(window.app || {}, {
   updateAdminVisibility() {
     const isPanitia = this.isAdmin();
 
-    // Tab Draw Grup selalu dapat diakses oleh semua pengguna (Peserta melihat hasil undian, Panitia mengatur undian)
-    document.querySelectorAll('.tab-btn[data-tab="draw"]').forEach(btn => {
-      btn.style.display = "inline-flex";
-    });
-    document.querySelectorAll('.mobile-nav-item[data-tab="draw"]').forEach(item => {
-      item.style.display = "flex";
-    });
+    // Sembunyikan SEMUA tombol khusus Panitia (termasuk Mode Panitia & Media Hub) dari pengunjung biasa!
+    const btnOpenAdmin = document.getElementById("btnOpenAdmin");
+    if (btnOpenAdmin) btnOpenAdmin.style.display = isPanitia ? "inline-flex" : "none";
 
-    // Sembunyikan tombol batch upload agar antarmuka bersih & fokus pada penginputan manual
+    const adminDivider = document.getElementById("adminHeaderDivider");
+    if (adminDivider) adminDivider.style.display = isPanitia ? "inline-block" : "none";
+
+    const btnQuickMediaHub = document.getElementById("btnQuickMediaHub");
+    if (btnQuickMediaHub) btnQuickMediaHub.style.display = isPanitia ? "inline-flex" : "none";
+
     const btnBatchUpload = document.getElementById("btnBatchUploadTeams");
     if (btnBatchUpload) btnBatchUpload.style.display = "none";
 
@@ -2212,7 +2213,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (btnQuickBanner) btnQuickBanner.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnAddTeam = document.getElementById("btnAddTeamBtn");
-    if (btnAddTeam) btnAddTeam.style.display = "inline-flex";
+    if (btnAddTeam) btnAddTeam.style.display = isPanitia ? "inline-flex" : "none";
 
     const btnManageSponsors = document.getElementById("btnManageSponsors");
     if (btnManageSponsors) btnManageSponsors.style.display = isPanitia ? "inline-flex" : "none";
@@ -2222,10 +2223,6 @@ var app = window.app = Object.assign(window.app || {}, {
 
     const btnHeaderAturLawan = document.getElementById("btnHeaderAturLawan");
     if (btnHeaderAturLawan) btnHeaderAturLawan.style.display = isPanitia ? "inline-flex" : "none";
-
-    if (this.currentTab === "draw" && typeof this.renderDrawView === "function") {
-      this.renderDrawView();
-    }
   },
 
   renderHeroBanner() {
@@ -2578,9 +2575,8 @@ var app = window.app = Object.assign(window.app || {}, {
 
   switchTab(tabId, pushHistory = true) {
     try {
-      if (tabId === "draw" && !this.isAdmin()) {
-        this.showToast("🔒 Menu Draw Grup hanya dapat diakses pada Mode Panitia.");
-        tabId = "home";
+      if (tabId === "draw") {
+        tabId = "standings";
       }
 
       if (pushHistory && tabId !== this.currentTab) {
@@ -3688,9 +3684,7 @@ var app = window.app = Object.assign(window.app || {}, {
             <div class="school-card-footer" onclick="event.stopPropagation();">
               <span class="roster-count">👥 ${tPlayers.length} Pemain</span>
               <div style="display: flex; gap: 6px; align-items: center;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); admin.openTeamEditorModal('${t.id}')" title="Edit Data Tim & Pemain" style="font-size: 0.72rem; padding: 3px 8px; border-color: var(--primary); color: var(--primary); font-weight: 600;">
-                  ✏️ Edit
-                </button>
+                ${isPanitia ? `<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); admin.openTeamEditorModal('${t.id}')" title="Edit Data Tim & Pemain" style="font-size: 0.72rem; padding: 3px 8px; border-color: var(--primary); color: var(--primary); font-weight: 600;">✏️ Edit</button>` : ''}
                 <a href="${waLink}" target="_blank" class="btn-wa-direct" title="Hubungi Official via WA">
                   💬 WA Official
                 </a>
@@ -4925,11 +4919,13 @@ var app = window.app = Object.assign(window.app || {}, {
     const waLink = this.getWhatsAppUrl(team.official.phone, `Halo Official ${team.name}, informasi ACC 2026`);
 
     body.innerHTML = `
-      <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
-        <button type="button" class="btn btn-primary btn-sm" onclick="app.closeAllModals(); admin.openTeamEditorModal('${team.id}')">
-          ✏️ Edit Data Tim & Skuad Pemain
-        </button>
-      </div>
+      ${isPanitia ? `
+        <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="app.closeAllModals(); admin.openTeamEditorModal('${team.id}')">
+            ✏️ Edit Data Tim & Skuad Pemain
+          </button>
+        </div>
+      ` : ''}
       <div class="team-modal-officials-box">
         <h4 class="team-modal-officials-title">Struktur Tim & Official Manajemen</h4>
         

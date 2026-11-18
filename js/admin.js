@@ -12,9 +12,48 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   DRAFT_TEAM_KEY: "acc_draft_team_editor_v1",
   DRAFT_BATCH_KEY: "acc_draft_batch_teams_v1",
 
+  _logoTapCount: 0,
+  _logoTapTimer: null,
+
   init() {
     this.checkSession();
     this.bindAdminEvents();
+    this.checkSecretAdminUrl();
+  },
+
+  // Jalur Khusus #1: Buka link https://accfutsal2026.vercel.app/?panitia (atau ?admin / #panitia)
+  checkSecretAdminUrl() {
+    try {
+      const search = (window.location.search || "").toLowerCase();
+      const hash = (window.location.hash || "").toLowerCase();
+      if (search.includes("panitia") || search.includes("admin") || hash === "#panitia" || hash === "#admin") {
+        if (this.isAuthenticated) {
+          this.updateAdminUi();
+        } else {
+          setTimeout(() => {
+            this.openLoginModal();
+          }, 300);
+        }
+      }
+    } catch (_) {}
+  },
+
+  // Jalur Khusus #2: Ketuk / klik Logo ACC 5 kali berturut-turut dalam 3 detik
+  handleLogoSecretTap() {
+    this._logoTapCount = (this._logoTapCount || 0) + 1;
+    if (this._logoTapTimer) clearTimeout(this._logoTapTimer);
+    this._logoTapTimer = setTimeout(() => {
+      this._logoTapCount = 0;
+    }, 3000);
+    if (this._logoTapCount >= 5) {
+      this._logoTapCount = 0;
+      if (this._logoTapTimer) clearTimeout(this._logoTapTimer);
+      if (this.isAuthenticated) {
+        this.openAdminDashboard();
+      } else {
+        this.openLoginModal();
+      }
+    }
   },
 
   checkSession() {
@@ -25,8 +64,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
         if (this.adminPinHash) sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
       } catch (_) {}
-      this.updateAdminUi();
     }
+    this.updateAdminUi();
   },
 
   bindAdminEvents() {
@@ -299,12 +338,21 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
   updateAdminUi() {
     const btn = document.getElementById("btnOpenAdmin");
+    const divider = document.getElementById("adminHeaderDivider");
+    const mediaBtn = document.getElementById("btnQuickMediaHub");
     const iconEl = document.getElementById("adminHeaderIcon");
     const labelEl = document.getElementById("adminHeaderLabel");
     const dotEl = document.getElementById("adminActiveBadge");
     if (btn) {
+      btn.style.display = this.isAuthenticated ? "inline-flex" : "none";
       btn.title = this.isAuthenticated ? "Panel Kontrol Panitia (Klik untuk Dashboard / Logout)" : "Masuk Mode Panitia";
       btn.classList.toggle("logged-in", this.isAuthenticated);
+    }
+    if (divider) {
+      divider.style.display = this.isAuthenticated ? "inline-block" : "none";
+    }
+    if (mediaBtn) {
+      mediaBtn.style.display = this.isAuthenticated ? "inline-flex" : "none";
     }
     if (iconEl) {
       iconEl.textContent = this.isAuthenticated ? "⚙️" : "🔒";
