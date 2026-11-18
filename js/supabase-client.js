@@ -312,15 +312,24 @@
         // 1. Try secure RPC if pinHash is provided
         if (pinHash) {
           try {
-            await this.client.rpc('secure_update_match', {
+            const { error: rpcErr } = await this.client.rpc('secure_update_match', {
               p_match_id: match.id,
               p_home_score: hScoreNum,
               p_away_score: aScoreNum,
-              p_status: match.status,
+              p_home_score_live: hScoreNum,
+              p_away_score_live: aScoreNum,
+              p_minute_live: minuteNum,
+              p_status: match.status || 'scheduled',
               p_scorers: match.scorers || [],
               p_cards: match.cards || [],
+              p_penalty_home_score: match.penaltyHomeScore !== undefined ? match.penaltyHomeScore : null,
+              p_penalty_away_score: match.penaltyAwayScore !== undefined ? match.penaltyAwayScore : null,
+              p_penalty_winner: match.penaltyWinner || null,
               p_pin_hash: pinHash
             });
+            if (!rpcErr) {
+              return true;
+            }
           } catch (rpcErr) {
             console.warn('[Supabase] secure_update_match info:', rpcErr);
           }

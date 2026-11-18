@@ -35,7 +35,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
           }, 300);
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   },
 
   // Jalur Khusus #2: Ketuk / klik Logo ACC 5 kali berturut-turut dalam 3 detik
@@ -63,7 +63,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
         if (this.adminPinHash) sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
-      } catch (_) {}
+      } catch (_) { }
     }
     this.updateAdminUi();
   },
@@ -219,52 +219,42 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
   },
 
-  // Core Login Routine - Secure, Master PINs (1234, 123456, 2026, admin), Anti-Lockout
+  // Core Login Routine - Cryptographic Verification with Anti-Brute-Force
   async doLogin(providedPin) {
     const input = document.getElementById("adminPinInput");
     const rawPin = (providedPin !== undefined ? providedPin : (input ? input.value : "")).toString().trim();
-    const cleanPin = rawPin.toLowerCase();
     const lockoutNote = document.getElementById("adminLoginLockoutNote");
 
-    if (!cleanPin) {
+    if (!rawPin) {
       if (lockoutNote) {
-        lockoutNote.innerHTML = "Silakan masukkan PIN Panitia atau klik tombol <strong>⚡ Masuk Langsung</strong> di bawah.";
+        lockoutNote.textContent = "Silakan masukkan PIN Panitia.";
         lockoutNote.style.display = "block";
       }
       return;
     }
 
-    // Master PINs Resmi Panitia ACC 2026 (Semua format resmi panpel diterima)
-    const acceptedMasterPins = ["1234", "123456", "2026", "admin", "panitia", "panpel", "alfayyadh", "acc2026", "acc"];
-    const isMaster = acceptedMasterPins.includes(cleanPin);
-
-    // Jika master PIN, segera bebaskan penalti lockout lama
-    if (isMaster) {
-      this.resetLockout(false);
-    } else {
-      // Periksa apakah akun sedang terkena penalti lockout brute-force untuk PIN non-master
-      if (window.Security && typeof window.Security.checkLockout === "function") {
-        const lockInfo = window.Security.checkLockout();
-        if (lockInfo.isLocked) {
-          const msg = `⚠️ Terlalu banyak percobaan salah! Akun panitia terkunci sementara selama ${lockInfo.remainingSeconds} detik.`;
-          if (lockoutNote) {
-            lockoutNote.innerHTML = `${msg} <br><button type="button" onclick="admin.resetLockout(true)" style="background:none;border:none;color:#0284c7;text-decoration:underline;cursor:pointer;font-size:0.75rem;padding:0;margin-top:4px;">Klik di sini untuk Buka Kunci Lockout</button>`;
-            lockoutNote.style.display = "block";
-          }
-          alert(msg);
-          return;
+    // Periksa apakah akun sedang terkena penalti lockout brute-force
+    if (window.Security && typeof window.Security.checkLockout === "function") {
+      const lockInfo = window.Security.checkLockout();
+      if (lockInfo.isLocked) {
+        const msg = `⚠️ Terlalu banyak percobaan salah! Akun panitia terkunci sementara selama ${lockInfo.remainingSeconds} detik.`;
+        if (lockoutNote) {
+          lockoutNote.textContent = msg;
+          lockoutNote.style.display = "block";
         }
+        alert(msg);
+        return;
       }
     }
 
-    // Validasi PIN terhadap stored hash di config atau master PIN turnamen
+    // Validasi PIN terhadap stored hash di config
     const storedHash = (app.store && app.store.data && app.store.data.config && app.store.data.config.adminPinHash)
       || "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
 
-    let isValid = isMaster;
-    let computedHash = "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
+    let isValid = false;
+    let computedHash = "";
 
-    if (!isValid && window.Security && typeof window.Security.verifyPin === "function") {
+    if (window.Security && typeof window.Security.verifyPin === "function") {
       isValid = await window.Security.verifyPin(rawPin, storedHash);
       if (isValid) {
         computedHash = await window.Security.hashPin(rawPin);
@@ -272,9 +262,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     if (isValid) {
-      this.resetLockout(false);
+      if (window.Security && typeof window.Security.recordSuccess === "function") {
+        window.Security.recordSuccess();
+      }
       this.isAuthenticated = true;
-      this.adminPinHash = computedHash || "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348";
+      this.adminPinHash = computedHash || storedHash;
 
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
@@ -408,16 +400,26 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   openLoginModal() {
-    // Otomatis bebaskan penalti lockout saat form dibuka agar panitia tidak terblokir
-    this.resetLockout(false);
-
     const modal = document.getElementById("adminLoginModal");
     const pinInput = document.getElementById("adminPinInput");
     const lockoutNote = document.getElementById("adminLoginLockoutNote");
-    if (lockoutNote) {
+
+    if (window.Security && typeof window.Security.checkLockout === "function") {
+      const lockInfo = window.Security.checkLockout();
+      if (lockInfo.isLocked) {
+        if (lockoutNote) {
+          lockoutNote.textContent = `⚠️ Akun panitia terkunci sementara (${lockInfo.remainingSeconds} detik tersisa).`;
+          lockoutNote.style.display = "block";
+        }
+      } else if (lockoutNote) {
+        lockoutNote.textContent = "";
+        lockoutNote.style.display = "none";
+      }
+    } else if (lockoutNote) {
       lockoutNote.textContent = "";
       lockoutNote.style.display = "none";
     }
+
     if (pinInput) pinInput.value = "";
     if (modal) modal.classList.add("active");
     if (pinInput) {
@@ -2085,7 +2087,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       let team = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(teamId) : null;
       if (!team && app.store && app.store.data && app.store.data.teams) {
         const query = String(teamId).trim().toLowerCase();
-        team = app.store.data.teams.find(t => 
+        team = app.store.data.teams.find(t =>
           String(t.id).trim().toLowerCase() === query ||
           (t.name && t.name.trim().toLowerCase() === query) ||
           (t.shortName && t.shortName.trim().toLowerCase() === query)
@@ -2203,7 +2205,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     this.teamEditorDirty = false;
     document.getElementById("teamEditorModal").classList.add("active");
-    try { history.pushState({ tab: app.currentTab, editing: true }, ""); } catch (_) {}
+    try { history.pushState({ tab: app.currentTab, editing: true }, ""); } catch (_) { }
 
     const teamForm = document.getElementById("teamEditorForm");
     if (teamForm && !teamForm._enterKeyGuarded) {
@@ -2238,7 +2240,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             if (thumb) thumb.src = cloudUrl;
             this.scheduleTeamEditorDraftSave();
           }
-        }).catch(() => {});
+        }).catch(() => { });
       }
       app.showToast("✅ Logo tim siap disimpan!");
     } catch (err) {
@@ -2269,7 +2271,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             if (thumb) thumb.src = cloudUrl;
             this.scheduleTeamEditorDraftSave();
           }
-        }).catch(() => {});
+        }).catch(() => { });
       }
       app.showToast("✅ Foto pelatih siap disimpan!");
     } catch (err) {
@@ -2301,7 +2303,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             if (thumb) thumb.src = cloudUrl;
             this.scheduleTeamEditorDraftSave();
           }
-        }).catch(() => {});
+        }).catch(() => { });
       }
       app.showToast("✅ Foto asisten pelatih siap disimpan!");
     } catch (err) {
@@ -2518,7 +2520,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         if (pPhoto && pPhoto.startsWith("data:image") && pPhoto.length > 150000) {
           try {
             pPhoto = await this.compressImageToDataUrl(pPhoto, 200, 0.65);
-          } catch (_) {}
+          } catch (_) { }
         }
 
         if (pName) {
@@ -2541,13 +2543,13 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
       // Compress official photos & logo if large
       if (coachPhoto && coachPhoto.startsWith("data:image") && coachPhoto.length > 200000) {
-        try { coachPhoto = await this.compressImageToDataUrl(coachPhoto, 280, 0.7); } catch (_) {}
+        try { coachPhoto = await this.compressImageToDataUrl(coachPhoto, 280, 0.7); } catch (_) { }
       }
       if (managerPhoto && managerPhoto.startsWith("data:image") && managerPhoto.length > 200000) {
-        try { managerPhoto = await this.compressImageToDataUrl(managerPhoto, 280, 0.7); } catch (_) {}
+        try { managerPhoto = await this.compressImageToDataUrl(managerPhoto, 280, 0.7); } catch (_) { }
       }
       if (logo && logo.startsWith("data:image") && logo.length > 250000) {
-        try { logo = await this.compressImageToDataUrl(logo, 300, 0.75); } catch (_) {}
+        try { logo = await this.compressImageToDataUrl(logo, 300, 0.75); } catch (_) { }
       }
 
       const teamPayload = {
@@ -2578,7 +2580,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         let existing = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(id) : null;
         if (!existing && app.store && app.store.data && app.store.data.teams) {
           const query = String(id).trim().toLowerCase();
-          existing = app.store.data.teams.find(t => 
+          existing = app.store.data.teams.find(t =>
             String(t.id).trim().toLowerCase() === query ||
             (t.name && t.name.trim().toLowerCase() === query) ||
             (t.shortName && t.shortName.trim().toLowerCase() === query)
@@ -2650,7 +2652,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       // Jika modal detail tim sedang aktif di belakangnya, segarkan tampilannya
       const teamModal = document.getElementById("teamModal");
       if (teamModal && teamModal.classList.contains("active")) {
-        try { app.openTeamModal(targetTeamId); } catch (_) {}
+        try { app.openTeamModal(targetTeamId); } catch (_) { }
       }
 
       // Refresh seluruh tampilan UI
@@ -2785,7 +2787,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             }
           });
         }
-      } catch (_) {}
+      } catch (_) { }
     });
 
     if (restoredPhotosCount > 0 || restoredTeamsCount > 0) {
@@ -2803,7 +2805,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
           try {
             if (window.SupabaseService.syncTeam) await window.SupabaseService.syncTeam(t);
             if (t.logo && window.SupabaseService.syncTeamLogo) await window.SupabaseService.syncTeamLogo(t.id, t.logo);
-          } catch (_) {}
+          } catch (_) { }
         }
       }
       if (!silent) {
@@ -2931,10 +2933,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
           team.logo = photoUrl;
           if (window.SupabaseService) {
             if (window.SupabaseService.syncTeamLogo) {
-              window.SupabaseService.syncTeamLogo(teamId, photoUrl).catch(() => {});
+              window.SupabaseService.syncTeamLogo(teamId, photoUrl).catch(() => { });
             }
             if (window.SupabaseService.syncTeam) {
-              window.SupabaseService.syncTeam(team).catch(() => {});
+              window.SupabaseService.syncTeam(team).catch(() => { });
             }
           }
         }
@@ -2989,7 +2991,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     let team = (app.store && typeof app.store.getTeam === 'function') ? app.store.getTeam(id) : null;
     if (!team && app.store && app.store.data && app.store.data.teams) {
       const query = String(id).trim().toLowerCase();
-      team = app.store.data.teams.find(t => 
+      team = app.store.data.teams.find(t =>
         String(t.id).trim().toLowerCase() === query ||
         (t.name && t.name.trim().toLowerCase() === query)
       );
@@ -3853,7 +3855,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             hasExistingDraft = true;
           }
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     if (hasExistingDraft) {
@@ -3871,7 +3873,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     modal.classList.add("active");
-    try { history.pushState({ tab: app.currentTab, editing: true }, ""); } catch (_) {}
+    try { history.pushState({ tab: app.currentTab, editing: true }, ""); } catch (_) { }
   },
 
   closeBatchUploadModal(force = false) {
@@ -5231,14 +5233,14 @@ var admin = window.admin = Object.assign(window.admin || {}, {
           managerPhoto: draft.managerPhoto.length < 60000 ? draft.managerPhoto : "",
           players: draft.players.map(p => ({ ...p, photo: (p.photo && p.photo.length < 40000) ? p.photo : "" }))
         };
-        try { localStorage.setItem(this.DRAFT_TEAM_KEY, JSON.stringify(lightDraft)); } catch (_) {}
+        try { localStorage.setItem(this.DRAFT_TEAM_KEY, JSON.stringify(lightDraft)); } catch (_) { }
       }
-    } catch (_) {}
+    } catch (_) { }
   },
 
   clearTeamEditorDraft() {
     this.teamEditorDirty = false;
-    try { localStorage.removeItem(this.DRAFT_TEAM_KEY); } catch (_) {}
+    try { localStorage.removeItem(this.DRAFT_TEAM_KEY); } catch (_) { }
   },
 
   closeTeamEditorModal(force = false) {
@@ -5291,13 +5293,13 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             players: (t.players || []).map(p => ({ ...p, photo: (p.photo && p.photo.length < 30000) ? p.photo : "" }))
           }))
         };
-        try { localStorage.setItem(this.DRAFT_BATCH_KEY, JSON.stringify(lightPayload)); } catch (_) {}
+        try { localStorage.setItem(this.DRAFT_BATCH_KEY, JSON.stringify(lightPayload)); } catch (_) { }
       }
-    } catch (_) {}
+    } catch (_) { }
   },
 
   clearBatchUploadDraft() {
-    try { localStorage.removeItem(this.DRAFT_BATCH_KEY); } catch (_) {}
+    try { localStorage.removeItem(this.DRAFT_BATCH_KEY); } catch (_) { }
   },
 
   saveAllActiveDrafts() {
@@ -5351,7 +5353,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         <button type="button" onclick="admin.discardSavedDraft('${draftType}')" style="background:rgba(255,255,255,0.18); color:#fff; border:none; border-radius:8px; padding:5px 10px; font-weight:600; cursor:pointer; font-size:0.75rem;">✕ Buang</button>
       `;
       document.body.appendChild(banner);
-    } catch (_) {}
+    } catch (_) { }
   },
 
   discardSavedDraft(type) {
@@ -5420,7 +5422,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         const modal = document.getElementById("teamEditorModal");
         if (modal) modal.classList.add("active");
       }
-    } catch (_) {}
+    } catch (_) { }
   },
 
   logout() {
