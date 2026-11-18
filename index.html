@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -3069,6 +3069,23 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         });
       }
     } catch (e) { }
+  </script>
+  <!-- Immediate Dynamic Sticky Header Scroll-Driven Animation Init -->
+  <script>
+    (function () {
+      var h = document.querySelector(".header");
+      if (!h) return;
+      var isScrolled = false;
+      function updateHeader() {
+        var scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
+        if (scrolled !== isScrolled) {
+          isScrolled = scrolled;
+          h.classList.toggle("scrolled", isScrolled);
+        }
+      }
+      window.addEventListener("scroll", updateHeader, { passive: true });
+      updateHeader();
+    })();
   </script>
 </body>
 

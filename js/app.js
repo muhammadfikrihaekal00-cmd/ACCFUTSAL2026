@@ -2287,6 +2287,21 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   bindEvents() {
+    // Dynamic Scroll-Driven Size Transition on Sticky Header
+    const headerEl = document.querySelector(".header");
+    if (headerEl) {
+      let isHeaderScrolled = false;
+      const onScrollHeader = () => {
+        const scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
+        if (scrolled !== isHeaderScrolled) {
+          isHeaderScrolled = scrolled;
+          headerEl.classList.toggle("scrolled", isHeaderScrolled);
+        }
+      };
+      window.addEventListener("scroll", onScrollHeader, { passive: true });
+      onScrollHeader();
+    }
+
     // Desktop Tabs
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {

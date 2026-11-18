@@ -212,47 +212,70 @@ main.container {
    ============================================================================ */
 .header {
   position: sticky !important;
-  top: 14px !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
   z-index: 1200 !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0 18px !important;
-  margin-top: 14px !important;
+  padding: 14px 18px 6px 18px !important;
+  margin: 0 !important;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
 }
 
 .header-inner {
   max-width: 1200px !important;
+  min-height: 76px !important;
   background: rgba(11, 19, 43, 0.74) !important;
   backdrop-filter: blur(20px) saturate(160%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 9999px !important;
-  padding: 10px 18px 10px 20px !important;
+  padding: 12px 24px !important;
   box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.45),
-    0 0 24px rgba(29, 78, 216, 0.14),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(29, 78, 216, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 14px !important;
-  min-height: 64px !important;
-  transition: var(--transition-smooth) !important;
+  gap: 16px !important;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Scrolled State: Dynamically shrunk, higher contrast & elevated shadow */
+.header.scrolled {
+  padding: 6px 14px !important;
+}
+
+.header.scrolled .header-inner {
+  min-height: 58px !important;
+  padding: 6px 18px !important;
+  background: rgba(6, 10, 23, 0.92) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.6),
+    0 0 28px rgba(29, 78, 216, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
 }
 
 .brand-group {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 12px !important;
   flex-shrink: 1 !important;
   min-width: 0 !important;
   overflow: hidden !important;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .brand-logo {
-  width: 34px !important;
-  height: 44px !important;
+  width: 42px !important;
+  height: 56px !important;
   object-fit: contain !important;
   background: transparent !important;
   border: none !important;
@@ -261,7 +284,13 @@ main.container {
   box-shadow: none !important;
   flex-shrink: 0 !important;
   filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.5)) !important;
-  transition: transform 0.3s ease !important;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.header.scrolled .brand-logo {
+  width: 32px !important;
+  height: 42px !important;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4)) !important;
 }
 
 .brand-group:hover .brand-logo {
@@ -271,29 +300,76 @@ main.container {
 .brand-text {
   min-width: 0 !important;
   overflow: hidden !important;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .brand-text h1 {
   font-family: var(--font-display) !important;
-  font-size: 0.92rem !important;
+  font-size: 1.05rem !important;
   font-weight: 800 !important;
   letter-spacing: -0.01em !important;
   color: #f8fafc !important;
   line-height: 1.15 !important;
-  max-width: 132px;
+  max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin: 0 !important;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.header.scrolled .brand-text h1 {
+  font-size: 0.92rem !important;
 }
 
 .brand-text p {
-  font-size: 0.64rem !important;
+  font-size: 0.72rem !important;
   color: #94a3b8 !important;
-  margin-top: 1px !important;
+  margin: 2px 0 0 0 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 132px;
+  max-width: 140px;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.header.scrolled .brand-text p {
+  font-size: 0.62rem !important;
+  opacity: 0.85 !important;
+}
+
+.header-nav-center .tab-btn {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border: 1px solid transparent !important;
+  border-radius: 9999px !important;
+  padding: 8px 14px !important;
+  font-size: 0.80rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: none !important;
+}
+
+.header.scrolled .header-nav-center .tab-btn {
+  padding: 5px 11px !important;
+  font-size: 0.74rem !important;
+}
+
+.header.scrolled .header-nav-center .nav-tabs {
+  padding: 3px !important;
+  gap: 2px !important;
+}
+
+.mobile-hamburger-btn {
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.header.scrolled .mobile-hamburger-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 11px !important;
 }
 
 /* Center Inline Navigation inside Floating Glass Navbar */
@@ -1380,14 +1456,56 @@ tr.zone-qualify {
 }
 
 @media (max-width: 980px) {
+  .header {
+    padding: 10px 12px 6px 12px !important;
+  }
+
+  .header.scrolled {
+    padding: 4px 8px !important;
+  }
+
   .header-nav-center {
     display: none !important;
   }
 
   .header-inner {
-    border-radius: 20px !important;
+    border-radius: 9999px !important;
     padding: 8px 14px !important;
     min-height: 56px !important;
+  }
+
+  .header.scrolled .header-inner {
+    min-height: 48px !important;
+    padding: 4px 12px !important;
+    border-radius: 9999px !important;
+  }
+
+  .brand-logo {
+    width: 36px !important;
+    height: 48px !important;
+  }
+
+  .header.scrolled .brand-logo {
+    width: 28px !important;
+    height: 36px !important;
+  }
+
+  .mobile-hamburger-btn {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .header.scrolled .mobile-hamburger-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .header.scrolled .brand-text h1 {
+    font-size: 0.88rem !important;
+  }
+
+  .header.scrolled .brand-text p {
+    font-size: 0.58rem !important;
   }
 
   .mobile-nav {
