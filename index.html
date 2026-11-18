@@ -1,19 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#28050c">
+  <meta name="theme-color" content="#060a17">
   <meta name="description"
     content="Portal Resmi Pemantauan Pertandingan, Skor Langsung, Klasemen, Bagan Gugur, dan Disiplin Kartu ACC Al-Fayyadh Champions Cup 2026 - Ma'had Tahfizhul Qur'an Al Fayyadh.">
   <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.43">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.43">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.43">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.43">
+  <link rel="manifest" href="manifest.json?v=8.44">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.44">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.44">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.44">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -43,7 +43,7 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.43";
+        var CURRENT_VER = "8.44";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -176,10 +176,21 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.43">
+  <link rel="stylesheet" href="css/styles.css?v=8.44">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.44">
 </head>
 
 <body>
+
+  <!-- AMBIENT MESH / STADIUM NIGHT AURA & ORBITAL RINGS (RECURSION-INSPIRED ACC PALETTE) -->
+  <div class="ambient-mesh-bg" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-blue"></div>
+    <div class="ambient-orb ambient-orb-gold"></div>
+    <div class="ambient-orb ambient-orb-crimson"></div>
+    <div class="ambient-orbit-ring ring-1"></div>
+    <div class="ambient-orbit-ring ring-2"></div>
+    <div class="ambient-grid-overlay"></div>
+  </div>
 
   <!-- TOP RUNNING ANNOUNCEMENT TICKER (RUNNING TEXT) -->
   <div class="ticker-bar">
@@ -193,7 +204,7 @@
     </div>
   </div>
 
-  <!-- MAIN HEADER -->
+  <!-- FLOATING GLASS STICKY NAVBAR -->
   <header class="header">
     <div class="container header-inner">
       <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap)admin.handleLogoSecretTap();" style="cursor: pointer;">
@@ -203,6 +214,24 @@
           <h1 id="headerTitle">ACC 2026</h1>
           <p>Ma'had Tahfizhul Qur'an Al Fayyadh</p>
         </div>
+      </div>
+
+      <!-- CENTER INLINE NAVIGATION TABS (FLOATING GLASS NAVBAR) -->
+      <div class="header-nav-center">
+        <nav class="nav-tabs" aria-label="Menu Utama Turnamen">
+          <button type="button" class="tab-btn active" data-tab="home" onclick="app.switchTab('home')">Beranda</button>
+          <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
+          <button type="button" class="tab-btn" data-tab="standings"
+            onclick="app.switchTab('standings')">Klasemen</button>
+          <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')"
+            style="display: none;">🎲 Draw Grup</button>
+          <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
+          <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
+          <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
+          <button type="button" class="tab-btn" data-tab="discipline"
+            onclick="app.switchTab('discipline')">Disiplin</button>
+          <button type="button" class="tab-btn" data-tab="juknis" onclick="app.switchTab('juknis')">Regulasi</button>
+        </nav>
       </div>
 
       <div class="header-actions">
@@ -258,12 +287,18 @@
   <!-- MAIN CONTENT CONTAINER (WHITE SPACE & USER FRIENDLY) -->
   <main class="container" style="padding-top: 14px;">
 
-    <!-- HERO SECTION / BANNER RAMAH DENGAN BANYAK WHITE SPACE -->
+    <!-- BORDERLESS FUTURISTIC HERO SECTION (TANPA KOTAK PUTIH + AURA GLOW) -->
     <div class="hero-card">
-      <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
-        <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="80" height="113"
-          loading="lazy">
+      <div class="hero-identity-stack">
+        <div class="hero-emblem-wrap">
+          <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="96" height="135"
+            fetchpriority="high">
+        </div>
         <div class="hero-details">
+          <div class="hero-kicker-pill">
+            <span class="hero-kicker-dot"></span>
+            <span>OFFICIAL TOURNAMENT PORTAL • ACC 2026</span>
+          </div>
           <div class="hero-badge-live" id="heroLiveBadge" onclick="app.scrollToLiveStream()"
             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.scrollToLiveStream();}"
             role="button" tabindex="0" title="Klik untuk menuju siaran langsung YouTube Live" style="display: none;">
@@ -271,8 +306,8 @@
             <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
           </div>
           <div class="hero-title" id="heroTitle">ACC "Al-Fayyadh Champions Cup" 2026</div>
-          <p id="heroSub" style="color: var(--text-muted); font-size: 0.9rem;">
-            Turnamen Futsal Antar-Sekolah & Pesantren • Ma'had Tahfizhul Qur'an Al Fayyadh
+          <p id="heroSub">
+            Turnamen Futsal Antar-Sekolah &amp; Pesantren se-Sulawesi Selatan • Ma'had Tahfizhul Qur'an Al Fayyadh Maros
           </p>
           <div class="hero-meta">
             <span>📍 <strong id="heroVenue">GOR Futsal MTQ Al-Fayyadh Maros</strong></span>
@@ -281,7 +316,7 @@
         </div>
       </div>
 
-      <div class="hero-quick-stats">
+      <div class="hero-quick-stats scroll-reveal">
         <div class="stat-pill">
           <div class="stat-val">32</div>
           <div class="stat-lbl">Tim (16 SMP + 16 SD)</div>
@@ -302,9 +337,9 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- DIVISION / KELAS SELECTOR (SMP & SD)                       -->
+    <!-- DIVISION / KELAS SELECTOR (SMP 13-15 | SD 9-12)           -->
     <!-- ========================================================= -->
-    <div class="category-selector-bar">
+    <div class="category-selector-bar scroll-reveal">
       <div class="category-selector-inner">
         <span class="category-selector-label">
           <span class="pulse-dot-green"></span> KELAS:
@@ -313,47 +348,27 @@
           <button type="button" class="category-pill active" id="btnCatSMP" onclick="app.setCategory('SMP')">
             <span class="pill-icon">🏆</span>
             <span class="pill-title">SMP</span>
-            <span class="pill-badge">U-15</span>
+            <span class="pill-badge">13-15</span>
           </button>
           <button type="button" class="category-pill" id="btnCatSD" onclick="app.setCategory('SD')">
             <span class="pill-icon">⚽</span>
             <span class="pill-title">SD</span>
-            <span class="pill-badge">U-12</span>
+            <span class="pill-badge">9-12</span>
           </button>
         </div>
       </div>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- NAVIGATION TABS: HYBRID FIFA & UEFA (MINIMALIST, SLEEK, SIMPLE) -->
-    <!-- ========================================================= -->
-    <div class="nav-tabs-wrapper">
-      <nav class="nav-tabs" aria-label="Menu Utama Turnamen">
-        <button type="button" class="tab-btn active" data-tab="home" onclick="app.switchTab('home')">Beranda</button>
-        <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
-        <button type="button" class="tab-btn" data-tab="standings"
-          onclick="app.switchTab('standings')">Klasemen</button>
-        <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')"
-          style="display: none;">🎲 Draw Grup</button>
-        <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
-        <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
-        <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
-        <button type="button" class="tab-btn" data-tab="discipline"
-          onclick="app.switchTab('discipline')">Disiplin</button>
-        <button type="button" class="tab-btn" data-tab="juknis" onclick="app.switchTab('juknis')">Regulasi</button>
-      </nav>
     </div>
 
     <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
     <section id="pane-home" class="tab-pane active">
 
       <!-- 0. SIARAN LANGSUNG YOUTUBE & LIVE MATCH CENTER (PALING ATAS BERANDA) -->
-      <section class="live-stream-hero-section" id="liveStreamHero">
+      <section class="live-stream-hero-section scroll-reveal" id="liveStreamHero">
         <!-- Rendered dynamically by app.renderLiveStreamHero() -->
       </section>
 
       <!-- 1. OPENING SHOWCASE BANNER -->
-      <div class="home-hero-banner" id="homeHeroBanner">
+      <div class="home-hero-banner scroll-reveal" id="homeHeroBanner">
         <button id="btnChangeBannerQuick" class="btn-banner-edit-overlay" onclick="admin.openHeroBannerModal()"
           title="Ubah Gambar Banner Turnamen" style="display: none;">
           📷 Ganti Gambar Banner (Panitia)
@@ -383,7 +398,7 @@
       </div>
 
       <!-- 2. MOMENT SHOWCASE BAR -->
-      <section class="acc-moments-section" id="accMomentsContainer">
+      <section class="acc-moments-section scroll-reveal" id="accMomentsContainer">
         <div class="moments-header-row">
           <div class="moments-title-wrap">
             <h2 class="moments-main-title">
@@ -495,7 +510,7 @@
       </div>
 
       <!-- 4. SPONSORSHIP & MITRA PENDUKUNG (100% dinamis dari Database Online) -->
-      <div class="sponsors-showcase-bar" id="sponsorsShowcaseBar">
+      <div class="sponsors-showcase-bar scroll-reveal" id="sponsorsShowcaseBar">
         <div class="section-header sponsors-header-row" style="margin-bottom: 16px;">
           <div>
             <h2 class="section-title sponsors-main-title" style="margin: 0;">
@@ -2647,11 +2662,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.43"></script>
-  <script src="js/supabase-client.js?v=8.43"></script>
-  <script src="js/data.js?v=8.43"></script>
-  <script src="js/admin.js?v=8.43"></script>
-  <script src="js/app.js?v=8.43"></script>
+  <script src="js/security.js?v=8.44"></script>
+  <script src="js/supabase-client.js?v=8.44"></script>
+  <script src="js/data.js?v=8.44"></script>
+  <script src="js/admin.js?v=8.44"></script>
+  <script src="js/app.js?v=8.44"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

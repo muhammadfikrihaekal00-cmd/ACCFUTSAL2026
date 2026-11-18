@@ -1,0 +1,1489 @@
+/* ============================================================================
+   ACC 2026 — RECURSION-INSPIRED DARK MIDNIGHT GLASSMORPHISM REDESIGN (v8.44)
+   Palette: Deep Midnight Navy (#060A17 -> #0B132B)
+            Electric Royal Blue Aura (#1D4ED8 / #0F296E)
+            Official ACC Warm Amber Gold (#F59E0B -> #D97706)
+            Stadium Crimson Red (#EF4444 / #DC2626) — Live & Alerts ONLY
+   Zero Purple • 100% High-Contrast Readability • Full Mobile & Desktop Support
+   ============================================================================ */
+
+:root,
+body,
+body.dark-theme {
+  --bg-main: #060a17;
+  --bg-midnight: #0b132b;
+  --bg-surface: rgba(15, 23, 42, 0.68);
+  --bg-surface-elevated: rgba(15, 23, 42, 0.85);
+  --bg-card: rgba(15, 23, 42, 0.65);
+  --bg-glass: rgba(15, 23, 42, 0.72);
+  --bg-glass-strong: rgba(11, 19, 43, 0.86);
+
+  --border-color: rgba(255, 255, 255, 0.11);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-glow: rgba(245, 158, 11, 0.32);
+  --border-gold: rgba(245, 158, 11, 0.28);
+  --border-bracket: rgba(245, 158, 11, 0.35);
+
+  --primary: #f59e0b;
+  --primary-hover: #d97706;
+  --primary-light: rgba(245, 158, 11, 0.16);
+  --primary-glow: rgba(245, 158, 11, 0.35);
+
+  --secondary: #38bdf8;
+  --secondary-light: rgba(56, 189, 248, 0.14);
+
+  --accent-gold: #f59e0b;
+  --accent-gold-bright: #fbbf24;
+  --accent-gold-light: rgba(245, 158, 11, 0.15);
+  --accent-emerald: #10b981;
+  --accent-emerald-light: rgba(16, 185, 129, 0.16);
+  --accent-red: #ef4444;
+  --accent-red-light: rgba(239, 68, 68, 0.18);
+
+  --card-yellow: #facc15;
+  --card-red: #ef4444;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 26px;
+  --radius-full: 9999px;
+
+  --shadow-card: 0 12px 36px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-elevated: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 28px rgba(245, 158, 11, 0.14);
+  --shadow-glow: 0 0 32px rgba(245, 158, 11, 0.28);
+  --transition-smooth: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================================
+   1. BASE BODY & AMBIENT MESH / STADIUM AURA BACKGROUND
+   ============================================================================ */
+html {
+  background-color: #060a17;
+  scroll-behavior: smooth;
+}
+
+body,
+body.dark-theme {
+  background-color: #060a17 !important;
+  color: var(--text-main) !important;
+  background-image:
+    radial-gradient(ellipse 80% 55% at 50% -8%, rgba(29, 78, 216, 0.34) 0%, rgba(15, 41, 110, 0.16) 42%, transparent 74%),
+    radial-gradient(ellipse 52% 38% at 84% 12%, rgba(245, 158, 11, 0.16) 0%, transparent 65%),
+    radial-gradient(ellipse 48% 36% at 14% 18%, rgba(220, 38, 38, 0.13) 0%, transparent 65%),
+    linear-gradient(180deg, #060a17 0%, #091126 48%, #0b132b 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+
+/* Ambient Mesh & Orbital Stadium Rings Backdrop */
+.ambient-mesh-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.ambient-orb-blue {
+  width: 640px;
+  height: 640px;
+  top: -220px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(29, 78, 216, 0.65) 0%, rgba(15, 41, 110, 0.25) 55%, transparent 75%);
+}
+
+.ambient-orb-gold {
+  width: 460px;
+  height: 460px;
+  top: 60px;
+  right: -120px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.38) 0%, rgba(217, 119, 6, 0.12) 55%, transparent 75%);
+}
+
+.ambient-orb-crimson {
+  width: 420px;
+  height: 420px;
+  top: 140px;
+  left: -130px;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.28) 0%, rgba(185, 28, 28, 0.08) 55%, transparent 75%);
+}
+
+/* Subtle futuristic orbital rings & stadium horizon grid */
+.ambient-orbit-ring {
+  position: absolute;
+  left: 50%;
+  top: 110px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1px solid rgba(245, 158, 11, 0.09);
+  pointer-events: none;
+}
+
+.ambient-orbit-ring.ring-1 {
+  width: 680px;
+  height: 680px;
+  border-color: rgba(245, 158, 11, 0.1);
+}
+
+.ambient-orbit-ring.ring-2 {
+  width: 1020px;
+  height: 1020px;
+  top: -40px;
+  border-color: rgba(59, 130, 246, 0.09);
+}
+
+.ambient-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 85% 60% at 50% 18%, #000 10%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 60% at 50% 18%, #000 10%, transparent 78%);
+}
+
+/* Ensure main layers stay above ambient backdrop */
+.ticker-bar,
+.header,
+main.container,
+.floating-live-bar,
+.mobile-nav {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================================================
+   2. GLOBAL CONTAINER & VERTICAL RHYTHM (BREATHABLE 1200PX LAYOUT)
+   ============================================================================ */
+.container {
+  max-width: 1200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+main.container {
+  padding-top: 28px !important;
+  padding-bottom: 80px !important;
+}
+
+/* ============================================================================
+   3. SLIM DARK TRANSLUCENT TOP INFO TICKER
+   ============================================================================ */
+.ticker-bar {
+  background: rgba(6, 10, 23, 0.82) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.16) !important;
+  color: #cbd5e1 !important;
+  padding: 6px 20px !important;
+  font-size: 0.78rem !important;
+  box-shadow: none !important;
+}
+
+.ticker-tag {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.14)) !important;
+  border: 1px solid rgba(245, 158, 11, 0.42) !important;
+  color: #fbbf24 !important;
+  border-radius: 9999px !important;
+  padding: 3px 11px !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.18) !important;
+}
+
+.ticker-content {
+  color: #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+
+/* ============================================================================
+   4. FLOATING GLASS STICKY NAVBAR (RECURSION 2.0 ARCHITECTURE)
+   ============================================================================ */
+.header {
+  position: sticky !important;
+  top: 14px !important;
+  z-index: 1200 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 18px !important;
+  margin-top: 14px !important;
+}
+
+.header-inner {
+  max-width: 1200px !important;
+  background: rgba(11, 19, 43, 0.74) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 9999px !important;
+  padding: 10px 18px 10px 20px !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 24px rgba(29, 78, 216, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  min-height: 64px !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.brand-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.brand-logo {
+  width: 34px !important;
+  height: 44px !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  flex-shrink: 0 !important;
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.5)) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.brand-group:hover .brand-logo {
+  transform: scale(1.06);
+}
+
+.brand-text {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.brand-text h1 {
+  font-family: var(--font-display) !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  color: #f8fafc !important;
+  line-height: 1.15 !important;
+  max-width: 132px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand-text p {
+  font-size: 0.64rem !important;
+  color: #94a3b8 !important;
+  margin-top: 1px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 132px;
+}
+
+/* Center Inline Navigation inside Floating Glass Navbar */
+.header-nav-center {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.header-nav-center::-webkit-scrollbar {
+  display: none;
+}
+
+.header-nav-center .nav-tabs {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  background: rgba(6, 10, 23, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 9999px !important;
+  padding: 4px !important;
+  box-shadow: none !important;
+  margin: 0 auto !important;
+  width: max-content !important;
+}
+
+.header-nav-center .tab-btn {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border: 1px solid transparent !important;
+  border-radius: 9999px !important;
+  padding: 6px 10px !important;
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: var(--transition-smooth) !important;
+  box-shadow: none !important;
+}
+
+.header-nav-center .tab-btn:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+.header-nav-center .tab-btn.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #060a17 !important;
+  font-weight: 800 !important;
+  border-color: rgba(251, 191, 36, 0.65) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Header Action Buttons */
+.header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.header-icon-btn {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #f8fafc !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 9999px !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.header-icon-btn:hover {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.3) !important;
+}
+
+.btn-admin-header:not(.logged-in) {
+  display: none !important;
+}
+
+.btn-admin-header.logged-in {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(16, 185, 129, 0.18)) !important;
+  border: 1px solid rgba(245, 158, 11, 0.55) !important;
+  color: #fbbf24 !important;
+  border-radius: 9999px !important;
+  padding: 7px 14px !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.25) !important;
+}
+
+.btn-admin-header.logged-in:hover {
+  transform: translateY(-2px) !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.42) !important;
+}
+
+.cloud-status-badge {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+/* ============================================================================
+   5. BORDERLESS FUTURISTIC HERO SECTION & 4 DARK GLASS STAT CARDS
+   ============================================================================ */
+.hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  border-radius: 0 !important;
+  padding: 44px 12px 24px !important;
+  margin: 0 auto 48px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 36px !important;
+  position: relative !important;
+}
+
+.hero-card::before,
+.hero-card::after {
+  display: none !important;
+}
+
+.hero-identity-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 18px !important;
+  max-width: 840px !important;
+}
+
+.hero-emblem-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.hero-emblem-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.42) 0%, rgba(29, 78, 216, 0.2) 48%, transparent 72%);
+  filter: blur(22px);
+  z-index: 0;
+  animation: accGoldPulse 5s ease-in-out infinite;
+}
+
+@keyframes accGoldPulse {
+  0%, 100% { transform: scale(0.95); opacity: 0.72; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+.hero-emblem-badge {
+  position: relative;
+  z-index: 1;
+  width: 96px !important;
+  height: auto !important;
+  max-height: 132px !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.5)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6)) !important;
+  animation: accFloatEmblem 6s ease-in-out infinite;
+}
+
+@keyframes accFloatEmblem {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.hero-details {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.hero-kicker-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.16);
+}
+
+.hero-kicker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+.hero-title {
+  font-family: var(--font-display) !important;
+  font-size: clamp(2rem, 4.6vw, 3.35rem) !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 52%, #f59e0b 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  text-shadow: none !important;
+  margin: 0 !important;
+}
+
+#heroSub {
+  color: #94a3b8 !important;
+  font-size: clamp(0.92rem, 1.4vw, 1.08rem) !important;
+  max-width: 680px !important;
+  line-height: 1.65 !important;
+  margin: 0 !important;
+}
+
+.hero-meta {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin-top: 6px !important;
+}
+
+.hero-meta span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 9999px !important;
+  padding: 7px 16px !important;
+  font-size: 0.82rem !important;
+  color: #cbd5e1 !important;
+}
+
+.hero-meta strong {
+  color: #f8fafc !important;
+  font-weight: 700 !important;
+}
+
+.hero-badge-live {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(220, 38, 38, 0.35)) !important;
+  border: 1px solid rgba(239, 68, 68, 0.6) !important;
+  color: #fecaca !important;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.35) !important;
+  border-radius: 9999px !important;
+  padding: 6px 16px !important;
+}
+
+/* 4 Horizontal Dark Glass Stat Cards */
+.hero-quick-stats {
+  width: 100% !important;
+  max-width: 980px !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+  margin-top: 6px !important;
+}
+
+.hero-quick-stats .stat-pill {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(245, 158, 11, 0.24) !important;
+  border-radius: 20px !important;
+  padding: 24px 18px !important;
+  text-align: center !important;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  transition: var(--transition-smooth) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.hero-quick-stats .stat-pill::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.7), transparent);
+  opacity: 0.7;
+}
+
+.hero-quick-stats .stat-pill:hover {
+  transform: translateY(-5px) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  background: rgba(15, 23, 42, 0.82) !important;
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(245, 158, 11, 0.22) !important;
+}
+
+.hero-quick-stats .stat-val {
+  font-family: var(--font-display) !important;
+  font-size: 2.25rem !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fbbf24 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  margin-bottom: 8px !important;
+}
+
+.hero-quick-stats .stat-lbl {
+  color: #94a3b8 !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* ============================================================================
+   6. CATEGORY PILL TOGGLE (KELAS: SMP 13-15 | SD 9-12)
+   ============================================================================ */
+.category-selector-bar {
+  margin: 0 auto 64px !important;
+  display: flex !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.category-selector-inner {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+  background: rgba(15, 23, 42, 0.68) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 9999px !important;
+  padding: 8px 10px 8px 20px !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+.category-selector-label {
+  color: #94a3b8 !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.category-pill-group {
+  display: inline-flex !important;
+  gap: 6px !important;
+  background: rgba(6, 10, 23, 0.55) !important;
+  padding: 4px !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.category-pill {
+  background: transparent !important;
+  color: #cbd5e1 !important;
+  border: 1px solid transparent !important;
+  border-radius: 9999px !important;
+  padding: 9px 20px !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  transition: var(--transition-smooth) !important;
+  box-shadow: none !important;
+}
+
+.category-pill:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #ffffff !important;
+}
+
+.category-pill .pill-badge {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #e2e8f0 !important;
+  border-radius: 9999px !important;
+  padding: 2px 8px !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+}
+
+.category-pill.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #060a17 !important;
+  border-color: rgba(251, 191, 36, 0.65) !important;
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.42) !important;
+}
+
+.category-pill.active .pill-title {
+  color: #060a17 !important;
+  font-weight: 900 !important;
+}
+
+.category-pill.active .pill-badge {
+  background: rgba(6, 10, 23, 0.2) !important;
+  color: #060a17 !important;
+}
+
+/* ============================================================================
+   7. SECTION SPACING & LIVE BROADCAST + PERTANDINGAN BERIKUTNYA
+   ============================================================================ */
+#pane-home > section,
+#pane-home > div {
+  margin-bottom: 80px !important;
+}
+
+#pane-home > :last-child {
+  margin-bottom: 16px !important;
+}
+
+.live-stream-hero-section {
+  margin-top: 0 !important;
+}
+
+.live-stream-card {
+  background: rgba(15, 23, 42, 0.68) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  border-radius: 26px !important;
+  padding: 28px 30px !important;
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.5),
+    0 0 36px rgba(239, 68, 68, 0.1),
+    0 0 28px rgba(245, 158, 11, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+.live-stream-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 0 0 18px 0 !important;
+  margin: 0 !important;
+}
+
+.live-on-air-pill {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border: 1px solid rgba(239, 68, 68, 0.55) !important;
+  color: #fca5a5 !important;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.25) !important;
+  border-radius: 9999px !important;
+  padding: 5px 13px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+}
+
+.live-stream-title {
+  color: #f8fafc !important;
+  font-family: var(--font-display) !important;
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+}
+
+/* Integrated "Pertandingan Berikutnya" / Live Ticker Banner ABOVE Video */
+.live-stream-match-ticker {
+  background: rgba(6, 10, 23, 0.65) !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  border-radius: 18px !important;
+  padding: 16px 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.live-stream-match-ticker.live {
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(15, 23, 42, 0.8)) !important;
+}
+
+.upcoming-status-badge {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+}
+
+.pulse-live-badge {
+  background: rgba(239, 68, 68, 0.22) !important;
+  color: #fecaca !important;
+  border: 1px solid rgba(239, 68, 68, 0.6) !important;
+  border-radius: 9999px !important;
+}
+
+.ticker-match-title {
+  color: #94a3b8 !important;
+  font-size: 0.82rem !important;
+}
+
+.ticker-score-teams {
+  color: #f8fafc !important;
+  font-size: 0.96rem !important;
+}
+
+.ticker-score-teams .vs-badge,
+.ticker-score-teams .score-highlight {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  border-radius: 8px !important;
+  padding: 2px 9px !important;
+  margin: 0 6px !important;
+}
+
+/* Video Frame with Crimson-Gold Glowing Rim */
+.live-video-player-wrapper {
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(245, 158, 11, 0.32) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.55),
+    0 0 26px rgba(239, 68, 68, 0.16),
+    0 0 18px rgba(245, 158, 11, 0.12) !important;
+  background: #020617 !important;
+}
+
+.yt-facade-overlay {
+  background: linear-gradient(180deg, rgba(6, 10, 23, 0.2) 0%, rgba(6, 10, 23, 0.78) 100%) !important;
+}
+
+.yt-facade-badge {
+  background: rgba(239, 68, 68, 0.9) !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important;
+}
+
+.yt-facade-title {
+  color: #f8fafc !important;
+}
+
+/* ============================================================================
+   8. TOURNAMENT BANNER & MOMENT SHOWCASE (DARK GLASS)
+   ============================================================================ */
+.home-hero-banner {
+  border-radius: 26px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.52),
+    0 0 32px rgba(29, 78, 216, 0.18) !important;
+  min-height: 360px !important;
+}
+
+.home-banner-overlay {
+  background: linear-gradient(180deg, rgba(6, 10, 23, 0.15) 0%, rgba(6, 10, 23, 0.86) 100%) !important;
+  padding: 28px 30px !important;
+}
+
+.banner-cta-group .btn-outline {
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #f8fafc !important;
+}
+
+.banner-cta-group .btn-outline:hover {
+  border-color: rgba(245, 158, 11, 0.65) !important;
+  color: #fbbf24 !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Moment Section */
+.acc-moments-section {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 26px !important;
+  padding: 28px 30px !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.moments-header-row {
+  margin-bottom: 22px !important;
+}
+
+.moments-main-title {
+  font-family: var(--font-display) !important;
+  font-size: 1.55rem !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.moments-main-title::before {
+  content: "";
+  width: 5px;
+  height: 24px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.55);
+}
+
+.moment-arrow-btn {
+  background: rgba(6, 10, 23, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #f8fafc !important;
+  border-radius: 9999px !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.moment-arrow-btn:hover {
+  border-color: rgba(245, 158, 11, 0.65) !important;
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.14) !important;
+}
+
+.moment-card {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 18px !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.moment-card:hover {
+  transform: translateY(-5px) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 24px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* ============================================================================
+   9. SPONSORS & MITRA RESMI (UNIFORM DARK GLASSMORPHISM GRID)
+   ============================================================================ */
+.sponsors-showcase-bar {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 26px !important;
+  padding: 32px !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.sponsors-main-title,
+.section-title {
+  font-family: var(--font-display) !important;
+  color: #f8fafc !important;
+  font-weight: 800 !important;
+}
+
+.sponsors-grid-primary {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 20px !important;
+  margin-bottom: 20px !important;
+}
+
+.sponsors-grid-secondary {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 16px !important;
+}
+
+.sponsor-card-primary,
+.sponsor-card-secondary {
+  background: rgba(6, 10, 23, 0.58) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 24px 20px !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.sponsor-card-primary:hover,
+.sponsor-card-secondary:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(245, 158, 11, 0.52) !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 24px rgba(245, 158, 11, 0.16) !important;
+}
+
+.acc-moments-section::before,
+.sponsors-showcase-bar::before {
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.65), rgba(29, 78, 216, 0.45), transparent) !important;
+  height: 2px !important;
+}
+
+.sponsor-logo-box-lg,
+.sponsor-logo-box-md,
+.sponsor-logo-box-sm,
+.sponsor-logo-wrapper,
+.sponsor-card-secondary .sponsor-logo-box,
+.sponsor-card-secondary > div:first-child {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+}
+
+.sponsor-name-lg,
+.sponsor-name-md {
+  color: #f8fafc !important;
+  font-weight: 800 !important;
+}
+
+.sponsor-sub-text {
+  color: #94a3b8 !important;
+}
+
+/* ============================================================================
+   10. BUTTONS (GOLD AMBER PRIMARY CTA + DARK GLASS OUTLINE)
+   ============================================================================ */
+.btn-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #060a17 !important;
+  border: 1px solid rgba(251, 191, 36, 0.65) !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3) !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.46) !important;
+  filter: brightness(1.06);
+}
+
+.btn-outline {
+  background: rgba(15, 23, 42, 0.68) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.btn-outline:hover {
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ============================================================================
+   11. ALL TOURNAMENT TABS (JADWAL, KLASEMEN, DRAW, BAGAN, TIM, TOP SKOR, DISIPLIN, JUKNIS)
+   ============================================================================ */
+.section-header {
+  margin-bottom: 24px !important;
+}
+
+/* Filter Selects & Status Pills */
+.filter-select,
+.form-input,
+.form-select,
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="url"],
+input[type="search"],
+select,
+textarea {
+  background-color: rgba(6, 10, 23, 0.78) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 12px !important;
+}
+
+select option {
+  background-color: #0b132b !important;
+  color: #f8fafc !important;
+}
+
+.filter-select:focus,
+.form-input:focus,
+.form-select:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(245, 158, 11, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18) !important;
+  outline: none !important;
+}
+
+.status-pill {
+  background: rgba(15, 23, 42, 0.68) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #cbd5e1 !important;
+  border-radius: 9999px !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.status-pill:hover {
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  color: #ffffff !important;
+}
+
+.status-pill.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #060a17 !important;
+  border-color: rgba(251, 191, 36, 0.7) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.35) !important;
+}
+
+.status-pill.pill-live.active {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #ffffff !important;
+  border-color: rgba(252, 165, 165, 0.6) !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.45) !important;
+}
+
+/* Match Cards, Standings Cards, Team Cards, Bracket Cards, Draw Stage, Leaderboard Cards, Juknis */
+.match-card,
+.standings-card,
+.group-card,
+.team-card,
+.bracket-match-card,
+.table-card,
+.leaderboard-card,
+.juknis-card,
+.mvp-spotlight-card,
+.news-card,
+.draw-stage-card,
+.draw-group-card,
+.draw-pool-card,
+.draw-controls-card,
+.scorer-card,
+.discipline-card {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  border-radius: 20px !important;
+  color: #f8fafc !important;
+  box-shadow: var(--shadow-card) !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.match-card:hover,
+.team-card:hover,
+.bracket-match-card:hover,
+.draw-group-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(245, 158, 11, 0.48) !important;
+  box-shadow: var(--shadow-elevated) !important;
+}
+
+.match-card-header,
+.standings-card-header,
+.group-header,
+.draw-group-header {
+  background: rgba(6, 10, 23, 0.5) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+}
+
+.match-score-box,
+.match-time-badge {
+  background: rgba(6, 10, 23, 0.72) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+
+.match-team-name,
+.team-card-name,
+.team-name-cell,
+.bracket-team-name,
+.draw-slot-name {
+  color: #f8fafc !important;
+}
+
+.match-meta-row,
+.match-venue,
+.team-card-meta,
+.draw-slot-empty {
+  color: #94a3b8 !important;
+}
+
+/* Tables (Standings, Top Scorers, Discipline, Player Roster) */
+table {
+  color: #f8fafc !important;
+}
+
+thead th {
+  background: rgba(6, 10, 23, 0.72) !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: transparent !important;
+}
+
+tbody tr:hover {
+  background: rgba(245, 158, 11, 0.07) !important;
+}
+
+tbody td {
+  color: #e2e8f0 !important;
+}
+
+tr.qualify-row,
+tr.zone-qualify {
+  background: rgba(16, 185, 129, 0.09) !important;
+}
+
+/* Draw Grup Stage Polish */
+.draw-reel-box,
+.draw-slot-item,
+.draw-pool-pill {
+  background: rgba(6, 10, 23, 0.68) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+}
+
+.draw-reel-item {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #f8fafc !important;
+}
+
+.draw-role-tag {
+  background: rgba(15, 23, 42, 0.78) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  color: #f8fafc !important;
+}
+
+.draw-role-desc {
+  color: #94a3b8 !important;
+}
+
+/* Juknis Content */
+.juknis-content,
+.juknis-content p,
+.juknis-content li {
+  color: #cbd5e1 !important;
+}
+
+.juknis-content h3 {
+  color: #fbbf24 !important;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.22) !important;
+}
+
+/* ============================================================================
+   12. MODALS & ADMIN DASHBOARD (COHESIVE DARK GLASS)
+   ============================================================================ */
+.modal-overlay {
+  background: rgba(2, 6, 23, 0.78) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.modal-box {
+  background: #0b132b !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  border-radius: 22px !important;
+  color: #f8fafc !important;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.7), 0 0 36px rgba(29, 78, 216, 0.2) !important;
+}
+
+.modal-header {
+  background: rgba(6, 10, 23, 0.72) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+
+.modal-title {
+  color: #f8fafc !important;
+}
+
+.modal-close {
+  color: #94a3b8 !important;
+}
+
+.modal-close:hover {
+  color: #fbbf24 !important;
+}
+
+.modal-body {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+}
+
+.modal-footer {
+  background: rgba(6, 10, 23, 0.65) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.form-label,
+.modal-box label {
+  color: #cbd5e1 !important;
+}
+
+.admin-action-card,
+.admin-dash-card,
+.official-card,
+.player-card-item {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  color: #f8fafc !important;
+}
+
+/* Toast Notification */
+.toast {
+  background: rgba(11, 19, 43, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(245, 158, 11, 0.5) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 0 22px rgba(245, 158, 11, 0.22) !important;
+}
+
+/* ============================================================================
+   13. SMOOTH REVEAL ON SCROLL & MICRO-INTERACTIONS
+   ============================================================================ */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================================
+   14. MOBILE BOTTOM NAVIGATION (DARK GLASS) & RESPONSIVE BREAKPOINTS
+   ============================================================================ */
+.mobile-nav {
+  background: rgba(6, 10, 23, 0.9) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(245, 158, 11, 0.22) !important;
+  box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.mobile-nav-item {
+  color: #94a3b8 !important;
+}
+
+.mobile-nav-item.active {
+  color: #fbbf24 !important;
+}
+
+@media (max-width: 980px) {
+  .header-nav-center {
+    display: none !important;
+  }
+  .header-inner {
+    border-radius: 20px !important;
+    padding: 8px 14px !important;
+    min-height: 56px !important;
+  }
+  .mobile-nav {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .header {
+    top: 8px !important;
+    padding: 0 12px !important;
+    margin-top: 8px !important;
+  }
+  .header-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+  .brand-group {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 92px) !important;
+  }
+  .brand-text h1 {
+    font-size: 0.86rem !important;
+    max-width: 100% !important;
+  }
+  .hero-kicker-pill {
+    font-size: 0.64rem !important;
+    padding: 5px 12px !important;
+    letter-spacing: 0.07em !important;
+    white-space: nowrap !important;
+  }
+  .hero-card {
+    padding: 24px 4px 12px !important;
+    gap: 24px !important;
+    margin-bottom: 32px !important;
+  }
+  .hero-emblem-badge {
+    width: 74px !important;
+  }
+  .hero-quick-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+  .hero-quick-stats .stat-pill {
+    padding: 18px 12px !important;
+  }
+  .hero-quick-stats .stat-val {
+    font-size: 1.75rem !important;
+  }
+  .category-selector-bar {
+    margin-bottom: 40px !important;
+  }
+  .category-selector-inner {
+    border-radius: 20px !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  #pane-home > section,
+  #pane-home > div {
+    margin-bottom: 48px !important;
+  }
+  .live-stream-card,
+  .acc-moments-section,
+  .sponsors-showcase-bar {
+    padding: 18px 16px !important;
+    border-radius: 20px !important;
+  }
+  .sponsors-grid-primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+  .home-hero-banner {
+    min-height: 240px !important;
+    border-radius: 20px !important;
+  }
+  .ambient-orbit-ring.ring-1 {
+    width: 380px;
+    height: 380px;
+  }
+  .ambient-orbit-ring.ring-2 {
+    width: 580px;
+    height: 580px;
+  }
+}
+
+/* Re-assert visitor lock-out on Panitia button across ALL screen sizes */
+#btnOpenAdmin:not(.logged-in) {
+  display: none !important;
+}

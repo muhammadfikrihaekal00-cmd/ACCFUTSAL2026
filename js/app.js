@@ -1294,6 +1294,9 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
         </div>
 
+        <!-- BANNER PERTANDINGAN BERIKUTNYA / LIVE TICKER TERINTEGRASI DI ATAS VIDEO -->
+        ${liveTickerHtml}
+
         <!-- LITE YOUTUBE FACADE (On-demand video loading) -->
         <div class="live-video-player-wrapper yt-facade" id="ytVideoPlayerContainer" onclick="app.playYoutubeLiveStream('${videoId}')" title="Klik untuk memutar siaran langsung YouTube">
           <img class="yt-facade-thumb" 
@@ -1315,9 +1318,6 @@ var app = window.app = Object.assign(window.app || {}, {
             </div>
           </div>
         </div>
-
-        <!-- MATCH TICKER DI BAWAH VIDEO -->
-        ${liveTickerHtml}
       </div>
     `;
   },
@@ -1976,22 +1976,22 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   initThemeAndViewMode() {
-    this.currentTheme = "light";
-    localStorage.setItem("pondok_futsal_theme", "light");
+    this.currentTheme = "dark";
+    localStorage.setItem("pondok_futsal_theme", "dark");
     document.body.classList.remove("dark-theme");
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#28050c");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#060a17");
   },
 
   toggleTheme() {
-    this.currentTheme = "light";
+    this.currentTheme = "dark";
     document.body.classList.remove("dark-theme");
   },
 
   setTheme(theme, showToastMsg = false) {
-    this.currentTheme = "light";
-    localStorage.setItem("pondok_futsal_theme", "light");
+    this.currentTheme = "dark";
+    localStorage.setItem("pondok_futsal_theme", "dark");
     document.body.classList.remove("dark-theme");
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#28050c");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#060a17");
   },
 
   setViewMode(mode, showToastMsg = true) {
