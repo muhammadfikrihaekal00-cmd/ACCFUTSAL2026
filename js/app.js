@@ -2484,6 +2484,7 @@ var app = window.app = Object.assign(window.app || {}, {
     const overlay = document.getElementById("mobileMenuOverlay");
     if (btn) btn.classList.add("active");
     if (overlay) overlay.classList.add("open");
+    document.body.classList.add("mobile-menu-active");
     document.body.style.overflow = "hidden";
 
     // Sinkronkan active state link di mobile menu
@@ -2507,6 +2508,7 @@ var app = window.app = Object.assign(window.app || {}, {
     const overlay = document.getElementById("mobileMenuOverlay");
     if (btn) btn.classList.remove("active");
     if (overlay) overlay.classList.remove("open");
+    document.body.classList.remove("mobile-menu-active");
     document.body.style.overflow = "";
   },
 
