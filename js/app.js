@@ -2493,12 +2493,6 @@ var app = window.app = Object.assign(window.app || {}, {
         ((this.currentTab === "team-detail" || this.currentTab === "player-detail") && link.dataset.tab === "teams");
       link.classList.toggle("active", isAct);
     });
-
-    // Sinkronkan pill kategori SMP/SD di mobile menu
-    const mobSMP = document.getElementById("mobCatSMP");
-    const mobSD = document.getElementById("mobCatSD");
-    if (mobSMP) mobSMP.classList.toggle("active", this.currentCategory === "SMP");
-    if (mobSD) mobSD.classList.toggle("active", this.currentCategory === "SD");
   },
 
   closeMobileMenu(e) {

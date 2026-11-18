@@ -262,123 +262,34 @@
   <!-- FULLSCREEN LUXURY MOBILE MENU OVERLAY (ANIMATED SMOOTH TRANSITION) -->
   <div id="mobileMenuOverlay" class="mobile-menu-overlay" onclick="app.closeMobileMenu(event)">
     <div class="mobile-menu-content" onclick="event.stopPropagation()">
-      <!-- Quick Division / Kategori Switcher inside Mobile Drawer -->
-      <div class="mobile-menu-division-bar">
-        <span class="mobile-division-label">KELAS:</span>
-        <div class="mobile-division-buttons">
-          <button type="button" class="mob-cat-btn" id="mobCatSMP"
-            onclick="app.setCategory('SMP'); app.closeMobileMenu();">
-            🏆 SMP (13-15)
-          </button>
-          <button type="button" class="mob-cat-btn" id="mobCatSD"
-            onclick="app.setCategory('SD'); app.closeMobileMenu();">
-            ⚽ SD (9-12)
-          </button>
-        </div>
-      </div>
-
-      <!-- 9 Dynamic Navigation Links -->
+      <!-- Dynamic Minimalist Navigation Links -->
       <nav class="mobile-menu-nav" aria-label="Navigasi Menu Mobile">
         <button type="button" class="mobile-nav-link" data-tab="home" onclick="app.navigateTo('/beranda', 'home')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🏠</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Beranda</span>
-              <span class="mobile-nav-link-sub">Pusat Informasi & Sambutan</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+          Beranda
         </button>
-
         <button type="button" class="mobile-nav-link" data-tab="matches" onclick="app.navigateTo('/jadwal', 'matches')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🏟️</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Jadwal & Skor</span>
-              <span class="mobile-nav-link-sub">Hasil Pertandingan & Live Score</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+          Jadwal & Skor
         </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="standings"
-          onclick="app.navigateTo('/klasemen', 'standings')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">📊</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Klasemen</span>
-              <span class="mobile-nav-link-sub">Peringkat Grup & Head-to-Head</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+        <button type="button" class="mobile-nav-link" data-tab="standings" onclick="app.navigateTo('/klasemen', 'standings')">
+          Klasemen
         </button>
-
         <button type="button" class="mobile-nav-link" data-tab="draw" onclick="app.navigateTo('/draw', 'draw')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🎲</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Draw Grup</span>
-              <span class="mobile-nav-link-sub">Simulator Undian Pot & Grup</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+          Draw Grup
         </button>
-
         <button type="button" class="mobile-nav-link" data-tab="bracket" onclick="app.navigateTo('/bagan', 'bracket')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🏆</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Bagan Fase Gugur</span>
-              <span class="mobile-nav-link-sub">Jalur Knockout Menuju Final</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+          Bagan Fase Gugur
         </button>
-
         <button type="button" class="mobile-nav-link" data-tab="teams" onclick="app.navigateTo('/tim', 'teams')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">👥</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Daftar Tim</span>
-              <span class="mobile-nav-link-sub">Katalog Peserta & Profil Lengkap</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+          Daftar Tim
         </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="scorers"
-          onclick="app.navigateTo('/top-skor', 'scorers')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">⚽</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Top Skor</span>
-              <span class="mobile-nav-link-sub">Peringkat Pencetak Gol Terbanyak</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+        <button type="button" class="mobile-nav-link" data-tab="scorers" onclick="app.navigateTo('/top-skor', 'scorers')">
+          Top Skor
         </button>
-
-        <button type="button" class="mobile-nav-link" data-tab="discipline"
-          onclick="app.navigateTo('/disiplin', 'discipline')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">🟨</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Disiplin</span>
-              <span class="mobile-nav-link-sub">Akumulasi Kartu & Sanksi Laga</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+        <button type="button" class="mobile-nav-link" data-tab="discipline" onclick="app.navigateTo('/disiplin', 'discipline')">
+          Disiplin
         </button>
-
         <button type="button" class="mobile-nav-link" data-tab="juknis" onclick="app.navigateTo('/regulasi', 'juknis')">
-          <div class="mobile-nav-link-left">
-            <span class="mobile-nav-link-icon">📋</span>
-            <div class="mobile-nav-link-meta">
-              <span class="mobile-nav-link-title">Regulasi</span>
-              <span class="mobile-nav-link-sub">Juknis & Tata Tertib Pertandingan</span>
-            </div>
-          </div>
-          <span class="mobile-nav-link-arrow">➔</span>
+          Regulasi
         </button>
       </nav>
 
