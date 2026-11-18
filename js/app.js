@@ -254,11 +254,11 @@ class TournamentStore {
             m.scorers.forEach(s => {
               const isTeam = !s.team || s.team === t.id || s.team === t.name || s.team === t.shortName;
               const scorerName = (s.player || '').toLowerCase().trim();
-              const isPlayer = scorerName === cleanPName || 
-                               scorerName === `${cleanPName} (#${p.no})` ||
-                               (p.no && scorerName.includes(`#${p.no}`)) ||
-                               scorerName.includes(cleanPName) || 
-                               cleanPName.includes(scorerName);
+              const isPlayer = scorerName === cleanPName ||
+                scorerName === `${cleanPName} (#${p.no})` ||
+                (p.no && scorerName.includes(`#${p.no}`)) ||
+                scorerName.includes(cleanPName) ||
+                cleanPName.includes(scorerName);
               if (isTeam && isPlayer) {
                 matchGoals += 1;
               }
@@ -269,11 +269,11 @@ class TournamentStore {
             m.cards.forEach(c => {
               const isTeam = !c.team || c.team === t.id || c.team === t.name || c.team === t.shortName;
               const cardPlayer = (c.player || '').toLowerCase().trim();
-              const isPlayer = cardPlayer === cleanPName || 
-                               cardPlayer === `${cleanPName} (#${p.no})` ||
-                               (p.no && cardPlayer.includes(`#${p.no}`)) ||
-                               cardPlayer.includes(cleanPName) || 
-                               cleanPName.includes(cardPlayer);
+              const isPlayer = cardPlayer === cleanPName ||
+                cardPlayer === `${cleanPName} (#${p.no})` ||
+                (p.no && cardPlayer.includes(`#${p.no}`)) ||
+                cardPlayer.includes(cleanPName) ||
+                cleanPName.includes(cardPlayer);
               if (isTeam && isPlayer) {
                 if (c.type === 'yellow') matchYc += 1;
                 if (c.type === 'red') matchRc += 1;
@@ -306,10 +306,10 @@ class TournamentStore {
   getTeam(id) {
     if (!id || !this.data || !this.data.teams) return null;
     const strId = String(id).trim().toLowerCase();
-    return this.data.teams.find(t => 
-      t.id === id || 
-      String(t.id).trim().toLowerCase() === strId || 
-      (t.name && t.name.trim().toLowerCase() === strId) || 
+    return this.data.teams.find(t =>
+      t.id === id ||
+      String(t.id).trim().toLowerCase() === strId ||
+      (t.name && t.name.trim().toLowerCase() === strId) ||
       (t.shortName && t.shortName.trim().toLowerCase() === strId)
     ) || null;
   }
@@ -344,8 +344,8 @@ class TournamentStore {
 
     const groupMatches = this.data.matches.filter(
       m => m.stage === "group" && m.group === groupLetter &&
-           (!category || category === "all" || (m.category || "SMP") === category) &&
-           m.status === "finished"
+        (!category || category === "all" || (m.category || "SMP") === category) &&
+        m.status === "finished"
     );
 
     groupMatches.forEach(m => {
@@ -778,11 +778,11 @@ var app = window.app = Object.assign(window.app || {}, {
         this.store = {
           STORAGE_KEY: "acc_futsal_tournament_2026_cloud_v7",
           data: JSON.parse(JSON.stringify(DEFAULT_DATA)),
-          saveData() {},
+          saveData() { },
           getTeam(id) { return (this.data.teams || []).find(t => t.id === id) || null; },
           getMatch(id) { return (this.data.matches || []).find(m => m.id === id) || null; },
-          syncPlayerStatsFromMatches() {},
-          syncKnockoutFromStandings() {},
+          syncPlayerStatsFromMatches() { },
+          syncKnockoutFromStandings() { },
           normalizeTeam(t) { return t; },
           normalizeMatch(m) { return m; },
           calculateGroupStandings() { return []; },
@@ -796,32 +796,32 @@ var app = window.app = Object.assign(window.app || {}, {
 
   init() {
     this.ensureStore();
-    try { this.initSplashScreen(); } catch(e) { console.warn("Splash init:", e); }
-    try { this.initThemeAndViewMode(); } catch(e) { console.warn("Theme init:", e); }
-    try { this.updateCategoryUI(); } catch(e) { console.warn("Category init:", e); }
-    try { this.renderHeader(); } catch(e) { console.warn("Header init:", e); }
-    try { this.renderLiveStreamHero(); } catch(e) { console.warn("LiveStream init:", e); }
-    try { this.bindEvents(); } catch(e) { console.warn("Events init:", e); }
+    try { this.initSplashScreen(); } catch (e) { console.warn("Splash init:", e); }
+    try { this.initThemeAndViewMode(); } catch (e) { console.warn("Theme init:", e); }
+    try { this.updateCategoryUI(); } catch (e) { console.warn("Category init:", e); }
+    try { this.renderHeader(); } catch (e) { console.warn("Header init:", e); }
+    try { this.renderLiveStreamHero(); } catch (e) { console.warn("LiveStream init:", e); }
+    try { this.bindEvents(); } catch (e) { console.warn("Events init:", e); }
     try {
       this.connectDrawToTournament("SMP", false);
       this.connectDrawToTournament("SD", false);
-    } catch(e) {}
-    try { this.updateAdminVisibility(); } catch(e) {}
-    try { this.renderCurrentView(); } catch(e) { console.warn("View init:", e); }
-    try { this.initPwa(); } catch(e) { console.warn("PWA init:", e); }
-    try { this.initSupabaseSync(); } catch(e) { console.warn("Supabase init:", e); }
+    } catch (e) { }
+    try { this.updateAdminVisibility(); } catch (e) { }
+    try { this.renderCurrentView(); } catch (e) { console.warn("View init:", e); }
+    try { this.initPwa(); } catch (e) { console.warn("PWA init:", e); }
+    try { this.initSupabaseSync(); } catch (e) { console.warn("Supabase init:", e); }
     // Cek jika ada draft pengisian tim / folder yang sempat terhenti (tampilkan banner pengingat non-blocking)
     setTimeout(() => {
       try {
         if (window.admin && typeof window.admin.restorePendingDraftsOnBoot === 'function') {
           window.admin.restorePendingDraftsOnBoot();
         }
-      } catch (_) {}
+      } catch (_) { }
     }, 800);
-    try { this.initGlobalLiveMatchTimer(); } catch(e) { console.warn("LiveTimer init:", e); }
-    try { this.initNetworkStatusListeners(); } catch(e) { console.warn("Network init:", e); }
-    try { this.initScrollReveal(); } catch(e) { console.warn("ScrollReveal init:", e); }
-    try { this.updateFloatingLiveNotice(); } catch(e) { console.warn("FloatingLive init:", e); }
+    try { this.initGlobalLiveMatchTimer(); } catch (e) { console.warn("LiveTimer init:", e); }
+    try { this.initNetworkStatusListeners(); } catch (e) { console.warn("Network init:", e); }
+    try { this.initScrollReveal(); } catch (e) { console.warn("ScrollReveal init:", e); }
+    try { this.updateFloatingLiveNotice(); } catch (e) { console.warn("FloatingLive init:", e); }
 
     // DOM-level guarantee
     try {
@@ -829,7 +829,7 @@ var app = window.app = Object.assign(window.app || {}, {
       if (tickerEl && tickerEl.textContent && (tickerEl.textContent.includes("ð") || tickerEl.textContent.includes("†") || !tickerEl.textContent.trim().startsWith("🏆"))) {
         tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
       }
-    } catch(e) {}
+    } catch (e) { }
   },
 
   cleanWhatsAppNumber(phone) {
@@ -1395,13 +1395,13 @@ var app = window.app = Object.assign(window.app || {}, {
         isSyncing = false;
         if (data) {
           // Generate signature lengkap: pertandingan, skor, menit, kartu, config, DAN DATA TIM BESERTA SKUAD & LOGO
-          const signature = (data.matches ? data.matches.map(m => 
-            `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers||[]).length}:${(m.cards||[]).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
+          const signature = (data.matches ? data.matches.map(m =>
+            `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
           ).join("|") : "") +
-          "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
-          "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.official_coach}:${t.official_manager}:${t.updated_at}:${(t.players||[]).length}:${(t.players||[]).map(p => p.name||'').join(',')}:${(t.coach_photo||'').length}:${(t.manager_photo||'').length}`).join("|") : "") +
-          "#" + (data.teamMeta ? Object.keys(data.teamMeta).sort().map(k => `${k}:${data.teamMeta[k]?.category||''}:${data.teamMeta[k]?.instansi||''}`).join("|") : "") +
-          "#" + (data.teamLogos ? Object.keys(data.teamLogos).map(k => `${k}:${(data.teamLogos[k]||'').length}`).join("|") : "");
+            "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
+            "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.official_coach}:${t.official_manager}:${t.updated_at}:${(t.players || []).length}:${(t.players || []).map(p => p.name || '').join(',')}:${(t.coach_photo || '').length}:${(t.manager_photo || '').length}`).join("|") : "") +
+            "#" + (data.teamMeta ? Object.keys(data.teamMeta).sort().map(k => `${k}:${data.teamMeta[k]?.category || ''}:${data.teamMeta[k]?.instansi || ''}`).join("|") : "") +
+            "#" + (data.teamLogos ? Object.keys(data.teamLogos).map(k => `${k}:${(data.teamLogos[k] || '').length}`).join("|") : "");
 
           if (isInitialLoad || signature !== lastDataSignature) {
             lastDataSignature = signature;
@@ -1662,7 +1662,7 @@ var app = window.app = Object.assign(window.app || {}, {
     try {
       this.syncDrawStateFromTournament("SMP", true);
       this.syncDrawStateFromTournament("SD", true);
-    } catch (e) {}
+    } catch (e) { }
     // Jika panitia sedang mengisi form/upload di modal editor, jangan re-render DOM supaya fokus ketikan tidak terganggu!
     if (this.isUserEditing()) return;
 
@@ -1685,7 +1685,7 @@ var app = window.app = Object.assign(window.app || {}, {
     // Jika modal tim sedang terbuka, perbarui tampilannya langsung dengan data terbaru
     const activeTeamModal = document.getElementById("teamModal");
     if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId) {
-      try { this.openTeamModal(this.activeTeamModalId); } catch (_) {}
+      try { this.openTeamModal(this.activeTeamModalId); } catch (_) { }
     }
   },
 
@@ -1865,7 +1865,7 @@ var app = window.app = Object.assign(window.app || {}, {
           this.renderStandings();
           const activeTeamModal = document.getElementById("teamModal");
           if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId === lastTeamId) {
-            try { this.openTeamModal(lastTeamId); } catch (_) {}
+            try { this.openTeamModal(lastTeamId); } catch (_) { }
           }
         }
       }, 450);
@@ -1903,7 +1903,7 @@ var app = window.app = Object.assign(window.app || {}, {
               }
             }
           }
-        } catch (_) {}
+        } catch (_) { }
         return;
       }
       if (payload.id === 'team_logos_registry' && payload.rules_text) {
@@ -1919,10 +1919,10 @@ var app = window.app = Object.assign(window.app || {}, {
             this.renderStandings();
             const activeTeamModal = document.getElementById("teamModal");
             if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId) {
-              try { this.openTeamModal(this.activeTeamModalId); } catch (_) {}
+              try { this.openTeamModal(this.activeTeamModalId); } catch (_) { }
             }
           }
-        } catch (_) {}
+        } catch (_) { }
         return;
       }
       if (!this.store.data.config) this.store.data.config = {};
@@ -2370,7 +2370,7 @@ var app = window.app = Object.assign(window.app || {}, {
     window.addEventListener("beforeunload", (e) => {
       if (this.isUserEditing()) {
         if (window.admin && typeof window.admin.saveAllActiveDrafts === "function") {
-          try { window.admin.saveAllActiveDrafts(); } catch (_) {}
+          try { window.admin.saveAllActiveDrafts(); } catch (_) { }
         }
         e.preventDefault();
         e.returnValue = "Anda sedang dalam proses pengisian data. Yakin ingin keluar?";
@@ -2404,7 +2404,7 @@ var app = window.app = Object.assign(window.app || {}, {
       if (activeModals.length > 0) {
         const topModal = activeModals[activeModals.length - 1];
         if (!readOnlyViewerModals.includes(topModal.id)) {
-          try { history.pushState({ tab: this.currentTab, editing: true }, ""); } catch (err) {}
+          try { history.pushState({ tab: this.currentTab, editing: true }, ""); } catch (err) { }
           const box = topModal.querySelector(".modal-box");
           if (box) {
             box.classList.remove("modal-shake");
@@ -2447,7 +2447,7 @@ var app = window.app = Object.assign(window.app || {}, {
     // Jalankan routing otomatis saat halaman pertama kali dimuat
     try {
       this.parseCurrentRoute(false);
-    } catch (_) {}
+    } catch (_) { }
   },
 
   // =========================================================
@@ -2472,7 +2472,7 @@ var app = window.app = Object.assign(window.app || {}, {
     // Sinkronkan active state link di mobile menu
     document.querySelectorAll(".mobile-nav-link").forEach(link => {
       const isAct = link.dataset.tab === this.currentTab ||
-                    ((this.currentTab === "team-detail" || this.currentTab === "player-detail") && link.dataset.tab === "teams");
+        ((this.currentTab === "team-detail" || this.currentTab === "player-detail") && link.dataset.tab === "teams");
       link.classList.toggle("active", isAct);
     });
 
@@ -2562,7 +2562,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (this._isMobileMenuOpen) this.closeMobileMenu();
 
     if (this.store && typeof this.store.syncPlayerStatsFromMatches === "function") {
-      try { this.store.syncPlayerStatsFromMatches(); } catch (_) {}
+      try { this.store.syncPlayerStatsFromMatches(); } catch (_) { }
     }
 
     const team = this.store.getTeam(teamId);
@@ -2576,7 +2576,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (pushHistory) {
       try {
         history.pushState({ tab: "team-detail", teamId: team.id }, "", path);
-      } catch (_) {}
+      } catch (_) { }
     }
 
     // Hitung statistik turnamen tim secara aktual dari data.matches (TIDAK ADA DATA STATIS)
@@ -2800,7 +2800,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (this._isMobileMenuOpen) this.closeMobileMenu();
 
     if (this.store && typeof this.store.syncPlayerStatsFromMatches === "function") {
-      try { this.store.syncPlayerStatsFromMatches(); } catch (_) {}
+      try { this.store.syncPlayerStatsFromMatches(); } catch (_) { }
     }
 
     const team = this.store.getTeam(teamId);
@@ -2821,7 +2821,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (pushHistory) {
       try {
         history.pushState({ tab: "player-detail", teamId: team.id, playerId: decodedId }, "", path);
-      } catch (_) {}
+      } catch (_) { }
     }
 
     const cleanPName = (player.name || "").toLowerCase().trim();
@@ -3024,7 +3024,7 @@ var app = window.app = Object.assign(window.app || {}, {
       if (pushHistory && tabId !== this.currentTab) {
         try {
           history.pushState({ tab: tabId }, "", targetPath);
-        } catch (err) {}
+        } catch (err) { }
       }
       this.currentTab = tabId;
 
@@ -3036,7 +3036,7 @@ var app = window.app = Object.assign(window.app || {}, {
       // Update Mobile Drawer Links
       document.querySelectorAll(".mobile-nav-link").forEach(link => {
         const isAct = link.dataset.tab === tabId ||
-                      ((tabId === "team-detail" || tabId === "player-detail") && link.dataset.tab === "teams");
+          ((tabId === "team-detail" || tabId === "player-detail") && link.dataset.tab === "teams");
         link.classList.toggle("active", isAct);
       });
 
@@ -3064,7 +3064,7 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   renderCurrentView() {
-    try { this.updateHeroLiveBadge(); } catch (e) {}
+    try { this.updateHeroLiveBadge(); } catch (e) { }
     try {
       switch (this.currentTab) {
         case "home":
@@ -3708,8 +3708,8 @@ var app = window.app = Object.assign(window.app || {}, {
               </thead>
               <tbody>
                 ${standings.map((row, idx) => {
-                  const isQualify = idx < 2;
-                  return `
+        const isQualify = idx < 2;
+        return `
                     <tr class="${isQualify ? 'qualify' : ''}">
                       <td class="td-pos">${idx + 1}</td>
                       <td class="td-team" onclick="app.openTeamModal('${row.team.id}')" style="cursor: pointer;" title="Klik untuk lihat skuad">
@@ -3728,7 +3728,7 @@ var app = window.app = Object.assign(window.app || {}, {
                       <td class="td-pts">${row.pts}</td>
                     </tr>
                   `;
-                }).join("")}
+      }).join("")}
               </tbody>
             </table>
           </div>
@@ -4365,11 +4365,11 @@ var app = window.app = Object.assign(window.app || {}, {
     if (!this._audioCtx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
-        try { this._audioCtx = new AudioCtx(); } catch (e) {}
+        try { this._audioCtx = new AudioCtx(); } catch (e) { }
       }
     }
     if (this._audioCtx && this._audioCtx.state === "suspended") {
-      try { this._audioCtx.resume(); } catch (e) {}
+      try { this._audioCtx.resume(); } catch (e) { }
     }
     return this._audioCtx;
   },
@@ -4389,7 +4389,7 @@ var app = window.app = Object.assign(window.app || {}, {
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.045);
-    } catch (e) {}
+    } catch (e) { }
   },
 
   playDrawWinSound() {
@@ -4410,7 +4410,7 @@ var app = window.app = Object.assign(window.app || {}, {
         osc.start(startTime);
         osc.stop(startTime + 0.36);
       });
-    } catch (e) {}
+    } catch (e) { }
   },
 
   fireDrawConfetti() {
@@ -4456,7 +4456,7 @@ var app = window.app = Object.assign(window.app || {}, {
       try {
         const raw = localStorage.getItem("acc_draw_state_2026");
         if (raw) this.drawState = JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) { }
     }
     if (!this.drawState) {
       this.drawState = {
@@ -4480,7 +4480,7 @@ var app = window.app = Object.assign(window.app || {}, {
   saveDrawState() {
     try {
       localStorage.setItem("acc_draw_state_2026", JSON.stringify(this.drawState));
-    } catch (e) {}
+    } catch (e) { }
   },
 
   getDrawCategoryTeams(cat = this.currentDrawCat) {
@@ -5194,21 +5194,21 @@ var app = window.app = Object.assign(window.app || {}, {
         this.renderHome();
         this.renderLiveStreamHero();
       }
-    } catch(e) {}
+    } catch (e) { }
 
     // Update group_letter in Supabase Cloud without touching team rosters or photos
     if (window.SupabaseService && window.SupabaseService.client) {
       try {
         const catTeams = (this.store.data.teams || []).filter(t => (t.category || "SMP") === cat);
         for (const t of catTeams) {
-          window.SupabaseService.client.from('teams').update({ group_letter: '-' }).eq('id', t.id).then(() => {}).catch(() => {});
+          window.SupabaseService.client.from('teams').update({ group_letter: '-' }).eq('id', t.id).then(() => { }).catch(() => { });
         }
         const catMatches = (this.store.data.matches || []).filter(m => {
           const hTeam = this.store.getTeam(m.homeId);
           return hTeam && (hTeam.category || "SMP") === cat;
         });
         for (const m of catMatches) {
-          window.SupabaseService.syncMatch(m).catch(() => {});
+          window.SupabaseService.syncMatch(m).catch(() => { });
         }
       } catch (drawSyncErr) {
         console.warn("Draw reset sync notice:", drawSyncErr);
@@ -5347,21 +5347,21 @@ var app = window.app = Object.assign(window.app || {}, {
         this.renderHome();
         this.renderLiveStreamHero();
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 6. Sinkronisasi grup drawing ke Cloud Supabase tanpa menimpa data pemain atau foto tim
     if (syncCloud && window.SupabaseService && window.SupabaseService.client) {
       try {
         const catTeams = (this.store.data.teams || []).filter(t => (t.category || "SMP") === cat);
         for (const t of catTeams) {
-          window.SupabaseService.client.from('teams').update({ group_letter: t.group }).eq('id', t.id).then(() => {}).catch(() => {});
+          window.SupabaseService.client.from('teams').update({ group_letter: t.group }).eq('id', t.id).then(() => { }).catch(() => { });
         }
         const catMatches = (this.store.data.matches || []).filter(m => {
           const hTeam = this.store.getTeam(m.homeId);
           return hTeam && (hTeam.category || "SMP") === cat;
         });
         for (const m of catMatches) {
-          window.SupabaseService.syncMatch(m).catch(() => {});
+          window.SupabaseService.syncMatch(m).catch(() => { });
         }
       } catch (drawSyncErr) {
         console.warn("Draw apply sync notice:", drawSyncErr);
@@ -5498,7 +5498,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     title.innerHTML = `
       <span class="mini-badge" style="background: ${team.badgeColor || '#0284c7'}; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; padding: 0;">
-        ${team.logo ? `<img src="${team.logo}" alt="${team.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : team.shortName.substring(0,2)}
+        ${team.logo ? `<img src="${team.logo}" alt="${team.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` : team.shortName.substring(0, 2)}
       </span>
       <span>${team.name} (${team.group && team.group !== '-' ? 'Grup ' + team.group : 'Belum Diundi'})</span>
     `;
@@ -5559,54 +5559,54 @@ var app = window.app = Object.assign(window.app || {}, {
             </thead>
             <tbody>
               ${team.players.map(p => {
-                // Sinkronkan akumulasi kartu & gol aktual dari rekaman pertandingan
-                let matchYc = 0;
-                let matchRc = 0;
-                let matchGoals = 0;
-                const cleanPName = (p.name || '').toLowerCase().trim();
+      // Sinkronkan akumulasi kartu & gol aktual dari rekaman pertandingan
+      let matchYc = 0;
+      let matchRc = 0;
+      let matchGoals = 0;
+      const cleanPName = (p.name || '').toLowerCase().trim();
 
-                (this.store.data.matches || []).forEach(m => {
-                  if (m.cards && Array.isArray(m.cards)) {
-                    m.cards.forEach(c => {
-                      const isTeam = !c.team || c.team === team.id || c.team === team.name || c.team === team.shortName;
-                      const cardPName = (c.player || '').toLowerCase().trim();
-                      const isPlayer = cardPName === cleanPName || 
-                                       cardPName === `${cleanPName} (#${p.no})` ||
-                                       (p.no && cardPName.includes(`#${p.no}`)) ||
-                                       cardPName.includes(cleanPName) || 
-                                       cleanPName.includes(cardPName);
-                      if (isTeam && isPlayer) {
-                        if (c.type === 'yellow') matchYc += 1;
-                        if (c.type === 'red') matchRc += 1;
-                      }
-                    });
-                  }
-                  if (m.scorers && Array.isArray(m.scorers)) {
-                    m.scorers.forEach(s => {
-                      const isTeam = !s.team || s.team === team.id || s.team === team.name || s.team === team.shortName;
-                      const scorerPName = (s.player || '').toLowerCase().trim();
-                      const isPlayer = scorerPName === cleanPName || 
-                                       scorerPName === `${cleanPName} (#${p.no})` ||
-                                       (p.no && scorerPName.includes(`#${p.no}`)) ||
-                                       scorerPName.includes(cleanPName) || 
-                                       cleanPName.includes(scorerPName);
-                      if (isTeam && isPlayer) {
-                        matchGoals += 1;
-                      }
-                    });
-                  }
-                });
+      (this.store.data.matches || []).forEach(m => {
+        if (m.cards && Array.isArray(m.cards)) {
+          m.cards.forEach(c => {
+            const isTeam = !c.team || c.team === team.id || c.team === team.name || c.team === team.shortName;
+            const cardPName = (c.player || '').toLowerCase().trim();
+            const isPlayer = cardPName === cleanPName ||
+              cardPName === `${cleanPName} (#${p.no})` ||
+              (p.no && cardPName.includes(`#${p.no}`)) ||
+              cardPName.includes(cleanPName) ||
+              cleanPName.includes(cardPName);
+            if (isTeam && isPlayer) {
+              if (c.type === 'yellow') matchYc += 1;
+              if (c.type === 'red') matchRc += 1;
+            }
+          });
+        }
+        if (m.scorers && Array.isArray(m.scorers)) {
+          m.scorers.forEach(s => {
+            const isTeam = !s.team || s.team === team.id || s.team === team.name || s.team === team.shortName;
+            const scorerPName = (s.player || '').toLowerCase().trim();
+            const isPlayer = scorerPName === cleanPName ||
+              scorerPName === `${cleanPName} (#${p.no})` ||
+              (p.no && scorerPName.includes(`#${p.no}`)) ||
+              scorerPName.includes(cleanPName) ||
+              cleanPName.includes(scorerPName);
+            if (isTeam && isPlayer) {
+              matchGoals += 1;
+            }
+          });
+        }
+      });
 
-                const totalYc = matchYc;
-                const totalRc = matchRc;
-                const totalGoals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
+      const totalYc = matchYc;
+      const totalRc = matchRc;
+      const totalGoals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
 
-                p.yc = totalYc;
-                p.rc = totalRc;
-                p.goals = totalGoals;
+      p.yc = totalYc;
+      p.rc = totalRc;
+      p.goals = totalGoals;
 
-                const rating = this.calculatePlayerRating(p);
-                return `
+      const rating = this.calculatePlayerRating(p);
+      return `
                 <tr>
                   <td style="text-align: center;"><strong style="color: var(--secondary);">#${p.no}</strong></td>
                   <td style="text-align: center;">
@@ -5627,7 +5627,7 @@ var app = window.app = Object.assign(window.app || {}, {
                   </td>
                 </tr>
               `;
-              }).join("")}
+    }).join("")}
             </tbody>
           </table>
         </div>
@@ -5833,12 +5833,12 @@ const _bootAppSafely = () => {
   try {
     app.init();
     if (window._pendingCat) {
-      try { app.setCategory(window._pendingCat, false); } catch (e) {}
+      try { app.setCategory(window._pendingCat, false); } catch (e) { }
     }
     if (window._pendingTab) {
-      try { app.switchTab(window._pendingTab, false); } catch (e) {}
+      try { app.switchTab(window._pendingTab, false); } catch (e) { }
     } else {
-      try { app.parseCurrentRoute(false); } catch (e) {}
+      try { app.parseCurrentRoute(false); } catch (e) { }
     }
   } catch (err) {
     console.error("Critical app.init error:", err);
