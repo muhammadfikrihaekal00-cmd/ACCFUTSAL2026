@@ -357,7 +357,11 @@ body.dark-theme .brand-text h1 {
   transform: translateY(-2px);
   box-shadow: 0 0 14px rgba(0, 210, 255, 0.4);
 }
+.btn-admin-header:not(.logged-in) {
+  display: none !important;
+}
 .btn-admin-header.logged-in {
+  display: inline-flex;
   background: rgba(245, 158, 11, 0.25);
   border-color: #f59e0b;
   color: #fbbf24;
@@ -3912,8 +3916,7 @@ body.dark-theme .mobile-nav-item.active {
   .header-v-divider {
     display: none !important;
   }
-  .header-icon-btn,
-  .btn-admin-header {
+  .header-icon-btn {
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
@@ -3927,12 +3930,23 @@ body.dark-theme .mobile-nav-item.active {
     touch-action: manipulation !important;
     cursor: pointer !important;
   }
-  .btn-admin-header {
-    border: 1.5px solid rgba(245, 158, 11, 0.7) !important;
-    background: rgba(245, 158, 11, 0.2) !important;
+  .btn-admin-header:not(.logged-in) {
+    display: none !important;
   }
   .btn-admin-header.logged-in {
-    border-color: #10b981 !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    font-size: 0.95rem !important;
+    flex-shrink: 0 !important;
+    touch-action: manipulation !important;
+    cursor: pointer !important;
+    border: 1.5px solid #10b981 !important;
     background: rgba(16, 185, 129, 0.28) !important;
   }
   .header-icon-btn span,

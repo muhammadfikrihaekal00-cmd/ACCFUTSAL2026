@@ -3903,13 +3903,8 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="draw-role-tag role-participant">
             <span class="draw-role-icon">🛡️</span>
             <div class="draw-role-info">
-              <div class="draw-role-badge">MODE PEMANTAU RESMI PESERTA</div>
-              <div class="draw-role-desc">Pengundian grup resmi dipimpin & ditetapkan oleh Panitia Pelaksana (Panpel). Pembagian grup di bawah ini sah & otomatis tersambung ke Jadwal dan Klasemen.</div>
-              <div style="margin-top: 8px;">
-                <button type="button" class="btn btn-sm" onclick="admin.openLoginModal()" style="background: rgba(3, 105, 161, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700; padding: 4px 12px; font-size: 0.74rem; border-radius: 999px; cursor: pointer;">
-                  🔑 Panitia? Masuk untuk Jalankan Undian & Kelola Tim ➔
-                </button>
-              </div>
+              <div class="draw-role-badge">AKSES KHUSUS PANITIA PELAKSANA</div>
+              <div class="draw-role-desc">Halaman pengundian grup hanya tersedia pada Mode Panitia.</div>
             </div>
           </div>
         `;
