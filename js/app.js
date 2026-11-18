@@ -1,22 +1,74 @@
 // app.js - Main Tournament Logic & UI Rendering
+function _safeStorageGet(storage, key) {
+  try { return storage.getItem(key); } catch (_) { return null; }
+}
 window.admin = window.admin || {
-  isAuthenticated: (sessionStorage.getItem("pondok_futsal_admin_auth") === "true"),
+  isAuthenticated: (_safeStorageGet(sessionStorage, "pondok_futsal_admin_auth") === "true" || _safeStorageGet(localStorage, "pondok_futsal_admin_auth") === "true"),
   activeMatchId: null,
   activeQuickMatchId: null,
-  adminPinHash: sessionStorage.getItem("pondok_futsal_admin_pin_hash") || ""
+  adminPinHash: _safeStorageGet(sessionStorage, "pondok_futsal_admin_pin_hash") || _safeStorageGet(localStorage, "pondok_futsal_admin_pin_hash") || ""
 };
 
 class TournamentStore {
   constructor() {
     this.STORAGE_KEY = "acc_futsal_tournament_2026_clean_zero_v6";
-    this.data = this.loadData();
-    this.syncPlayerStatsFromMatches();
-    this.syncKnockoutFromStandings();
+    try {
+      this.data = this.loadData();
+    } catch (e) {
+      console.error("loadData fallback to DEFAULT_DATA:", e);
+      this.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+    try { this.syncPlayerStatsFromMatches(); } catch (e) { console.warn("syncPlayerStats notice:", e); }
+    try { this.syncKnockoutFromStandings(); } catch (e) { console.warn("syncKnockout notice:", e); }
+  }
+
+  normalizeTeam(t, idx = 0) {
+    if (!t || typeof t !== "object") return null;
+    const id = t.id || ("T" + String(idx + 1).padStart(2, "0"));
+    const numId = parseInt(String(id).replace(/\D/g, ""), 10) || (idx + 1);
+    const name = (typeof t.name === "string" && t.name.trim()) ? t.name : ("Tim " + id);
+    const shortName = (typeof t.shortName === "string" && t.shortName.trim())
+      ? t.shortName
+      : ((typeof t.short_name === "string" && t.short_name.trim()) ? t.short_name : name.substring(0, 10).toUpperCase());
+    const offSrc = (t.official && typeof t.official === "object") ? t.official : {};
+    const official = {
+      coach: offSrc.coach || t.official_coach || t.coach || "",
+      manager: offSrc.manager || t.official_manager || t.manager || "",
+      medic: offSrc.medic || t.official_medic || t.medic || "",
+      phone: offSrc.phone || t.official_phone || t.phone || "",
+      jerseyHome: offSrc.jerseyHome || t.official_jersey_home || t.jerseyHome || "",
+      jerseyAway: offSrc.jerseyAway || t.official_jersey_away || t.jerseyAway || "",
+      coachPhoto: offSrc.coachPhoto || t.coach_photo || t.coachPhoto || "",
+      managerPhoto: offSrc.managerPhoto || t.manager_photo || t.managerPhoto || ""
+    };
+    const players = Array.isArray(t.players) ? t.players.filter(p => p && typeof p === "object").map((p, pIdx) => ({
+      no: (p.no !== undefined && p.no !== null && p.no !== "") ? p.no : (pIdx + 1),
+      name: (typeof p.name === "string") ? p.name : ("Pemain " + (pIdx + 1)),
+      pos: p.pos || "Flank",
+      goals: parseInt(p.goals, 10) || 0,
+      yc: parseInt(p.yc, 10) || 0,
+      rc: parseInt(p.rc, 10) || 0,
+      photo: (typeof p.photo === "string") ? p.photo : ""
+    })) : [];
+
+    return {
+      ...t,
+      id,
+      name,
+      shortName,
+      category: t.category || (numId >= 17 ? "SD" : (numId >= 9 && numId <= 16 ? "SMP" : "SMP")),
+      group: t.group || t.group_letter || "A",
+      badgeColor: t.badgeColor || t.badge_color || "#0284c7",
+      city: (typeof t.city === "string") ? t.city : "",
+      logo: (typeof t.logo === "string") ? t.logo : "",
+      official,
+      players
+    };
   }
 
   loadData() {
     let data;
-    const saved = localStorage.getItem(this.STORAGE_KEY);
+    const saved = _safeStorageGet(localStorage, this.STORAGE_KEY);
     if (saved) {
       try {
         data = JSON.parse(saved);
@@ -25,8 +77,14 @@ class TournamentStore {
       }
     }
 
-    if (!data || !data.teams || data.teams.length < 32) {
+    if (!data || !Array.isArray(data.teams) || data.teams.length < 32) {
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+    if (!Array.isArray(data.matches) || data.matches.length === 0) {
+      data.matches = JSON.parse(JSON.stringify(DEFAULT_DATA.matches));
+    }
+    if (!data.config || typeof data.config !== "object") {
+      data.config = JSON.parse(JSON.stringify(DEFAULT_DATA.config));
     }
 
     // ------------------------------------------------------------------
@@ -236,19 +294,21 @@ class TournamentStore {
         data.moments = JSON.parse(JSON.stringify(DEFAULT_DATA.homeData.moments));
       }
     }
-    // Pastikan foto pemain, logo, dan kategori SD / SMP terhubung jika belum ada
+    // Normalisasi seluruh tim agar tidak pernah crash (anti undefined official / shortName / name / players)
     if (data.teams && Array.isArray(data.teams)) {
+      data.teams = data.teams.map((t, idx) => this.normalizeTeam(t, idx)).filter(Boolean);
       data.teams.forEach(t => {
-        // Auto-assign category if missing (T01-T08 = SMP, T09-T16 = SD)
-        const numId = parseInt((t.id || '').replace(/\D/g, ''), 10);
+        const numId = parseInt(String(t.id || '').replace(/\D/g, ''), 10) || 1;
         if (!t.category) {
-          t.category = (numId >= 9) ? "SD" : "SMP";
+          t.category = (numId >= 17) ? "SD" : "SMP";
         }
         // Normalize school prefix to SMP / MTs vs SD / MI
-        if (t.category === "SMP") {
-          t.name = t.name.replace(/^SMA /, "SMP ").replace(/^SMK /, "SMP ").replace(/^SMKN 1 /, "SMPN 1 ");
-        } else if (t.category === "SD") {
-          t.name = t.name.replace(/^SMA /, "SD ").replace(/^SMK /, "SD IT ").replace(/^MA /, "MI ").replace(/^MTQ /, "SD MTQ ");
+        if (typeof t.name === "string") {
+          if (t.category === "SMP") {
+            t.name = t.name.replace(/^SMA /, "SMP ").replace(/^SMK /, "SMP ").replace(/^SMKN 1 /, "SMPN 1 ");
+          } else if (t.category === "SD") {
+            t.name = t.name.replace(/^SMA /, "SD ").replace(/^SMK /, "SD IT ").replace(/^MA /, "MI ").replace(/^MTQ /, "SD MTQ ");
+          }
         }
         if (t.logo === undefined) t.logo = "";
 
@@ -689,17 +749,20 @@ class TournamentStore {
     }
 
     teams.forEach(t => {
+      if (!t || !Array.isArray(t.players)) return;
+      const off = (t.official && typeof t.official === "object") ? t.official : {};
       t.players.forEach(p => {
+        if (!p) return;
         const key = `${t.id}-${p.name}`;
         playerStats[key] = {
           teamId: t.id,
-          teamName: t.name,
+          teamName: t.name || "",
           category: t.category || "SMP",
-          manager: t.official.manager,
-          managerPhone: t.official.phone,
+          manager: off.manager || "",
+          managerPhone: off.phone || "",
           playerNo: p.no,
-          playerName: p.name,
-          pos: p.pos,
+          playerName: p.name || "",
+          pos: p.pos || "Flank",
           yellowCount: 0,
           redCount: 0,
           cardsHistory: []
@@ -773,7 +836,9 @@ class TournamentStore {
     }
 
     teams.forEach(t => {
+      if (!t || !Array.isArray(t.players)) return;
       t.players.forEach(p => {
+        if (!p) return;
         const key = `${t.id}-${p.name}`;
         scorers[key] = {
           teamId: t.id,
@@ -806,11 +871,11 @@ class TournamentStore {
   }
 }
 
-// Global UI Manager
-const app = {
-  store: new TournamentStore(),
+// Global UI Manager (Unified single instance with window.app, ZERO TDZ!)
+var app = window.app = Object.assign(window.app || {}, {
+  store: null,
   currentTab: "home", // Default sekarang membuka tab Beranda Utama
-  currentCategory: localStorage.getItem("acc_active_category") || "SMP",
+  currentCategory: _safeStorageGet(localStorage, "acc_active_category") || "SMP",
   filterDay: "all",
   filterPitch: "all",
   filterGroup: "all",
@@ -829,7 +894,32 @@ const app = {
     return Boolean(window.admin && window.admin.isAuthenticated === true);
   },
 
+  ensureStore() {
+    if (!this.store) {
+      try {
+        this.store = new TournamentStore();
+      } catch (e) {
+        console.error("Fallback TournamentStore init:", e);
+        this.store = {
+          STORAGE_KEY: "acc_futsal_tournament_2026_clean_zero_v6",
+          data: JSON.parse(JSON.stringify(DEFAULT_DATA)),
+          saveData() {},
+          getTeam(id) { return (this.data.teams || []).find(t => t.id === id) || null; },
+          getMatch(id) { return (this.data.matches || []).find(m => m.id === id) || null; },
+          syncPlayerStatsFromMatches() {},
+          syncKnockoutFromStandings() {},
+          normalizeTeam(t) { return t; },
+          calculateGroupStandings() { return []; },
+          getDisciplinaryRecords() { return []; },
+          getTopScorers() { return []; }
+        };
+      }
+    }
+    return this.store;
+  },
+
   init() {
+    this.ensureStore();
     try { this.initSplashScreen(); } catch(e) { console.warn("Splash init:", e); }
     try { this.initThemeAndViewMode(); } catch(e) { console.warn("Theme init:", e); }
     try { this.updateCategoryUI(); } catch(e) { console.warn("Category init:", e); }
@@ -1934,7 +2024,10 @@ const app = {
 
         Object.assign(this.store.data.teams[idx], mapped);
       } else {
-        this.store.data.teams.push(payload);
+        const norm = (this.store && typeof this.store.normalizeTeam === "function")
+          ? this.store.normalizeTeam(payload, this.store.data.teams.length)
+          : payload;
+        if (norm) this.store.data.teams.push(norm);
       }
       // Debounce saveData & DOM render agar tidak freeze saat beberapa laptop mengedit bersamaan
       if (this._teamRealtimeTimer) clearTimeout(this._teamRealtimeTimer);
@@ -3554,7 +3647,11 @@ const app = {
     const isPanitia = this.isAdmin();
 
     container.innerHTML = teams.map((t, idx) => {
-      const waLink = this.getWhatsAppUrl(t.official.phone, `Halo Official ${t.name}, informasi ACC 2026`);
+      const off = (t && t.official && typeof t.official === "object") ? t.official : {};
+      const tName = (t && t.name) ? String(t.name) : ("Tim " + (t && t.id ? t.id : ""));
+      const tShort = (t && (t.shortName || t.short_name)) ? String(t.shortName || t.short_name) : tName;
+      const tPlayers = (t && Array.isArray(t.players)) ? t.players : [];
+      const waLink = this.getWhatsAppUrl(off.phone || "", `Halo Official ${tName}, informasi ACC 2026`);
       const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
 
       return `
@@ -3568,28 +3665,28 @@ const app = {
 
           <div class="school-card-body">
             <div class="school-avatar" style="background: ${t.badgeColor || '#0284c7'};">
-              ${t.logo ? `<img src="${t.logo}" class="team-logo-img" alt="${t.name}">` : t.shortName.substring(0, 3)}
+              ${t.logo ? `<img src="${t.logo}" class="team-logo-img" alt="${tName}">` : tShort.substring(0, 3)}
             </div>
 
-            <div class="school-card-name">${t.name}</div>
+            <div class="school-card-name">${tName}</div>
             <div class="school-card-city">📍 ${t.city || '-'}</div>
 
             <div class="official-info-box">
               <div class="official-row" style="align-items: center; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
-                  ${t.official.coachPhoto ? `<img src="${t.official.coachPhoto}" alt="Foto Pelatih" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); flex-shrink: 0;">` : '<span>👔</span>'}
+                  ${off.coachPhoto ? `<img src="${off.coachPhoto}" alt="Foto Pelatih" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); flex-shrink: 0;">` : '<span>👔</span>'}
                   <span style="font-size: 0.72rem; color: #64748b; white-space: nowrap;">Pelatih / Asisten:</span>
                 </div>
-                <strong style="color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58%; text-align: right;" title="${t.official.coach || t.official.manager}">${t.official.coach && t.official.manager && t.official.coach !== t.official.manager ? `${t.official.coach} / ${t.official.manager}` : (t.official.coach || t.official.manager || '-')}</strong>
+                <strong style="color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58%; text-align: right;" title="${off.coach || off.manager || ''}">${off.coach && off.manager && off.coach !== off.manager ? `${off.coach} / ${off.manager}` : (off.coach || off.manager || '-')}</strong>
               </div>
               <div class="official-row">
                 <span>🎽 Jersey:</span>
-                <strong style="font-size: 0.72rem; color: #0f172a;">${t.official.jerseyHome || '-'}</strong>
+                <strong style="font-size: 0.72rem; color: #0f172a;">${off.jerseyHome || '-'}</strong>
               </div>
             </div>
 
             <div class="school-card-footer" onclick="event.stopPropagation();">
-              <span class="roster-count">👥 ${t.players.length} Pemain</span>
+              <span class="roster-count">👥 ${tPlayers.length} Pemain</span>
               <div style="display: flex; gap: 6px; align-items: center;">
                 <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); admin.openTeamEditorModal('${t.id}')" title="Edit Data Tim & Pemain" style="font-size: 0.72rem; padding: 3px 8px; border-color: var(--primary); color: var(--primary); font-weight: 600;">
                   ✏️ Edit
@@ -5142,32 +5239,29 @@ const app = {
       }
     });
   }
-};
+});
 
-// Guarantee window.app is defined immediately before any event triggers
+// Guarantee window.app === app unified single instance
 app._realSwitchTab = app.switchTab.bind(app);
 app._realSetCategory = app.setCategory.bind(app);
-window.app = Object.assign(window.app || {}, app);
-if (window._pendingTab) {
-  try { app.switchTab(window._pendingTab, false); } catch(e) {}
-}
-if (window._pendingCat) {
-  try { app.setCategory(window._pendingCat, false); } catch(e) {}
-}
 
 // Initialize when DOM ready (supports already-loaded state on mobile/PWA cache)
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    try {
-      app.init();
-    } catch (err) {
-      console.error("Critical app.init error:", err);
-    }
-  });
-} else {
+const _bootAppSafely = () => {
   try {
     app.init();
+    if (window._pendingCat) {
+      try { app.setCategory(window._pendingCat, false); } catch (e) {}
+    }
+    if (window._pendingTab) {
+      try { app.switchTab(window._pendingTab, false); } catch (e) {}
+    }
   } catch (err) {
     console.error("Critical app.init error:", err);
   }
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", _bootAppSafely);
+} else {
+  _bootAppSafely();
 }

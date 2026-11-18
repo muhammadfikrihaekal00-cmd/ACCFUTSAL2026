@@ -1,9 +1,12 @@
 // admin.js - Panitia Admin Control Panel
-const admin = window.admin = Object.assign(window.admin || {}, {
-  isAuthenticated: (sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true"),
+function _safeAdminGet(storage, key) {
+  try { return storage.getItem(key); } catch (_) { return null; }
+}
+var admin = window.admin = Object.assign(window.admin || {}, {
+  isAuthenticated: (_safeAdminGet(sessionStorage, "pondok_futsal_admin_auth") === "true" || _safeAdminGet(localStorage, "pondok_futsal_admin_auth") === "true"),
   activeMatchId: null,
   activeQuickMatchId: null,
-  adminPinHash: sessionStorage.getItem("pondok_futsal_admin_pin_hash") || localStorage.getItem("pondok_futsal_admin_pin_hash") || "",
+  adminPinHash: _safeAdminGet(sessionStorage, "pondok_futsal_admin_pin_hash") || _safeAdminGet(localStorage, "pondok_futsal_admin_pin_hash") || "",
   teamEditorDirty: false,
   _draftSaveTimer: null,
   DRAFT_TEAM_KEY: "acc_draft_team_editor_v1",
@@ -15,9 +18,9 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   checkSession() {
-    if (sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true") {
+    if (_safeAdminGet(sessionStorage, "pondok_futsal_admin_auth") === "true" || _safeAdminGet(localStorage, "pondok_futsal_admin_auth") === "true") {
       this.isAuthenticated = true;
-      this.adminPinHash = sessionStorage.getItem("pondok_futsal_admin_pin_hash") || localStorage.getItem("pondok_futsal_admin_pin_hash") || "";
+      this.adminPinHash = _safeAdminGet(sessionStorage, "pondok_futsal_admin_pin_hash") || _safeAdminGet(localStorage, "pondok_futsal_admin_pin_hash") || "";
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
         if (this.adminPinHash) sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
