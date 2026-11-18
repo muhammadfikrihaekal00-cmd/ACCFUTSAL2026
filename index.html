@@ -10,10 +10,10 @@
   <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.37">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.37">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.37">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.37">
+  <link rel="manifest" href="manifest.json?v=8.38">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.38">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.38">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.38">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -43,7 +43,7 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.28";
+        var CURRENT_VER = "8.38";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -55,10 +55,6 @@
             navigator.serviceWorker.getRegistrations().then(function (regs) {
               regs.forEach(function (reg) { reg.unregister(); });
             });
-          }
-          if (!sessionStorage.getItem("acc_ver_flushed_" + CURRENT_VER)) {
-            sessionStorage.setItem("acc_ver_flushed_" + CURRENT_VER, "1");
-            window.location.reload();
           }
         }
       } catch (e) { }
@@ -213,7 +209,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.37">
+  <link rel="stylesheet" href="css/styles.css?v=8.38">
 </head>
 
 <body>
@@ -2754,11 +2750,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.37"></script>
-  <script src="js/supabase-client.js?v=8.37"></script>
-  <script src="js/data.js?v=8.37"></script>
-  <script src="js/admin.js?v=8.37"></script>
-  <script src="js/app.js?v=8.37"></script>
+  <script src="js/security.js?v=8.38"></script>
+  <script src="js/supabase-client.js?v=8.38"></script>
+  <script src="js/data.js?v=8.38"></script>
+  <script src="js/admin.js?v=8.38"></script>
+  <script src="js/app.js?v=8.38"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

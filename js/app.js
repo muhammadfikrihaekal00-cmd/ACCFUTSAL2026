@@ -306,7 +306,33 @@ class TournamentStore {
   }
 
   saveData() {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
+    } catch (e) {
+      // Tangani QuotaExceededError agar aplikasi TIDAK PERNAH crash/error saat foto tim sudah banyak!
+      try {
+        // Simpan salinan ringan ke localStorage (foto base64 besar tetap aman di RAM & Supabase Cloud)
+        const slim = {
+          ...this.data,
+          teams: (this.data.teams || []).map(t => ({
+            ...t,
+            logo: (t.logo && t.logo.startsWith("data:image") && t.logo.length > 15000) ? "" : (t.logo || ""),
+            official: t.official ? {
+              ...t.official,
+              coachPhoto: (t.official.coachPhoto && t.official.coachPhoto.startsWith("data:image") && t.official.coachPhoto.length > 15000) ? "" : (t.official.coachPhoto || ""),
+              managerPhoto: (t.official.managerPhoto && t.official.managerPhoto.startsWith("data:image") && t.official.managerPhoto.length > 15000) ? "" : (t.official.managerPhoto || "")
+            } : {},
+            players: (t.players || []).map(p => ({
+              ...p,
+              photo: (p.photo && p.photo.startsWith("data:image") && p.photo.length > 10000) ? "" : (p.photo || "")
+            }))
+          }))
+        };
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(slim));
+      } catch (innerErr) {
+        console.warn("localStorage quota full, running cleanly in memory + Cloud:", innerErr);
+      }
+    }
   }
 
   resetData() {
@@ -818,22 +844,14 @@ const app = {
     try { this.renderCurrentView(); } catch(e) { console.warn("View init:", e); }
     try { this.initPwa(); } catch(e) { console.warn("PWA init:", e); }
     try { this.initSupabaseSync(); } catch(e) { console.warn("Supabase init:", e); }
-    // Otomatis pulihkan draft pengisian tim / folder jika browser sempat reload/terkeluar mendadak
+    // Cek jika ada draft pengisian tim / folder yang sempat terhenti (tampilkan banner pengingat non-blocking)
     setTimeout(() => {
       try {
         if (window.admin && typeof window.admin.restorePendingDraftsOnBoot === 'function') {
           window.admin.restorePendingDraftsOnBoot();
         }
       } catch (_) {}
-    }, 600);
-    // Otomatis pulihkan dan selaraskan foto cache lama secara realtime di latar belakang tanpa tombol
-    setTimeout(() => {
-      try {
-        if (window.admin && typeof window.admin.recoverDataFromLocalCache === 'function') {
-          window.admin.recoverDataFromLocalCache(true);
-        }
-      } catch (_) {}
-    }, 1000);
+    }, 800);
     try { this.initGlobalLiveMatchTimer(); } catch(e) { console.warn("LiveTimer init:", e); }
     try { this.initNetworkStatusListeners(); } catch(e) { console.warn("Network init:", e); }
     try { this.initScrollReveal(); } catch(e) { console.warn("ScrollReveal init:", e); }
@@ -1449,45 +1467,40 @@ const app = {
       window.addEventListener("load", startInitialSync, { once: true });
     }
 
-    // Auto-refresh instan saat pengguna kembali ke aplikasi / unlock HP / jaringan reconnect
+    // Auto-refresh ringan saat pengguna kembali ke aplikasi (dibatasi min 20 detik agar tidak spam jaringan)
     // PROTEKSI: Jangan pernah sync/re-render saat pengguna sedang aktif mengisi form atau memilih file/folder!
+    let lastFocusSyncTs = Date.now();
+    const safeFocusSync = () => {
+      if (this.isUserEditing()) return;
+      const now = Date.now();
+      if (now - lastFocusSyncTs < 20000) return;
+      lastFocusSyncTs = now;
+      syncFromRemote();
+    };
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && !this.isUserEditing()) {
-        syncFromRemote();
-      }
-    });
-    window.addEventListener("focus", () => {
-      if (!this.isUserEditing()) {
-        syncFromRemote();
-      }
+      if (document.visibilityState === "visible") safeFocusSync();
     });
     window.addEventListener("online", () => {
-      if (!this.isUserEditing()) {
-        syncFromRemote();
-      }
+      if (!this.isUserEditing()) syncFromRemote();
     });
 
-    // Realtime Background Auto-Sync:
-    // Jika Mode Panitia aktif: sinkron otomatis setiap 4 detik agar input antar-laptop sinkron instan!
-    // Jika ada match LIVE: sinkron setiap 5 detik.
-    // Jika penonton biasa: sinkron setiap 12 detik.
-    let lastPollTimestamp = 0;
+    // Realtime Background Safety Polling (WebSocket menangani update instan ~50ms, polling hanya cadangan ringan):
+    // Jika ada match LIVE: 12 detik. Normal: 30 detik. Tidak membebani CPU/jaringan!
+    let lastPollTimestamp = Date.now();
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      // PROTEKSI ANTI-KELUAR: Jangan polling atau re-render jika sedang aktif mengedit data di modal mana pun!
       if (this.isUserEditing()) return;
 
-      const isPanitia = Boolean(window.admin && window.admin.isAuthenticated);
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
       const hasLiveMatch = matches.some(m => m.status === "live");
-      const requiredIntervalMs = isPanitia ? 4000 : (hasLiveMatch ? 5000 : 12000);
+      const requiredIntervalMs = hasLiveMatch ? 12000 : 30000;
 
       const now = Date.now();
-      if ((now - lastPollTimestamp) >= requiredIntervalMs - 100) {
+      if ((now - lastPollTimestamp) >= requiredIntervalMs) {
         lastPollTimestamp = now;
         syncFromRemote();
       }
-    }, 2000);
+    }, 5000);
   },
 
   isUserEditing() {
@@ -1648,6 +1661,7 @@ const app = {
             const localTeam = this.store.data.teams[idx];
             const curOff = localTeam.official || {};
 
+            const isValidPhoto = (v) => typeof v === 'string' && v.trim().length > 5;
             const mapped = {
               name: remoteTeam.name || localTeam.name,
               shortName: remoteTeam.short_name || remoteTeam.shortName || localTeam.shortName,
@@ -1655,7 +1669,7 @@ const app = {
               city: remoteTeam.city !== undefined ? remoteTeam.city : localTeam.city,
               group: remoteTeam.group_letter || remoteTeam.group || localTeam.group,
               // Data Shield: Pertahankan logo lokal jika remote kosong
-              logo: (remoteTeam.logo && remoteTeam.logo.length > 10) ? remoteTeam.logo : (localTeam.logo || '')
+              logo: isValidPhoto(remoteTeam.logo) ? remoteTeam.logo : (localTeam.logo || '')
             };
             if (remoteTeam.category) mapped.category = remoteTeam.category;
 
@@ -1674,8 +1688,8 @@ const app = {
                   const lP = localPlayers[pIdx] || localPlayers.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
                   return {
                     ...rP,
-                    // KUNCI: Jangan pernah menghapus foto yang sudah ada jika remote kosong!
-                    photo: (rP.photo && rP.photo.length > 30) ? rP.photo : (lP.photo || ""),
+                    // KUNCI: Terima baik base64 maupun path assets/... dan jangan hapus jika remote kosong!
+                    photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || ""),
                     goals: (rP.goals !== undefined && rP.goals !== null) ? rP.goals : (lP.goals || 0),
                     yc: (rP.yc !== undefined && rP.yc !== null) ? rP.yc : (lP.yc || 0),
                     rc: (rP.rc !== undefined && rP.rc !== null) ? rP.rc : (lP.rc || 0)
@@ -1699,33 +1713,14 @@ const app = {
               jerseyHome: remoteTeam.official_jersey_home || (remoteTeam.official && remoteTeam.official.jerseyHome) || curOff.jerseyHome || '',
               jerseyAway: remoteTeam.official_jersey_away || (remoteTeam.official && remoteTeam.official.jerseyAway) || curOff.jerseyAway || '',
               // KUNCI: Jangan pernah menghapus foto pelatih / asisten jika remote kosong!
-              coachPhoto: (rCoachPhoto && rCoachPhoto.length > 30) ? rCoachPhoto : (curOff.coachPhoto || ''),
-              managerPhoto: (rManagerPhoto && rManagerPhoto.length > 30) ? rManagerPhoto : (curOff.managerPhoto || '')
+              coachPhoto: isValidPhoto(rCoachPhoto) ? rCoachPhoto : (curOff.coachPhoto || ''),
+              managerPhoto: isValidPhoto(rManagerPhoto) ? rManagerPhoto : (curOff.managerPhoto || '')
             };
 
             Object.assign(this.store.data.teams[idx], mapped);
           }
         });
       }
-
-      // Auto-upload local real photos/rosters to Supabase Cloud if local device has photos that cloud lacks
-      try {
-        if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.syncTeam) {
-          this.store.data.teams.forEach(locTeam => {
-            const remTeam = data.teams ? data.teams.find(rt => rt.id === locTeam.id) : null;
-            if (remTeam) {
-              const locHasCoachPhoto = locTeam.official && locTeam.official.coachPhoto && locTeam.official.coachPhoto.length > 50;
-              const remHasCoachPhoto = remTeam.coach_photo && remTeam.coach_photo.length > 50;
-              const locHasPlayerPhotos = locTeam.players && locTeam.players.some(p => p.photo && p.photo.length > 50);
-              const remHasPlayerPhotos = remTeam.players && remTeam.players.some(p => p.photo && p.photo.length > 50);
-
-              if ((locHasCoachPhoto && !remHasCoachPhoto) || (locHasPlayerPhotos && !remHasPlayerPhotos)) {
-                window.SupabaseService.syncTeam(locTeam).catch(() => {});
-              }
-            }
-          });
-        }
-      } catch (_) {}
 
       // Terapkan logo dari registry cloud lintas-perangkat (prioritas tertinggi)
       if (data.teamLogos && typeof data.teamLogos === 'object') {
@@ -1736,32 +1731,6 @@ const app = {
           }
         });
       }
-
-      // Auto-upload local logos to Supabase registry if local device has logos not yet in cloud
-      try {
-        if (window.SupabaseService && window.SupabaseService.isConfigured) {
-          const localLogos = {};
-          let needsRegistrySync = false;
-          const cloudLogos = data.teamLogos || {};
-          this.store.data.teams.forEach(t => {
-            if (t.id && t.logo) {
-              localLogos[t.id] = t.logo;
-              if (!cloudLogos[t.id] || cloudLogos[t.id] !== t.logo) {
-                needsRegistrySync = true;
-              }
-            }
-          });
-          if (needsRegistrySync && Object.keys(localLogos).length > 0) {
-            const merged = { ...cloudLogos, ...localLogos };
-            window.SupabaseService.client.from('tournament_config').upsert({
-              id: 'team_logos_registry',
-              tournament_name: 'Team Logos Registry',
-              rules_text: JSON.stringify(merged),
-              updated_at: new Date().toISOString()
-            }).then(() => {}).catch(() => {});
-          }
-        }
-      } catch (_) {}
 
       if (data.moments && data.moments.length > 0) this.store.data.moments = data.moments;
       if (data.sponsors && (Array.isArray(data.sponsors) ? data.sponsors.length > 0 : true)) {
@@ -1908,6 +1877,7 @@ const app = {
       }
     } else if (table === 'teams') {
       const idx = this.store.data.teams.findIndex(t => t.id === payload.id);
+      const isValidPhoto = (v) => typeof v === 'string' && v.trim().length > 5;
       if (idx !== -1) {
         const localTeam = this.store.data.teams[idx];
         const curOff = localTeam.official || {};
@@ -1918,7 +1888,7 @@ const app = {
           badgeColor: payload.badge_color || payload.badgeColor || localTeam.badgeColor,
           city: payload.city !== undefined ? payload.city : localTeam.city,
           group: payload.group_letter || payload.group || localTeam.group,
-          logo: (payload.logo && payload.logo.length > 10) ? payload.logo : (localTeam.logo || '')
+          logo: isValidPhoto(payload.logo) ? payload.logo : (localTeam.logo || '')
         };
         if (payload.category) mapped.category = payload.category;
 
@@ -1935,7 +1905,7 @@ const app = {
               const lP = localPlayers[pIdx] || localPlayers.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
               return {
                 ...rP,
-                photo: (rP.photo && rP.photo.length > 30) ? rP.photo : (lP.photo || ""),
+                photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || ""),
                 goals: (rP.goals !== undefined && rP.goals !== null) ? rP.goals : (lP.goals || 0),
                 yc: (rP.yc !== undefined && rP.yc !== null) ? rP.yc : (lP.yc || 0),
                 rc: (rP.rc !== undefined && rP.rc !== null) ? rP.rc : (lP.rc || 0)
@@ -1958,23 +1928,28 @@ const app = {
           phone: payload.official_phone || (payload.official && payload.official.phone) || curOff.phone || '',
           jerseyHome: payload.official_jersey_home || (payload.official && payload.official.jerseyHome) || curOff.jerseyHome || '',
           jerseyAway: payload.official_jersey_away || (payload.official && payload.official.jerseyAway) || curOff.jerseyAway || '',
-          coachPhoto: (rCoachPhoto && rCoachPhoto.length > 30) ? rCoachPhoto : (curOff.coachPhoto || ''),
-          managerPhoto: (rManagerPhoto && rManagerPhoto.length > 30) ? rManagerPhoto : (curOff.managerPhoto || '')
+          coachPhoto: isValidPhoto(rCoachPhoto) ? rCoachPhoto : (curOff.coachPhoto || ''),
+          managerPhoto: isValidPhoto(rManagerPhoto) ? rManagerPhoto : (curOff.managerPhoto || '')
         };
 
         Object.assign(this.store.data.teams[idx], mapped);
       } else {
         this.store.data.teams.push(payload);
       }
-      this.store.saveData();
-      if (!this.isUserEditing()) {
-        this.renderTeams();
-        this.renderStandings();
-        const activeTeamModal = document.getElementById("teamModal");
-        if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId === payload.id) {
-          try { this.openTeamModal(payload.id); } catch (_) {}
+      // Debounce saveData & DOM render agar tidak freeze saat beberapa laptop mengedit bersamaan
+      if (this._teamRealtimeTimer) clearTimeout(this._teamRealtimeTimer);
+      const lastTeamId = payload.id;
+      this._teamRealtimeTimer = setTimeout(() => {
+        this.store.saveData();
+        if (!this.isUserEditing()) {
+          this.renderTeams();
+          this.renderStandings();
+          const activeTeamModal = document.getElementById("teamModal");
+          if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId === lastTeamId) {
+            try { this.openTeamModal(lastTeamId); } catch (_) {}
+          }
         }
-      }
+      }, 450);
     } else if (table === 'moments') {
       if (!this.store.data.moments) this.store.data.moments = [];
       const idx = this.store.data.moments.findIndex(m => m.id === payload.id);

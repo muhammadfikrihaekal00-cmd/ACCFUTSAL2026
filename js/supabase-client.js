@@ -419,28 +419,29 @@
           if (rem) existingRem = rem;
         } catch (_) {}
 
-        // Non-destructive photo & logo preservation
+        // Non-destructive photo & logo preservation (mendukung base64, URL cloud, & path assets/...)
+        const hasImg = (v) => typeof v === 'string' && v.trim().length > 5;
         let coachPhoto = team.official ? (team.official.coachPhoto || team.coach_photo || '') : '';
-        if ((!coachPhoto || coachPhoto.length < 30) && existingRem && existingRem.coach_photo && existingRem.coach_photo.length > 30) {
+        if (!hasImg(coachPhoto) && existingRem && hasImg(existingRem.coach_photo)) {
           coachPhoto = existingRem.coach_photo;
         }
         let managerPhoto = team.official ? (team.official.managerPhoto || team.manager_photo || '') : '';
-        if ((!managerPhoto || managerPhoto.length < 30) && existingRem && existingRem.manager_photo && existingRem.manager_photo.length > 30) {
+        if (!hasImg(managerPhoto) && existingRem && hasImg(existingRem.manager_photo)) {
           managerPhoto = existingRem.manager_photo;
         }
         let logo = team.logo || '';
-        if ((!logo || logo.length < 20) && existingRem && existingRem.logo && existingRem.logo.length > 20) {
+        if (!hasImg(logo) && existingRem && hasImg(existingRem.logo)) {
           logo = existingRem.logo;
         }
         let players = Array.isArray(team.players) ? [...team.players] : [];
         if (existingRem && Array.isArray(existingRem.players) && existingRem.players.length > 0) {
-          const remHasPhotos = existingRem.players.some(p => p.photo && p.photo.length > 30);
+          const remHasPhotos = existingRem.players.some(p => hasImg(p.photo));
           if (remHasPhotos) {
             players = players.map((p, pIdx) => {
               const rP = existingRem.players[pIdx] || existingRem.players.find(x => x.no === p.no || (x.name && x.name === p.name));
               return {
                 ...p,
-                photo: (p.photo && p.photo.length > 30) ? p.photo : (rP && rP.photo ? rP.photo : '')
+                photo: hasImg(p.photo) ? p.photo : (rP && hasImg(rP.photo) ? rP.photo : '')
               };
             });
           }

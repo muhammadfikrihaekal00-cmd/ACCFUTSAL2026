@@ -5211,96 +5211,117 @@ const admin = window.admin = Object.assign(window.admin || {}, {
 
   restorePendingDraftsOnBoot() {
     try {
-      // 1. Cek draft Batch Upload Folder Tim (jika sempat reload / keluar mendadak saat input folder)
+      let draftType = null;
+      let draftLabel = "";
+
       const rawBatch = localStorage.getItem(this.DRAFT_BATCH_KEY);
       if (rawBatch) {
         const parsedBatch = JSON.parse(rawBatch);
         const ageMs = Date.now() - (parsedBatch.savedAt || 0);
-        // Pulihkan jika draft berusia kurang dari 12 jam dan ada isinya
         if (ageMs < 12 * 3600 * 1000 && ((parsedBatch.teams && parsedBatch.teams.length > 0) || parsedBatch.pasteText)) {
-          const modal = document.getElementById("modalBatchUploadTeams");
-          if (modal) {
-            this.batchParsedTeams = Array.isArray(parsedBatch.teams) ? parsedBatch.teams : [];
-            const pasteInput = document.getElementById("batchTextPasteInput");
-            if (pasteInput && parsedBatch.pasteText) pasteInput.value = parsedBatch.pasteText;
-            if (this.batchParsedTeams.length > 0) {
-              this.renderBatchUploadPreview();
-              const btnSave = document.getElementById("btnBatchSaveTeams");
-              if (btnSave) btnSave.style.display = "inline-flex";
-              const statusEl = document.getElementById("batchUploadStatus");
-              if (statusEl) {
-                statusEl.style.display = "block";
-                statusEl.innerHTML = `<div style="background:#ecfdf5; border:1px solid #10b981; color:#065f46; padding:10px 12px; border-radius:8px; font-size:0.8rem; font-weight:700;">🛡️ Draft pengisian folder (${this.batchParsedTeams.length} tim) otomatis dipulihkan! Anda bisa langsung melanjutkan tanpa mengulang dari awal.</div>`;
-              }
-            }
-            modal.classList.add("active");
-            if (window.app && typeof app.showToast === "function") {
-              app.showToast("🛡️ Draft folder tim terakhir Anda otomatis dipulihkan!");
-            }
-            return;
-          }
+          draftType = "batch";
+          draftLabel = `Folder Tim (${(parsedBatch.teams || []).length} tim)`;
         } else {
           this.clearBatchUploadDraft();
         }
       }
 
-      // 2. Cek draft Form Input/Edit Tim (jika sempat reload / keluar mendadak saat mengetik tim)
-      const rawTeam = localStorage.getItem(this.DRAFT_TEAM_KEY);
-      if (rawTeam) {
-        const draft = JSON.parse(rawTeam);
-        const ageMs = Date.now() - (draft.savedAt || 0);
-        if (ageMs < 12 * 3600 * 1000 && (draft.name || draft.coach || (draft.players && draft.players.some(p => p.name)))) {
-          if (!this.isAuthenticated) {
-            this.isAuthenticated = true;
-            this.updateAdminUi();
+      if (!draftType) {
+        const rawTeam = localStorage.getItem(this.DRAFT_TEAM_KEY);
+        if (rawTeam) {
+          const draft = JSON.parse(rawTeam);
+          const ageMs = Date.now() - (draft.savedAt || 0);
+          if (ageMs < 12 * 3600 * 1000 && (draft.name || draft.coach || (draft.players && draft.players.some(p => p.name)))) {
+            draftType = "team";
+            draftLabel = draft.name || "Tim Baru";
+          } else {
+            this.clearTeamEditorDraft();
           }
-          this.populateTeamEditorSelect(draft.id || "");
-          const titleEl = document.getElementById("teamEditorModalTitle");
-          if (titleEl) titleEl.textContent = draft.id ? `✏️ Lanjutkan Edit Tim: ${draft.name || draft.id}` : "➕ Lanjutkan Input Tim Baru (Draft)";
-          const setVal = (elId, v) => { const el = document.getElementById(elId); if (el) el.value = v || ""; };
-          setVal("editTeamId", draft.id);
-          setVal("editTeamName", draft.name);
-          setVal("editTeamShortName", draft.shortName);
-          setVal("editTeamCategory", draft.category || "SMP");
-          setVal("editTeamGroup", draft.group || "A");
-          setVal("editTeamCity", draft.city);
-          setVal("editTeamColor", draft.badgeColor || "#10b981");
-          setVal("editTeamColorPicker", draft.badgeColor || "#10b981");
-          setVal("editTeamLogo", draft.logo);
-          setVal("editTeamCoach", draft.coach);
-          setVal("editTeamCoachPhoto", draft.coachPhoto);
-          setVal("editTeamManager", draft.manager);
-          setVal("editTeamManagerPhoto", draft.managerPhoto);
-          setVal("editTeamMedic", draft.medic);
-          setVal("editTeamPhone", draft.phone);
-          setVal("editTeamJerseyHome", draft.jerseyHome);
-          setVal("editTeamJerseyAway", draft.jerseyAway);
-
-          const logoThumb = document.getElementById("teamLogoThumb");
-          if (logoThumb) logoThumb.src = draft.logo || "assets/acc_logo.png";
-          const coachThumb = document.getElementById("coachPhotoThumb");
-          if (coachThumb) {
-            coachThumb.src = draft.coachPhoto || "";
-            coachThumb.style.display = draft.coachPhoto ? "block" : "none";
-          }
-          const managerThumb = document.getElementById("managerPhotoThumb");
-          if (managerThumb) {
-            managerThumb.src = draft.managerPhoto || "";
-            managerThumb.style.display = draft.managerPhoto ? "block" : "none";
-          }
-          const btnDelete = document.getElementById("btnDeleteTeam");
-          if (btnDelete) btnDelete.style.display = draft.id ? "inline-flex" : "none";
-
-          this.renderPlayerRows(Array.isArray(draft.players) ? draft.players : []);
-          this.teamEditorDirty = true;
-          const modal = document.getElementById("teamEditorModal");
-          if (modal) modal.classList.add("active");
-          if (window.app && typeof app.showToast === "function") {
-            app.showToast("🛡️ Draft pengisian tim terakhir Anda otomatis dipulihkan!");
-          }
-        } else {
-          this.clearTeamEditorDraft();
         }
+      }
+
+      if (!draftType) return;
+
+      // Tampilkan banner pengingat non-blocking di pojok bawah agar TIDAK pernah menghalangi klik layar utama
+      const existing = document.getElementById("draftRecoveryBanner");
+      if (existing) existing.remove();
+
+      const banner = document.createElement("div");
+      banner.id = "draftRecoveryBanner";
+      banner.style.cssText = "position:fixed; bottom:74px; right:16px; z-index:1800; background:#065f46; color:#ffffff; padding:12px 16px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.3); display:flex; align-items:center; gap:10px; max-width:92vw; flex-wrap:wrap; font-size:0.8rem; border:1.5px solid #34d399;";
+      banner.innerHTML = `
+        <span>🛡️ Draft <strong>${draftLabel}</strong> belum tersimpan!</span>
+        <button type="button" onclick="admin.resumeSavedDraft('${draftType}')" style="background:#10b981; color:#fff; border:none; border-radius:8px; padding:5px 12px; font-weight:700; cursor:pointer; font-size:0.78rem;">▶️ Lanjutkan</button>
+        <button type="button" onclick="admin.discardSavedDraft('${draftType}')" style="background:rgba(255,255,255,0.18); color:#fff; border:none; border-radius:8px; padding:5px 10px; font-weight:600; cursor:pointer; font-size:0.75rem;">✕ Buang</button>
+      `;
+      document.body.appendChild(banner);
+    } catch (_) {}
+  },
+
+  discardSavedDraft(type) {
+    if (type === "batch") this.clearBatchUploadDraft();
+    if (type === "team") this.clearTeamEditorDraft();
+    const el = document.getElementById("draftRecoveryBanner");
+    if (el) el.remove();
+  },
+
+  resumeSavedDraft(type) {
+    const el = document.getElementById("draftRecoveryBanner");
+    if (el) el.remove();
+    try {
+      if (type === "batch") {
+        this.openBatchUploadModal();
+        return;
+      }
+      if (type === "team") {
+        const rawTeam = localStorage.getItem(this.DRAFT_TEAM_KEY);
+        if (!rawTeam) return;
+        const draft = JSON.parse(rawTeam);
+        if (!this.isAuthenticated) {
+          this.isAuthenticated = true;
+          this.updateAdminUi();
+        }
+        this.populateTeamEditorSelect(draft.id || "");
+        const titleEl = document.getElementById("teamEditorModalTitle");
+        if (titleEl) titleEl.textContent = draft.id ? `✏️ Lanjutkan Edit Tim: ${draft.name || draft.id}` : "➕ Lanjutkan Input Tim Baru (Draft)";
+        const setVal = (elId, v) => { const inp = document.getElementById(elId); if (inp) inp.value = v || ""; };
+        setVal("editTeamId", draft.id);
+        setVal("editTeamName", draft.name);
+        setVal("editTeamShortName", draft.shortName);
+        setVal("editTeamCategory", draft.category || "SMP");
+        setVal("editTeamGroup", draft.group || "A");
+        setVal("editTeamCity", draft.city);
+        setVal("editTeamColor", draft.badgeColor || "#10b981");
+        setVal("editTeamColorPicker", draft.badgeColor || "#10b981");
+        setVal("editTeamLogo", draft.logo);
+        setVal("editTeamCoach", draft.coach);
+        setVal("editTeamCoachPhoto", draft.coachPhoto);
+        setVal("editTeamManager", draft.manager);
+        setVal("editTeamManagerPhoto", draft.managerPhoto);
+        setVal("editTeamMedic", draft.medic);
+        setVal("editTeamPhone", draft.phone);
+        setVal("editTeamJerseyHome", draft.jerseyHome);
+        setVal("editTeamJerseyAway", draft.jerseyAway);
+
+        const logoThumb = document.getElementById("teamLogoThumb");
+        if (logoThumb) logoThumb.src = draft.logo || "assets/acc_logo.png";
+        const coachThumb = document.getElementById("coachPhotoThumb");
+        if (coachThumb) {
+          coachThumb.src = draft.coachPhoto || "";
+          coachThumb.style.display = draft.coachPhoto ? "block" : "none";
+        }
+        const managerThumb = document.getElementById("managerPhotoThumb");
+        if (managerThumb) {
+          managerThumb.src = draft.managerPhoto || "";
+          managerThumb.style.display = draft.managerPhoto ? "block" : "none";
+        }
+        const btnDelete = document.getElementById("btnDeleteTeam");
+        if (btnDelete) btnDelete.style.display = draft.id ? "inline-flex" : "none";
+
+        this.renderPlayerRows(Array.isArray(draft.players) ? draft.players : []);
+        this.teamEditorDirty = true;
+        const modal = document.getElementById("teamEditorModal");
+        if (modal) modal.classList.add("active");
       }
     } catch (_) {}
   },
