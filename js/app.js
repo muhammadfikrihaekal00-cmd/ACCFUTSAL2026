@@ -954,7 +954,7 @@ var app = window.app = Object.assign(window.app || {}, {
       targetMatches = matches.slice(0, 8);
     }
 
-    const tName = config.tournamentName || 'ACC "Al-Fayyadh Champions Cup" 2026';
+    const tName = config.tournamentName || 'ACC 2026';
     const venue = config.venue || "GOR Futsal MTQ Al-Fayyadh Maros";
 
     let text = `🏆 *REKAP HASIL PERTANDINGAN RESMI*\n`;
@@ -1040,7 +1040,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
   shareToWhatsApp() {
     const config = (this.store && this.store.data && this.store.data.config) || {};
-    const tName = config.tournamentName || 'ACC "Al-Fayyadh Champions Cup" 2026';
+    const tName = config.tournamentName || 'ACC 2026';
     const text = encodeURIComponent(
       `🏆 *${tName}*\n` +
       `Pantau jadwal pertandingan, skor langsung (live score), klasemen grup, bagan fase gugur, dan sanksi kartu di portal resmi turnamen:\n` +

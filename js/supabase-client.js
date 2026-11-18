@@ -180,7 +180,7 @@
         if (this.channel) {
           try {
             this.client.removeChannel(this.channel);
-          } catch (e) {}
+          } catch (e) { }
         }
         this.channel = this.client.channel('tournament_live_channel')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => {
@@ -258,13 +258,13 @@
           if (logosRow && logosRow.rules_text) {
             try {
               teamLogos = JSON.parse(logosRow.rules_text) || {};
-            } catch (_) {}
+            } catch (_) { }
           }
           const metaRow = configListRes.data.find(c => c.id === 'team_meta_registry');
           if (metaRow && metaRow.rules_text) {
             try {
               teamMeta = JSON.parse(metaRow.rules_text) || {};
-            } catch (_) {}
+            } catch (_) { }
           }
         }
 
@@ -433,7 +433,7 @@
 
         let registry = {};
         if (data && data.rules_text) {
-          try { registry = JSON.parse(data.rules_text) || {}; } catch (_) {}
+          try { registry = JSON.parse(data.rules_text) || {}; } catch (_) { }
         }
         registry[teamId] = logoUrl || '';
 
@@ -465,7 +465,7 @@
 
         let registry = {};
         if (existing && existing.rules_text) {
-          try { registry = JSON.parse(existing.rules_text) || {}; } catch (_) {}
+          try { registry = JSON.parse(existing.rules_text) || {}; } catch (_) { }
         }
         registry[teamId] = {
           category: category || (registry[teamId] && registry[teamId].category) || 'SMP',
@@ -523,7 +523,7 @@
                 });
             }
           }
-        } catch (_) {}
+        } catch (_) { }
         return true;
       } catch (e) {
         return false;
@@ -544,7 +544,7 @@
         try {
           const { data: rem } = await this.client.from('teams').select('*').eq('id', team.id).maybeSingle();
           if (rem) existingRem = rem;
-        } catch (_) {}
+        } catch (_) { }
 
         // Non-destructive photo & logo preservation (mendukung base64, URL cloud, & path assets/...)
         const hasImg = (v) => typeof v === 'string' && v.trim().length > 5;
@@ -627,7 +627,7 @@
           try {
             const { data: remList } = await this.client.from('teams').select('*');
             if (remList && Array.isArray(remList)) existingRemoteTeams = remList;
-          } catch (_) {}
+          } catch (_) { }
 
           // Safely merge logos registry without overwriting existing cloud logos!
           try {
@@ -638,7 +638,7 @@
               .maybeSingle();
             let remoteReg = {};
             if (regRow && regRow.rules_text) {
-              try { remoteReg = JSON.parse(regRow.rules_text) || {}; } catch (_) {}
+              try { remoteReg = JSON.parse(regRow.rules_text) || {}; } catch (_) { }
             }
             const localLogos = {};
             data.teams.forEach(t => {
@@ -726,7 +726,7 @@
               .maybeSingle();
             let remoteMeta = {};
             if (metaRow && metaRow.rules_text) {
-              try { remoteMeta = JSON.parse(metaRow.rules_text) || {}; } catch (_) {}
+              try { remoteMeta = JSON.parse(metaRow.rules_text) || {}; } catch (_) { }
             }
             data.teams.forEach(t => {
               if (!t || !t.id) return;
@@ -742,7 +742,7 @@
               rules_text: JSON.stringify(remoteMeta),
               updated_at: new Date().toISOString()
             });
-          } catch (_) {}
+          } catch (_) { }
 
           let { error: teamErr } = await this.client.from('teams').upsert(teamsPayload);
           if (teamErr) {
