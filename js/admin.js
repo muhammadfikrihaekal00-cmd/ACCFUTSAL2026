@@ -1489,10 +1489,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     setVal("settingAnnouncement", cleanAnn);
 
     // MVP fields
-    const mvp = (app.store.data.homeData && app.store.data.homeData.mvp) || DEFAULT_DATA.homeData.mvp;
+    const mvp = (app.store.data.homeData && app.store.data.homeData.mvp) || {};
     if (mvp) {
       if (document.getElementById("settingMvpName")) document.getElementById("settingMvpName").value = mvp.name || "";
-      if (document.getElementById("settingMvpNumber")) document.getElementById("settingMvpNumber").value = mvp.number || 10;
+      if (document.getElementById("settingMvpNumber")) document.getElementById("settingMvpNumber").value = mvp.number || "";
       if (document.getElementById("settingMvpTeam")) document.getElementById("settingMvpTeam").value = mvp.team || "";
       if (document.getElementById("settingMvpPos")) document.getElementById("settingMvpPos").value = mvp.position || "";
       if (document.getElementById("settingMvpGoals")) document.getElementById("settingMvpGoals").value = mvp.goals || 0;
@@ -1602,22 +1602,29 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     cfg.runningAnnouncement = savedAnn;
 
     // Save MVP
-    if (!app.store.data.homeData) app.store.data.homeData = JSON.parse(JSON.stringify(DEFAULT_DATA.homeData));
-    if (!app.store.data.homeData.mvp) app.store.data.homeData.mvp = {};
-
-    const mvp = app.store.data.homeData.mvp;
-    if (document.getElementById("settingMvpName")) mvp.name = document.getElementById("settingMvpName").value.trim();
-    if (document.getElementById("settingMvpNumber")) mvp.number = parseInt(document.getElementById("settingMvpNumber").value, 10) || 10;
-    if (document.getElementById("settingMvpTeam")) mvp.team = document.getElementById("settingMvpTeam").value.trim();
-    if (document.getElementById("settingMvpPos")) mvp.position = document.getElementById("settingMvpPos").value.trim();
-    if (document.getElementById("settingMvpGoals")) mvp.goals = parseInt(document.getElementById("settingMvpGoals").value, 10) || 0;
-    if (document.getElementById("settingMvpAssists")) mvp.assists = parseInt(document.getElementById("settingMvpAssists").value, 10) || 0;
-    if (document.getElementById("settingMvpQuote")) mvp.quote = document.getElementById("settingMvpQuote").value.trim();
+    if (!app.store.data.homeData) app.store.data.homeData = { mvp: null, news: [], moments: [], sponsors: { platinum: [], gold: [], media: [] } };
+    const mvpNameVal = (document.getElementById("settingMvpName")?.value || "").trim();
+    if (mvpNameVal) {
+      if (!app.store.data.homeData.mvp) app.store.data.homeData.mvp = {};
+      const mvp = app.store.data.homeData.mvp;
+      mvp.name = mvpNameVal;
+      if (document.getElementById("settingMvpNumber")) mvp.number = parseInt(document.getElementById("settingMvpNumber").value, 10) || 10;
+      if (document.getElementById("settingMvpTeam")) mvp.team = document.getElementById("settingMvpTeam").value.trim();
+      if (document.getElementById("settingMvpPos")) mvp.position = document.getElementById("settingMvpPos").value.trim();
+      if (document.getElementById("settingMvpGoals")) mvp.goals = parseInt(document.getElementById("settingMvpGoals").value, 10) || 0;
+      if (document.getElementById("settingMvpAssists")) mvp.assists = parseInt(document.getElementById("settingMvpAssists").value, 10) || 0;
+      if (document.getElementById("settingMvpQuote")) mvp.quote = document.getElementById("settingMvpQuote").value.trim();
+    } else {
+      app.store.data.homeData.mvp = null;
+    }
 
     app.store.saveData();
+    if (window.SupabaseService && typeof window.SupabaseService.syncConfig === "function") {
+      await window.SupabaseService.syncConfig(cfg);
+    }
     app.renderHeader();
     if (app.currentTab === "home") app.renderHome();
-    app.showToast("Pengaturan turnamen & MVP berhasil diperbarui!");
+    app.showToast("☁️ Pengaturan turnamen berhasil disimpan ke Database Online!");
     document.getElementById("adminDashboardModal").classList.remove("active");
   },
 
@@ -2734,7 +2741,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
                 restoredPhotosCount++;
                 teamModified = true;
               }
-              if (oldTeam.official.coach && !oldTeam.official.coach.includes("Guardiola") && !oldTeam.official.coach.includes("Deschamps")) {
+              if (oldTeam.official.coach && !curTeam.official.coach) {
                 curTeam.official.coach = oldTeam.official.coach;
                 teamModified = true;
               }
@@ -2754,11 +2761,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             // Players
             if (Array.isArray(oldTeam.players) && oldTeam.players.length > 0) {
               const oldHasPhotos = oldTeam.players.some(p => p.photo && p.photo.length > 40);
-              const oldHasRealNames = oldTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
-              const curHasRealNames = curTeam.players && curTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
               const curHasPhotos = curTeam.players && curTeam.players.some(p => p.photo && p.photo.length > 40);
 
-              if ((oldHasPhotos && !curHasPhotos) || (oldHasRealNames && !curHasRealNames)) {
+              if (oldHasPhotos && !curHasPhotos) {
                 curTeam.players = JSON.parse(JSON.stringify(oldTeam.players));
                 restoredPhotosCount += oldTeam.players.filter(p => p.photo && p.photo.length > 30).length;
                 teamModified = true;

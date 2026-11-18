@@ -184,19 +184,35 @@
         }
         this.channel = this.client.channel('tournament_live_channel')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, payload => {
-            this.notifyListeners('matches', payload.new || payload.old);
+            if (payload.eventType === 'DELETE') {
+              this.notifyListeners('matches', { id: payload.old && payload.old.id, _deleted: true });
+            } else {
+              this.notifyListeners('matches', payload.new || payload.old);
+            }
           })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, payload => {
-            this.notifyListeners('teams', payload.new || payload.old);
+            if (payload.eventType === 'DELETE') {
+              this.notifyListeners('teams', { id: payload.old && payload.old.id, _deleted: true });
+            } else {
+              this.notifyListeners('teams', payload.new || payload.old);
+            }
           })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'moments' }, payload => {
-            this.notifyListeners('moments', payload.new || payload.old);
+            if (payload.eventType === 'DELETE') {
+              this.notifyListeners('moments', { id: payload.old && payload.old.id, _deleted: true });
+            } else {
+              this.notifyListeners('moments', payload.new || payload.old);
+            }
           })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_config' }, payload => {
             this.notifyListeners('config', payload.new || payload.old);
           })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'sponsors' }, payload => {
-            this.notifyListeners('sponsors', payload.new || payload.old);
+            if (payload.eventType === 'DELETE') {
+              this.notifyListeners('sponsors', { id: payload.old && payload.old.id, _deleted: true });
+            } else {
+              this.notifyListeners('sponsors', payload.new || payload.old);
+            }
           })
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
@@ -635,17 +651,8 @@
           const teamsPayload = data.teams.map(t => {
             const rem = existingRemoteTeams.find(r => r.id === t.id);
 
-            // Cek apakah tim lokal masih default placeholder, sedangkan cloud sudah ada data asli
-            let teamName = t.name;
-            let shortName = t.shortName;
-            if (rem && rem.name && rem.name !== teamName) {
-              const locIsPlaceholder = (teamName.startsWith("SMP ") || teamName.startsWith("SD ") || teamName.startsWith("TAIPA") || teamName.includes("Mandai"));
-              const remIsReal = (!rem.name.startsWith("SMP ") && !rem.name.startsWith("TAIPA") && !rem.name.includes("Mandai"));
-              if (locIsPlaceholder && remIsReal) {
-                teamName = rem.name;
-                if (rem.short_name) shortName = rem.short_name;
-              }
-            }
+            const teamName = t.name || (rem ? rem.name : '');
+            const shortName = t.shortName || (rem ? rem.short_name : (teamName || '').substring(0, 10).toUpperCase());
 
             // Pertahankan foto pelatih & asisten jika lokal kosong
             let coachPhoto = t.official ? (t.official.coachPhoto || t.coach_photo || '') : '';
@@ -655,12 +662,6 @@
             let managerPhoto = t.official ? (t.official.managerPhoto || t.manager_photo || '') : '';
             if ((!managerPhoto || managerPhoto.length < 30) && rem && rem.manager_photo && rem.manager_photo.length > 30) {
               managerPhoto = rem.manager_photo;
-            }
-
-            // Pertahankan logo jika lokal kosong
-            let logo = t.logo || '';
-            if ((!logo || logo.length < 20) && rem && rem.logo && rem.logo.length > 20) {
-              logo = rem.logo;
             }
 
             // Pertahankan official contact jika lokal kosong
@@ -675,22 +676,16 @@
             let jerseyAway = t.official ? t.official.jerseyAway : '';
             if (!jerseyAway && rem && rem.official_jersey_away) jerseyAway = rem.official_jersey_away;
 
-            // Merge pemain & foto
+            // Merge pemain & pertahankan foto jika lokal kosong
             let players = Array.isArray(t.players) ? [...t.players] : [];
-            if (rem && Array.isArray(rem.players) && rem.players.length > 0) {
-              const locIsDummy = players.some(p => p.name && (p.name.includes("Ramsdale") || p.name.includes("Donnarumma") || p.name.includes("Pemain")));
-              const remIsReal = rem.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain"));
-              if (locIsDummy && remIsReal) {
-                players = rem.players;
-              } else {
-                players = players.map((p, pIdx) => {
-                  const rP = rem.players[pIdx] || rem.players.find(x => x.no === p.no || (x.name && x.name === p.name));
-                  return {
-                    ...p,
-                    photo: (p.photo && p.photo.length > 30) ? p.photo : (rP && rP.photo ? rP.photo : '')
-                  };
-                });
-              }
+            if (rem && Array.isArray(rem.players) && rem.players.length > 0 && players.length > 0) {
+              players = players.map((p, pIdx) => {
+                const rP = rem.players[pIdx] || rem.players.find(x => x.no === p.no || (x.name && x.name === p.name));
+                return {
+                  ...p,
+                  photo: (p.photo && p.photo.length > 30) ? p.photo : (rP && rP.photo ? rP.photo : '')
+                };
+              });
             }
 
             return {

@@ -11,11 +11,11 @@ window.admin = window.admin || {
 
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026_clean_zero_v6";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v7";
     try {
       this.data = this.loadData();
     } catch (e) {
-      console.error("loadData fallback to DEFAULT_DATA:", e);
+      console.error("loadData fallback to empty schema:", e);
       this.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
     }
     try { this.syncPlayerStatsFromMatches(); } catch (e) { console.warn("syncPlayerStats notice:", e); }
@@ -67,301 +67,136 @@ class TournamentStore {
     };
   }
 
+  normalizeMatch(m, teams = []) {
+    if (!m || typeof m !== "object") return null;
+    const id = String(m.id || "").trim();
+    if (!id) return null;
+
+    const homeId = m.homeId !== undefined ? m.homeId : (m.home_id !== undefined && m.home_id !== null ? m.home_id : "");
+    const awayId = m.awayId !== undefined ? m.awayId : (m.away_id !== undefined && m.away_id !== null ? m.away_id : "");
+    const stage = m.stage || (/(QF|SF|3RD|FINAL)/i.test(id) ? "knockout" : "group");
+    const group = m.group !== undefined ? m.group : (m.group_letter || "");
+    const roundName = m.roundName !== undefined ? m.roundName : (m.round_name || "");
+    const status = m.status || "upcoming";
+
+    // Infer category secara dinamis dari properti match, ID/nama babak, atau kategori tim
+    let category = m.category || "";
+    if (!category) {
+      if (/_SD$/i.test(id) || /\bSD\b/i.test(roundName)) {
+        category = "SD";
+      } else if (/_SMP$/i.test(id) || /\bSMP\b/i.test(roundName)) {
+        category = "SMP";
+      } else {
+        const hTeam = homeId ? teams.find(t => t.id === homeId) : null;
+        const aTeam = awayId ? teams.find(t => t.id === awayId) : null;
+        if (hTeam && hTeam.category) category = hTeam.category;
+        else if (aTeam && aTeam.category) category = aTeam.category;
+        else {
+          const mNumMatch = id.match(/^M(\d+)$/i);
+          if (mNumMatch) {
+            const mNum = parseInt(mNumMatch[1], 10);
+            category = ((mNum >= 9 && mNum <= 16) || mNum >= 33) ? "SD" : "SMP";
+          } else {
+            category = "SMP";
+          }
+        }
+      }
+    }
+
+    const rHome = m.homeScore !== undefined ? m.homeScore : (m.home_score !== undefined ? m.home_score : null);
+    const rAway = m.awayScore !== undefined ? m.awayScore : (m.away_score !== undefined ? m.away_score : null);
+    const isUpcoming = status === "upcoming" || status === "scheduled";
+    const homeScore = isUpcoming ? null : (rHome !== null && rHome !== undefined ? parseInt(rHome, 10) : 0);
+    const awayScore = isUpcoming ? null : (rAway !== null && rAway !== undefined ? parseInt(rAway, 10) : 0);
+
+    const dateStr = m.date || "";
+    let day = m.day;
+    if (!day && dateStr) {
+      if (dateStr.includes("22")) day = 1;
+      else if (dateStr.includes("23")) day = 2;
+      else if (dateStr.includes("24")) day = 3;
+      else if (dateStr.includes("25")) day = 4;
+      else if (dateStr.includes("26")) day = 5;
+    }
+
+    const pitch = m.pitch || m.venue || "Lapangan Utama";
+    const pitchNum = m.pitchNum || (/2/.test(pitch) ? 2 : 1);
+
+    const normalized = {
+      id,
+      category,
+      group: group || null,
+      stage,
+      roundName,
+      day: day || 1,
+      date: dateStr,
+      time: m.time || "",
+      pitch,
+      pitchNum,
+      homeId: homeId || "",
+      awayId: awayId || "",
+      homePlaceholder: m.homePlaceholder !== undefined ? m.homePlaceholder : (m.home_placeholder || ""),
+      awayPlaceholder: m.awayPlaceholder !== undefined ? m.awayPlaceholder : (m.away_placeholder || ""),
+      status,
+      homeScore,
+      awayScore,
+      homeScoreLive: homeScore,
+      awayScoreLive: awayScore,
+      liveMinute: status === "live" ? (m.liveMinute || (m.minute_live ? `${parseInt(m.minute_live, 10) || 1}'` : "1'")) : "",
+      scorers: Array.isArray(m.scorers) ? m.scorers : [],
+      cards: Array.isArray(m.cards) ? m.cards : []
+    };
+
+    if (m.penaltyHomeScore !== undefined || m.penalty_home_score !== undefined) {
+      normalized.penaltyHomeScore = m.penaltyHomeScore !== undefined ? m.penaltyHomeScore : m.penalty_home_score;
+    }
+    if (m.penaltyAwayScore !== undefined || m.penalty_away_score !== undefined) {
+      normalized.penaltyAwayScore = m.penaltyAwayScore !== undefined ? m.penaltyAwayScore : m.penalty_away_score;
+    }
+    if (m.penaltyWinner !== undefined || m.penalty_winner !== undefined) {
+      normalized.penaltyWinner = m.penaltyWinner !== undefined ? m.penaltyWinner : m.penalty_winner;
+    }
+    if (m.liveStartedAt) normalized.liveStartedAt = m.liveStartedAt;
+    return normalized;
+  }
+
   loadData() {
-    let data;
+    let data = null;
     const saved = _safeStorageGet(localStorage, this.STORAGE_KEY);
     if (saved) {
       try {
         data = JSON.parse(saved);
       } catch (e) {
-        console.error("Gagal memuat data dari localStorage, menggunakan default", e);
+        console.warn("Cache lokal tidak valid, menunggu data online Supabase:", e);
       }
     }
 
-    if (!data || !Array.isArray(data.teams) || data.teams.length < 32) {
-      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const base = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    if (!data || typeof data !== "object") {
+      data = base;
     }
-    if (!Array.isArray(data.matches) || data.matches.length === 0) {
-      data.matches = JSON.parse(JSON.stringify(DEFAULT_DATA.matches));
-    }
+
+    // Pastikan struktur minimal selalu valid (tanpa pernah menyuntikkan data tim/laga/pemain tetap!)
     if (!data.config || typeof data.config !== "object") {
-      data.config = JSON.parse(JSON.stringify(DEFAULT_DATA.config));
+      data.config = base.config;
+    } else {
+      data.config = { ...base.config, ...data.config };
     }
-
-    // ------------------------------------------------------------------
-    // UNIVERSAL AUTO-RECOVERY ENGINE: Pulihkan otomatis seluruh tim, skuad & foto dari cache lokal lama
-    // ------------------------------------------------------------------
-    let needsSaveHealing = false;
-    try {
-      const storagePrefixes = [
-        "acc_futsal_tournament_2026_clean_zero_v5",
-        "acc_futsal_tournament_2026_clean_zero_v4",
-        "acc_futsal_tournament_2026_clean_zero_v3",
-        "acc_futsal_tournament_2026_clean_zero_v2",
-        "acc_futsal_tournament_2026_clean_zero_v1",
-        "acc_futsal_tournament_2026_clean_zero",
-        "acc_futsal_tournament_2026_clean_v6",
-        "acc_futsal_tournament_2026_clean_v5",
-        "acc_futsal_tournament_2026_v1",
-        "acc_tournament_data_v1"
-      ];
-      // Cari seluruh key localStorage yang pernah tersimpan di browser ini
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k !== this.STORAGE_KEY && (k.includes("acc_") || k.includes("futsal") || k.includes("tournament"))) {
-          if (!storagePrefixes.includes(k)) storagePrefixes.push(k);
-        }
-      }
-
-      let restoredPhotosCount = 0;
-      let restoredTeamsCount = 0;
-
-      storagePrefixes.forEach(oldKey => {
-        try {
-          const raw = localStorage.getItem(oldKey);
-          if (!raw) return;
-          const parsed = JSON.parse(raw);
-
-          // Pulihkan hasil pertandingan jika belum ada di data aktif
-          if (parsed && Array.isArray(parsed.matches) && (!data.matches || data.matches.every(m => m.homeScore === null))) {
-            parsed.matches.forEach((m, idx) => {
-              if (data.matches && data.matches[idx]) {
-                if (m.homeScore !== undefined && m.homeScore !== null) data.matches[idx].homeScore = m.homeScore;
-                if (m.awayScore !== undefined && m.awayScore !== null) data.matches[idx].awayScore = m.awayScore;
-                if (m.status) data.matches[idx].status = m.status;
-                if (m.scorers) data.matches[idx].scorers = m.scorers;
-                if (m.cards) data.matches[idx].cards = m.cards;
-              }
-            });
-          }
-
-          if (parsed && Array.isArray(parsed.teams) && parsed.teams.length > 0) {
-            parsed.teams.forEach(oldTeam => {
-              if (!oldTeam || !oldTeam.id) return;
-              const curTeam = data.teams.find(ct => ct.id === oldTeam.id);
-              if (!curTeam) return;
-
-              // A. Pulihkan Nama Tim Asli
-              if (oldTeam.name && oldTeam.name !== curTeam.name && !oldTeam.name.includes("SMA ") && !oldTeam.name.includes("TAIPA")) {
-                if (curTeam.name.startsWith("SMP ") || curTeam.name.startsWith("SD ") || curTeam.name.startsWith("UPTD") || curTeam.name.includes("Mandai")) {
-                  curTeam.name = oldTeam.name;
-                  if (oldTeam.shortName) curTeam.shortName = oldTeam.shortName;
-                  restoredTeamsCount++;
-                  needsSaveHealing = true;
-                }
-              }
-
-              // B. Pulihkan Logo Tim
-              if (oldTeam.logo && oldTeam.logo.length > 20 && (!curTeam.logo || curTeam.logo.length < oldTeam.logo.length)) {
-                curTeam.logo = oldTeam.logo;
-                restoredPhotosCount++;
-                needsSaveHealing = true;
-              }
-
-              // C. Pulihkan Struktur Official & Foto Pelatih / Asisten
-              if (oldTeam.official) {
-                if (!curTeam.official) curTeam.official = {};
-                if (oldTeam.official.coach && !oldTeam.official.coach.includes("Guardiola") && !oldTeam.official.coach.includes("Deschamps")) {
-                  curTeam.official.coach = oldTeam.official.coach;
-                  needsSaveHealing = true;
-                }
-                if (oldTeam.official.manager && (!curTeam.official.manager || curTeam.official.manager.length < oldTeam.official.manager.length)) {
-                  curTeam.official.manager = oldTeam.official.manager;
-                  needsSaveHealing = true;
-                }
-                if (oldTeam.official.medic && !curTeam.official.medic) {
-                  curTeam.official.medic = oldTeam.official.medic;
-                  needsSaveHealing = true;
-                }
-                if (oldTeam.official.phone && !curTeam.official.phone) {
-                  curTeam.official.phone = oldTeam.official.phone;
-                  needsSaveHealing = true;
-                }
-                if (oldTeam.official.jerseyHome && !curTeam.official.jerseyHome) {
-                  curTeam.official.jerseyHome = oldTeam.official.jerseyHome;
-                  needsSaveHealing = true;
-                }
-                if (oldTeam.official.jerseyAway && !curTeam.official.jerseyAway) {
-                  curTeam.official.jerseyAway = oldTeam.official.jerseyAway;
-                  needsSaveHealing = true;
-                }
-
-                // Foto Pelatih
-                const oldCPhoto = oldTeam.official.coachPhoto || oldTeam.coach_photo || oldTeam.coachPhoto || "";
-                if (oldCPhoto && oldCPhoto.length > 30 && (!curTeam.official.coachPhoto || curTeam.official.coachPhoto.length < oldCPhoto.length)) {
-                  curTeam.official.coachPhoto = oldCPhoto;
-                  restoredPhotosCount++;
-                  needsSaveHealing = true;
-                }
-                // Foto Asisten Pelatih
-                const oldMPhoto = oldTeam.official.managerPhoto || oldTeam.manager_photo || oldTeam.managerPhoto || "";
-                if (oldMPhoto && oldMPhoto.length > 30 && (!curTeam.official.managerPhoto || curTeam.official.managerPhoto.length < oldMPhoto.length)) {
-                  curTeam.official.managerPhoto = oldMPhoto;
-                  restoredPhotosCount++;
-                  needsSaveHealing = true;
-                }
-              }
-
-              // D. Pulihkan Skuad Pemain Resmi & Foto Pemain
-              if (Array.isArray(oldTeam.players) && oldTeam.players.length > 0) {
-                const oldHasPhotos = oldTeam.players.some(p => p.photo && p.photo.length > 40);
-                const oldHasRealNames = oldTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
-                const curHasRealNames = curTeam.players && curTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
-                const curHasPhotos = curTeam.players && curTeam.players.some(p => p.photo && p.photo.length > 40);
-
-                if ((oldHasPhotos && !curHasPhotos) || (oldHasRealNames && !curHasRealNames)) {
-                  curTeam.players = JSON.parse(JSON.stringify(oldTeam.players));
-                  restoredPhotosCount += (oldTeam.players.filter(p => p.photo && p.photo.length > 30).length);
-                  needsSaveHealing = true;
-                } else if (curTeam.players && oldTeam.players) {
-                  // Merge foto per pemain
-                  curTeam.players.forEach((p, pIdx) => {
-                    const matchedOldP = oldTeam.players[pIdx] || oldTeam.players.find(op => op.no === p.no || (op.name && op.name === p.name));
-                    if (matchedOldP && matchedOldP.photo && matchedOldP.photo.length > 30 && (!p.photo || p.photo.length < matchedOldP.photo.length)) {
-                      p.photo = matchedOldP.photo;
-                      restoredPhotosCount++;
-                      needsSaveHealing = true;
-                    }
-                  });
-                }
-              }
-            });
-          }
-        } catch (_) {}
-      });
-
-      if (restoredPhotosCount > 0 || restoredTeamsCount > 0) {
-        console.log(`🛡️ Auto-Recovery sukses memulihkan ${restoredPhotosCount} foto & ${restoredTeamsCount} data tim dari cache lokal!`);
-      }
-    } catch (e) {
-      console.warn("Auto-recovery engine error:", e);
+    if (!Array.isArray(data.teams)) data.teams = [];
+    if (!Array.isArray(data.matches)) data.matches = [];
+    if (!Array.isArray(data.moments)) data.moments = [];
+    if (!data.sponsors || typeof data.sponsors !== "object") {
+      data.sponsors = { platinum: [], gold: [], media: [] };
     }
-    if (data && data.config) {
-      if (!data.config.subTitle || data.config.subTitle.includes("â") || data.config.subTitle.includes("€") || !data.config.subTitle.includes("•")) {
-        data.config.subTitle = DEFAULT_DATA.config.subTitle;
-        needsSaveHealing = true;
-      }
-      if (!data.config.runningAnnouncement || data.config.runningAnnouncement.includes("ð") || data.config.runningAnnouncement.includes("â") || data.config.runningAnnouncement.includes("†") || !data.config.runningAnnouncement.startsWith("🏆")) {
-        data.config.runningAnnouncement = DEFAULT_DATA.config.runningAnnouncement;
-        needsSaveHealing = true;
-      }
-      if (!data.config.youtubeLiveUrl) {
-        data.config.youtubeLiveUrl = DEFAULT_DATA.config.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
-        needsSaveHealing = true;
-      }
-      if (!data.config.youtubeLiveTitle) {
-        data.config.youtubeLiveTitle = DEFAULT_DATA.config.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
-        needsSaveHealing = true;
-      }
+    if (!data.homeData || typeof data.homeData !== "object") {
+      data.homeData = { mvp: null, news: [], moments: [], sponsors: { platinum: [], gold: [], media: [] } };
     }
-    if (data && data.homeData && data.homeData.moments) {
-      data.homeData.moments.forEach((m, idx) => {
-        if (m.badge && (m.badge.includes("ð") || m.badge.includes("â") || m.badge.includes("†")) && DEFAULT_DATA.homeData.moments[idx]) {
-          m.badge = DEFAULT_DATA.homeData.moments[idx].badge;
-          needsSaveHealing = true;
-        }
-      });
-    }
-    if (data && data.sponsors) {
-      ['platinum', 'gold', 'media'].forEach(tier => {
-        if (data.sponsors[tier] && DEFAULT_DATA.homeData.sponsors[tier]) {
-          data.sponsors[tier].forEach((s, idx) => {
-            if (s.icon && (s.icon.includes("ð") || s.icon.includes("â") || s.icon.includes("†")) && DEFAULT_DATA.homeData.sponsors[tier][idx]) {
-              s.icon = DEFAULT_DATA.homeData.sponsors[tier][idx].icon;
-              needsSaveHealing = true;
-            }
-          });
-        }
-      });
-    }
-    if (needsSaveHealing) {
-      try {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-      } catch (err) {}
-    }
-    // Pastikan data sponsor selalu ada
-    if (!data.sponsors) {
-      if (data.homeData && data.homeData.sponsors) {
-        data.sponsors = data.homeData.sponsors;
-      } else {
-        data.sponsors = JSON.parse(JSON.stringify(DEFAULT_DATA.homeData.sponsors));
-      }
-    }
-    // Pastikan data moments selalu ada
-    if (!data.moments) {
-      if (data.homeData && data.homeData.moments) {
-        data.moments = data.homeData.moments;
-      } else {
-        data.moments = JSON.parse(JSON.stringify(DEFAULT_DATA.homeData.moments));
-      }
-    }
-    // Normalisasi seluruh tim agar tidak pernah crash (anti undefined official / shortName / name / players)
-    if (data.teams && Array.isArray(data.teams)) {
-      data.teams = data.teams.map((t, idx) => this.normalizeTeam(t, idx)).filter(Boolean);
-      data.teams.forEach(t => {
-        const numId = parseInt(String(t.id || '').replace(/\D/g, ''), 10) || 1;
-        if (!t.category) {
-          t.category = (numId >= 17) ? "SD" : "SMP";
-        }
-        // Normalize school prefix to SMP / MTs vs SD / MI
-        if (typeof t.name === "string") {
-          if (t.category === "SMP") {
-            t.name = t.name.replace(/^SMA /, "SMP ").replace(/^SMK /, "SMP ").replace(/^SMKN 1 /, "SMPN 1 ");
-          } else if (t.category === "SD") {
-            t.name = t.name.replace(/^SMA /, "SD ").replace(/^SMK /, "SD IT ").replace(/^MA /, "MI ").replace(/^MTQ /, "SD MTQ ");
-          }
-        }
-        if (t.logo === undefined) t.logo = "";
+    if (!Array.isArray(data.homeData.news)) data.homeData.news = [];
+    if (!Array.isArray(data.homeData.moments)) data.homeData.moments = [];
 
-        const defTeam = DEFAULT_DATA.teams.find(dt => dt.id === t.id);
-        if (defTeam) {
-          if (!t.logo && defTeam.logo) t.logo = defTeam.logo;
-          // Auto-heal nama tim yang masih template dummy
-          if (defTeam.name && (t.name === "SDN 215 INPRES TAIPA" || t.name === "SMP Urwah" || t.name.includes("TAIPA"))) {
-            t.name = defTeam.name;
-            t.shortName = defTeam.shortName;
-            t.players = JSON.parse(JSON.stringify(defTeam.players));
-            if (defTeam.official) t.official = JSON.parse(JSON.stringify(defTeam.official));
-            if (defTeam.logo) t.logo = defTeam.logo;
-          }
-          // Auto-heal jika skuad pemain masih nama dummy Eropa (seperti Aaron Ramsdale, Jordan Pickford, dsb.)
-          if (t.players && defTeam.players && t.players.length > 0) {
-            const firstP = (t.players[0] && t.players[0].name) ? t.players[0].name.trim() : "";
-            if (firstP === "Aaron Ramsdale" || firstP === "Jordan Pickford" || firstP === "Guglielmo Vicario" || firstP === "Peter Gulacsi" || firstP === "Koen Casteels") {
-              t.players = JSON.parse(JSON.stringify(defTeam.players));
-              if (defTeam.official) t.official = JSON.parse(JSON.stringify(defTeam.official));
-              if (defTeam.name) t.name = defTeam.name;
-              if (defTeam.shortName) t.shortName = defTeam.shortName;
-              if (defTeam.logo) t.logo = defTeam.logo;
-            }
-          }
-          if (defTeam.official) {
-            if (!t.official) t.official = {};
-            if (!t.official.coachPhoto && defTeam.official.coachPhoto) {
-              t.official.coachPhoto = defTeam.official.coachPhoto;
-            }
-          }
-          if (t.players && defTeam.players) {
-            t.players.forEach(p => {
-              const defPlayer = defTeam.players.find(dp => dp.name === p.name || dp.no === p.no);
-              if (defPlayer && defPlayer.photo && !p.photo) {
-                p.photo = defPlayer.photo;
-              }
-            });
-          }
-        }
-      });
-    }
-
-    // Pastikan laga terhubung dengan kategori
-    if (data.matches && Array.isArray(data.matches)) {
-      data.matches.forEach(m => {
-        if (!m.category) {
-          const homeTeam = data.teams.find(t => t.id === m.homeId);
-          m.category = (homeTeam && homeTeam.category) || (m.group === "C" || m.group === "D" ? "SD" : "SMP");
-        }
-      });
-    }
+    // Normalisasi struktur tim & laga dari cache agar tidak pernah crash (tanpa mengubah isi data!)
+    data.teams = data.teams.map((t, idx) => this.normalizeTeam(t, idx)).filter(Boolean);
+    data.matches = data.matches.map(m => this.normalizeMatch(m, data.teams)).filter(Boolean);
 
     return data;
   }
@@ -902,7 +737,7 @@ var app = window.app = Object.assign(window.app || {}, {
       } catch (e) {
         console.error("Fallback TournamentStore init:", e);
         this.store = {
-          STORAGE_KEY: "acc_futsal_tournament_2026_clean_zero_v6",
+          STORAGE_KEY: "acc_futsal_tournament_2026_cloud_v7",
           data: JSON.parse(JSON.stringify(DEFAULT_DATA)),
           saveData() {},
           getTeam(id) { return (this.data.teams || []).find(t => t.id === id) || null; },
@@ -910,6 +745,7 @@ var app = window.app = Object.assign(window.app || {}, {
           syncPlayerStatsFromMatches() {},
           syncKnockoutFromStandings() {},
           normalizeTeam(t) { return t; },
+          normalizeMatch(m) { return m; },
           calculateGroupStandings() { return []; },
           getDisciplinaryRecords() { return []; },
           getTopScorers() { return []; }
@@ -1609,272 +1445,203 @@ var app = window.app = Object.assign(window.app || {}, {
   applyRemoteData(data) {
     if (!data) return;
 
-    if (!data.teams || data.teams.length < 10 || !data.matches || data.matches.length < 10) {
-      if (this.store && this.store.data && this.store.data.teams && this.store.data.teams.length >= 30) {
-        if (window.SupabaseService && window.SupabaseService.syncAllData) {
-          window.SupabaseService.syncAllData(this.store.data);
-        }
+    if (data.config) {
+      const cfg = this.store.data.config || {};
+      if (data.config.tournament_name || data.config.tournamentName) {
+        cfg.tournamentName = data.config.tournament_name || data.config.tournamentName;
       }
-    }
-
-    if (data.matches || data.teams) {
-      if (data.config) {
-        if (data.config.runningAnnouncement && (data.config.runningAnnouncement.includes("ð") || data.config.runningAnnouncement.includes("†"))) {
-          data.config.runningAnnouncement = DEFAULT_DATA.config.runningAnnouncement;
-        }
-        if (data.config.subTitle && (data.config.subTitle.includes("â") || data.config.subTitle.includes("€"))) {
-          data.config.subTitle = DEFAULT_DATA.config.subTitle;
-        }
-        if (data.config.running_announcement && !data.config.running_announcement.includes("ð")) {
-          this.store.data.config.runningAnnouncement = data.config.running_announcement;
-        }
-        if (data.config.sub_title && !data.config.sub_title.includes("â")) {
-          this.store.data.config.subTitle = data.config.sub_title;
-        }
-        if (data.config.youtube_live_url || data.config.youtubeLiveUrl) {
-          this.store.data.config.youtubeLiveUrl = data.config.youtube_live_url || data.config.youtubeLiveUrl;
-        }
-        if (data.config.youtube_live_title || data.config.youtubeLiveTitle) {
-          this.store.data.config.youtubeLiveTitle = data.config.youtube_live_title || data.config.youtubeLiveTitle;
-        }
-        if (data.config.hero_banner_image || data.config.heroBannerImage) {
-          this.store.data.config.heroBannerImage = data.config.hero_banner_image || data.config.heroBannerImage;
-        }
-        if (data.config.dates && (data.config.dates.includes("15 - 20") || data.config.dates.includes("15 – 20"))) {
-          data.config.dates = "22 - 26 November 2026";
-        }
-        Object.assign(this.store.data.config, data.config);
-        this.renderHeader();
-        this.renderLiveStreamHero();
+      if (data.config.sub_title !== undefined || data.config.subTitle !== undefined) {
+        cfg.subTitle = data.config.sub_title !== undefined ? data.config.sub_title : data.config.subTitle;
       }
-
-      if (data.matches && data.matches.length > 0) {
-        data.matches.forEach(remoteMatch => {
-          const idx = this.store.data.matches.findIndex(m => m.id === remoteMatch.id);
-          if (idx !== -1) {
-            const mapped = {};
-            const curMatch = this.store.data.matches[idx];
-            if (remoteMatch.home_id !== undefined && remoteMatch.home_id !== null) mapped.homeId = remoteMatch.home_id;
-            if (remoteMatch.away_id !== undefined && remoteMatch.away_id !== null) mapped.awayId = remoteMatch.away_id;
-            if (remoteMatch.status) mapped.status = remoteMatch.status;
-            if (remoteMatch.scorers) mapped.scorers = remoteMatch.scorers;
-            if (remoteMatch.cards) mapped.cards = remoteMatch.cards;
-            if (remoteMatch.minute_live !== undefined && remoteMatch.minute_live !== null) {
-              const remoteMinNum = parseInt(remoteMatch.minute_live, 10) || 0;
-              const finalStatus = remoteMatch.status || curMatch.status;
-              const isMatchLive = finalStatus === 'live';
-              const isActiveInAdminModal = Boolean(this.isAdmin() && (window.admin.activeMatchId === remoteMatch.id || window.admin.activeQuickMatchId === remoteMatch.id));
-              if (isMatchLive) {
-                if (!isActiveInAdminModal) {
-                  const validatedMin = Math.max(1, remoteMinNum);
-                  mapped.liveMinute = `${validatedMin}'`;
-                  if (!curMatch.liveStartedAt) {
-                    mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
-                  } else {
-                    const curLocalElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
-                    if (Math.abs(validatedMin - curLocalElapsed) > 1) {
-                      mapped.liveStartedAt = Date.now() - ((validatedMin - 1) * 60000);
-                    } else {
-                      mapped.liveStartedAt = curMatch.liveStartedAt;
-                    }
-                  }
-                }
-              } else {
-                mapped.liveMinute = "";
-                delete mapped.liveStartedAt;
-                delete curMatch.liveStartedAt;
-              }
-            }
-            if (remoteMatch.penalty_home_score !== undefined) mapped.penaltyHomeScore = remoteMatch.penalty_home_score;
-            if (remoteMatch.penalty_away_score !== undefined) mapped.penaltyAwayScore = remoteMatch.penalty_away_score;
-            if (remoteMatch.penalty_winner !== undefined) mapped.penaltyWinner = remoteMatch.penalty_winner;
-
-            const rHome = remoteMatch.home_score !== undefined ? remoteMatch.home_score : remoteMatch.homeScore;
-            const rAway = remoteMatch.away_score !== undefined ? remoteMatch.away_score : remoteMatch.awayScore;
-            const rHomeLive = remoteMatch.home_score_live !== undefined ? remoteMatch.home_score_live : remoteMatch.homeScoreLive;
-            const rAwayLive = remoteMatch.away_score_live !== undefined ? remoteMatch.away_score_live : remoteMatch.awayScoreLive;
-
-            const finalHome = (rHome !== undefined && rHome !== null) ? rHome : ((rHomeLive !== undefined && rHomeLive !== null) ? rHomeLive : curMatch.homeScore);
-            const finalAway = (rAway !== undefined && rAway !== null) ? rAway : ((rAwayLive !== undefined && rAwayLive !== null) ? rAwayLive : curMatch.awayScore);
-
-            mapped.homeScore = finalHome;
-            mapped.awayScore = finalAway;
-            mapped.homeScoreLive = finalHome;
-            mapped.awayScoreLive = finalAway;
-
-            // Auto-sync jika scorers ada
-            const activeScorers = mapped.scorers || curMatch.scorers;
-            const isLiveOrFinished = (mapped.status || curMatch.status) === 'live' || (mapped.status || curMatch.status) === 'finished';
-            if (activeScorers && Array.isArray(activeScorers) && activeScorers.length > 0 && isLiveOrFinished) {
-              const hCount = activeScorers.filter(s => s.team === curMatch.homeId).length;
-              const aCount = activeScorers.filter(s => s.team === curMatch.awayId).length;
-              mapped.homeScore = Math.max(parseInt(mapped.homeScore, 10) || 0, hCount);
-              mapped.awayScore = Math.max(parseInt(mapped.awayScore, 10) || 0, aCount);
-              mapped.homeScoreLive = mapped.homeScore;
-              mapped.awayScoreLive = mapped.awayScore;
-            }
-
-            if ((mapped.status || curMatch.status) === 'live') {
-              const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-              if (!mapped.liveStartedAt) {
-                if (curMatch.liveStartedAt) {
-                  const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
-                  if (Math.abs(minNum - curElapsed) > 1) {
-                    mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
-                  } else {
-                    mapped.liveStartedAt = curMatch.liveStartedAt;
-                  }
-                } else {
-                  mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
-                }
-              }
-            } else if ((mapped.status || curMatch.status) === 'finished') {
-              delete mapped.liveStartedAt;
-              delete curMatch.liveStartedAt;
-            } else if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
-              delete mapped.liveStartedAt;
-              delete curMatch.liveStartedAt;
-              mapped.homeScore = null;
-              mapped.awayScore = null;
-              mapped.homeScoreLive = null;
-              mapped.awayScoreLive = null;
-              mapped.liveMinute = "";
-            }
-
-            Object.assign(this.store.data.matches[idx], mapped);
-          }
-        });
+      if (data.config.venue !== undefined) cfg.venue = data.config.venue;
+      if (data.config.dates !== undefined) cfg.dates = data.config.dates;
+      if (data.config.rules_text !== undefined || data.config.rulesText !== undefined) {
+        cfg.rulesText = data.config.rules_text !== undefined ? data.config.rules_text : data.config.rulesText;
       }
-
-      if (data.teams && data.teams.length > 0) {
-        data.teams.forEach(remoteTeam => {
-          const idx = this.store.data.teams.findIndex(t => t.id === remoteTeam.id);
-          if (idx !== -1) {
-            const localTeam = this.store.data.teams[idx];
-            const curOff = localTeam.official || {};
-
-            const isValidPhoto = (v) => typeof v === 'string' && v.trim().length > 5;
-            const mapped = {
-              name: remoteTeam.name || localTeam.name,
-              shortName: remoteTeam.short_name || remoteTeam.shortName || localTeam.shortName,
-              badgeColor: remoteTeam.badge_color || remoteTeam.badgeColor || localTeam.badgeColor,
-              city: remoteTeam.city !== undefined ? remoteTeam.city : localTeam.city,
-              group: remoteTeam.group_letter || remoteTeam.group || localTeam.group,
-              instansi: (remoteTeam.instansi && remoteTeam.instansi.trim()) ? remoteTeam.instansi.trim() : (localTeam.instansi || ''),
-              // Data Shield: Pertahankan logo lokal jika remote kosong
-              logo: isValidPhoto(remoteTeam.logo) ? remoteTeam.logo : (localTeam.logo || '')
-            };
-            if (remoteTeam.category) mapped.category = remoteTeam.category;
-
-            // DATA SHIELD PEMAIN: Jangan pernah menimpa foto atau pemain asli lokal dengan data kosong
-            if (remoteTeam.players && Array.isArray(remoteTeam.players) && remoteTeam.players.length > 0) {
-              const remoteIsDummy = remoteTeam.players.some(p => p.name && (p.name.includes("Ramsdale") || p.name.includes("Donnarumma") || p.name.includes("Verbruggen") || p.name.includes("Oblak") || p.name.includes("Courtois")));
-              const curIsReal = localTeam.players && localTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
-
-              if (remoteIsDummy && curIsReal) {
-                // Pertahankan pemain asli lokal
-                mapped.players = localTeam.players;
-              } else {
-                // Gabungkan pemain: PERTAHANKAN foto pemain lokal jika remote kosong
-                const localPlayers = localTeam.players || [];
-                mapped.players = remoteTeam.players.map((rP, pIdx) => {
-                  const lP = localPlayers[pIdx] || localPlayers.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
-                  return {
-                    ...rP,
-                    // KUNCI: Terima baik base64 maupun path assets/... dan jangan hapus jika remote kosong!
-                    photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || ""),
-                    goals: (rP.goals !== undefined && rP.goals !== null) ? rP.goals : (lP.goals || 0),
-                    yc: (rP.yc !== undefined && rP.yc !== null) ? rP.yc : (lP.yc || 0),
-                    rc: (rP.rc !== undefined && rP.rc !== null) ? rP.rc : (lP.rc || 0)
-                  };
-                });
-              }
-            } else if (localTeam.players) {
-              mapped.players = localTeam.players;
-            }
-
-            // DATA SHIELD OFFICIAL & FOTO PELATIH / ASISTEN
-            const rCoachPhoto = remoteTeam.coach_photo || (remoteTeam.official && remoteTeam.official.coachPhoto) || "";
-            const rManagerPhoto = remoteTeam.manager_photo || (remoteTeam.official && remoteTeam.official.managerPhoto) || "";
-
-            mapped.official = {
-              ...curOff,
-              coach: remoteTeam.official_coach || (remoteTeam.official && remoteTeam.official.coach) || curOff.coach || '',
-              manager: remoteTeam.official_manager || (remoteTeam.official && remoteTeam.official.manager) || curOff.manager || '',
-              medic: remoteTeam.official_medic || (remoteTeam.official && remoteTeam.official.medic) || curOff.medic || '',
-              phone: remoteTeam.official_phone || (remoteTeam.official && remoteTeam.official.phone) || curOff.phone || '',
-              jerseyHome: remoteTeam.official_jersey_home || (remoteTeam.official && remoteTeam.official.jerseyHome) || curOff.jerseyHome || '',
-              jerseyAway: remoteTeam.official_jersey_away || (remoteTeam.official && remoteTeam.official.jerseyAway) || curOff.jerseyAway || '',
-              // KUNCI: Jangan pernah menghapus foto pelatih / asisten jika remote kosong!
-              coachPhoto: isValidPhoto(rCoachPhoto) ? rCoachPhoto : (curOff.coachPhoto || ''),
-              managerPhoto: isValidPhoto(rManagerPhoto) ? rManagerPhoto : (curOff.managerPhoto || '')
-            };
-
-            Object.assign(this.store.data.teams[idx], mapped);
-          } else if (remoteTeam && remoteTeam.id && remoteTeam.name && remoteTeam.name !== "Tim Umum") {
-            // Tim baru yang ditambahkan dari perangkat lain di Database Online!
-            const norm = (this.store && typeof this.store.normalizeTeam === "function")
-              ? this.store.normalizeTeam(remoteTeam, this.store.data.teams.length)
-              : remoteTeam;
-            if (norm) this.store.data.teams.push(norm);
-          }
-        });
+      if (data.config.running_announcement !== undefined || data.config.runningAnnouncement !== undefined) {
+        cfg.runningAnnouncement = data.config.running_announcement !== undefined ? data.config.running_announcement : data.config.runningAnnouncement;
       }
-
-      // Terapkan metadata (category & instansi) dari registry cloud lintas-perangkat
-      if (data.teamMeta && typeof data.teamMeta === 'object') {
-        Object.entries(data.teamMeta).forEach(([tId, meta]) => {
-          const t = this.store.data.teams.find(tm => tm.id === tId);
-          if (t && meta) {
-            if (meta.category) t.category = meta.category;
-            if (meta.instansi !== undefined) t.instansi = String(meta.instansi || '').trim();
-          }
-        });
+      if (data.config.youtube_live_url !== undefined || data.config.youtubeLiveUrl !== undefined) {
+        cfg.youtubeLiveUrl = data.config.youtube_live_url !== undefined ? data.config.youtube_live_url : data.config.youtubeLiveUrl;
       }
-
-      // Terapkan logo dari registry cloud lintas-perangkat (prioritas tertinggi)
-      if (data.teamLogos && typeof data.teamLogos === 'object') {
-        Object.entries(data.teamLogos).forEach(([tId, lUrl]) => {
-          const t = this.store.data.teams.find(tm => tm.id === tId);
-          if (t && lUrl) {
-            t.logo = lUrl;
-          }
-        });
+      if (data.config.youtube_live_title !== undefined || data.config.youtubeLiveTitle !== undefined) {
+        cfg.youtubeLiveTitle = data.config.youtube_live_title !== undefined ? data.config.youtube_live_title : data.config.youtubeLiveTitle;
       }
-
-      if (data.moments && data.moments.length > 0) this.store.data.moments = data.moments;
-      if (data.sponsors && (Array.isArray(data.sponsors) ? data.sponsors.length > 0 : true)) {
-        this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
+      if (data.config.hero_banner_image || data.config.heroBannerImage) {
+        cfg.heroBannerImage = data.config.hero_banner_image || data.config.heroBannerImage;
       }
-      this.store.syncPlayerStatsFromMatches();
-      this.store.saveData();
-      this.store.syncKnockoutFromStandings();
-      try {
-        this.syncDrawStateFromTournament("SMP", true);
-        this.syncDrawStateFromTournament("SD", true);
-      } catch (e) {}
-      // Jika panitia sedang mengisi form/upload di modal editor, jangan re-render DOM supaya fokus ketikan tidak terganggu!
-      if (this.isUserEditing()) return;
-
-      this.renderCurrentView();
-      this.renderTeams();
-      this.renderMatches();
-      this.renderStandings();
-      this.renderBracket();
-      if (typeof this.renderTopScorer === "function") this.renderTopScorer();
-      if (typeof this.renderDisciplinary === "function") this.renderDisciplinary();
-      this.updateHeroLiveBadge();
-      this.updateFloatingLiveNotice();
+      if (data.config.admin_pin_hash || data.config.adminPinHash) {
+        cfg.adminPinHash = data.config.admin_pin_hash || data.config.adminPinHash;
+      }
+      this.store.data.config = cfg;
       this.renderHeader();
       this.renderLiveStreamHero();
-      this.renderHeroBanner();
-      this.refreshActiveMatchDetail();
+    }
 
-      // Jika modal tim sedang terbuka, perbarui tampilannya langsung dengan data terbaru
-      const activeTeamModal = document.getElementById("teamModal");
-      if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId) {
-        try { this.openTeamModal(this.activeTeamModalId); } catch (_) {}
-      }
+    // 1. Sinkronkan TIM dari Database Online Supabase (Single Source of Truth — ZERO data mutlak!)
+    if (Array.isArray(data.teams)) {
+      const prevTeamsMap = new Map((this.store.data.teams || []).map(t => [t.id, t]));
+      const isValidPhoto = (v) => typeof v === 'string' && v.trim().length > 5;
+
+      const syncedTeams = data.teams.map((remoteTeam, rIdx) => {
+        if (!remoteTeam || !remoteTeam.id) return null;
+        const localTeam = prevTeamsMap.get(remoteTeam.id);
+        const norm = (this.store && typeof this.store.normalizeTeam === "function")
+          ? this.store.normalizeTeam(remoteTeam, rIdx)
+          : remoteTeam;
+        if (!norm) return null;
+
+        if (localTeam) {
+          if (!isValidPhoto(norm.logo) && isValidPhoto(localTeam.logo)) {
+            norm.logo = localTeam.logo;
+          }
+          if (localTeam.official) {
+            if (!isValidPhoto(norm.official.coachPhoto) && isValidPhoto(localTeam.official.coachPhoto)) {
+              norm.official.coachPhoto = localTeam.official.coachPhoto;
+            }
+            if (!isValidPhoto(norm.official.managerPhoto) && isValidPhoto(localTeam.official.managerPhoto)) {
+              norm.official.managerPhoto = localTeam.official.managerPhoto;
+            }
+          }
+          if (Array.isArray(norm.players) && Array.isArray(localTeam.players)) {
+            norm.players = norm.players.map((rP, pIdx) => {
+              const lP = localTeam.players[pIdx] || localTeam.players.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
+              return {
+                ...rP,
+                photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || "")
+              };
+            });
+          }
+        }
+        return norm;
+      }).filter(Boolean);
+
+      syncedTeams.sort((a, b) => {
+        const na = parseInt(String(a.id).replace(/\D/g, ""), 10) || 9999;
+        const nb = parseInt(String(b.id).replace(/\D/g, ""), 10) || 9999;
+        return na - nb || String(a.id).localeCompare(String(b.id));
+      });
+
+      this.store.data.teams = syncedTeams;
+    }
+
+    // Terapkan metadata (category & instansi) dari registry cloud lintas-perangkat
+    if (data.teamMeta && typeof data.teamMeta === 'object') {
+      Object.entries(data.teamMeta).forEach(([tId, meta]) => {
+        const t = this.store.data.teams.find(tm => tm.id === tId);
+        if (t && meta) {
+          if (meta.category) t.category = meta.category;
+          if (meta.instansi !== undefined) t.instansi = String(meta.instansi || '').trim();
+        }
+      });
+    }
+
+    // Terapkan logo dari registry cloud lintas-perangkat
+    if (data.teamLogos && typeof data.teamLogos === 'object') {
+      Object.entries(data.teamLogos).forEach(([tId, lUrl]) => {
+        const t = this.store.data.teams.find(tm => tm.id === tId);
+        if (t && lUrl) {
+          t.logo = lUrl;
+        }
+      });
+    }
+
+    // 2. Sinkronkan PERTANDINGAN dari Database Online Supabase (Single Source of Truth)
+    if (Array.isArray(data.matches)) {
+      const prevMatchesMap = new Map((this.store.data.matches || []).map(m => [m.id, m]));
+      const syncedMatches = data.matches.map(remoteMatch => {
+        if (!remoteMatch || !remoteMatch.id) return null;
+        const curMatch = prevMatchesMap.get(remoteMatch.id);
+        const norm = (this.store && typeof this.store.normalizeMatch === "function")
+          ? this.store.normalizeMatch(remoteMatch, this.store.data.teams)
+          : remoteMatch;
+        if (!norm) return null;
+
+        if (norm.status === "live") {
+          const isActiveInAdminModal = Boolean(this.isAdmin() && (window.admin.activeMatchId === norm.id || window.admin.activeQuickMatchId === norm.id));
+          const remoteMinNum = Math.max(1, parseInt(remoteMatch.minute_live, 10) || parseInt(String(norm.liveMinute || "1").replace(/\D/g, ""), 10) || 1);
+          if (curMatch && isActiveInAdminModal) {
+            norm.liveMinute = curMatch.liveMinute || `${remoteMinNum}'`;
+            if (curMatch.liveStartedAt) norm.liveStartedAt = curMatch.liveStartedAt;
+          } else {
+            norm.liveMinute = `${remoteMinNum}'`;
+            if (curMatch && curMatch.liveStartedAt) {
+              const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
+              norm.liveStartedAt = Math.abs(remoteMinNum - curElapsed) > 1
+                ? (Date.now() - ((remoteMinNum - 1) * 60000))
+                : curMatch.liveStartedAt;
+            } else {
+              norm.liveStartedAt = Date.now() - ((remoteMinNum - 1) * 60000);
+            }
+          }
+        } else {
+          delete norm.liveStartedAt;
+        }
+
+        if ((norm.status === "live" || norm.status === "finished") && Array.isArray(norm.scorers) && norm.scorers.length > 0) {
+          const hCount = norm.scorers.filter(s => s.team === norm.homeId).length;
+          const aCount = norm.scorers.filter(s => s.team === norm.awayId).length;
+          norm.homeScore = Math.max(parseInt(norm.homeScore, 10) || 0, hCount);
+          norm.awayScore = Math.max(parseInt(norm.awayScore, 10) || 0, aCount);
+          norm.homeScoreLive = norm.homeScore;
+          norm.awayScoreLive = norm.awayScore;
+        }
+
+        return norm;
+      }).filter(Boolean);
+
+      const matchOrderWeight = (id) => {
+        const mNum = String(id).match(/^M(\d+)$/i);
+        if (mNum) return parseInt(mNum[1], 10);
+        if (/^QF/i.test(id)) return 100 + (parseInt(id.replace(/\D/g, ""), 10) || 0);
+        if (/^SF/i.test(id)) return 200 + (parseInt(id.replace(/\D/g, ""), 10) || 0);
+        if (/^3RD/i.test(id)) return 300;
+        if (/^FINAL/i.test(id)) return 400;
+        return 500;
+      };
+      syncedMatches.sort((a, b) => matchOrderWeight(a.id) - matchOrderWeight(b.id) || String(a.id).localeCompare(String(b.id)));
+      this.store.data.matches = syncedMatches;
+    }
+
+    // 3. Sinkronkan MOMENTS & SPONSORS dari Database Online Supabase
+    if (Array.isArray(data.moments)) {
+      this.store.data.moments = data.moments;
+      if (this.store.data.homeData) this.store.data.homeData.moments = data.moments;
+    }
+    if (data.sponsors) {
+      this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
+    }
+
+    this.store.syncPlayerStatsFromMatches();
+    this.store.saveData();
+    this.store.syncKnockoutFromStandings();
+    try {
+      this.syncDrawStateFromTournament("SMP", true);
+      this.syncDrawStateFromTournament("SD", true);
+    } catch (e) {}
+    // Jika panitia sedang mengisi form/upload di modal editor, jangan re-render DOM supaya fokus ketikan tidak terganggu!
+    if (this.isUserEditing()) return;
+
+    this.renderCurrentView();
+    this.renderTeams();
+    this.renderMatches();
+    this.renderStandings();
+    this.renderBracket();
+    if (typeof this.renderTopScorer === "function") this.renderTopScorer();
+    if (typeof this.renderDisciplinary === "function") this.renderDisciplinary();
+    if (typeof this.renderMoments === "function") this.renderMoments();
+    if (typeof this.renderSponsors === "function") this.renderSponsors();
+    this.updateHeroLiveBadge();
+    this.updateFloatingLiveNotice();
+    this.renderHeader();
+    this.renderLiveStreamHero();
+    this.renderHeroBanner();
+    this.refreshActiveMatchDetail();
+
+    // Jika modal tim sedang terbuka, perbarui tampilannya langsung dengan data terbaru
+    const activeTeamModal = document.getElementById("teamModal");
+    if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId) {
+      try { this.openTeamModal(this.activeTeamModalId); } catch (_) {}
     }
   },
 
@@ -1986,30 +1753,26 @@ var app = window.app = Object.assign(window.app || {}, {
         this.refreshActiveMatchDetail();
       }
     } else if (table === 'teams') {
-      const idx = this.store.data.teams.findIndex(t => t.id === payload.id);
-      const isValidPhoto = (v) => typeof v === 'string' && v.trim().length > 5;
-      if (idx !== -1) {
-        const localTeam = this.store.data.teams[idx];
-        const curOff = localTeam.official || {};
+      if (payload._deleted && payload.id) {
+        this.store.data.teams = (this.store.data.teams || []).filter(t => t.id !== payload.id);
+      } else {
+        const idx = this.store.data.teams.findIndex(t => t.id === payload.id);
+        const isValidPhoto = (v) => typeof v === 'string' && v.trim().length > 5;
+        if (idx !== -1) {
+          const localTeam = this.store.data.teams[idx];
+          const curOff = localTeam.official || {};
 
-        const mapped = {
-          name: payload.name || localTeam.name,
-          shortName: payload.short_name || payload.shortName || localTeam.shortName,
-          badgeColor: payload.badge_color || payload.badgeColor || localTeam.badgeColor,
-          city: payload.city !== undefined ? payload.city : localTeam.city,
-          group: payload.group_letter || payload.group || localTeam.group,
-          logo: isValidPhoto(payload.logo) ? payload.logo : (localTeam.logo || '')
-        };
-        if (payload.category) mapped.category = payload.category;
+          const mapped = {
+            name: payload.name || localTeam.name,
+            shortName: payload.short_name || payload.shortName || localTeam.shortName,
+            badgeColor: payload.badge_color || payload.badgeColor || localTeam.badgeColor,
+            city: payload.city !== undefined ? payload.city : localTeam.city,
+            group: payload.group_letter || payload.group || localTeam.group,
+            logo: isValidPhoto(payload.logo) ? payload.logo : (localTeam.logo || '')
+          };
+          if (payload.category) mapped.category = payload.category;
 
-        // DATA SHIELD PEMAIN REALTIME: Lindungi foto & data pemain asli
-        if (payload.players && Array.isArray(payload.players) && payload.players.length > 0) {
-          const remoteIsDummy = payload.players.some(p => p.name && (p.name.includes("Ramsdale") || p.name.includes("Donnarumma") || p.name.includes("Verbruggen") || p.name.includes("Oblak") || p.name.includes("Courtois")));
-          const curIsReal = localTeam.players && localTeam.players.some(p => p.name && !p.name.includes("Ramsdale") && !p.name.includes("Donnarumma") && !p.name.includes("Pemain") && !p.name.includes("Oblak"));
-
-          if (remoteIsDummy && curIsReal) {
-            mapped.players = localTeam.players;
-          } else {
+          if (Array.isArray(payload.players)) {
             const localPlayers = localTeam.players || [];
             mapped.players = payload.players.map((rP, pIdx) => {
               const lP = localPlayers[pIdx] || localPlayers.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
@@ -2021,33 +1784,32 @@ var app = window.app = Object.assign(window.app || {}, {
                 rc: (rP.rc !== undefined && rP.rc !== null) ? rP.rc : (lP.rc || 0)
               };
             });
+          } else if (localTeam.players) {
+            mapped.players = localTeam.players;
           }
-        } else if (localTeam.players) {
-          mapped.players = localTeam.players;
+
+          const rCoachPhoto = payload.coach_photo || (payload.official && payload.official.coachPhoto) || "";
+          const rManagerPhoto = payload.manager_photo || (payload.official && payload.official.managerPhoto) || "";
+
+          mapped.official = {
+            ...curOff,
+            coach: payload.official_coach !== undefined ? payload.official_coach : ((payload.official && payload.official.coach) || curOff.coach || ''),
+            manager: payload.official_manager !== undefined ? payload.official_manager : ((payload.official && payload.official.manager) || curOff.manager || ''),
+            medic: payload.official_medic !== undefined ? payload.official_medic : ((payload.official && payload.official.medic) || curOff.medic || ''),
+            phone: payload.official_phone !== undefined ? payload.official_phone : ((payload.official && payload.official.phone) || curOff.phone || ''),
+            jerseyHome: payload.official_jersey_home !== undefined ? payload.official_jersey_home : ((payload.official && payload.official.jerseyHome) || curOff.jerseyHome || ''),
+            jerseyAway: payload.official_jersey_away !== undefined ? payload.official_jersey_away : ((payload.official && payload.official.jerseyAway) || curOff.jerseyAway || ''),
+            coachPhoto: isValidPhoto(rCoachPhoto) ? rCoachPhoto : (curOff.coachPhoto || ''),
+            managerPhoto: isValidPhoto(rManagerPhoto) ? rManagerPhoto : (curOff.managerPhoto || '')
+          };
+
+          Object.assign(this.store.data.teams[idx], mapped);
+        } else {
+          const norm = (this.store && typeof this.store.normalizeTeam === "function")
+            ? this.store.normalizeTeam(payload, this.store.data.teams.length)
+            : payload;
+          if (norm) this.store.data.teams.push(norm);
         }
-
-        // DATA SHIELD OFFICIAL & FOTO PELATIH / ASISTEN
-        const rCoachPhoto = payload.coach_photo || (payload.official && payload.official.coachPhoto) || "";
-        const rManagerPhoto = payload.manager_photo || (payload.official && payload.official.managerPhoto) || "";
-
-        mapped.official = {
-          ...curOff,
-          coach: payload.official_coach || (payload.official && payload.official.coach) || curOff.coach || '',
-          manager: payload.official_manager || (payload.official && payload.official.manager) || curOff.manager || '',
-          medic: payload.official_medic || (payload.official && payload.official.medic) || curOff.medic || '',
-          phone: payload.official_phone || (payload.official && payload.official.phone) || curOff.phone || '',
-          jerseyHome: payload.official_jersey_home || (payload.official && payload.official.jerseyHome) || curOff.jerseyHome || '',
-          jerseyAway: payload.official_jersey_away || (payload.official && payload.official.jerseyAway) || curOff.jerseyAway || '',
-          coachPhoto: isValidPhoto(rCoachPhoto) ? rCoachPhoto : (curOff.coachPhoto || ''),
-          managerPhoto: isValidPhoto(rManagerPhoto) ? rManagerPhoto : (curOff.managerPhoto || '')
-        };
-
-        Object.assign(this.store.data.teams[idx], mapped);
-      } else {
-        const norm = (this.store && typeof this.store.normalizeTeam === "function")
-          ? this.store.normalizeTeam(payload, this.store.data.teams.length)
-          : payload;
-        if (norm) this.store.data.teams.push(norm);
       }
       // Debounce saveData & DOM render agar tidak freeze saat beberapa laptop mengedit bersamaan
       if (this._teamRealtimeTimer) clearTimeout(this._teamRealtimeTimer);
@@ -2065,11 +1827,15 @@ var app = window.app = Object.assign(window.app || {}, {
       }, 450);
     } else if (table === 'moments') {
       if (!this.store.data.moments) this.store.data.moments = [];
-      const idx = this.store.data.moments.findIndex(m => m.id === payload.id);
-      if (idx !== -1) {
-        Object.assign(this.store.data.moments[idx], payload);
+      if (payload._deleted && payload.id) {
+        this.store.data.moments = this.store.data.moments.filter(m => m.id !== payload.id);
       } else {
-        this.store.data.moments.unshift(payload);
+        const idx = this.store.data.moments.findIndex(m => m.id === payload.id);
+        if (idx !== -1) {
+          Object.assign(this.store.data.moments[idx], payload);
+        } else {
+          this.store.data.moments.unshift(payload);
+        }
       }
       this.store.saveData();
       this.renderMoments();
@@ -2712,44 +2478,50 @@ var app = window.app = Object.assign(window.app || {}, {
   // 0. RENDER HOME (BERANDA UTAMA)
   renderHome() {
     this.renderLiveStreamHero();
-    const homeData = this.store.data.homeData || DEFAULT_DATA.homeData;
-    if (!homeData) return;
+    const homeData = this.store.data.homeData || { mvp: null, news: [], moments: [] };
 
-    // 1. Update MVP Card
+    // 1. Update MVP Card (tampilkan hanya jika panitia sudah mengisi data MVP)
     const mvp = homeData.mvp;
-    if (mvp) {
+    const mvpSection = document.getElementById("mvpSpotlightSection");
+    if (mvp && mvp.name) {
+      if (mvpSection) mvpSection.style.display = "";
       const mvpPhoto = document.getElementById("mvpPhoto");
       if (mvpPhoto && mvp.photo) mvpPhoto.src = mvp.photo;
 
       const mvpName = document.getElementById("mvpName");
-      if (mvpName) mvpName.textContent = `${mvp.name} (#${mvp.number})`;
+      if (mvpName) mvpName.textContent = mvp.number ? `${mvp.name} (#${mvp.number})` : mvp.name;
 
       const mvpTeam = document.getElementById("mvpTeam");
-      if (mvpTeam) mvpTeam.textContent = mvp.team;
+      if (mvpTeam) mvpTeam.textContent = mvp.team || "";
 
       const mvpPos = document.getElementById("mvpPos");
-      if (mvpPos) mvpPos.textContent = `Posisi: ${mvp.position}`;
+      if (mvpPos) mvpPos.textContent = mvp.position ? `Posisi: ${mvp.position}` : "";
 
       const mvpGoals = document.getElementById("mvpGoals");
-      if (mvpGoals) mvpGoals.textContent = mvp.goals;
+      if (mvpGoals) mvpGoals.textContent = mvp.goals || 0;
 
       const mvpAssists = document.getElementById("mvpAssists");
-      if (mvpAssists) mvpAssists.textContent = mvp.assists;
+      if (mvpAssists) mvpAssists.textContent = mvp.assists || 0;
 
       const mvpMotm = document.getElementById("mvpMotm");
-      if (mvpMotm) mvpMotm.textContent = `${mvp.motmCount || 2}x`;
+      if (mvpMotm) mvpMotm.textContent = `${mvp.motmCount || 1}x`;
 
       const mvpRating = document.getElementById("mvpRating");
       if (mvpRating) mvpRating.textContent = this.calculatePlayerRating(mvp);
 
       const mvpQuote = document.getElementById("mvpQuote");
-      if (mvpQuote) mvpQuote.textContent = `"${mvp.quote}"`;
+      if (mvpQuote) mvpQuote.textContent = mvp.quote ? `"${mvp.quote}"` : "";
+    } else if (mvpSection) {
+      mvpSection.style.display = "none";
     }
 
-    // 2. Render News Grid
+    // 2. Render News Grid (tampilkan hanya jika ada berita dari data)
+    const newsSection = document.getElementById("homeNewsSection");
     const newsContainer = document.getElementById("homeNewsContainer");
-    if (newsContainer && homeData.news) {
-      newsContainer.innerHTML = homeData.news.map((n, idx) => `
+    const newsList = Array.isArray(homeData.news) ? homeData.news : [];
+    if (newsSection) newsSection.style.display = newsList.length > 0 ? "" : "none";
+    if (newsContainer) {
+      newsContainer.innerHTML = newsList.map((n, idx) => `
         <div class="news-card scroll-reveal ${idx % 2 === 1 ? 'reveal-right' : ''}" onclick="app.openNewsModal('${n.id}')" style="cursor: pointer;" title="Klik untuk membaca selengkapnya">
           <div class="news-header-meta">
             <span class="news-tag">${n.tag}</span>
@@ -2778,27 +2550,27 @@ var app = window.app = Object.assign(window.app || {}, {
     const container = document.getElementById("momentsCarousel");
     if (!container) return;
 
-    const moments = this.store.data.moments || (this.store.data.homeData && this.store.data.homeData.moments) || DEFAULT_DATA.homeData.moments || [];
+    const moments = Array.isArray(this.store.data.moments) ? this.store.data.moments : [];
 
     if (moments.length === 0) {
       container.innerHTML = `
         <div style="color: #94a3b8; font-size: 0.85rem; padding: 24px; text-align: center; width: 100%;">
-          Belum ada momen pertandingan yang diunggah. Panitia dapat menambahkan momen baru.
+          Belum ada momen pertandingan yang diunggah.
         </div>
       `;
       return;
     }
 
     container.innerHTML = moments.map(m => `
-      <div class="moment-card" style="background-image: url('${m.image || 'assets/moment_celebration.jpg'}');" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat momen spektakuler">
+      <div class="moment-card" style="background-image: url('${m.image || 'assets/hero_banner.jpg'}');" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat momen">
         <div class="moment-badge-new">${m.tag || 'NEW'}</div>
         <div class="moment-badge-tag">${m.badge || '🔥 HIGHLIGHT'}</div>
         <div class="moment-gradient-overlay">
           <div class="moment-player-row">
-            <span>⚽</span> <span>${m.player}</span>
+            <span>⚽</span> <span>${m.player || ''}</span>
           </div>
-          <div class="moment-title-text">${m.title}</div>
-          <div class="moment-team-text">${m.team}</div>
+          <div class="moment-title-text">${m.title || ''}</div>
+          <div class="moment-team-text">${m.team || ''}</div>
         </div>
       </div>
     `).join("");
@@ -2812,7 +2584,7 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   openMomentModal(id) {
-    const moments = this.store.data.moments || (this.store.data.homeData && this.store.data.homeData.moments) || DEFAULT_DATA.homeData.moments || [];
+    const moments = Array.isArray(this.store.data.moments) ? this.store.data.moments : [];
     const moment = moments.find(m => m.id === id);
     if (!moment) return;
 
@@ -2848,8 +2620,8 @@ var app = window.app = Object.assign(window.app || {}, {
 
   // MODAL BACA INFORMASI & KILAS TURNAMEN
   openNewsModal(id) {
-    const homeData = this.store.data.homeData || (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.homeData) || {};
-    const newsList = homeData.news || ((typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.homeData && DEFAULT_DATA.homeData.news) ? DEFAULT_DATA.homeData.news : []);
+    const homeData = this.store.data.homeData || {};
+    const newsList = Array.isArray(homeData.news) ? homeData.news : [];
     const newsItem = newsList.find(n => n.id === id);
     if (!newsItem) {
       this.showToast("Rincian informasi tidak ditemukan.");
@@ -4067,7 +3839,7 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   getDrawCategoryTeams(cat = this.currentDrawCat) {
-    const teams = (this.store && this.store.data && this.store.data.teams) || (window.DEFAULT_DATA && window.DEFAULT_DATA.teams) || [];
+    const teams = (this.store && this.store.data && Array.isArray(this.store.data.teams)) ? this.store.data.teams : [];
     return teams.filter(t => (t.category || "SMP") === cat);
   },
 
