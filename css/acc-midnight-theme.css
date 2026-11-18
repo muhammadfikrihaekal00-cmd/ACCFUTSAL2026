@@ -1658,7 +1658,7 @@ tr.zone-qualify {
   opacity: 1 !important;
 }
 
-.header.scrolled ~ #mobileMenuOverlay .mobile-menu-content {
+.header.scrolled~#mobileMenuOverlay .mobile-menu-content {
   top: 56px !important;
 }
 
@@ -2118,6 +2118,7 @@ tr.zone-qualify {
    16. MOBILE TEXT LAYOUT & ANTI-CLUTTER SPACING OPTIMIZATION
    ============================================================================ */
 @media (max-width: 768px) {
+
   /* Hero section text breathing space */
   .hero-card {
     padding: 22px 14px 18px 14px !important;
@@ -2295,6 +2296,7 @@ tr.zone-qualify {
     opacity: 0;
     transform: translateY(16px) scale(0.98);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -2315,6 +2317,7 @@ tr.zone-qualify {
     opacity: 0;
     transform: translateY(22px) scale(0.98);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);

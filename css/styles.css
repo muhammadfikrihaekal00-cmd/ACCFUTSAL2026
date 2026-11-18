@@ -8245,47 +8245,58 @@ body.dark-theme .fixture-team-row:hover {
     border-radius: 20px;
     gap: 14px;
   }
+
   .feature-hero-title {
     font-size: 1.35rem;
   }
+
   .feature-hero-desc {
     font-size: 0.82rem;
   }
+
   .feature-hero-badge {
     width: 48px;
     height: 48px;
     font-size: 1.35rem;
     border-radius: 14px;
   }
+
   .category-selector-box {
     padding: 14px 14px;
     border-radius: 20px;
     gap: 10px;
   }
+
   .category-selector-header {
     padding-bottom: 8px;
   }
+
   .category-selector-hint {
     display: none;
   }
+
   .category-button-grid {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
+
   .cat-select-btn {
     padding: 10px 10px;
     gap: 8px;
     border-radius: 14px;
   }
+
   .cat-select-icon {
     width: 36px;
     height: 36px;
     font-size: 1.2rem;
     border-radius: 10px;
   }
+
   .cat-select-name {
     font-size: 0.82rem;
   }
+
   .cat-select-sub {
     font-size: 0.65rem;
   }
