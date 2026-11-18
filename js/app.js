@@ -1361,6 +1361,11 @@ var app = window.app = Object.assign(window.app || {}, {
     const btnSD = document.getElementById("btnCatSD");
     if (btnSMP) btnSMP.classList.toggle("active", this.currentCategory === "SMP");
     if (btnSD) btnSD.classList.toggle("active", this.currentCategory === "SD");
+
+    const mobSMP = document.getElementById("mobCatSMP");
+    const mobSD = document.getElementById("mobCatSD");
+    if (mobSMP) mobSMP.classList.toggle("active", this.currentCategory === "SMP");
+    if (mobSD) mobSD.classList.toggle("active", this.currentCategory === "SD");
   },
 
   initSupabaseSync() {
@@ -2386,17 +2391,18 @@ var app = window.app = Object.assign(window.app || {}, {
       });
     }
 
-    // Mobile swipe-back gesture & browser history management (HP Friendly)
-    try {
-      history.replaceState({ tab: "home" }, "");
-    } catch (e) {}
-
+    // Mobile swipe-back gesture & modern full-page routing (Clean URL & History API)
     window.addEventListener("popstate", (e) => {
-      // 1. Jika ada popup modal aktif
+      // 1. Tutup mobile menu overlay jika sedang terbuka
+      if (this._isMobileMenuOpen) {
+        this.closeMobileMenu();
+        return;
+      }
+
+      // 2. Jika ada popup modal aktif
       const activeModals = Array.from(document.querySelectorAll(".modal-overlay.active"));
       if (activeModals.length > 0) {
         const topModal = activeModals[activeModals.length - 1];
-        // Jangan pernah tutup modal editor/input/folder karena swipe-back atau tombol back tidak sengaja!
         if (!readOnlyViewerModals.includes(topModal.id)) {
           try { history.pushState({ tab: this.currentTab, editing: true }, ""); } catch (err) {}
           const box = topModal.querySelector(".modal-box");
@@ -2408,43 +2414,616 @@ var app = window.app = Object.assign(window.app || {}, {
           return;
         }
         topModal.classList.remove("active");
-        try {
-          history.pushState({ tab: this.currentTab }, "");
-        } catch (err) {}
         return;
       }
 
-      // 2. Jika splash screen masih aktif, sembunyikan splash screen
+      // 3. Jika splash screen masih aktif, sembunyikan splash screen
       const splash = document.getElementById("appSplashScreen");
       if (splash && !splash.classList.contains("splash-fade-out") && splash.style.display !== "none") {
         this.dismissSplashScreen();
-        try {
-          history.pushState({ tab: this.currentTab }, "");
-        } catch (err) {}
         return;
       }
 
-      // 3. Jika sedang berada di tab selain Beranda, kembali ke Beranda (Menu Awal)
-      if (this.currentTab !== "home") {
-        this.switchTab("home", false);
-        return;
+      // 4. Jika ada state riwayat eksplisit
+      if (e.state) {
+        if (e.state.tab === "player-detail" && e.state.teamId && e.state.playerId) {
+          this.openPlayerDetailPage(e.state.teamId, e.state.playerId, false);
+          return;
+        }
+        if (e.state.tab === "team-detail" && e.state.teamId) {
+          this.openTeamDetailPage(e.state.teamId, false);
+          return;
+        }
+        if (e.state.tab) {
+          this.switchTab(e.state.tab, false);
+          return;
+        }
       }
 
-      if (e.state && e.state.tab) {
-        this.switchTab(e.state.tab, false);
-      }
+      // 5. Fallback ke pembacaan path URL browser
+      this.parseCurrentRoute(false);
     });
+
+    // Jalankan routing otomatis saat halaman pertama kali dimuat
+    try {
+      this.parseCurrentRoute(false);
+    } catch (_) {}
   },
 
-  switchTab(tabId, pushHistory = true) {
+  // =========================================================
+  // MOBILE HAMBURGER & MODERN ROUTER METHODS
+  // =========================================================
+  toggleMobileMenu() {
+    if (this._isMobileMenuOpen) {
+      this.closeMobileMenu();
+    } else {
+      this.openMobileMenu();
+    }
+  },
+
+  openMobileMenu() {
+    this._isMobileMenuOpen = true;
+    const btn = document.getElementById("btnMobileMenu");
+    const overlay = document.getElementById("mobileMenuOverlay");
+    if (btn) btn.classList.add("active");
+    if (overlay) overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+
+    // Sinkronkan active state link di mobile menu
+    document.querySelectorAll(".mobile-nav-link").forEach(link => {
+      const isAct = link.dataset.tab === this.currentTab ||
+                    ((this.currentTab === "team-detail" || this.currentTab === "player-detail") && link.dataset.tab === "teams");
+      link.classList.toggle("active", isAct);
+    });
+
+    // Sinkronkan pill kategori SMP/SD di mobile menu
+    const mobSMP = document.getElementById("mobCatSMP");
+    const mobSD = document.getElementById("mobCatSD");
+    if (mobSMP) mobSMP.classList.toggle("active", this.currentCategory === "SMP");
+    if (mobSD) mobSD.classList.toggle("active", this.currentCategory === "SD");
+  },
+
+  closeMobileMenu(e) {
+    if (e && e.target && e.target.classList.contains("mobile-menu-content")) return;
+    this._isMobileMenuOpen = false;
+    const btn = document.getElementById("btnMobileMenu");
+    const overlay = document.getElementById("mobileMenuOverlay");
+    if (btn) btn.classList.remove("active");
+    if (overlay) overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  },
+
+  navigateTo(path, tabId, data = null, pushHistory = true) {
+    if (this._isMobileMenuOpen) {
+      this.closeMobileMenu();
+    }
+
+    if (tabId === "team-detail" && data && data.teamId) {
+      this.openTeamDetailPage(data.teamId, pushHistory, path);
+      return;
+    }
+    if (tabId === "player-detail" && data && data.teamId && data.playerId) {
+      this.openPlayerDetailPage(data.teamId, data.playerId, pushHistory, path);
+      return;
+    }
+
+    this.switchTab(tabId, pushHistory, path);
+  },
+
+  parseCurrentRoute(pushHistory = false) {
+    let path = window.location.pathname || "";
+    if (window.location.hash && window.location.hash.startsWith("#/")) {
+      path = window.location.hash.slice(1);
+    }
+
+    // Pola 1: Detail Pemain (/daftar-tim/detail-tim/:teamId/detail-pemain/:playerId)
+    const playerMatch = path.match(/\/daftar-tim\/detail-tim\/([^/]+)\/detail-pemain\/([^/]+)/i);
+    if (playerMatch) {
+      const teamId = decodeURIComponent(playerMatch[1]);
+      const playerId = decodeURIComponent(playerMatch[2]);
+      this.openPlayerDetailPage(teamId, playerId, pushHistory);
+      return;
+    }
+
+    // Pola 2: Detail Tim (/daftar-tim/detail-tim/:teamId)
+    const teamMatch = path.match(/\/daftar-tim\/detail-tim\/([^/]+)/i);
+    if (teamMatch) {
+      const teamId = decodeURIComponent(teamMatch[1]);
+      this.openTeamDetailPage(teamId, pushHistory);
+      return;
+    }
+
+    // Pola 3: Rute Standar Turnamen
+    const tabMap = {
+      "/": "home",
+      "/beranda": "home",
+      "/jadwal": "matches",
+      "/klasemen": "standings",
+      "/draw": "draw",
+      "/bagan": "bracket",
+      "/tim": "teams",
+      "/top-skor": "scorers",
+      "/disiplin": "discipline",
+      "/regulasi": "juknis"
+    };
+
+    const cleanPath = path.replace(/\/$/, "");
+    if (cleanPath && tabMap[cleanPath]) {
+      this.switchTab(tabMap[cleanPath], pushHistory, cleanPath);
+    } else {
+      this.switchTab(this.currentTab || "home", pushHistory);
+    }
+  },
+
+  // =========================================================
+  // FULL-PAGE INTERACTION: DETAIL TIM & DETAIL PEMAIN (100% DINAMIS)
+  // =========================================================
+  openTeamDetailPage(teamId, pushHistory = true, customPath = null) {
+    if (this._isMobileMenuOpen) this.closeMobileMenu();
+
+    if (this.store && typeof this.store.syncPlayerStatsFromMatches === "function") {
+      try { this.store.syncPlayerStatsFromMatches(); } catch (_) {}
+    }
+
+    const team = this.store.getTeam(teamId);
+    if (!team) {
+      this.switchTab("teams", false);
+      return;
+    }
+
+    this.currentTab = "team-detail";
+    const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}`;
+    if (pushHistory) {
+      try {
+        history.pushState({ tab: "team-detail", teamId: team.id }, "", path);
+      } catch (_) {}
+    }
+
+    // Hitung statistik turnamen tim secara aktual dari data.matches (TIDAK ADA DATA STATIS)
+    let mp = 0, w = 0, d = 0, l = 0, gf = 0, ga = 0;
+    const teamMatches = (this.store.data.matches || []).filter(m =>
+      (m.homeId === team.id || m.awayId === team.id)
+    );
+
+    teamMatches.forEach(m => {
+      if (m.status !== "finished") return;
+      const isHome = m.homeId === team.id;
+      const myScore = isHome ? (m.homeScore || 0) : (m.awayScore || 0);
+      const oppScore = isHome ? (m.awayScore || 0) : (m.homeScore || 0);
+      mp++;
+      gf += myScore;
+      ga += oppScore;
+      if (myScore > oppScore) w++;
+      else if (myScore < oppScore) l++;
+      else d++;
+    });
+
+    const gd = gf - ga;
+    const pts = (w * 3) + d;
+    const off = team.official || {};
+    const waLink = this.getWhatsAppUrl(off.phone || "", `Halo Official ${team.name}, informasi ACC 2026`);
+
+    // Roster pemain dinamis dengan kalkulasi gol & kartu dari matches aktual
+    const playersHtml = (team.players || []).map(p => {
+      const pName = (p.name || "").trim();
+      const pNameLower = pName.toLowerCase();
+      let goalsCount = 0;
+      let ycCount = 0;
+      let rcCount = 0;
+
+      (this.store.data.matches || []).forEach(m => {
+        (m.goals || []).forEach(g => {
+          const gPlayer = (g.player || "").toLowerCase().trim();
+          const isMyTeam = g.team === team.id || g.team === team.name;
+          if (isMyTeam && (gPlayer === pNameLower || gPlayer === `${pNameLower} (#${p.no})` || (p.no && gPlayer === `#${p.no}`))) {
+            goalsCount++;
+          }
+        });
+        (m.cards || []).forEach(c => {
+          const cPlayer = (c.player || "").toLowerCase().trim();
+          const isMyTeam = c.team === team.id || c.team === team.name;
+          if (isMyTeam && (cPlayer === pNameLower || cPlayer === `${pNameLower} (#${p.no})` || (p.no && cPlayer === `#${p.no}`))) {
+            if (c.type === "yellow") ycCount++;
+            else if (c.type === "red") rcCount++;
+          }
+        });
+      });
+
+      const playerKey = p.id || p.no || p.name;
+      const detailUrl = `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}/detail-pemain/${encodeURIComponent(playerKey)}`;
+
+      return `
+        <div class="player-interactive-card" onclick="app.navigateTo('${detailUrl}', 'player-detail', { teamId: '${team.id}', playerId: '${encodeURIComponent(playerKey)}' })">
+          <div class="player-card-left">
+            <div class="player-jersey-badge">#${p.no || '-'}</div>
+            <div class="player-card-info">
+              <div class="player-card-name">${typeof Security !== 'undefined' ? Security.sanitize(p.name || 'Pemain') : (p.name || 'Pemain')}</div>
+              <div class="player-card-tags">
+                <span class="player-tag pos">${typeof Security !== 'undefined' ? Security.sanitize(p.pos || 'Flank') : (p.pos || 'Flank')}</span>
+                ${goalsCount > 0 ? `<span class="player-tag goal">⚽ ${goalsCount} Gol</span>` : ''}
+                ${ycCount > 0 ? `<span class="player-tag yc">🟨 ${ycCount}</span>` : ''}
+                ${rcCount > 0 ? `<span class="player-tag rc">🟥 ${rcCount}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="player-card-action">➔</div>
+        </div>
+      `;
+    }).join("");
+
+    // Riwayat laga turnamen tim
+    const matchHistoryHtml = teamMatches.length > 0 ? teamMatches.map(m => {
+      const isHome = m.homeId === team.id;
+      const oppId = isHome ? m.awayId : m.homeId;
+      const opp = this.store.getTeam(oppId);
+      const oppName = opp ? opp.name : ("Tim " + oppId);
+      const myScore = isHome ? m.homeScore : m.awayScore;
+      const oppScore = isHome ? m.awayScore : m.homeScore;
+      const isFin = m.status === "finished";
+      const isLive = m.status === "live";
+
+      let statusBadge = `<span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,0.08); color: #cbd5e1;">Terjadwal</span>`;
+      if (isFin) {
+        const isWin = (myScore || 0) > (oppScore || 0);
+        const isLoss = (myScore || 0) < (oppScore || 0);
+        const winBg = isWin ? 'background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);' : (isLoss ? 'background: rgba(239,68,68,0.2); color: #ef4444;' : 'background: rgba(245,158,11,0.2); color: #f59e0b;');
+        statusBadge = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; ${winBg}">${isWin ? 'MENANG' : (isLoss ? 'KALAH' : 'SERI')} (${myScore} - ${oppScore})</span>`;
+      } else if (isLive) {
+        statusBadge = `<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: rgba(239,68,68,0.25); color: #ef4444; border: 1px solid #ef4444;">● LIVE</span>`;
+      }
+
+      return `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;">
+          <div>
+            <div style="font-size: 0.84rem; font-weight: 700; color: #ffffff;">vs ${typeof Security !== 'undefined' ? Security.sanitize(oppName) : oppName}</div>
+            <div style="font-size: 0.70rem; color: #94a3b8; margin-top: 2px;">${m.time || 'Waktu Pertandingan'} • Lapangan ${m.pitch || '1'}</div>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+      `;
+    }).join("") : `<p style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 12px;">Belum ada riwayat pertandingan untuk tim ini.</p>`;
+
+    const container = document.getElementById("teamDetailPageContainer");
+    if (container) {
+      container.innerHTML = `
+        <div class="fullpage-nav-bar">
+          <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/tim', 'teams')">
+            <span>←</span> Kembali ke Daftar Tim
+          </button>
+          <div style="font-size: 0.76rem; color: #94a3b8;">
+            Turnamen Futsal ACC 2026 / Profil Tim
+          </div>
+        </div>
+
+        <div class="team-hero-card">
+          <div class="team-hero-inner">
+            <div class="team-hero-emblem-wrap">
+              ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-hero-emblem">` : `<span style="font-size: 2rem;">🏆</span>`}
+            </div>
+            <div class="team-hero-meta" style="flex: 1;">
+              <div class="team-badge-row">
+                <span style="font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: rgba(245,158,11,0.2); color: var(--accent-gold); border: 1px solid rgba(245,158,11,0.4);">
+                  Grup ${team.group && team.group !== '-' ? team.group : 'Belum Diundi'} • ${team.category || 'SMP'}
+                </span>
+                <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 99px; background: rgba(255,255,255,0.08); color: #e2e8f0;">
+                  📍 ${typeof Security !== 'undefined' ? Security.sanitize(team.city || 'Sulawesi Selatan') : (team.city || 'Sulawesi Selatan')}
+                </span>
+              </div>
+              <h1>${typeof Security !== 'undefined' ? Security.sanitize(team.name) : team.name}</h1>
+              <p>Official Pelatih: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.coach || '-') : (off.coach || '-')}</strong></p>
+              <p style="margin-top: 3px;">Manager: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.manager || '-') : (off.manager || '-')}</strong> • Medis: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.medic || '-') : (off.medic || '-')}</strong></p>
+            </div>
+          </div>
+
+          <div class="fullpage-stats-grid">
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val">${mp}</div>
+              <div class="fullpage-stat-lbl">Main</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val green">${w}</div>
+              <div class="fullpage-stat-lbl">Menang</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val">${d}</div>
+              <div class="fullpage-stat-lbl">Seri</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val red">${l}</div>
+              <div class="fullpage-stat-lbl">Kalah</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val">${gf}:${ga}</div>
+              <div class="fullpage-stat-lbl">Gol (+/-)</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val gold">${pts}</div>
+              <div class="fullpage-stat-lbl">Poin</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fullpage-section-card">
+          <div class="fullpage-section-title">
+            <span>👕</span> Informasi Jersey & Kontak Manajemen
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: 0.82rem;">
+            <div style="padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+              <span style="color: #94a3b8; font-size: 0.72rem; display: block;">Jersey Utama (Home):</span>
+              <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.jerseyHome || 'Kostum Utama') : (off.jerseyHome || 'Kostum Utama')}</strong>
+            </div>
+            <div style="padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+              <span style="color: #94a3b8; font-size: 0.72rem; display: block;">Jersey Cadangan (Away):</span>
+              <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.jerseyAway || 'Kostum Cadangan') : (off.jerseyAway || 'Kostum Cadangan')}</strong>
+            </div>
+            <div style="padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+              <span style="color: #94a3b8; font-size: 0.72rem; display: block;">WhatsApp Official:</span>
+              ${off.phone ? `<a href="${waLink}" target="_blank" style="color: #25d366; font-weight: 700; text-decoration: none;">💬 ${typeof Security !== 'undefined' ? Security.sanitize(off.phone) : off.phone}</a>` : '<span style="color: #64748b;">-</span>'}
+            </div>
+          </div>
+        </div>
+
+        <div class="fullpage-section-card">
+          <div class="fullpage-section-title" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>👥</span> Skuad Pemain Resmi (${(team.players || []).length} Pemain)
+            </div>
+            <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 500;">Klik kartu pemain untuk detail</span>
+          </div>
+          <div class="roster-interactive-grid">
+            ${playersHtml || `<p style="color: var(--text-muted); padding: 16px;">Belum ada pemain yang terdaftar dalam tim ini.</p>`}
+          </div>
+        </div>
+
+        <div class="fullpage-section-card">
+          <div class="fullpage-section-title">
+            <span>🏟️</span> Jadwal & Riwayat Pertandingan Tim
+          </div>
+          <div>${matchHistoryHtml}</div>
+        </div>
+      `;
+    }
+
+    document.querySelectorAll(".tab-pane").forEach(pane => {
+      pane.classList.remove("active");
+      pane.style.display = "none";
+    });
+    const targetPane = document.getElementById("pane-team-detail");
+    if (targetPane) {
+      targetPane.classList.add("active");
+      targetPane.style.display = "block";
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+
+  openPlayerDetailPage(teamId, playerIdOrName, pushHistory = true, customPath = null) {
+    if (this._isMobileMenuOpen) this.closeMobileMenu();
+
+    if (this.store && typeof this.store.syncPlayerStatsFromMatches === "function") {
+      try { this.store.syncPlayerStatsFromMatches(); } catch (_) {}
+    }
+
+    const team = this.store.getTeam(teamId);
+    if (!team) {
+      this.switchTab("teams", false);
+      return;
+    }
+
+    const decodedId = decodeURIComponent(playerIdOrName);
+    const player = (team.players || []).find(p =>
+      String(p.id) === decodedId ||
+      String(p.no) === decodedId ||
+      (p.name && p.name.trim().toLowerCase() === decodedId.trim().toLowerCase())
+    ) || { name: decodedId, no: '-', pos: 'Pemain' };
+
+    this.currentTab = "player-detail";
+    const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}/detail-pemain/${encodeURIComponent(player.name || decodedId)}`;
+    if (pushHistory) {
+      try {
+        history.pushState({ tab: "player-detail", teamId: team.id, playerId: decodedId }, "", path);
+      } catch (_) {}
+    }
+
+    const cleanPName = (player.name || "").toLowerCase().trim();
+
+    // Hitung seluruh statistik pemain secara aktual dari data.matches
+    let totalGoals = 0;
+    let totalYc = 0;
+    let totalRc = 0;
+    let matchesCount = 0;
+    const playerEventsLog = [];
+
+    (this.store.data.matches || []).forEach(m => {
+      let playerInMatch = false;
+      const isHome = m.homeId === team.id;
+      const isAway = m.awayId === team.id;
+      if (!isHome && !isAway) return;
+
+      const oppId = isHome ? m.awayId : m.homeId;
+      const opp = this.store.getTeam(oppId);
+      const oppName = opp ? opp.name : ("Tim " + oppId);
+
+      // Periksa gol
+      (m.goals || []).forEach(g => {
+        const gPlayer = (g.player || "").toLowerCase().trim();
+        const isMyTeam = g.team === team.id || g.team === team.name;
+        if (isMyTeam && (gPlayer === cleanPName || gPlayer === `${cleanPName} (#${player.no})` || (player.no && gPlayer === `#${player.no}`))) {
+          totalGoals++;
+          playerInMatch = true;
+          playerEventsLog.push({
+            type: "goal",
+            matchTitle: `vs ${oppName}`,
+            minute: g.minute ? `${g.minute}'` : "Laga",
+            note: "⚽ Mencetak Gol"
+          });
+        }
+      });
+
+      // Periksa kartu
+      (m.cards || []).forEach(c => {
+        const cPlayer = (c.player || "").toLowerCase().trim();
+        const isMyTeam = c.team === team.id || c.team === team.name;
+        if (isMyTeam && (cPlayer === cleanPName || cPlayer === `${cleanPName} (#${player.no})` || (player.no && cPlayer === `#${player.no}`))) {
+          playerInMatch = true;
+          if (c.type === "yellow") {
+            totalYc++;
+            playerEventsLog.push({
+              type: "yellow",
+              matchTitle: `vs ${oppName}`,
+              minute: c.minute ? `${c.minute}'` : "Laga",
+              note: "🟨 Kartu Kuning"
+            });
+          } else if (c.type === "red") {
+            totalRc++;
+            playerEventsLog.push({
+              type: "red",
+              matchTitle: `vs ${oppName}`,
+              minute: c.minute ? `${c.minute}'` : "Laga",
+              note: "🟥 Kartu Merah Langsung"
+            });
+          }
+        }
+      });
+
+      if (m.status === "finished") {
+        matchesCount++;
+      }
+    });
+
+    let statusLabel = "SIAP BERTANDING (AMAN)";
+    let statusBg = "background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);";
+    if (totalRc >= 1) {
+      statusLabel = "SANKSI KARTU MERAH (LARANGAN BERMAIN 1 LAGA)";
+      statusBg = "background: rgba(239,68,68,0.25); color: #ef4444; border: 1px solid rgba(239,68,68,0.5);";
+    } else if (totalYc >= 2) {
+      statusLabel = "AKUMULASI 2 KARTU KUNING (SANKSI 1 LAGA)";
+      statusBg = "background: rgba(245,158,11,0.25); color: #f59e0b; border: 1px solid rgba(245,158,11,0.5);";
+    } else if (totalYc === 1) {
+      statusLabel = "PERINGATAN 1 KARTU KUNING";
+      statusBg = "background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4);";
+    }
+
+    const container = document.getElementById("playerDetailPageContainer");
+    if (container) {
+      container.innerHTML = `
+        <div class="fullpage-nav-bar">
+          <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/daftar-tim/detail-tim/${encodeURIComponent(team.id)}', 'team-detail', { teamId: '${team.id}' })">
+            <span>←</span> Kembali ke Profil Tim ${typeof Security !== 'undefined' ? Security.sanitize(team.name) : team.name}
+          </button>
+          <div style="font-size: 0.76rem; color: #94a3b8;">
+            Turnamen Futsal ACC 2026 / Profil Pemain
+          </div>
+        </div>
+
+        <div class="player-hero-card">
+          <div class="player-watermark-number">#${player.no || ''}</div>
+          <div class="player-hero-inner">
+            <div class="player-hero-photo-wrap">
+              ${player.photo ? `<img src="${player.photo}" alt="${player.name}" class="player-hero-photo" onerror="this.onerror=null; this.src='assets/acc_logo.png';">` : `<img src="assets/acc_logo.png" alt="ACC 2026" class="player-hero-photo">`}
+            </div>
+            <div class="player-hero-meta" style="flex: 1;">
+              <div class="team-badge-row">
+                <span style="font-size: 0.74rem; font-weight: 800; padding: 4px 12px; border-radius: 99px; ${statusBg}">
+                  ● ${statusLabel}
+                </span>
+                <span style="font-size: 0.74rem; padding: 4px 10px; border-radius: 99px; background: rgba(255,255,255,0.08); color: #ffffff;">
+                  Posisi: ${typeof Security !== 'undefined' ? Security.sanitize(player.pos || 'Flank') : (player.pos || 'Flank')}
+                </span>
+              </div>
+              <h1>${typeof Security !== 'undefined' ? Security.sanitize(player.name) : player.name} <span style="color: var(--accent-gold);">#${player.no || '-'}</span></h1>
+              <p>Asal Tim: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(team.name) : team.name}</strong> (${team.category || 'SMP'})</p>
+              <p style="margin-top: 3px;">Pelatih: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(team.official?.coach || '-') : (team.official?.coach || '-')}</strong></p>
+            </div>
+          </div>
+
+          <div class="fullpage-stats-grid">
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val green">${totalGoals}</div>
+              <div class="fullpage-stat-lbl">Gol Dicetak</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val gold">${totalYc}</div>
+              <div class="fullpage-stat-lbl">Kartu Kuning 🟨</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val red">${totalRc}</div>
+              <div class="fullpage-stat-lbl">Kartu Merah 🟥</div>
+            </div>
+            <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val">${matchesCount}</div>
+              <div class="fullpage-stat-lbl">Laga Selesai Tim</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fullpage-section-card">
+          <div class="fullpage-section-title">
+            <span>⚽</span> Riwayat Kontribusi Gol & Pelanggaran Laga
+          </div>
+          <div>
+            ${playerEventsLog.length > 0 ? playerEventsLog.map(ev => `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.1); font-family: monospace; font-size: 0.76rem; font-weight: 700; color: #ffffff;">${ev.minute}</span>
+                  <div>
+                    <strong style="font-size: 0.84rem; color: #ffffff; display: block;">${ev.matchTitle}</strong>
+                    <span style="font-size: 0.72rem; color: #94a3b8;">${ev.note}</span>
+                  </div>
+                </div>
+                <div>
+                  ${ev.type === 'goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #10b981;">+1 Gol</span>' : (ev.type === 'yellow' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f59e0b;">Kartu Kuning</span>' : '<span style="font-size: 0.74rem; font-weight: 700; color: #ef4444;">Kartu Merah</span>')}
+                </div>
+              </div>
+            `).join('') : `
+              <div style="text-align: center; padding: 24px 16px; color: var(--text-muted); font-size: 0.82rem;">
+                <span style="font-size: 2rem; display: block; margin-bottom: 8px;">✨</span>
+                Pemain bermain bersih dan disiplin — belum ada catatan kartu atau gol dalam rekaman laga.
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    document.querySelectorAll(".tab-pane").forEach(pane => {
+      pane.classList.remove("active");
+      pane.style.display = "none";
+    });
+    const targetPane = document.getElementById("pane-player-detail");
+    if (targetPane) {
+      targetPane.classList.add("active");
+      targetPane.style.display = "block";
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+
+  openTeamModal(teamId) {
+    return this.openTeamDetailPage(teamId, true);
+  },
+
+  switchTab(tabId, pushHistory = true, customPath = null) {
     try {
       if (tabId === "draw" && !this.isAdmin()) {
         tabId = "home";
       }
 
+      const tabToPath = {
+        home: "/beranda",
+        matches: "/jadwal",
+        standings: "/klasemen",
+        draw: "/draw",
+        bracket: "/bagan",
+        teams: "/tim",
+        scorers: "/top-skor",
+        discipline: "/disiplin",
+        juknis: "/regulasi"
+      };
+
+      const targetPath = customPath || tabToPath[tabId] || ("/" + tabId);
+
       if (pushHistory && tabId !== this.currentTab) {
         try {
-          history.pushState({ tab: tabId }, "");
+          history.pushState({ tab: tabId }, "", targetPath);
         } catch (err) {}
       }
       this.currentTab = tabId;
@@ -2454,7 +3033,14 @@ var app = window.app = Object.assign(window.app || {}, {
         btn.classList.toggle("active", btn.dataset.tab === tabId);
       });
 
-      // Update Mobile Nav
+      // Update Mobile Drawer Links
+      document.querySelectorAll(".mobile-nav-link").forEach(link => {
+        const isAct = link.dataset.tab === tabId ||
+                      ((tabId === "team-detail" || tabId === "player-detail") && link.dataset.tab === "teams");
+        link.classList.toggle("active", isAct);
+      });
+
+      // Update Mobile Nav (jika ada)
       document.querySelectorAll(".mobile-nav-item").forEach(item => {
         item.classList.toggle("active", item.dataset.tab === tabId);
       });
@@ -3520,7 +4106,7 @@ var app = window.app = Object.assign(window.app || {}, {
       const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
 
       return `
-        <div class="school-card ${swipeClass}" onclick="app.openTeamModal('${t.id}')">
+        <div class="school-card ${swipeClass}" onclick="app.navigateTo('/daftar-tim/detail-tim/${t.id}', 'team-detail', { teamId: '${t.id}' })" style="cursor: pointer;">
           ${t.logo ? `<div class="school-card-watermark" style="background-image: url('${t.logo}');"></div>` : ''}
           <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor || '#0284c7'}, #0f172a);">
             <span class="group-tag-corner">
@@ -3553,6 +4139,9 @@ var app = window.app = Object.assign(window.app || {}, {
             <div class="school-card-footer" onclick="event.stopPropagation();">
               <span class="roster-count">👥 ${tPlayers.length} Pemain</span>
               <div style="display: flex; gap: 6px; align-items: center;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="event.stopPropagation(); app.navigateTo('/daftar-tim/detail-tim/${t.id}', 'team-detail', { teamId: '${t.id}' })" style="font-size: 0.72rem; padding: 4px 10px; font-weight: 700; border-radius: 99px; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #ffffff;">
+                  🔍 Profil & Skuad
+                </button>
                 ${isPanitia ? `<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); admin.openTeamEditorModal('${t.id}')" title="Edit Data Tim & Pemain" style="font-size: 0.72rem; padding: 3px 8px; border-color: var(--primary); color: var(--primary); font-weight: 600;">✏️ Edit</button>` : ''}
                 <a href="${waLink}" target="_blank" class="btn-wa-direct" title="Hubungi Official via WA">
                   💬 WA Official
@@ -5248,6 +5837,8 @@ const _bootAppSafely = () => {
     }
     if (window._pendingTab) {
       try { app.switchTab(window._pendingTab, false); } catch (e) {}
+    } else {
+      try { app.parseCurrentRoute(false); } catch (e) {}
     }
   } catch (err) {
     console.error("Critical app.init error:", err);
