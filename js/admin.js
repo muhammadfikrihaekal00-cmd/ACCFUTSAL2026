@@ -1,9 +1,13 @@
 // admin.js - Panitia Admin Control Panel
 const admin = window.admin = Object.assign(window.admin || {}, {
-  isAuthenticated: (sessionStorage.getItem("pondok_futsal_admin_auth") === "true"),
+  isAuthenticated: (sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true"),
   activeMatchId: null,
   activeQuickMatchId: null,
-  adminPinHash: sessionStorage.getItem("pondok_futsal_admin_pin_hash") || "",
+  adminPinHash: sessionStorage.getItem("pondok_futsal_admin_pin_hash") || localStorage.getItem("pondok_futsal_admin_pin_hash") || "",
+  teamEditorDirty: false,
+  _draftSaveTimer: null,
+  DRAFT_TEAM_KEY: "acc_draft_team_editor_v1",
+  DRAFT_BATCH_KEY: "acc_draft_batch_teams_v1",
 
   init() {
     this.checkSession();
@@ -11,9 +15,13 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   checkSession() {
-    if (sessionStorage.getItem("pondok_futsal_admin_auth") === "true") {
+    if (sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true") {
       this.isAuthenticated = true;
-      this.adminPinHash = sessionStorage.getItem("pondok_futsal_admin_pin_hash") || "";
+      this.adminPinHash = sessionStorage.getItem("pondok_futsal_admin_pin_hash") || localStorage.getItem("pondok_futsal_admin_pin_hash") || "";
+      try {
+        sessionStorage.setItem("pondok_futsal_admin_auth", "true");
+        if (this.adminPinHash) sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
+      } catch (_) {}
       this.updateAdminUi();
     }
   },
@@ -131,6 +139,42 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         }
       });
     }
+
+    // GLOBAL ENTER-KEY GUARD: Mencegah tombol Enter menutup / submit form editor secara tidak sengaja
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target && e.target.tagName === "INPUT") {
+        const inputType = (e.target.type || "").toLowerCase();
+        if (inputType === "submit" || inputType === "button" || e.target.id === "adminPinInput") return;
+        const inEditor = e.target.closest("#teamEditorModal, #modalBatchUploadTeams, #matchEditorModal, #quickScoreModal, #sponsorEditorModal, #momentEditorModal, #youtubeLiveModal, #adminDashboardModal, #mediaHubModal");
+        if (inEditor) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+    }, true);
+
+    // AUTO-DRAFT LIVE LISTENER: Simpan otomatis setiap ketikan di Form Tim agar tidak pernah hilang / isi ulang!
+    const teamEditorModalEl = document.getElementById("teamEditorModal");
+    if (teamEditorModalEl) {
+      const triggerDraftSave = (e) => {
+        if (e && e.target && e.target.id === "teamEditorSelectTarget") return;
+        this.teamEditorDirty = true;
+        this.scheduleTeamEditorDraftSave();
+      };
+      teamEditorModalEl.addEventListener("input", triggerDraftSave);
+      teamEditorModalEl.addEventListener("change", triggerDraftSave);
+    }
+
+    // AUTO-DRAFT LIVE LISTENER: Simpan otomatis setiap edit di Folder / Batch Upload Tim
+    const batchModalEl = document.getElementById("modalBatchUploadTeams");
+    if (batchModalEl) {
+      const triggerBatchDraftSave = () => {
+        this.scheduleBatchUploadDraftSave();
+      };
+      batchModalEl.addEventListener("input", triggerBatchDraftSave);
+      batchModalEl.addEventListener("change", triggerBatchDraftSave);
+    }
   },
 
   // Core Login Routine - Secure, Master PINs (1234, 123456, 2026, admin), Anti-Lockout
@@ -193,6 +237,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
         sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
+        localStorage.setItem("pondok_futsal_admin_auth", "true");
+        localStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
       } catch (e) { }
 
       if (input) input.value = "";
@@ -2094,7 +2140,9 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       this.renderPlayerRows([]);
     }
 
+    this.teamEditorDirty = false;
     document.getElementById("teamEditorModal").classList.add("active");
+    try { history.pushState({ tab: app.currentTab, editing: true }, ""); } catch (_) {}
 
     const teamForm = document.getElementById("teamEditorForm");
     if (teamForm && !teamForm._enterKeyGuarded) {
@@ -2118,6 +2166,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       const thumb = document.getElementById("teamLogoThumb");
       if (hiddenInput) hiddenInput.value = dataUrl;
       if (thumb) thumb.src = dataUrl;
+      this.teamEditorDirty = true;
+      this.scheduleTeamEditorDraftSave();
 
       // Try uploading to Supabase Storage in background
       if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
@@ -2125,6 +2175,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           if (cloudUrl && hiddenInput) {
             hiddenInput.value = cloudUrl;
             if (thumb) thumb.src = cloudUrl;
+            this.scheduleTeamEditorDraftSave();
           }
         }).catch(() => {});
       }
@@ -2146,6 +2197,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         thumb.src = dataUrl;
         thumb.style.display = "block";
       }
+      this.teamEditorDirty = true;
+      this.scheduleTeamEditorDraftSave();
 
       // Try uploading to Supabase Storage in background
       if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
@@ -2153,6 +2206,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           if (cloudUrl && hiddenInput) {
             hiddenInput.value = cloudUrl;
             if (thumb) thumb.src = cloudUrl;
+            this.scheduleTeamEditorDraftSave();
           }
         }).catch(() => {});
       }
@@ -2175,6 +2229,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         thumb.src = dataUrl;
         thumb.style.display = "block";
       }
+      this.teamEditorDirty = true;
+      this.scheduleTeamEditorDraftSave();
 
       // Try uploading to Supabase Storage in background
       if (window.SupabaseService && window.SupabaseService.isConfigured && window.SupabaseService.uploadImage) {
@@ -2182,6 +2238,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
           if (cloudUrl && hiddenInput) {
             hiddenInput.value = cloudUrl;
             if (thumb) thumb.src = cloudUrl;
+            this.scheduleTeamEditorDraftSave();
           }
         }).catch(() => {});
       }
@@ -2207,6 +2264,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         }
         if (hidden) hidden.value = dataUrl;
       }
+      this.teamEditorDirty = true;
+      this.scheduleTeamEditorDraftSave();
       if (window.app && typeof app.showToast === 'function') {
         app.showToast("✅ Foto pemain siap disimpan!");
       }
@@ -2291,7 +2350,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         <input type="number" class="form-input player-no-input" value="${currentRows + 1}" placeholder="No" style="padding: 4px; font-weight:700; width: 45px;">
       </td>
       <td style="text-align: center;">
-        <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block; position: relative;" onclick="const fi = this.querySelector('input[type=file]'); if (fi) fi.click();">
+        <label class="player-photo-label-btn" title="Klik untuk upload foto pemain" style="cursor: pointer; display: inline-block; position: relative;">
           <img src="assets/mvp_player.jpg" class="player-row-photo-preview" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border-color); display: block;">
           <input type="file" accept="image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;" onchange="admin.handlePlayerPhotoUpload(event, this)">
           <input type="hidden" class="player-photo-input" value="">
@@ -2322,11 +2381,17 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       </td>
     `;
     tbody.appendChild(tr);
+    this.teamEditorDirty = true;
+    this.scheduleTeamEditorDraftSave();
   },
 
   removePlayerRow(btn) {
     const row = btn.closest(".player-input-row");
-    if (row) row.remove();
+    if (row) {
+      row.remove();
+      this.teamEditorDirty = true;
+      this.scheduleTeamEditorDraftSave();
+    }
   },
 
   async saveTeamData() {
@@ -2485,7 +2550,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         app.store.syncKnockoutFromStandings();
       }
 
-      // Tutup modal form editor segera agar responsif
+      // Bersihkan draft karena data sudah tersimpan permanen, lalu tutup modal
+      this.clearTeamEditorDraft();
       const editorModal = document.getElementById("teamEditorModal");
       if (editorModal) editorModal.classList.remove("active");
 
@@ -3675,16 +3741,58 @@ const admin = window.admin = Object.assign(window.admin || {}, {
   batchParsedTeams: [],
 
   openBatchUploadModal() {
-    this.batchParsedTeams = [];
     const modal = document.getElementById("modalBatchUploadTeams");
     if (!modal) return;
-    this.resetBatchUploadUI();
+
+    // Cek apakah masih ada draft / antrian folder tim yang belum disimpan agar TIDAK hilang!
+    let hasExistingDraft = this.batchParsedTeams && this.batchParsedTeams.length > 0;
+    if (!hasExistingDraft) {
+      try {
+        const rawDraft = localStorage.getItem(this.DRAFT_BATCH_KEY);
+        if (rawDraft) {
+          const parsed = JSON.parse(rawDraft);
+          if (parsed && Array.isArray(parsed.teams) && parsed.teams.length > 0) {
+            this.batchParsedTeams = parsed.teams;
+            const pasteInput = document.getElementById("batchTextPasteInput");
+            if (pasteInput && parsed.pasteText) pasteInput.value = parsed.pasteText;
+            hasExistingDraft = true;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (hasExistingDraft) {
+      this.renderBatchUploadPreview();
+      const btnSave = document.getElementById("btnBatchSaveTeams");
+      if (btnSave) btnSave.style.display = "inline-flex";
+      const statusEl = document.getElementById("batchUploadStatus");
+      if (statusEl) {
+        statusEl.style.display = "block";
+        statusEl.innerHTML = `<div style="background:#ecfdf5; border:1px solid #10b981; color:#065f46; padding:10px 12px; border-radius:8px; font-size:0.8rem; font-weight:700;">🛡️ Data antrian folder sebelumnya (${this.batchParsedTeams.length} tim) masih tersimpan aman! Anda bisa langsung melanjutkan tanpa mengulang dari awal.</div>`;
+      }
+    } else {
+      this.batchParsedTeams = [];
+      this.resetBatchUploadUI();
+    }
+
     modal.classList.add("active");
+    try { history.pushState({ tab: app.currentTab, editing: true }, ""); } catch (_) {}
   },
 
-  closeBatchUploadModal() {
+  closeBatchUploadModal(force = false) {
     const modal = document.getElementById("modalBatchUploadTeams");
-    if (modal) modal.classList.remove("active");
+    if (!modal) return;
+    const pasteVal = (document.getElementById("batchTextPasteInput")?.value || "").trim();
+    if (!force && ((this.batchParsedTeams && this.batchParsedTeams.length > 0) || pasteVal.length > 0)) {
+      const ok = confirm("⚠️ Data berkas / folder tim yang sedang Anda isi BELUM DISIMPAN ke turnamen.\n\nApakah Anda yakin ingin keluar dan mengosongkan antrian ini?\n(Klik Cancel untuk tetap melanjutkan pengisian)");
+      if (!ok) return;
+    }
+    this.clearBatchUploadDraft();
+    this.resetBatchUploadUI();
+    modal.classList.remove("active");
+    if (!document.querySelector(".modal-overlay.active")) {
+      document.body.classList.remove("modal-open");
+    }
   },
 
   resetBatchUploadUI() {
@@ -4574,6 +4682,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     });
 
     previewEl.innerHTML = html;
+    this.scheduleBatchUploadDraftSave();
   },
 
   updateBatchTeamMapping(idx, teamId) {
@@ -4599,6 +4708,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     } else {
       t.players[playerIdx][field] = val;
     }
+    this.scheduleBatchUploadDraftSave();
   },
 
   addBatchPlayer(teamIdx) {
@@ -4792,6 +4902,7 @@ const admin = window.admin = Object.assign(window.admin || {}, {
         }
       } else {
         const newId = "T" + String(app.store.data.teams.length + 1).padStart(2, "0");
+        tData.id = newId;
         const newTeamObj = {
           id: newId,
           name: tData.teamName || tData.folderName,
@@ -4857,7 +4968,8 @@ const admin = window.admin = Object.assign(window.admin || {}, {
       btnSave.textContent = "💾 Terapkan & Simpan ke Turnamen (Semua HP & Cloud)";
     }
 
-    this.closeBatchUploadModal();
+    this.clearBatchUploadDraft();
+    this.closeBatchUploadModal(true);
     app.showToast(`🎉 Sukses! ${updatedCount} tim diperbarui & ${newCount} tim baru ditambahkan. Otomatis tersinkron ke Cloud & semua HP!`);
   },
 
@@ -4956,11 +5068,250 @@ const admin = window.admin = Object.assign(window.admin || {}, {
     await this.processBatchFiles(rawFiles);
   },
 
+  // ==========================================
+  // AUTO-DRAFT ENGINE (ANTI-HILANG & ANTI-ISI ULANG)
+  // ==========================================
+  scheduleTeamEditorDraftSave() {
+    if (this._draftSaveTimer) clearTimeout(this._draftSaveTimer);
+    this._draftSaveTimer = setTimeout(() => {
+      this.saveTeamEditorDraft();
+    }, 350);
+  },
+
+  saveTeamEditorDraft() {
+    const modal = document.getElementById("teamEditorModal");
+    if (!modal || !modal.classList.contains("active")) return;
+    try {
+      const rows = document.querySelectorAll("#teamEditorPlayersTbody .player-input-row");
+      const players = [];
+      for (const r of rows) {
+        const pName = (r.querySelector(".player-name-input")?.value || "").trim();
+        const pNo = parseInt(r.querySelector(".player-no-input")?.value, 10);
+        const pPos = r.querySelector(".player-pos-select")?.value || "Flank";
+        const pGoals = parseInt(r.querySelector(".player-goals-input")?.value, 10) || 0;
+        const pYc = parseInt(r.querySelector(".player-yc-input")?.value, 10) || 0;
+        const pRc = parseInt(r.querySelector(".player-rc-input")?.value, 10) || 0;
+        const pPhoto = r.querySelector(".player-photo-input")?.value || "";
+        players.push({
+          no: isNaN(pNo) ? (players.length + 1) : pNo,
+          name: pName,
+          pos: pPos,
+          goals: pGoals,
+          yc: pYc,
+          rc: pRc,
+          photo: pPhoto
+        });
+      }
+
+      const draft = {
+        savedAt: Date.now(),
+        id: (document.getElementById("editTeamId")?.value || "").trim(),
+        name: (document.getElementById("editTeamName")?.value || ""),
+        shortName: (document.getElementById("editTeamShortName")?.value || ""),
+        category: document.getElementById("editTeamCategory")?.value || "SMP",
+        group: document.getElementById("editTeamGroup")?.value || "A",
+        city: (document.getElementById("editTeamCity")?.value || ""),
+        badgeColor: (document.getElementById("editTeamColor")?.value || "#10b981"),
+        logo: document.getElementById("editTeamLogo")?.value || "",
+        coach: (document.getElementById("editTeamCoach")?.value || ""),
+        coachPhoto: document.getElementById("editTeamCoachPhoto")?.value || "",
+        manager: (document.getElementById("editTeamManager")?.value || ""),
+        managerPhoto: document.getElementById("editTeamManagerPhoto")?.value || "",
+        medic: (document.getElementById("editTeamMedic")?.value || ""),
+        phone: (document.getElementById("editTeamPhone")?.value || ""),
+        jerseyHome: (document.getElementById("editTeamJerseyHome")?.value || ""),
+        jerseyAway: (document.getElementById("editTeamJerseyAway")?.value || ""),
+        players
+      };
+
+      try {
+        localStorage.setItem(this.DRAFT_TEAM_KEY, JSON.stringify(draft));
+      } catch (quotaErr) {
+        // Fallback jika kuota penuh: simpan semua teks & foto yang ukuran kecil
+        const lightDraft = {
+          ...draft,
+          logo: draft.logo.length < 60000 ? draft.logo : "",
+          coachPhoto: draft.coachPhoto.length < 60000 ? draft.coachPhoto : "",
+          managerPhoto: draft.managerPhoto.length < 60000 ? draft.managerPhoto : "",
+          players: draft.players.map(p => ({ ...p, photo: (p.photo && p.photo.length < 40000) ? p.photo : "" }))
+        };
+        try { localStorage.setItem(this.DRAFT_TEAM_KEY, JSON.stringify(lightDraft)); } catch (_) {}
+      }
+    } catch (_) {}
+  },
+
+  clearTeamEditorDraft() {
+    this.teamEditorDirty = false;
+    try { localStorage.removeItem(this.DRAFT_TEAM_KEY); } catch (_) {}
+  },
+
+  closeTeamEditorModal(force = false) {
+    const modal = document.getElementById("teamEditorModal");
+    if (!modal) return;
+    if (!force && this.teamEditorDirty) {
+      const ok = confirm("⚠️ Perubahan data tim ini belum disimpan.\n\nApakah Anda yakin ingin keluar dan membatalkan perubahan ini?\n(Klik Cancel untuk tetap melanjutkan pengisian)");
+      if (!ok) return;
+    }
+    this.clearTeamEditorDraft();
+    modal.classList.remove("active");
+    if (!document.querySelector(".modal-overlay.active")) {
+      document.body.classList.remove("modal-open");
+    }
+  },
+
+  scheduleBatchUploadDraftSave() {
+    if (this._batchDraftSaveTimer) clearTimeout(this._batchDraftSaveTimer);
+    this._batchDraftSaveTimer = setTimeout(() => {
+      this.saveBatchUploadDraft();
+    }, 350);
+  },
+
+  saveBatchUploadDraft() {
+    const modal = document.getElementById("modalBatchUploadTeams");
+    if (!modal || !modal.classList.contains("active")) return;
+    const pasteVal = (document.getElementById("batchTextPasteInput")?.value || "").trim();
+    if ((!this.batchParsedTeams || this.batchParsedTeams.length === 0) && !pasteVal) {
+      this.clearBatchUploadDraft();
+      return;
+    }
+    try {
+      const payload = {
+        savedAt: Date.now(),
+        pasteText: pasteVal,
+        teams: this.batchParsedTeams || []
+      };
+      try {
+        localStorage.setItem(this.DRAFT_BATCH_KEY, JSON.stringify(payload));
+      } catch (quotaErr) {
+        // Fallback tanpa foto besar jika kuota localStorage hampir penuh
+        const lightPayload = {
+          savedAt: Date.now(),
+          pasteText: pasteVal,
+          teams: (this.batchParsedTeams || []).map(t => ({
+            ...t,
+            logo: (t.logo && t.logo.length < 50000) ? t.logo : "",
+            coachPhoto: (t.coachPhoto && t.coachPhoto.length < 50000) ? t.coachPhoto : "",
+            managerPhoto: (t.managerPhoto && t.managerPhoto.length < 50000) ? t.managerPhoto : "",
+            players: (t.players || []).map(p => ({ ...p, photo: (p.photo && p.photo.length < 30000) ? p.photo : "" }))
+          }))
+        };
+        try { localStorage.setItem(this.DRAFT_BATCH_KEY, JSON.stringify(lightPayload)); } catch (_) {}
+      }
+    } catch (_) {}
+  },
+
+  clearBatchUploadDraft() {
+    try { localStorage.removeItem(this.DRAFT_BATCH_KEY); } catch (_) {}
+  },
+
+  saveAllActiveDrafts() {
+    this.saveTeamEditorDraft();
+    this.saveBatchUploadDraft();
+  },
+
+  restorePendingDraftsOnBoot() {
+    try {
+      // 1. Cek draft Batch Upload Folder Tim (jika sempat reload / keluar mendadak saat input folder)
+      const rawBatch = localStorage.getItem(this.DRAFT_BATCH_KEY);
+      if (rawBatch) {
+        const parsedBatch = JSON.parse(rawBatch);
+        const ageMs = Date.now() - (parsedBatch.savedAt || 0);
+        // Pulihkan jika draft berusia kurang dari 12 jam dan ada isinya
+        if (ageMs < 12 * 3600 * 1000 && ((parsedBatch.teams && parsedBatch.teams.length > 0) || parsedBatch.pasteText)) {
+          const modal = document.getElementById("modalBatchUploadTeams");
+          if (modal) {
+            this.batchParsedTeams = Array.isArray(parsedBatch.teams) ? parsedBatch.teams : [];
+            const pasteInput = document.getElementById("batchTextPasteInput");
+            if (pasteInput && parsedBatch.pasteText) pasteInput.value = parsedBatch.pasteText;
+            if (this.batchParsedTeams.length > 0) {
+              this.renderBatchUploadPreview();
+              const btnSave = document.getElementById("btnBatchSaveTeams");
+              if (btnSave) btnSave.style.display = "inline-flex";
+              const statusEl = document.getElementById("batchUploadStatus");
+              if (statusEl) {
+                statusEl.style.display = "block";
+                statusEl.innerHTML = `<div style="background:#ecfdf5; border:1px solid #10b981; color:#065f46; padding:10px 12px; border-radius:8px; font-size:0.8rem; font-weight:700;">🛡️ Draft pengisian folder (${this.batchParsedTeams.length} tim) otomatis dipulihkan! Anda bisa langsung melanjutkan tanpa mengulang dari awal.</div>`;
+              }
+            }
+            modal.classList.add("active");
+            if (window.app && typeof app.showToast === "function") {
+              app.showToast("🛡️ Draft folder tim terakhir Anda otomatis dipulihkan!");
+            }
+            return;
+          }
+        } else {
+          this.clearBatchUploadDraft();
+        }
+      }
+
+      // 2. Cek draft Form Input/Edit Tim (jika sempat reload / keluar mendadak saat mengetik tim)
+      const rawTeam = localStorage.getItem(this.DRAFT_TEAM_KEY);
+      if (rawTeam) {
+        const draft = JSON.parse(rawTeam);
+        const ageMs = Date.now() - (draft.savedAt || 0);
+        if (ageMs < 12 * 3600 * 1000 && (draft.name || draft.coach || (draft.players && draft.players.some(p => p.name)))) {
+          if (!this.isAuthenticated) {
+            this.isAuthenticated = true;
+            this.updateAdminUi();
+          }
+          this.populateTeamEditorSelect(draft.id || "");
+          const titleEl = document.getElementById("teamEditorModalTitle");
+          if (titleEl) titleEl.textContent = draft.id ? `✏️ Lanjutkan Edit Tim: ${draft.name || draft.id}` : "➕ Lanjutkan Input Tim Baru (Draft)";
+          const setVal = (elId, v) => { const el = document.getElementById(elId); if (el) el.value = v || ""; };
+          setVal("editTeamId", draft.id);
+          setVal("editTeamName", draft.name);
+          setVal("editTeamShortName", draft.shortName);
+          setVal("editTeamCategory", draft.category || "SMP");
+          setVal("editTeamGroup", draft.group || "A");
+          setVal("editTeamCity", draft.city);
+          setVal("editTeamColor", draft.badgeColor || "#10b981");
+          setVal("editTeamColorPicker", draft.badgeColor || "#10b981");
+          setVal("editTeamLogo", draft.logo);
+          setVal("editTeamCoach", draft.coach);
+          setVal("editTeamCoachPhoto", draft.coachPhoto);
+          setVal("editTeamManager", draft.manager);
+          setVal("editTeamManagerPhoto", draft.managerPhoto);
+          setVal("editTeamMedic", draft.medic);
+          setVal("editTeamPhone", draft.phone);
+          setVal("editTeamJerseyHome", draft.jerseyHome);
+          setVal("editTeamJerseyAway", draft.jerseyAway);
+
+          const logoThumb = document.getElementById("teamLogoThumb");
+          if (logoThumb) logoThumb.src = draft.logo || "assets/acc_logo.png";
+          const coachThumb = document.getElementById("coachPhotoThumb");
+          if (coachThumb) {
+            coachThumb.src = draft.coachPhoto || "";
+            coachThumb.style.display = draft.coachPhoto ? "block" : "none";
+          }
+          const managerThumb = document.getElementById("managerPhotoThumb");
+          if (managerThumb) {
+            managerThumb.src = draft.managerPhoto || "";
+            managerThumb.style.display = draft.managerPhoto ? "block" : "none";
+          }
+          const btnDelete = document.getElementById("btnDeleteTeam");
+          if (btnDelete) btnDelete.style.display = draft.id ? "inline-flex" : "none";
+
+          this.renderPlayerRows(Array.isArray(draft.players) ? draft.players : []);
+          this.teamEditorDirty = true;
+          const modal = document.getElementById("teamEditorModal");
+          if (modal) modal.classList.add("active");
+          if (window.app && typeof app.showToast === "function") {
+            app.showToast("🛡️ Draft pengisian tim terakhir Anda otomatis dipulihkan!");
+          }
+        } else {
+          this.clearTeamEditorDraft();
+        }
+      }
+    } catch (_) {}
+  },
+
   logout() {
     this.isAuthenticated = false;
     this.adminPinHash = "";
     sessionStorage.removeItem("pondok_futsal_admin_auth");
     sessionStorage.removeItem("pondok_futsal_admin_pin_hash");
+    localStorage.removeItem("pondok_futsal_admin_auth");
+    localStorage.removeItem("pondok_futsal_admin_pin_hash");
     this.updateAdminUi();
     document.getElementById("adminDashboardModal").classList.remove("active");
     app.showToast("Anda telah keluar dari Mode Panitia (kembali ke Mode Peserta).");

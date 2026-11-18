@@ -10,10 +10,10 @@
   <title>ACC "Al-Fayyadh Champions Cup" 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.36">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.36">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.36">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.36">
+  <link rel="manifest" href="manifest.json?v=8.37">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.37">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.37">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.37">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -213,7 +213,7 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.36">
+  <link rel="stylesheet" href="css/styles.css?v=8.37">
 </head>
 
 <body>
@@ -1773,9 +1773,12 @@
   <div id="teamEditorModal" class="modal-overlay">
     <div class="modal-box" style="max-width: 760px;">
       <div class="modal-header">
-        <h3 class="modal-title" id="teamEditorModalTitle">✏️ Input & Edit Data Tim</h3>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <h3 class="modal-title" id="teamEditorModalTitle" style="margin: 0;">✏️ Input & Edit Data Tim</h3>
+          <span style="font-size: 0.68rem; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 999px;">🛡️ Auto-Draft Aktif</span>
+        </div>
         <button type="button" class="modal-close"
-          onclick="event.preventDefault(); document.getElementById('teamEditorModal').classList.remove('active');">&times;</button>
+          onclick="event.preventDefault(); admin.closeTeamEditorModal();">&times;</button>
       </div>
       <div class="modal-body">
         <form id="teamEditorForm" novalidate onsubmit="event.preventDefault(); admin.saveTeamData();">
@@ -1966,7 +1969,7 @@
             </button>
             <div style="display: flex; gap: 8px; margin-left: auto;">
               <button type="button" class="btn btn-outline btn-modal-close"
-                onclick="event.preventDefault(); document.getElementById('teamEditorModal').classList.remove('active');">Batal</button>
+                onclick="event.preventDefault(); admin.closeTeamEditorModal();">Batal</button>
               <button type="button" id="btnSaveTeamEditor" onclick="admin.saveTeamData()" class="btn btn-primary"
                 style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 700; color: #ffffff; padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);">
                 💾 Simpan Data Tim & Skuad
@@ -2555,7 +2558,10 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="modalBatchUploadTeams" class="modal-overlay">
     <div class="modal-box" style="max-width: 820px;">
       <div class="modal-header" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff;">
-        <h3 class="modal-title" style="color: #ffffff;">📂 Import Berkas Data Pemain & Tim (Batch Otomatis)</h3>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <h3 class="modal-title" style="color: #ffffff; margin: 0;">📂 Import Berkas Data Pemain & Tim (Batch Otomatis)</h3>
+          <span style="font-size: 0.68rem; font-weight: 700; color: #ffffff; background: rgba(16, 185, 129, 0.35); border: 1px solid rgba(255,255,255,0.4); padding: 2px 8px; border-radius: 999px;">🛡️ Auto-Draft Aktif</span>
+        </div>
         <button type="button" class="modal-close" onclick="admin.closeBatchUploadModal()"
           style="color: #ffffff;">&times;</button>
       </div>
@@ -2748,11 +2754,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.36"></script>
-  <script src="js/supabase-client.js?v=8.36"></script>
-  <script src="js/data.js?v=8.36"></script>
-  <script src="js/admin.js?v=8.36"></script>
-  <script src="js/app.js?v=8.36"></script>
+  <script src="js/security.js?v=8.37"></script>
+  <script src="js/supabase-client.js?v=8.37"></script>
+  <script src="js/data.js?v=8.37"></script>
+  <script src="js/admin.js?v=8.37"></script>
+  <script src="js/app.js?v=8.37"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

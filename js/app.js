@@ -818,6 +818,14 @@ const app = {
     try { this.renderCurrentView(); } catch(e) { console.warn("View init:", e); }
     try { this.initPwa(); } catch(e) { console.warn("PWA init:", e); }
     try { this.initSupabaseSync(); } catch(e) { console.warn("Supabase init:", e); }
+    // Otomatis pulihkan draft pengisian tim / folder jika browser sempat reload/terkeluar mendadak
+    setTimeout(() => {
+      try {
+        if (window.admin && typeof window.admin.restorePendingDraftsOnBoot === 'function') {
+          window.admin.restorePendingDraftsOnBoot();
+        }
+      } catch (_) {}
+    }, 600);
     // Otomatis pulihkan dan selaraskan foto cache lama secara realtime di latar belakang tanpa tombol
     setTimeout(() => {
       try {
@@ -1442,16 +1450,21 @@ const app = {
     }
 
     // Auto-refresh instan saat pengguna kembali ke aplikasi / unlock HP / jaringan reconnect
+    // PROTEKSI: Jangan pernah sync/re-render saat pengguna sedang aktif mengisi form atau memilih file/folder!
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === "visible" && !this.isUserEditing()) {
         syncFromRemote();
       }
     });
     window.addEventListener("focus", () => {
-      syncFromRemote();
+      if (!this.isUserEditing()) {
+        syncFromRemote();
+      }
     });
     window.addEventListener("online", () => {
-      syncFromRemote();
+      if (!this.isUserEditing()) {
+        syncFromRemote();
+      }
     });
 
     // Realtime Background Auto-Sync:
@@ -1461,13 +1474,8 @@ const app = {
     let lastPollTimestamp = 0;
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      // PROTEKSI ANTI-KELUAR: Jangan polling atau re-render jika sedang aktif mengedit data di modal!
-      const isEditing = Boolean(
-        document.querySelector("#teamEditorModal.active") ||
-        document.querySelector("#matchEditorModal.active") ||
-        document.querySelector("#batchUploadModal.active")
-      );
-      if (isEditing) return;
+      // PROTEKSI ANTI-KELUAR: Jangan polling atau re-render jika sedang aktif mengedit data di modal mana pun!
+      if (this.isUserEditing()) return;
 
       const isPanitia = Boolean(window.admin && window.admin.isAuthenticated);
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
@@ -1480,6 +1488,17 @@ const app = {
         syncFromRemote();
       }
     }, 2000);
+  },
+
+  isUserEditing() {
+    const readOnlyViewerIds = ["teamModal", "matchDetailModal", "momentModal", "newsModal"];
+    const activeModals = document.querySelectorAll(".modal-overlay.active");
+    for (const m of activeModals) {
+      if (!readOnlyViewerIds.includes(m.id)) {
+        return true;
+      }
+    }
+    return false;
   },
 
   applyRemoteData(data) {
@@ -1755,6 +1774,9 @@ const app = {
         this.syncDrawStateFromTournament("SMP", true);
         this.syncDrawStateFromTournament("SD", true);
       } catch (e) {}
+      // Jika panitia sedang mengisi form/upload di modal editor, jangan re-render DOM supaya fokus ketikan tidak terganggu!
+      if (this.isUserEditing()) return;
+
       this.renderCurrentView();
       this.renderTeams();
       this.renderMatches();
@@ -1945,11 +1967,13 @@ const app = {
         this.store.data.teams.push(payload);
       }
       this.store.saveData();
-      this.renderTeams();
-      this.renderStandings();
-      const activeTeamModal = document.getElementById("teamModal");
-      if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId === payload.id) {
-        try { this.openTeamModal(payload.id); } catch (_) {}
+      if (!this.isUserEditing()) {
+        this.renderTeams();
+        this.renderStandings();
+        const activeTeamModal = document.getElementById("teamModal");
+        if (activeTeamModal && activeTeamModal.classList.contains("active") && this.activeTeamModalId === payload.id) {
+          try { this.openTeamModal(payload.id); } catch (_) {}
+        }
       }
     } else if (table === 'moments') {
       if (!this.store.data.moments) this.store.data.moments = [];
@@ -2366,20 +2390,32 @@ const app = {
       });
     }
 
-    // Modal Close buttons & Backdrop clicks
+    // Modal Close buttons (hanya menutup modal miliknya sendiri, TIDAK menutup semua modal!)
+    const readOnlyViewerModals = ["teamModal", "matchDetailModal", "momentModal", "newsModal"];
     document.querySelectorAll(".modal-close, .btn-modal-close").forEach(btn => {
+      // Jika tombol sudah punya handler onclick khusus (seperti konfirmasi keluar editor), biarkan handler tersebut bekerja
+      if (btn.getAttribute("onclick")) return;
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("active"));
-        document.body.classList.remove("modal-open");
+        const parentModal = btn.closest(".modal-overlay");
+        if (parentModal) {
+          parentModal.classList.remove("active");
+        }
+        if (!document.querySelector(".modal-overlay.active")) {
+          document.body.classList.remove("modal-open");
+        }
       });
     });
 
+    // Backdrop clicks: HANYA modal baca-saja (viewer) yang boleh ditutup lewat klik luar.
+    // SEMUA modal editor, input tim, folder batch upload, jadwal, skor, sponsor, momen, media hub DIKUNCI ANTI-KELUAR!
     document.querySelectorAll(".modal-overlay").forEach(overlay => {
+      let mouseDownTarget = null;
+      overlay.addEventListener("mousedown", (e) => {
+        mouseDownTarget = e.target;
+      });
       overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) {
-          // PROTEKSI ANTI-KELUAR: Jangan pernah tutup modal editor yang sedang diisi data jika klik luar tidak sengaja!
-          const nonDismissableModals = ["teamEditorModal", "matchEditorModal", "quickScoreModal", "batchUploadModal", "adminLoginModal", "deviceSyncModal"];
-          if (nonDismissableModals.includes(overlay.id)) {
+        if (e.target === overlay && mouseDownTarget === overlay) {
+          if (!readOnlyViewerModals.includes(overlay.id)) {
             const box = overlay.querySelector(".modal-box");
             if (box) {
               box.classList.remove("modal-shake");
@@ -2389,9 +2425,24 @@ const app = {
             return;
           }
           overlay.classList.remove("active");
-          document.body.classList.remove("modal-open");
+          if (!document.querySelector(".modal-overlay.active")) {
+            document.body.classList.remove("modal-open");
+          }
         }
+        mouseDownTarget = null;
       });
+    });
+
+    // Proteksi Browser Refresh / Tab Close (F5 / Ctrl+W) saat sedang mengisi form
+    window.addEventListener("beforeunload", (e) => {
+      if (this.isUserEditing()) {
+        if (window.admin && typeof window.admin.saveAllActiveDrafts === "function") {
+          try { window.admin.saveAllActiveDrafts(); } catch (_) {}
+        }
+        e.preventDefault();
+        e.returnValue = "Anda sedang dalam proses pengisian data. Yakin ingin keluar?";
+        return e.returnValue;
+      }
     });
 
     // WhatsApp Share Button
@@ -2413,16 +2464,22 @@ const app = {
     } catch (e) {}
 
     window.addEventListener("popstate", (e) => {
-      // 1. Jika ada popup modal aktif, tutup modal (jangan keluar aplikasi)
-      const activeModal = document.querySelector(".modal-overlay.active");
-      if (activeModal) {
-        // Jangan tutup modal editor jika pengguna tidak sengaja swipe back
-        const nonDismissableModals = ["teamEditorModal", "matchEditorModal", "quickScoreModal", "batchUploadModal"];
-        if (nonDismissableModals.includes(activeModal.id)) {
-          try { history.pushState({ tab: this.currentTab }, ""); } catch (err) {}
+      // 1. Jika ada popup modal aktif
+      const activeModals = Array.from(document.querySelectorAll(".modal-overlay.active"));
+      if (activeModals.length > 0) {
+        const topModal = activeModals[activeModals.length - 1];
+        // Jangan pernah tutup modal editor/input/folder karena swipe-back atau tombol back tidak sengaja!
+        if (!readOnlyViewerModals.includes(topModal.id)) {
+          try { history.pushState({ tab: this.currentTab, editing: true }, ""); } catch (err) {}
+          const box = topModal.querySelector(".modal-box");
+          if (box) {
+            box.classList.remove("modal-shake");
+            void box.offsetWidth;
+            box.classList.add("modal-shake");
+          }
           return;
         }
-        activeModal.classList.remove("active");
+        topModal.classList.remove("active");
         try {
           history.pushState({ tab: this.currentTab }, "");
         } catch (err) {}
