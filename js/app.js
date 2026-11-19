@@ -182,6 +182,9 @@ class TournamentStore {
     } else {
       data.config = { ...base.config, ...data.config };
     }
+    if (data.config && (!data.config.tournamentName || data.config.tournamentName.includes('ACC "Al-Fayyadh') || data.config.tournamentName === 'ACC 2026')) {
+      data.config.tournamentName = 'Al-Fayyadh Champions Cup 2026';
+    }
     if (!Array.isArray(data.teams)) data.teams = [];
     if (!Array.isArray(data.matches)) data.matches = [];
     if (!Array.isArray(data.moments)) data.moments = [];
@@ -1534,7 +1537,11 @@ var app = window.app = Object.assign(window.app || {}, {
     if (data.config) {
       const cfg = this.store.data.config || {};
       if (data.config.tournament_name || data.config.tournamentName) {
-        cfg.tournamentName = data.config.tournament_name || data.config.tournamentName;
+        let name = data.config.tournament_name || data.config.tournamentName;
+        if (name && (name.includes('ACC "Al-Fayyadh') || name === 'ACC 2026')) {
+          name = 'Al-Fayyadh Champions Cup 2026';
+        }
+        cfg.tournamentName = name;
       }
       if (data.config.sub_title !== undefined || data.config.subTitle !== undefined) {
         cfg.subTitle = data.config.sub_title !== undefined ? data.config.sub_title : data.config.subTitle;
@@ -2149,7 +2156,12 @@ var app = window.app = Object.assign(window.app || {}, {
     // Hero section di beranda: Nama lengkap turnamen
     const heroTitleEl = document.getElementById("heroTitle");
     if (heroTitleEl) {
-      heroTitleEl.textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName || 'Al-Fayyadh Champions Cup 2026';
+      let tName = config.tournamentName || DEFAULT_DATA.config.tournamentName || 'Al-Fayyadh Champions Cup 2026';
+      if (tName && (tName.includes('ACC "Al-Fayyadh') || tName === 'ACC 2026')) {
+        tName = 'Al-Fayyadh Champions Cup 2026';
+        config.tournamentName = tName;
+      }
+      heroTitleEl.textContent = tName;
     }
     const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
     let cleanSub = (rawSub || "")

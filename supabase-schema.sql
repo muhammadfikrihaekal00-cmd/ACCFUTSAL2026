@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- 2. TOURNAMENT CONFIGURATION TABLE
 CREATE TABLE IF NOT EXISTS public.tournament_config (
   id TEXT PRIMARY KEY DEFAULT 'config_main',
-  tournament_name TEXT NOT NULL DEFAULT 'ACC "Al-Fayyadh Champions Cup" 2026',
+  tournament_name TEXT NOT NULL DEFAULT 'Al-Fayyadh Champions Cup 2026',
   sub_title TEXT DEFAULT 'Turnamen Futsal Antar-Sekolah & Pesantren',
   venue TEXT DEFAULT 'GOR Futsal Ma''had Tahfizhul Qur''an Al Fayyadh',
   dates TEXT DEFAULT '15 - 20 November 2026',
