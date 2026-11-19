@@ -2149,7 +2149,7 @@ var app = window.app = Object.assign(window.app || {}, {
     // Hero section di beranda: Nama lengkap turnamen
     const heroTitleEl = document.getElementById("heroTitle");
     if (heroTitleEl) {
-      heroTitleEl.textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName || 'ACC "Al-Fayyadh Champions Cup" 2026';
+      heroTitleEl.textContent = config.tournamentName || DEFAULT_DATA.config.tournamentName || 'Al-Fayyadh Champions Cup 2026';
     }
     const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
     let cleanSub = (rawSub || "")
