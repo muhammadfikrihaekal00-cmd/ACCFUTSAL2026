@@ -4138,14 +4138,14 @@ var app = window.app = Object.assign(window.app || {}, {
             <div class="official-info-box">
               <div class="official-row" style="align-items: center; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
-                  ${off.coachPhoto ? `<img src="${off.coachPhoto}" alt="Foto Pelatih" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); flex-shrink: 0;">` : '<span>👔</span>'}
-                  <span style="font-size: 0.72rem; color: #64748b; white-space: nowrap;">Pelatih / Asisten:</span>
+                  ${off.coachPhoto ? `<img src="${off.coachPhoto}" alt="Foto Pelatih" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent-gold); flex-shrink: 0;">` : '<span>👔</span>'}
+                  <span style="font-size: 0.72rem; color: #94a3b8; white-space: nowrap;">Pelatih / Asisten:</span>
                 </div>
-                <strong style="color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58%; text-align: right;" title="${off.coach || off.manager || ''}">${off.coach && off.manager && off.coach !== off.manager ? `${off.coach} / ${off.manager}` : (off.coach || off.manager || '-')}</strong>
+                <strong style="color: #f8fafc; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58%; text-align: right;" title="${off.coach || off.manager || ''}">${off.coach && off.manager && off.coach !== off.manager ? `${off.coach} / ${off.manager}` : (off.coach || off.manager || '-')}</strong>
               </div>
               <div class="official-row">
-                <span>🎽 Jersey:</span>
-                <strong style="font-size: 0.72rem; color: #0f172a;">${off.jerseyHome || '-'}</strong>
+                <span style="color: #94a3b8;">🎽 Jersey:</span>
+                <strong style="font-size: 0.72rem; color: #f8fafc;">${off.jerseyHome || '-'}</strong>
               </div>
             </div>
 
