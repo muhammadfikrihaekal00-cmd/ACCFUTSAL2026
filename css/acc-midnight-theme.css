@@ -689,6 +689,7 @@ body.snap-scroll-active {
 }
 
 @media (min-width: 981px) {
+
   html.snap-scroll-active,
   body.snap-scroll-active {
     scroll-padding-top: 88px !important;
@@ -797,10 +798,13 @@ body.snap-scroll-active {
 }
 
 @keyframes heroHintBounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(-50%) translateY(0);
     opacity: 0.5;
   }
+
   50% {
     transform: translateX(-50%) translateY(6px);
     opacity: 1;
@@ -2699,7 +2703,8 @@ body.mobile-menu-active .mobile-menu-content {
     gap: 14px !important;
     max-width: 100% !important;
     width: 100% !important;
-    margin-top: -22px !important; /* Menaikkan stack hero ke optical center agar presisi di tengah layar */
+    margin-top: -22px !important;
+    /* Menaikkan stack hero ke optical center agar presisi di tengah layar */
   }
 
   .hero-emblem-wrap {
