@@ -2477,16 +2477,550 @@ tr.zone-qualify {
   box-shadow: 0 0 6px currentColor !important;
 }
 
-/* Juknis Content */
-.juknis-content,
-.juknis-content p,
-.juknis-content li {
+/* Juknis Content & Comprehensive Modern Clean Regulations Architecture */
+.juknis-toolbar-card {
+  background: rgba(11, 19, 43, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 18px 20px !important;
+  margin-bottom: 24px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35) !important;
+}
+
+.juknis-download-banner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.22) 0%, rgba(245, 158, 11, 0.14) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  border-radius: 14px !important;
+  padding: 14px 18px !important;
+  margin-bottom: 16px !important;
+}
+
+.juknis-download-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.juknis-download-icon {
+  font-size: 1.8rem !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+}
+
+.juknis-download-title {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #f8fafc !important;
+}
+
+.juknis-download-subtitle {
+  font-size: 0.78rem !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+}
+
+.juknis-action-buttons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.juknis-download-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #020617 !important;
+  font-weight: 700 !important;
+  border: none !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 8px 16px !important;
+  border-radius: 10px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.juknis-download-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
+}
+
+.juknis-search-bar {
+  position: relative !important;
+  margin-bottom: 14px !important;
+}
+
+.juknis-input {
+  width: 100% !important;
+  background: rgba(6, 10, 23, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 12px 42px 12px 16px !important;
+  font-size: 0.9rem !important;
+  color: #f8fafc !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.juknis-input:focus {
+  outline: none !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25) !important;
+}
+
+.juknis-search-clear {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: none !important;
+  color: #ffffff !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.72rem !important;
+}
+
+.juknis-quick-filter-bar {
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  padding-bottom: 4px !important;
+  scrollbar-width: thin !important;
+}
+
+.juknis-quick-filter-bar::-webkit-scrollbar {
+  height: 4px !important;
+}
+
+.juknis-quick-filter-bar::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.3) !important;
+  border-radius: 4px !important;
+}
+
+.juknis-filter-chip {
+  padding: 6px 14px !important;
+  border-radius: 9999px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+
+.juknis-filter-chip:hover {
+  color: #f8fafc !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.juknis-filter-chip.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #020617 !important;
+  border-color: #fbbf24 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35) !important;
+}
+
+.juknis-content-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  margin-bottom: 24px !important;
+}
+
+.juknis-chapter-card {
+  background: rgba(11, 19, 43, 0.72) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 18px !important;
+  padding: 22px 24px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
+}
+
+.juknis-chapter-card:hover {
+  border-color: rgba(245, 158, 11, 0.32) !important;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45) !important;
+}
+
+.juknis-chapter-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.juknis-chapter-badge {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(29, 78, 216, 0.35) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #fbbf24 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  flex-shrink: 0 !important;
+}
+
+.juknis-chapter-meta {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.juknis-chapter-cat {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: #38bdf8 !important;
+}
+
+.juknis-chapter-title {
+  font-size: 1.08rem !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  margin: 0 !important;
+}
+
+.juknis-chapter-body {
+  font-size: 0.88rem !important;
   color: #cbd5e1 !important;
 }
 
-.juknis-content h3 {
+.juknis-points-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.juknis-point-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  line-height: 1.55 !important;
+  font-size: 0.88rem !important;
+  color: #cbd5e1 !important;
+}
+
+.juknis-point-item .point-dot {
   color: #fbbf24 !important;
-  border-bottom: 1px solid rgba(245, 158, 11, 0.22) !important;
+  font-weight: bold !important;
+  flex-shrink: 0 !important;
+  font-size: 1.1rem !important;
+  line-height: 1.4 !important;
+}
+
+.juknis-timeline-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.juknis-timeline-item {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  border-left: 3px solid #38bdf8 !important;
+}
+
+.juknis-timeline-date {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  color: #38bdf8 !important;
+  margin-bottom: 4px !important;
+}
+
+.juknis-timeline-desc {
+  font-size: 0.85rem !important;
+  color: #e2e8f0 !important;
+  line-height: 1.45 !important;
+}
+
+.juknis-table-wrap {
+  overflow-x: auto !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  margin-bottom: 14px !important;
+}
+
+.juknis-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 0.85rem !important;
+}
+
+.juknis-table th {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+  padding: 10px 14px !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.juknis-table td {
+  padding: 10px 14px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #e2e8f0 !important;
+}
+
+.juknis-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+.juknis-fee-pill {
+  display: inline-block !important;
+  padding: 3px 10px !important;
+  border-radius: 6px !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.juknis-fee-pill.yellow {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #fbbf24 !important;
+}
+
+.juknis-fee-pill.red {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+  color: #f87171 !important;
+}
+
+.juknis-fee-pill.dark {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(239, 68, 68, 0.5) !important;
+  color: #ef4444 !important;
+}
+
+.prize-badge {
+  display: inline-block !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.prize-badge.gold {
+  background: rgba(245, 158, 11, 0.22) !important;
+  border: 1px solid #fbbf24 !important;
+  color: #fbbf24 !important;
+}
+
+.prize-badge.silver {
+  background: rgba(148, 163, 184, 0.22) !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #e2e8f0 !important;
+}
+
+.prize-badge.bronze {
+  background: rgba(180, 83, 9, 0.22) !important;
+  border: 1px solid #d97706 !important;
+  color: #f59e0b !important;
+}
+
+.prize-badge.star,
+.prize-badge.ball {
+  background: rgba(56, 189, 248, 0.22) !important;
+  border: 1px solid #38bdf8 !important;
+  color: #38bdf8 !important;
+}
+
+.juknis-callout {
+  display: flex !important;
+  gap: 12px !important;
+  align-items: flex-start !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  font-size: 0.86rem !important;
+  line-height: 1.5 !important;
+  margin: 12px 0 !important;
+}
+
+.juknis-callout.syariat {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #a7f3d0 !important;
+}
+
+.juknis-callout.warning {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  color: #fde68a !important;
+}
+
+.juknis-callout.danger {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.38) !important;
+  color: #fca5a5 !important;
+}
+
+.juknis-callout.kickin-alert {
+  background: rgba(56, 189, 248, 0.12) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  color: #bae6fd !important;
+}
+
+.juknis-callout .callout-icon {
+  font-size: 1.25rem !important;
+  line-height: 1.3 !important;
+  flex-shrink: 0 !important;
+}
+
+.juknis-stepper-title {
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  margin-top: 14px !important;
+  margin-bottom: 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.juknis-stepper-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.juknis-step-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+}
+
+.juknis-step-card.warning {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+.juknis-step-card.danger {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  background: rgba(239, 68, 68, 0.06) !important;
+}
+
+.juknis-step-card .step-num {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 6px !important;
+  color: #f8fafc !important;
+}
+
+.juknis-step-card .step-title {
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  color: #f8fafc !important;
+}
+
+.juknis-step-card .step-desc {
+  font-size: 0.78rem !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+  line-height: 1.4 !important;
+}
+
+.juknis-helpdesk-card {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;
+  background: rgba(11, 19, 43, 0.8) !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  border-radius: 18px !important;
+  padding: 18px 24px !important;
+  margin-top: 20px !important;
+}
+
+.juknis-helpdesk-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.juknis-helpdesk-icon {
+  font-size: 2rem !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+}
+
+.juknis-helpdesk-title {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #f8fafc !important;
+  margin: 0 !important;
+}
+
+.juknis-helpdesk-sub {
+  font-size: 0.8rem !important;
+  color: #94a3b8 !important;
+  margin: 2px 0 4px 0 !important;
+}
+
+.juknis-helpdesk-phone {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: #fbbf24 !important;
+}
+
+.btn-whatsapp {
+  background: #25D366 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: none !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 8px 16px !important;
+  border-radius: 10px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.btn-whatsapp:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4) !important;
+}
+
+.juknis-search-empty {
+  text-align: center !important;
+  padding: 36px 20px !important;
+  color: #94a3b8 !important;
+}
+
+.juknis-search-empty .empty-icon {
+  font-size: 2.2rem !important;
+  margin-bottom: 8px !important;
 }
 
 /* ============================================================================
@@ -3213,7 +3747,7 @@ body.mobile-menu-active .mobile-menu-content {
 
   /* Ambient Orbit Ring repositioned to align with elevated trophy on mobile */
   .ambient-orbit-ring {
-    top: 30px !important;
+    top: -25px !important;
   }
 
   /* Fullscreen Mobile Viewport - Perfectly Centered & Raised Up to Optical Center */
@@ -3221,13 +3755,13 @@ body.mobile-menu-active .mobile-menu-content {
   #homeHeroFullscreen {
     min-height: calc(100svh - 76px) !important;
     min-height: calc(100dvh - 76px) !important;
-    padding: 0 14px clamp(28px, 6vh, 48px) !important;
+    padding: 0 14px 20px !important;
     margin: 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 8px !important;
     box-sizing: border-box !important;
   }
 
@@ -3235,15 +3769,15 @@ body.mobile-menu-active .mobile-menu-content {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 14px !important;
+    gap: 10px !important;
     max-width: 100% !important;
     width: 100% !important;
-    margin-top: -22px !important;
+    margin-top: -65px !important;
     /* Menaikkan stack hero ke optical center agar presisi di tengah layar */
   }
 
   .hero-emblem-wrap {
-    padding: 2px 0 6px 0 !important;
+    padding: 0 !important;
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -3259,7 +3793,7 @@ body.mobile-menu-active .mobile-menu-content {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     width: 100% !important;
     padding: 0 6px !important;
     box-sizing: border-box !important;

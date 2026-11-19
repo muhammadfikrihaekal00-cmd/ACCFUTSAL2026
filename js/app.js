@@ -4730,40 +4730,394 @@ var app = window.app = Object.assign(window.app || {}, {
     this.switchTab("stats", false);
   },
 
-  // 7. RENDER JUKNIS (Buku Panduan)
+  // 7. RENDER JUKNIS (Buku Panduan & Regulasi ACC 2026)
   renderJuknis() {
     const container = document.getElementById("juknisContent");
     const contactEl = document.getElementById("juknisContact");
     if (!container) return;
 
-    // Simple markdown-like to HTML converter
-    const text = this.store.data.config.rulesText;
-    const html = text
-      .replace(/### (.*)/g, '<h3>$1</h3>')
-      .replace(/- (.*)/g, '<li>$1</li>')
-      .replace(/\n\n/g, '<br/>');
+    const rawText = (this.store && this.store.data && this.store.data.config && this.store.data.config.rulesText)
+      ? this.store.data.config.rulesText
+      : (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.config ? DEFAULT_DATA.config.rulesText : "");
 
+    const html = this.parseJuknisMarkdown(rawText);
     container.innerHTML = html;
-    this._juknisFullHtml = html; // simpan untuk fitur pencarian
-    if (contactEl) {
+    this._juknisRawText = rawText;
+    this._currentJuknisChapter = 'ALL';
+
+    if (contactEl && this.store && this.store.data && this.store.data.config && this.store.data.config.contactCommittee) {
       contactEl.textContent = this.store.data.config.contactCommittee;
     }
   },
 
+  parseJuknisMarkdown(rawText) {
+    if (!rawText || !rawText.trim()) {
+      return '<div class="juknis-empty-state"><p>Belum ada data regulasi turnamen.</p></div>';
+    }
+
+    const rawChapters = rawText.split(/^### /m).filter(Boolean);
+    let html = '';
+
+    const chapterMeta = {
+      'A': { icon: '📌', cat: 'Identitas & Pelaksanaan', tagColor: '#38bdf8' },
+      'B': { icon: '📅', cat: 'Timeline & Jadwal Resmi', tagColor: '#60a5fa' },
+      'C': { icon: '📋', cat: 'Ketentuan Peserta & TM', tagColor: '#34d399' },
+      'D': { icon: '👥', cat: 'Ofisial Tim & ID Card', tagColor: '#2dd4bf' },
+      'E': { icon: '⏱️', cat: 'Sistem Laga & Durasi Waktu', tagColor: '#fbbf24' },
+      'F': { icon: '⚽', cat: 'Regulasi FIFA & Kick-In', tagColor: '#f59e0b' },
+      'G': { icon: '🕌', cat: 'Tata Tertib & Adab Pesantren', tagColor: '#10b981' },
+      'H': { icon: '🟨', cat: 'Sanksi Kartu, WO & Denda', tagColor: '#f87171' },
+      'I': { icon: '📣', cat: 'Tata Tertib Suporter', tagColor: '#fb923c' },
+      'J': { icon: '⚖️', cat: 'Gangguan, Medis & Protes', tagColor: '#a78bfa' },
+      'K': { icon: '🏆', cat: 'Penghargaan & Hadiah Resmi', tagColor: '#f59e0b' }
+    };
+
+    rawChapters.forEach(rawChap => {
+      const lines = rawChap.split('\n');
+      const headerLine = lines[0].trim();
+      const contentLines = lines.slice(1);
+
+      const letterMatch = headerLine.match(/^([A-Z])\.\s*(.*)/);
+      const letter = letterMatch ? letterMatch[1] : '•';
+      const title = letterMatch ? letterMatch[2] : headerLine;
+      const meta = chapterMeta[letter] || { icon: '📄', cat: 'Regulasi Turnamen', tagColor: '#fbbf24' };
+
+      let bodyHtml = '';
+
+      // Bab B: Timeline Grid
+      if (letter === 'B') {
+        bodyHtml += '<div class="juknis-timeline-grid">';
+        contentLines.forEach(l => {
+          const clean = l.replace(/^[-*]\s*/, '').trim();
+          if (!clean) return;
+          const parts = clean.split(/:\s*(.*)/);
+          if (parts.length >= 2) {
+            bodyHtml += `
+              <div class="juknis-timeline-item">
+                <div class="juknis-timeline-date">${parts[0]}</div>
+                <div class="juknis-timeline-desc">${parts[1]}</div>
+              </div>`;
+          } else {
+            bodyHtml += `<div class="juknis-timeline-item"><div class="juknis-timeline-desc">${clean}</div></div>`;
+          }
+        });
+        bodyHtml += '</div>';
+      }
+      // Bab H: Tabel Denda Kartu & Sanksi
+      else if (letter === 'H') {
+        bodyHtml += `
+          <div class="juknis-table-wrap">
+            <table class="juknis-table">
+              <thead>
+                <tr>
+                  <th>Jenis Pelanggaran / Kartu</th>
+                  <th>Kategori SD (U-12)</th>
+                  <th>Kategori SMP (U-15)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Kartu Kuning</strong></td>
+                  <td><span class="juknis-fee-pill yellow">Rp 10.000</span></td>
+                  <td><span class="juknis-fee-pill yellow">Rp 20.000</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Kartu Merah Tidak Langsung</strong> (2 Kartu Kuning)</td>
+                  <td><span class="juknis-fee-pill red">Rp 15.000</span></td>
+                  <td><span class="juknis-fee-pill red">Rp 30.000</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Kartu Merah Langsung</strong> (Pelanggaran Berat)</td>
+                  <td><span class="juknis-fee-pill red">Rp 25.000</span></td>
+                  <td><span class="juknis-fee-pill red">Rp 50.000</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Kuning + Merah Langsung</strong></td>
+                  <td><span class="juknis-fee-pill dark">Rp 60.000</span></td>
+                  <td><span class="juknis-fee-pill dark">Rp 60.000</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        bodyHtml += '<div class="juknis-points-list">';
+        contentLines.forEach(l => {
+          const clean = l.replace(/^[-*]\s*/, '').trim();
+          if (!clean || clean.includes('Denda Administrasi Kartu')) return;
+
+          let calloutClass = '';
+          if (clean.includes('Sanksi Keterlambatan') || clean.includes('WO 3-0')) calloutClass = 'warning';
+          if (clean.includes('Pemutihan kartu TIDAK BERLAKU')) calloutClass = 'danger';
+
+          if (calloutClass) {
+            bodyHtml += `
+              <div class="juknis-callout ${calloutClass}">
+                <span class="callout-icon">⚠️</span>
+                <div>${clean}</div>
+              </div>`;
+          } else {
+            bodyHtml += `
+              <div class="juknis-point-item">
+                <span class="point-dot">•</span>
+                <div class="point-text">${clean}</div>
+              </div>`;
+          }
+        });
+        bodyHtml += '</div>';
+      }
+      // Bab K: Tabel Hadiah & Uang Pembinaan
+      else if (letter === 'K') {
+        bodyHtml += `
+          <div class="juknis-table-wrap">
+            <table class="juknis-table prize-table">
+              <thead>
+                <tr>
+                  <th>Penghargaan Resmi</th>
+                  <th>Kategori SD (U-12)</th>
+                  <th>Kategori SMP (U-15)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="prize-badge gold">🥇 Juara I</span></td>
+                  <td>Trofi + Sertifikat + <strong>Rp 1.500.000</strong></td>
+                  <td>Trofi + Sertifikat + <strong>Rp 2.000.000</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="prize-badge silver">🥈 Juara II</span></td>
+                  <td>Sertifikat + <strong>Rp 750.000</strong></td>
+                  <td>Sertifikat + <strong>Rp 1.000.000</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="prize-badge bronze">🥉 Juara III</span></td>
+                  <td>Sertifikat + <strong>Rp 500.000</strong></td>
+                  <td>Sertifikat + <strong>Rp 500.000</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="prize-badge star">⭐ Pemain Terbaik (MVP)</span></td>
+                  <td>Plakat + <strong>Rp 200.000</strong></td>
+                  <td>Plakat + <strong>Rp 250.000</strong></td>
+                </tr>
+                <tr>
+                  <td><span class="prize-badge ball">⚽ Top Scorer</span></td>
+                  <td>Plakat + <strong>Rp 200.000</strong></td>
+                  <td>Plakat + <strong>Rp 250.000</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+      // Bab G: Tata Tertib Pesantren
+      else if (letter === 'G') {
+        bodyHtml += `
+          <div class="juknis-callout syariat">
+            <span class="callout-icon">🕌</span>
+            <div>
+              <strong>Kewajiban Menutup Aurat di Lingkungan Pesantren:</strong><br/>
+              Pemain putra <strong>wajib mengenakan celana training/panjang</strong> saat memasuki pesantren & bertanding. <strong>Dilarang keras memakai celana pendek</strong> di seluruh wilayah Ma'had Al-Fayyadh.
+            </div>
+          </div>
+          <div class="juknis-points-list">
+        `;
+        contentLines.forEach(l => {
+          const clean = l.replace(/^[-*]\s*/, '').trim();
+          if (!clean) return;
+          bodyHtml += `
+            <div class="juknis-point-item">
+              <span class="point-dot">•</span>
+              <div class="point-text">${clean}</div>
+            </div>`;
+        });
+        bodyHtml += '</div>';
+      }
+      // Bab I: Tata Tertib Suporter
+      else if (letter === 'I') {
+        bodyHtml += `
+          <div class="juknis-callout warning">
+            <span class="callout-icon">🧕</span>
+            <div>
+              <strong>Syarat Mutlak Suporter/Penonton Putri:</strong><br/>
+              Wajib mengenakan busana muslimah yang longgar, memakai rok panjang, bermasker, serta menjaga ketertiban. Dilarang keras mengenakan pakaian ketat atau celana panjang.
+            </div>
+          </div>
+          <div class="juknis-points-list">
+        `;
+        contentLines.forEach(l => {
+          const clean = l.replace(/^[-*]\s*/, '').trim();
+          if (!clean || clean.includes('Tahapan Sanksi')) return;
+          bodyHtml += `
+            <div class="juknis-point-item">
+              <span class="point-dot">•</span>
+              <div class="point-text">${clean}</div>
+            </div>`;
+        });
+        bodyHtml += `</div>
+          <div class="juknis-stepper-title">Tahapan Sanksi Pelanggaran Suporter:</div>
+          <div class="juknis-stepper-grid">
+            <div class="juknis-step-card">
+              <div class="step-num">1</div>
+              <div class="step-title">Peringatan Lisan</div>
+              <div class="step-desc">Diberikan secara tegas pada pelanggaran ke-1 dan ke-2.</div>
+            </div>
+            <div class="juknis-step-card warning">
+              <div class="step-num">2</div>
+              <div class="step-title">Dikeluarkan Paksa</div>
+              <div class="step-desc">Pelanggaran ke-3: oknum suporter dikeluarkan paksa dari area GOR.</div>
+            </div>
+            <div class="juknis-step-card danger">
+              <div class="step-num">3</div>
+              <div class="step-title">Diskualifikasi Tim</div>
+              <div class="step-desc">Pelanggaran berulang: tim yang didukung langsung didiskualifikasi!</div>
+            </div>
+          </div>
+        `;
+      }
+      // Bab F: Kick-in & FIFA
+      else if (letter === 'F') {
+        bodyHtml += `
+          <div class="juknis-callout kickin-alert">
+            <span class="callout-icon">⚽</span>
+            <div>
+              <strong>Aturan Khusus Tendangan ke Dalam (Kick-in):</strong><br/>
+              Jika bola dari tendangan ke dalam langsung mengarah ke gawang lawan dan masuk tanpa menyentuh pemain lain, maka <strong>GOL TIDAK SAH</strong> (dilanjutkan lemparan gawang oleh kiper lawan). Bola <strong>wajib menyentuh pemain lain terlebih dahulu</strong> sebelum melewati garis gawang agar sah menjadi gol.
+            </div>
+          </div>
+          <div class="juknis-points-list">
+        `;
+        contentLines.forEach(l => {
+          const clean = l.replace(/^[-*]\s*/, '').trim();
+          if (!clean) return;
+          bodyHtml += `
+            <div class="juknis-point-item">
+              <span class="point-dot">•</span>
+              <div class="point-text">${clean}</div>
+            </div>`;
+        });
+        bodyHtml += '</div>';
+      }
+      // Bab lainnya (A, C, D, E, J)
+      else {
+        bodyHtml += '<div class="juknis-points-list">';
+        contentLines.forEach(l => {
+          const clean = l.replace(/^[-*]\s*/, '').trim();
+          if (!clean) return;
+
+          if (clean.includes('Jeda Waktu Shalat Wajib')) {
+            bodyHtml += `
+              <div class="juknis-callout syariat">
+                <span class="callout-icon">🕌</span>
+                <div><strong>Jeda Waktu Shalat Wajib:</strong> Saat azan berkumandang, seluruh pertandingan dihentikan. Seluruh peserta dan suporter wajib melaksanakan sholat berjamaah.</div>
+              </div>`;
+          } else if (clean.includes('Anti Match Fixing')) {
+            bodyHtml += `
+              <div class="juknis-callout danger">
+                <span class="callout-icon">🚫</span>
+                <div><strong>Anti Match Fixing:</strong> Tim yang teridentifikasi melakukan pengaturan skor akan langsung didiskualifikasi tanpa kompromi!</div>
+              </div>`;
+          } else {
+            bodyHtml += `
+              <div class="juknis-point-item">
+                <span class="point-dot">•</span>
+                <div class="point-text">${clean}</div>
+              </div>`;
+          }
+        });
+        bodyHtml += '</div>';
+      }
+
+      html += `
+        <div class="juknis-chapter-card scroll-reveal" id="juknisChap_${letter}" data-letter="${letter}">
+          <div class="juknis-chapter-header">
+            <div class="juknis-chapter-badge">${letter}</div>
+            <div class="juknis-chapter-meta">
+              <div class="juknis-chapter-cat">${meta.icon} ${meta.cat}</div>
+              <h3 class="juknis-chapter-title">${title}</h3>
+            </div>
+          </div>
+          <div class="juknis-chapter-body">
+            ${bodyHtml}
+          </div>
+        </div>
+      `;
+    });
+
+    return html;
+  },
+
+  filterJuknisChapter(letter) {
+    this._currentJuknisChapter = letter;
+    const chips = document.querySelectorAll('#juknisFilterChips .juknis-filter-chip');
+    chips.forEach(chip => {
+      chip.classList.toggle('active', chip.getAttribute('data-chapter') === letter);
+    });
+
+    const cards = document.querySelectorAll('.juknis-chapter-card');
+    cards.forEach(card => {
+      if (letter === 'ALL') {
+        card.style.display = '';
+      } else {
+        const cardLetter = card.getAttribute('data-letter');
+        card.style.display = (cardLetter === letter) ? '' : 'none';
+      }
+    });
+
+    if (letter !== 'ALL') {
+      const targetCard = document.getElementById(`juknisChap_${letter}`);
+      if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  },
+
   filterJuknis(query) {
+    const clearBtn = document.getElementById("juknisSearchClearBtn");
     const container = document.getElementById("juknisContent");
     if (!container) return;
+
     if (!query || !query.trim()) {
-      container.innerHTML = this._juknisFullHtml || container.innerHTML;
+      if (clearBtn) clearBtn.style.display = 'none';
+      const emptyMsg = document.getElementById('juknisSearchEmpty');
+      if (emptyMsg) emptyMsg.style.display = 'none';
+      this.filterJuknisChapter(this._currentJuknisChapter || 'ALL');
       return;
     }
+
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
     const q = query.toLowerCase();
-    const full = this._juknisFullHtml || container.innerHTML;
-    // Pisah per section <h3>, tampilkan hanya yang cocok
-    const sections = full.split(/(?=<h3>)/);
-    const filtered = sections.filter(s => s.toLowerCase().includes(q)).join('');
-    container.innerHTML = filtered ||
-      `<p style="color:var(--text-muted);text-align:center;padding:24px;">Tidak ada hasil untuk "<strong>${typeof Security !== 'undefined' ? Security.sanitize(query) : query}</strong>"</p>`;
+    const cards = container.querySelectorAll('.juknis-chapter-card');
+    let matchedCount = 0;
+
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      if (text.includes(q)) {
+        card.style.display = '';
+        matchedCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    let emptyMsg = document.getElementById('juknisSearchEmpty');
+    if (matchedCount === 0) {
+      if (!emptyMsg) {
+        emptyMsg = document.createElement('div');
+        emptyMsg.id = 'juknisSearchEmpty';
+        emptyMsg.className = 'juknis-search-empty';
+        container.appendChild(emptyMsg);
+      }
+      emptyMsg.innerHTML = `<div class="empty-icon">🔍</div><p>Tidak ditemukan pasal atau aturan yang cocok dengan "<strong>${typeof Security !== 'undefined' ? Security.sanitize(query) : query}</strong>".</p>`;
+      emptyMsg.style.display = 'block';
+    } else if (emptyMsg) {
+      emptyMsg.style.display = 'none';
+    }
+  },
+
+  clearJuknisSearch() {
+    const input = document.getElementById("juknisSearchInput");
+    if (input) input.value = '';
+    this.filterJuknis('');
   },
 
   // =========================================================

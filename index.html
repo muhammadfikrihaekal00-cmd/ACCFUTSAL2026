@@ -178,7 +178,7 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/styles.css?v=8.48">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.48">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.49">
 </head>
 
 <body class="snap-scroll-active">
@@ -352,7 +352,7 @@
             <div class="hero-meta">
               <span id="heroVenue">GOR Futsal Ma'had Al-Fayyadh Maros</span>
               <span class="hero-meta-dot">•</span>
-              <span id="heroDates">22 - 26 November 2026</span>
+              <span id="heroDates">22 - 28 November 2026</span>
             </div>
           </div>
         </div>
@@ -1060,41 +1060,74 @@
             <span>OFFICIAL RULES & REGULATIONS</span>
           </div>
           <h2 class="feature-hero-title">Regulasi & Petunjuk Teknis</h2>
-          <p class="feature-hero-desc">Tata tertib turnamen, aturan penentuan juara grup, regulasi pemutihan kartu, dan
-            pedoman teknis ACC 2026.</p>
+          <p class="feature-hero-desc">Buku pedoman resmi, ketentuan peserta, aturan adab pesantren, regulasi FIFA, sanksi kartu, dan pembagian hadiah ACC 2026.</p>
         </div>
         <div class="feature-hero-badge" aria-hidden="true">📋</div>
       </div>
-      <div class="section-header" style="margin-bottom: 12px;">
-        <span class="section-hint-badge">
-          <span>📋</span> Dokumen Resmi Tata Tertib, Regulasi Poin &amp; Sanksi Turnamen
-        </span>
-      </div>
 
-      <div style="margin-bottom: 14px;">
-        <input type="text" id="juknisSearchInput" class="form-input"
-          placeholder="🔍 Cari pasal, aturan poin, adu penalti, sanksi, atau kontak..."
-          oninput="app.filterJuknis(this.value)"
-          style="width: 100%; border-radius: var(--radius-md); font-size: 0.88rem; padding: 10px 14px;">
-      </div>
-
-      <div class="juknis-card">
-        <div class="juknis-body" id="juknisContent">
-          <!-- Rendered by app.js from config -->
+      <!-- DOKUMEN UNDUH & SEARCH TOOLBAR -->
+      <div class="juknis-toolbar-card scroll-reveal">
+        <div class="juknis-download-banner">
+          <div class="juknis-download-info">
+            <div class="juknis-download-icon">📥</div>
+            <div>
+              <div class="juknis-download-title">Petunjuk Teknis Resmi ACC 2026 (PDF Asli)</div>
+              <div class="juknis-download-subtitle">Dokumen autentik kepanitiaan Al-Fayyadh Champions Cup 2026 (11 Bab Lengkap)</div>
+            </div>
+          </div>
+          <div class="juknis-action-buttons">
+            <a href="assets/juknis_acc_2026.pdf" download="Juknis_Al_Fayyadh_Champions_Cup_2026.pdf" target="_blank" rel="noopener" class="btn btn-primary btn-sm juknis-download-btn">
+              <span>⬇️ Unduh PDF Resmi</span>
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
+              <span>🖨️ Cetak / Print</span>
+            </button>
+          </div>
         </div>
 
-        <div class="contact-box">
+        <div class="juknis-search-bar">
+          <input type="text" id="juknisSearchInput" class="form-input juknis-input"
+            placeholder="🔍 Cari pasal, sistem poin, adu penalti, kick-in, denda kartu, hadiah..."
+            oninput="app.filterJuknis(this.value)">
+          <button type="button" id="juknisSearchClearBtn" class="juknis-search-clear" onclick="app.clearJuknisSearch()" title="Hapus pencarian" style="display: none;">✕</button>
+        </div>
+
+        <!-- QUICK CHAPTER NAV CHIPS -->
+        <div class="juknis-quick-filter-bar" id="juknisFilterChips" aria-label="Navigasi Cepat Bab Juknis">
+          <button type="button" class="juknis-filter-chip active" data-chapter="ALL" onclick="app.filterJuknisChapter('ALL')">Semua Bab</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="A" onclick="app.filterJuknisChapter('A')">📌 A. Identitas</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="B" onclick="app.filterJuknisChapter('B')">📅 B. Timeline</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="C" onclick="app.filterJuknisChapter('C')">📋 C. Peserta & Dokumen</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="D" onclick="app.filterJuknisChapter('D')">👥 D. Ofisial & ID Card</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="E" onclick="app.filterJuknisChapter('E')">⏱️ E. Sistem Laga & Waktu</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="F" onclick="app.filterJuknisChapter('F')">⚽ F. Aturan FIFA & Kick-in</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="G" onclick="app.filterJuknisChapter('G')">🕌 G. Adab Pesantren</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="H" onclick="app.filterJuknisChapter('H')">🟨 H. Sanksi & Denda</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="I" onclick="app.filterJuknisChapter('I')">📣 I. Suporter</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="J" onclick="app.filterJuknisChapter('J')">⚖️ J. Gangguan & Medis</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="K" onclick="app.filterJuknisChapter('K')">🏆 K. Hadiah Juara</button>
+        </div>
+      </div>
+
+      <!-- MAIN JUKNIS CARDS CONTAINER -->
+      <div id="juknisContent" class="juknis-content-container">
+        <!-- Rendered dynamically by app.renderJuknis() -->
+      </div>
+
+      <!-- CONTACT & HELPDESK FOOTER CARD -->
+      <div class="juknis-helpdesk-card scroll-reveal">
+        <div class="juknis-helpdesk-info">
+          <div class="juknis-helpdesk-icon">📞</div>
           <div>
-            <strong style="font-size: 0.95rem; color: var(--text-main);">📞 Layanan Informasi & Pengaduan
-              Panitia:</strong>
-            <p id="juknisContact"
-              style="font-size: 0.85rem; color: var(--secondary); margin-top: 2px; font-weight: 700;">
-              0812-9876-5432 (Kak Harun - Sie. Pertandingan)
-            </p>
+            <h4 class="juknis-helpdesk-title">Layanan Informasi &amp; Pengaduan Panitia</h4>
+            <p class="juknis-helpdesk-sub">Ada pertanyaan atau kendala seputar regulasi dan pertandingan?</p>
+            <div id="juknisContact" class="juknis-helpdesk-phone">0812-9876-5432 (Kak Harun - Sie. Pertandingan)</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="window.print()">
-            🖨️ Cetak / Simpan PDF
-          </button>
+        </div>
+        <div class="juknis-helpdesk-actions">
+          <a href="https://wa.me/6281298765432?text=Halo%20Panitia%20ACC%202026,%20saya%20ingin%20bertanya%20seputar%20regulasi" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">
+            <span>💬 Hubungi via WhatsApp</span>
+          </a>
         </div>
       </div>
     </section>
@@ -2821,11 +2854,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="appToast" class="toast"></div>
 
   <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.44"></script>
-  <script src="js/supabase-client.js?v=8.44"></script>
-  <script src="js/data.js?v=8.44"></script>
-  <script src="js/admin.js?v=8.44"></script>
-  <script src="js/app.js?v=8.47"></script>
+  <script src="js/security.js?v=8.49"></script>
+  <script src="js/supabase-client.js?v=8.49"></script>
+  <script src="js/data.js?v=8.49"></script>
+  <script src="js/admin.js?v=8.49"></script>
+  <script src="js/app.js?v=8.49"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
