@@ -4321,7 +4321,7 @@ var app = window.app = Object.assign(window.app || {}, {
       <div class="stats-summary-card ${this.currentStatsTab === 'assists' ? 'active' : ''}" onclick="app.setStatsTab('assists')">
         <div class="stats-summary-icon-fallback">👟</div>
         <div class="stats-summary-info">
-          <div class="stats-summary-kicker">🎯 TOP ASSIST</div>
+          <div class="stats-summary-kicker">👟 TOP ASSIST</div>
           <div class="stats-summary-name">Belum Ada Assist</div>
           <div class="stats-summary-sub">Kandidat Playmaker</div>
         </div>
@@ -4468,7 +4468,7 @@ var app = window.app = Object.assign(window.app || {}, {
         tableBody.innerHTML = `
           <tr>
             <td colspan="5" style="text-align: center; padding: 36px 16px; color: #94a3b8;">
-              <div style="font-size: 2rem; margin-bottom: 8px;">🎯</div>
+              <div style="font-size: 2rem; margin-bottom: 8px;">👟</div>
               <strong>Belum ada catatan assist pada kelas ${cat}.</strong>
               <div style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Data akan otomatis bertambah seiring berlangsungnya laga.</div>
             </td>
