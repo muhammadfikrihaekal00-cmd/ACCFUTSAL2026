@@ -1862,6 +1862,10 @@ tr.zone-qualify {
     padding-bottom: 24px !important;
   }
 
+  main.container {
+    padding-top: 0 !important;
+  }
+
   .header {
     top: 10px !important;
     left: 50% !important;
@@ -2093,17 +2097,6 @@ body.mobile-menu-active .mobile-menu-content {
     padding: 5px 12px !important;
     letter-spacing: 0.07em !important;
     white-space: nowrap !important;
-  }
-
-  .hero-card {
-    padding: 24px 4px 12px !important;
-    gap: 24px !important;
-    margin-bottom: 32px !important;
-  }
-
-  .hero-emblem-badge {
-    width: clamp(120px, 32vw, 150px) !important;
-    max-height: 215px !important;
   }
 
   .hero-quick-stats {
@@ -2485,40 +2478,90 @@ body.mobile-menu-active .mobile-menu-content {
    ============================================================================ */
 @media (max-width: 768px) {
 
-  /* Hero section text breathing space - Fullscreen Mobile Viewport */
-  .hero-card {
-    min-height: calc(100svh - 70px) !important;
-    min-height: calc(100dvh - 70px) !important;
-    padding: 24px 12px 32px !important;
-    gap: 16px !important;
+  /* Mobile Container: Zero top padding so hero is measured cleanly from fixed navbar */
+  main.container {
+    padding-top: 0 !important;
+  }
+
+  /* Ambient Orbit Ring repositioned to align with elevated trophy on mobile */
+  .ambient-orbit-ring {
+    top: 30px !important;
+  }
+
+  /* Fullscreen Mobile Viewport - Perfectly Centered & Raised Up to Optical Center */
+  .hero-card,
+  #homeHeroFullscreen {
+    min-height: calc(100svh - 76px) !important;
+    min-height: calc(100dvh - 76px) !important;
+    padding: 0 14px clamp(28px, 6vh, 48px) !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
     justify-content: center !important;
+    align-items: center !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .hero-identity-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 14px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-top: -22px !important; /* Menaikkan stack hero ke optical center agar presisi di tengah layar */
+  }
+
+  .hero-emblem-wrap {
+    padding: 2px 0 6px 0 !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .hero-emblem-badge {
+    width: clamp(120px, 30vw, 142px) !important;
+    height: auto !important;
+    max-height: 195px !important;
   }
 
   .hero-details {
-    gap: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
     width: 100% !important;
-    padding: 0 4px !important;
+    padding: 0 6px !important;
     box-sizing: border-box !important;
   }
 
   .hero-title {
-    font-size: clamp(1.15rem, 4.8vw, 1.45rem) !important;
-    line-height: 1.25 !important;
+    font-size: clamp(1.22rem, 5.2vw, 1.55rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.24 !important;
     margin: 0 !important;
+    text-align: center !important;
     word-break: break-word !important;
   }
 
+  #heroSub,
   .hero-sub {
-    font-size: 0.78rem !important;
+    font-size: 0.82rem !important;
     line-height: 1.45 !important;
-    max-width: 100% !important;
-    margin: 2px 0 0 0 !important;
+    max-width: 340px !important;
+    margin: 2px auto 0 !important;
+    text-align: center !important;
     color: #94a3b8 !important;
   }
 
   .hero-meta {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
     gap: 6px !important;
-    margin-top: 6px !important;
+    margin-top: 4px !important;
     font-size: 0.78rem !important;
   }
 
