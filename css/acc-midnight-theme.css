@@ -858,28 +858,84 @@ main.container {
 }
 
 .live-stream-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
   background: transparent !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 0 0 18px 0 !important;
   margin: 0 !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.live-stream-header-left {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 10px !important;
+  width: 100% !important;
 }
 
 .live-on-air-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
   background: rgba(239, 68, 68, 0.18) !important;
   border: 1px solid rgba(239, 68, 68, 0.55) !important;
   color: #fca5a5 !important;
   box-shadow: 0 0 16px rgba(239, 68, 68, 0.25) !important;
   border-radius: 9999px !important;
-  padding: 5px 13px !important;
-  font-size: 0.72rem !important;
+  padding: 6px 16px !important;
+  font-size: 0.75rem !important;
   font-weight: 800 !important;
+  letter-spacing: 0.8px !important;
+  margin: 0 auto !important;
 }
 
 .live-stream-title {
   color: #f8fafc !important;
   font-family: var(--font-display) !important;
-  font-size: 1.2rem !important;
+  font-size: 1.22rem !important;
   font-weight: 800 !important;
+  line-height: 1.45 !important;
+  text-align: center !important;
+  margin: 0 auto !important;
+  max-width: 92% !important;
+}
+
+.live-stream-header-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+}
+
+@media (max-width: 640px) {
+  .live-stream-header {
+    align-items: center !important;
+    text-align: center !important;
+    padding: 0 0 14px 0 !important;
+    gap: 10px !important;
+  }
+
+  .live-stream-header-left {
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .live-stream-title {
+    font-size: 1.05rem !important;
+    line-height: 1.45 !important;
+    text-align: center !important;
+    max-width: 100% !important;
+  }
 }
 
 /* Integrated "Pertandingan Berikutnya" / Live Ticker Banner ABOVE Video */
