@@ -637,6 +637,8 @@ class TournamentStore {
           playerNo: p.no,
           playerName: p.name || "",
           pos: p.pos || "Flank",
+          photo: p.photo || "",
+          badgeColor: t.badgeColor || "#0284c7",
           yellowCount: 0,
           redCount: 0,
           cardsHistory: []
@@ -744,12 +746,67 @@ class TournamentStore {
       .filter(s => s.goals > 0)
       .sort((a, b) => b.goals - a.goals);
   }
+
+  // Calculate Top Assists
+  getTopAssistsList(category = null) {
+    const assisters = {};
+    let teams = this.data.teams;
+    if (category && category !== "all") {
+      teams = teams.filter(t => (t.category || "SMP") === category);
+    }
+
+    teams.forEach(t => {
+      if (!t || !Array.isArray(t.players)) return;
+      t.players.forEach(p => {
+        if (!p) return;
+        const key = `${t.id}-${p.name}`;
+        assisters[key] = {
+          teamId: t.id,
+          teamName: t.name,
+          category: t.category || "SMP",
+          badgeColor: t.badgeColor,
+          playerNo: p.no,
+          playerName: p.name,
+          pos: p.pos,
+          photo: p.photo || "",
+          assists: parseInt(p.assists || p.assist, 10) || 0,
+          goals: parseInt(p.goals, 10) || 0
+        };
+      });
+    });
+
+    (this.data.matches || []).forEach(m => {
+      if (m.scorers && Array.isArray(m.scorers)) {
+        m.scorers.forEach(s => {
+          if (s.assist) {
+            const key = `${s.team}-${s.assist}`;
+            if (assisters[key]) {
+              assisters[key].assists += 1;
+            } else {
+              const cleanA = (s.assist || '').toLowerCase().trim();
+              const foundKey = Object.keys(assisters).find(k => {
+                const item = assisters[k];
+                const isTeam = !s.team || s.team === item.teamId || s.team === item.teamName;
+                return isTeam && (item.playerName.toLowerCase().trim() === cleanA || (item.playerNo && cleanA.includes(`#${item.playerNo}`)));
+              });
+              if (foundKey) assisters[foundKey].assists += 1;
+            }
+          }
+        });
+      }
+    });
+
+    return Object.values(assisters)
+      .filter(a => a.assists > 0)
+      .sort((a, b) => b.assists - a.assists || b.goals - a.goals);
+  }
 }
 
 // Global UI Manager (Unified single instance with window.app, ZERO TDZ!)
 var app = window.app = Object.assign(window.app || {}, {
   store: null,
   currentTab: "home", // Default sekarang membuka tab Beranda Utama
+  currentStatsTab: "scorers", // Default sub-tab di statistik: scorers | assists | yellow | red
   currentCategory: _safeStorageGet(localStorage, "acc_active_category") || "SMP",
   filterDay: "all",
   filterPitch: "all",
@@ -2555,8 +2612,11 @@ var app = window.app = Object.assign(window.app || {}, {
       "/draw": "draw",
       "/bagan": "bracket",
       "/tim": "teams",
-      "/top-skor": "scorers",
-      "/disiplin": "discipline",
+      "/daftar-tim": "teams",
+      "/statistik": "stats",
+      "/stats": "stats",
+      "/top-skor": "stats",
+      "/disiplin": "stats",
       "/regulasi": "juknis"
     };
 
@@ -3027,8 +3087,9 @@ var app = window.app = Object.assign(window.app || {}, {
         draw: "/draw",
         bracket: "/bagan",
         teams: "/tim",
-        scorers: "/top-skor",
-        discipline: "/disiplin",
+        stats: "/statistik",
+        scorers: "/statistik",
+        discipline: "/statistik",
         juknis: "/regulasi"
       };
 
@@ -3098,11 +3159,12 @@ var app = window.app = Object.assign(window.app || {}, {
         case "teams":
           this.renderTeams();
           break;
-        case "discipline":
-          this.renderDiscipline();
+        case "stats":
+          this.renderStats();
           break;
+        case "discipline":
         case "scorers":
-          this.renderTopScorers();
+          this.switchTab("stats", false);
           break;
         case "juknis":
           this.renderJuknis();
@@ -4169,170 +4231,440 @@ var app = window.app = Object.assign(window.app || {}, {
     this.initScrollReveal();
   },
 
-  // 5. RENDER DISCIPLINARY TABLE (Crucial for Managers!)
-  renderDiscipline() {
-    const container = document.getElementById("disciplineTableBody");
-    if (!container) return;
-
-    const records = this.store.getDisciplinaryRecords(this.currentCategory);
-
-    if (records.length === 0) {
-      container.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 30px; color: var(--primary);">
-            ✅ Belum ada kartu kuning atau merah yang tercatat. Fair Play terjaga!
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    container.innerHTML = records.map((r, idx) => {
-      const waMsgText = `⚠️ PEMBERITAHUAN DISIPLIN PANITIA:\nPemain an. ${r.playerName} (#${r.playerNo}) dari tim *${r.teamName}* telah menerima ${r.yellowCount} Kartu Kuning & ${r.redCount} Kartu Merah.\nStatus: *${r.status}*${r.actionNote ? ` (${r.actionNote})` : ''}.\nHarap official memperhatikan demi kelancaran pertandingan.`;
-      const waUrl = this.getWhatsAppUrl(r.managerPhone, waMsgText);
-
-      return `
-        <tr>
-          <td>${idx + 1}</td>
-          <td>
-            <strong>${r.playerName}</strong> (#${r.playerNo})
-            <div style="font-size: 0.7rem; color: var(--text-subtle);">
-              <span class="discipline-mobile-team">${r.teamName} • </span>${r.pos}
-            </div>
-          </td>
-          <td class="col-secondary">${r.teamName}</td>
-          <td>
-            <span style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
-              <span class="card-icon-y"></span> ${r.yellowCount}
-            </span>
-            &nbsp;
-            <span style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
-              <span class="card-icon-r"></span> ${r.redCount}
-            </span>
-          </td>
-          <td>
-            <span class="${r.statusType === 'danger' || r.statusType === 'warning' ? 'suspension-badge' : 'safe-badge'}">
-              ${r.status}
-            </span>
-            ${r.actionNote ? `<div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">${r.actionNote}</div>` : ''}
-          </td>
-          <td>
-            <a href="${waUrl}" target="_blank" class="btn-wa-direct" style="font-size: 0.68rem; padding: 3px 6px;">
-              📲 <span class="hide-on-mobile">Beritahu </span>WA
-            </a>
-          </td>
-        </tr>
-      `;
-    }).join("");
-    this.updateFloatingLiveNotice();
+  // 5. STATISTIK TURNAMEN (TOP SKOR, TOP ASSIST, KARTU KUNING, KARTU MERAH)
+  setStatsTab(tab) {
+    const validTabs = ["scorers", "assists", "yellow", "red"];
+    this.currentStatsTab = validTabs.includes(tab) ? tab : "scorers";
+    document.querySelectorAll(".stats-tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.stat === this.currentStatsTab);
+    });
+    this.renderStatsTable();
   },
 
-  // 6. RENDER TOP SCORER
-  renderTopScorers() {
-    const tableContainer = document.getElementById("topScorersTableBody");
-    if (!tableContainer) return;
-
-    const scorers = this.store.getTopScorersList(this.currentCategory);
-
-    if (scorers.length === 0) {
-      tableContainer.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Belum ada data gol yang tercatat.</td></tr>`;
-      return;
+  renderStats() {
+    if (this.store && typeof this.store.syncPlayerStatsFromMatches === "function") {
+      try { this.store.syncPlayerStatsFromMatches(); } catch (_) { }
     }
+    this.renderStatsSummary();
+    this.renderStatsTable();
+    this.initScrollReveal();
+  },
 
-    tableContainer.innerHTML = scorers.map((s, idx) => {
-      // RANK 1: FEATURED LEADER ROW
-      if (idx === 0) {
-        return `
-          <tr class="top-scorer-leader-row">
-            <td style="text-align: center; vertical-align: middle;">
-              <div class="leader-rank-badge">
-                <span class="leader-crown-badge">👑</span>
-                <span class="leader-rank-num">#1</span>
-                <span class="leader-rank-title">TOP SKOR</span>
-              </div>
-            </td>
-            <td style="text-align: left; vertical-align: middle;">
-              <div class="leader-player-col">
-                <div class="leader-avatar-frame">
-                  <img src="${s.photo || 'assets/player_athar.jpg'}" alt="${s.playerName}" class="leader-avatar-img" onerror="this.onerror=null; this.src='assets/mvp_player.jpg'">
-                  <span class="leader-jersey-pill" style="background: ${s.badgeColor || '#059669'};">
-                    #${s.playerNo}
-                  </span>
-                </div>
-                <div class="leader-name-info">
-                  <div class="leader-golden-tag">👑 TOP SCORER #1 (GOLDEN BOOT)</div>
-                  <div class="leader-name-text">${s.playerName}</div>
-                  <div class="leader-sub-text">
-                    <span class="leader-pos-badge">${s.pos}</span>
-                    <span class="leader-team-inline" style="font-weight: 700; color: var(--text-main);">${s.teamName}</span>
-                    <span class="player-rating-pill rating-superb" style="font-size: 0.72rem; padding: 2px 7px;">⭐ ${this.calculatePlayerRating(s)}</span>
-                  </div>
-                </div>
-              </div>
-            </td>
-            <td class="col-secondary" style="text-align: left; vertical-align: middle;">
-              <div class="leader-team-cell-wrap">
-                <div class="leader-school-name">${s.teamName}</div>
-                <div class="leader-school-sub">
-                  <span>📍 Kontestan ACC 2026</span>
-                </div>
-              </div>
-            </td>
-            <td class="col-secondary" style="text-align: center; vertical-align: middle;">
-              <span class="leader-pos-cell-badge">${s.pos}</span>
-            </td>
-            <td style="text-align: center; vertical-align: middle;">
-              <div class="leader-goals-wrap">
-                <span class="leader-goals-big">${s.goals}</span>
-                <span class="leader-goals-lbl">GOL</span>
-              </div>
-            </td>
+  renderStatsSummary() {
+    const container = document.getElementById("statsSummaryRibbon");
+    if (!container) return;
+
+    const cat = this.currentCategory;
+    const scorers = this.store.getTopScorersList(cat);
+    const topScorer = scorers.length > 0 ? scorers[0] : null;
+
+    const assisters = typeof this.store.getTopAssistsList === "function" ? this.store.getTopAssistsList(cat) : [];
+    const topAssister = assisters.length > 0 ? assisters[0] : null;
+
+    const discRecords = this.store.getDisciplinaryRecords(cat);
+    const totalYellow = discRecords.reduce((sum, r) => sum + (r.yellowCount || 0), 0);
+    const totalRed = discRecords.reduce((sum, r) => sum + (r.redCount || 0), 0);
+
+    const safeImg = (src) => src || "assets/acc_logo.png";
+
+    const card1 = topScorer ? `
+      <div class="stats-summary-card ${this.currentStatsTab === 'scorers' ? 'active' : ''}" onclick="app.setStatsTab('scorers')">
+        <img src="${safeImg(topScorer.photo)}" alt="${topScorer.playerName}" class="stats-summary-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
+        <div class="stats-summary-info">
+          <div class="stats-summary-kicker">👑 TOP SKOR</div>
+          <div class="stats-summary-name" title="${topScorer.playerName}">${topScorer.playerName}</div>
+          <div class="stats-summary-sub">${topScorer.teamName}</div>
+        </div>
+        <div class="stats-summary-value text-gold">${topScorer.goals}<span class="stats-summary-unit">Gol</span></div>
+      </div>
+    ` : `
+      <div class="stats-summary-card ${this.currentStatsTab === 'scorers' ? 'active' : ''}" onclick="app.setStatsTab('scorers')">
+        <div class="stats-summary-icon-fallback">⚽</div>
+        <div class="stats-summary-info">
+          <div class="stats-summary-kicker">👑 TOP SKOR</div>
+          <div class="stats-summary-name">Belum Ada Gol</div>
+          <div class="stats-summary-sub">Kandidat Golden Boot</div>
+        </div>
+        <div class="stats-summary-value text-gold">0<span class="stats-summary-unit">Gol</span></div>
+      </div>
+    `;
+
+    const card2 = topAssister ? `
+      <div class="stats-summary-card ${this.currentStatsTab === 'assists' ? 'active' : ''}" onclick="app.setStatsTab('assists')">
+        <img src="${safeImg(topAssister.photo)}" alt="${topAssister.playerName}" class="stats-summary-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
+        <div class="stats-summary-info">
+          <div class="stats-summary-kicker">🎯 TOP ASSIST</div>
+          <div class="stats-summary-name" title="${topAssister.playerName}">${topAssister.playerName}</div>
+          <div class="stats-summary-sub">${topAssister.teamName}</div>
+        </div>
+        <div class="stats-summary-value text-cyan">${topAssister.assists}<span class="stats-summary-unit">Ast</span></div>
+      </div>
+    ` : `
+      <div class="stats-summary-card ${this.currentStatsTab === 'assists' ? 'active' : ''}" onclick="app.setStatsTab('assists')">
+        <div class="stats-summary-icon-fallback">🎯</div>
+        <div class="stats-summary-info">
+          <div class="stats-summary-kicker">🎯 TOP ASSIST</div>
+          <div class="stats-summary-name">Belum Ada Assist</div>
+          <div class="stats-summary-sub">Kandidat Playmaker</div>
+        </div>
+        <div class="stats-summary-value text-cyan">0<span class="stats-summary-unit">Ast</span></div>
+      </div>
+    `;
+
+    const card3 = `
+      <div class="stats-summary-card ${this.currentStatsTab === 'yellow' ? 'active' : ''}" onclick="app.setStatsTab('yellow')">
+        <div class="stats-summary-icon-fallback">🟨</div>
+        <div class="stats-summary-info">
+          <div class="stats-summary-kicker">🟨 KARTU KUNING</div>
+          <div class="stats-summary-name">${totalYellow} Kartu</div>
+          <div class="stats-summary-sub">Akumulasi Disiplin</div>
+        </div>
+        <div class="stats-summary-value text-yellow">${totalYellow}</div>
+      </div>
+    `;
+
+    const card4 = `
+      <div class="stats-summary-card ${this.currentStatsTab === 'red' ? 'active' : ''}" onclick="app.setStatsTab('red')">
+        <div class="stats-summary-icon-fallback">🟥</div>
+        <div class="stats-summary-info">
+          <div class="stats-summary-kicker">🟥 KARTU MERAH</div>
+          <div class="stats-summary-name">${totalRed} Kartu</div>
+          <div class="stats-summary-sub">Sanksi & Larangan</div>
+        </div>
+        <div class="stats-summary-value text-red">${totalRed}</div>
+      </div>
+    `;
+
+    container.innerHTML = card1 + card2 + card3 + card4;
+  },
+
+  renderStatsTable() {
+    const tableHead = document.getElementById("statsTableHead");
+    const tableBody = document.getElementById("statsTableBody");
+    const badgeEl = document.getElementById("statsHeaderBadge");
+    if (!tableBody) return;
+
+    const cat = this.currentCategory;
+    const tab = this.currentStatsTab || "scorers";
+
+    // Update active tab buttons & summary active cards
+    document.querySelectorAll(".stats-tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.stat === tab);
+    });
+    document.querySelectorAll(".stats-summary-card").forEach(c => {
+      c.classList.remove("active");
+    });
+
+    const safeImg = (src) => src || "assets/acc_logo.png";
+
+    if (tab === "scorers") {
+      if (badgeEl) {
+        badgeEl.innerHTML = `<span>⚽</span> Peringkat Pencetak Gol Terbanyak &amp; Kandidat Golden Boot`;
+      }
+      if (tableHead) {
+        tableHead.innerHTML = `
+          <tr>
+            <th style="width: 50px; text-align: center;">#</th>
+            <th style="text-align: left;">Pemain</th>
+            <th class="col-secondary" style="text-align: left; width: 190px;">Sekolah / Tim</th>
+            <th class="col-secondary" style="text-align: center; width: 85px;">Posisi</th>
+            <th style="text-align: center; width: 85px;">GOL</th>
           </tr>
         `;
       }
 
-      // RANK 2, 3, & SETERUSNYA
-      let rankBadgeHtml = `<span class="rank-badge rank-default">${idx + 1}</span>`;
-      let avatarClass = "table-player-avatar";
-      if (idx === 1) {
-        rankBadgeHtml = `<span class="rank-badge rank-silver" title="Peringkat 2">🥈 2</span>`;
-        avatarClass = "table-player-avatar silver-ring";
-      } else if (idx === 2) {
-        rankBadgeHtml = `<span class="rank-badge rank-bronze" title="Peringkat 3">🥉 3</span>`;
-        avatarClass = "table-player-avatar bronze-ring";
+      const scorers = this.store.getTopScorersList(cat);
+      if (scorers.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 36px 16px; color: #94a3b8;">
+              <div style="font-size: 2rem; margin-bottom: 8px;">⚽</div>
+              <strong>Belum ada catatan gol pada kelas ${cat}.</strong>
+              <div style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Data akan otomatis bertambah seiring berlangsungnya laga.</div>
+            </td>
+          </tr>
+        `;
+        return;
       }
 
-      const pRating = this.calculatePlayerRating(s);
+      tableBody.innerHTML = scorers.map((s, idx) => {
+        let rankHtml = `<span class="stats-pos-num">${idx + 1}</span>`;
+        if (idx === 0) rankHtml = `<span class="stats-medal-badge gold" title="Peringkat 1">🥇 1</span>`;
+        else if (idx === 1) rankHtml = `<span class="stats-medal-badge silver" title="Peringkat 2">🥈 2</span>`;
+        else if (idx === 2) rankHtml = `<span class="stats-medal-badge bronze" title="Peringkat 3">🥉 3</span>`;
 
-      return `
-        <tr>
-          <td style="text-align: center; vertical-align: middle;">
-            ${rankBadgeHtml}
-          </td>
-          <td style="text-align: left; vertical-align: middle;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <img src="${s.photo || 'assets/mvp_player.jpg'}" alt="${s.playerName}" class="${avatarClass}" onerror="this.onerror=null; this.src='assets/mvp_player.jpg'">
-              <div>
-                <strong style="color: var(--text-main); font-size: 0.9rem;">${s.playerName}</strong> <span style="color: var(--secondary); font-size: 0.75rem;">(#${s.playerNo})</span>
-                <div style="font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
-                  <span class="top-scorer-mobile-team">${s.teamName} • </span>
-                  <span>${s.pos}</span>
-                  <span class="player-rating-pill ${pRating >= 9.0 ? 'rating-superb' : (pRating >= 8.0 ? 'rating-great' : 'rating-solid')}" style="font-size: 0.68rem; padding: 1px 5px;">
-                    ⭐ ${pRating}
-                  </span>
+        const pRating = this.calculatePlayerRating(s);
+        const pTarget = s.playerNo || s.playerName;
+
+        return `
+          <tr class="stats-clickable-row" onclick="app.openPlayerDetailPage('${s.teamId}', '${encodeURIComponent(pTarget)}')">
+            <td style="text-align: center; vertical-align: middle;">${rankHtml}</td>
+            <td style="text-align: left; vertical-align: middle;">
+              <div class="stats-player-cell">
+                <img src="${safeImg(s.photo)}" alt="${s.playerName}" class="stats-player-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
+                <div class="stats-player-meta">
+                  <div class="stats-player-name-row">
+                    <strong class="stats-player-name">${s.playerName}</strong>
+                    <span class="stats-jersey-no">(#${s.playerNo})</span>
+                  </div>
+                  <div class="stats-player-sub-row">
+                    <span class="stats-mobile-team">${s.teamName}</span>
+                    <span class="stats-dot-sep">•</span>
+                    <span class="stats-pos-pill">${s.pos || 'Flank'}</span>
+                    <span class="stats-rating-pill">⭐ ${pRating}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </td>
-          <td class="col-secondary" style="text-align: left; vertical-align: middle; color: var(--text-main); font-weight: 600;">${s.teamName}</td>
-          <td class="col-secondary" style="text-align: center; vertical-align: middle;"><span style="color: var(--secondary); font-size: 0.75rem; font-weight: 700;">${s.pos}</span></td>
-          <td style="text-align: center; vertical-align: middle;">
-            <span class="scorer-goal-badge">${s.goals}</span>
-          </td>
-        </tr>
-      `;
-    }).join("");
-    this.updateFloatingLiveNotice();
+            </td>
+            <td class="col-secondary" style="text-align: left; vertical-align: middle; color: #e2e8f0; font-weight: 600;">
+              ${s.teamName}
+            </td>
+            <td class="col-secondary" style="text-align: center; vertical-align: middle;">
+              <span class="stats-pos-pill">${s.pos || 'Pemain'}</span>
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="stats-metric-pill metric-gold">${s.goals}</span>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+    } else if (tab === "assists") {
+      if (badgeEl) {
+        badgeEl.innerHTML = `<span>🎯</span> Peringkat Assist Terbanyak &amp; Playmaker Turnamen`;
+      }
+      if (tableHead) {
+        tableHead.innerHTML = `
+          <tr>
+            <th style="width: 50px; text-align: center;">#</th>
+            <th style="text-align: left;">Pemain</th>
+            <th class="col-secondary" style="text-align: left; width: 190px;">Sekolah / Tim</th>
+            <th class="col-secondary" style="text-align: center; width: 85px;">Posisi</th>
+            <th style="text-align: center; width: 85px;">ASSIST</th>
+          </tr>
+        `;
+      }
+
+      const assisters = typeof this.store.getTopAssistsList === "function" ? this.store.getTopAssistsList(cat) : [];
+      if (assisters.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 36px 16px; color: #94a3b8;">
+              <div style="font-size: 2rem; margin-bottom: 8px;">🎯</div>
+              <strong>Belum ada catatan assist pada kelas ${cat}.</strong>
+              <div style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Statistik assist diinput oleh panitia pada menu pencatat gol.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = assisters.map((s, idx) => {
+        let rankHtml = `<span class="stats-pos-num">${idx + 1}</span>`;
+        if (idx === 0) rankHtml = `<span class="stats-medal-badge gold" title="Peringkat 1">🥇 1</span>`;
+        else if (idx === 1) rankHtml = `<span class="stats-medal-badge silver" title="Peringkat 2">🥈 2</span>`;
+        else if (idx === 2) rankHtml = `<span class="stats-medal-badge bronze" title="Peringkat 3">🥉 3</span>`;
+
+        const pRating = this.calculatePlayerRating(s);
+        const pTarget = s.playerNo || s.playerName;
+
+        return `
+          <tr class="stats-clickable-row" onclick="app.openPlayerDetailPage('${s.teamId}', '${encodeURIComponent(pTarget)}')">
+            <td style="text-align: center; vertical-align: middle;">${rankHtml}</td>
+            <td style="text-align: left; vertical-align: middle;">
+              <div class="stats-player-cell">
+                <img src="${safeImg(s.photo)}" alt="${s.playerName}" class="stats-player-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
+                <div class="stats-player-meta">
+                  <div class="stats-player-name-row">
+                    <strong class="stats-player-name">${s.playerName}</strong>
+                    <span class="stats-jersey-no">(#${s.playerNo})</span>
+                  </div>
+                  <div class="stats-player-sub-row">
+                    <span class="stats-mobile-team">${s.teamName}</span>
+                    <span class="stats-dot-sep">•</span>
+                    <span class="stats-pos-pill">${s.pos || 'Flank'}</span>
+                    <span class="stats-rating-pill">⭐ ${pRating}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="col-secondary" style="text-align: left; vertical-align: middle; color: #e2e8f0; font-weight: 600;">
+              ${s.teamName}
+            </td>
+            <td class="col-secondary" style="text-align: center; vertical-align: middle;">
+              <span class="stats-pos-pill">${s.pos || 'Pemain'}</span>
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="stats-metric-pill metric-cyan">${s.assists}</span>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+    } else if (tab === "yellow") {
+      if (badgeEl) {
+        badgeEl.innerHTML = `<span>🟨</span> Rekapitulasi Kartu Kuning &amp; Akumulasi Pemain`;
+      }
+      if (tableHead) {
+        tableHead.innerHTML = `
+          <tr>
+            <th style="width: 50px; text-align: center;">#</th>
+            <th style="text-align: left;">Pemain</th>
+            <th class="col-secondary" style="text-align: left; width: 190px;">Sekolah / Tim</th>
+            <th style="text-align: center; width: 85px;">KUNING</th>
+            <th style="text-align: center; width: 140px;">Status</th>
+            <th style="text-align: center; width: 90px;">Aksi</th>
+          </tr>
+        `;
+      }
+
+      const records = this.store.getDisciplinaryRecords(cat).filter(r => r.yellowCount > 0);
+      if (records.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 36px 16px; color: #10b981;">
+              <div style="font-size: 2rem; margin-bottom: 8px;">✅</div>
+              <strong>Belum ada kartu kuning yang tercatat di kelas ${cat}.</strong>
+              <div style="font-size: 0.8rem; margin-top: 4px; color: #94a3b8;">Prinsip Fair Play &amp; sportivitas terjaga dengan baik!</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = records.map((r, idx) => {
+        const pTarget = r.playerNo || r.playerName;
+        const waMsgText = `⚠️ PEMBERITAHUAN DISIPLIN PANITIA ACC 2026:\nPemain an. ${r.playerName} (#${r.playerNo}) dari tim *${r.teamName}* telah menerima ${r.yellowCount} Kartu Kuning.\nStatus: *${r.status}*${r.actionNote ? ` (${r.actionNote})` : ''}.\nHarap official memperhatikan demi kelancaran turnamen.`;
+        const waUrl = this.getWhatsAppUrl(r.managerPhone, waMsgText);
+        const badgeClass = r.statusType === 'danger' || r.statusType === 'warning' ? 'suspension-badge' : 'safe-badge';
+
+        return `
+          <tr class="stats-clickable-row" onclick="app.openPlayerDetailPage('${r.teamId}', '${encodeURIComponent(pTarget)}')">
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="stats-pos-num">${idx + 1}</span>
+            </td>
+            <td style="text-align: left; vertical-align: middle;">
+              <div class="stats-player-cell">
+                <img src="${safeImg(r.photo)}" alt="${r.playerName}" class="stats-player-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
+                <div class="stats-player-meta">
+                  <div class="stats-player-name-row">
+                    <strong class="stats-player-name">${r.playerName}</strong>
+                    <span class="stats-jersey-no">(#${r.playerNo})</span>
+                  </div>
+                  <div class="stats-player-sub-row">
+                    <span class="stats-mobile-team">${r.teamName}</span>
+                    <span class="stats-dot-sep">•</span>
+                    <span class="stats-pos-pill">${r.pos || 'Pemain'}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="col-secondary" style="text-align: left; vertical-align: middle; color: #e2e8f0; font-weight: 600;">
+              ${r.teamName}
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="stats-metric-pill metric-yellow">🟨 ${r.yellowCount}</span>
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="${badgeClass}">${r.status}</span>
+              ${r.actionNote ? `<div style="font-size: 0.68rem; color: #94a3b8; margin-top: 2px;">${r.actionNote}</div>` : ''}
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <a href="${waUrl}" target="_blank" onclick="event.stopPropagation();" class="stats-row-action" title="Kirim Pesan Resmi ke Official Tim">
+                📲 WA
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+    } else if (tab === "red") {
+      if (badgeEl) {
+        badgeEl.innerHTML = `<span>🟥</span> Rekapitulasi Kartu Merah &amp; Sanksi Pertandingan`;
+      }
+      if (tableHead) {
+        tableHead.innerHTML = `
+          <tr>
+            <th style="width: 50px; text-align: center;">#</th>
+            <th style="text-align: left;">Pemain</th>
+            <th class="col-secondary" style="text-align: left; width: 190px;">Sekolah / Tim</th>
+            <th style="text-align: center; width: 85px;">MERAH</th>
+            <th style="text-align: center; width: 140px;">Sanksi</th>
+            <th style="text-align: center; width: 90px;">Aksi</th>
+          </tr>
+        `;
+      }
+
+      const records = this.store.getDisciplinaryRecords(cat).filter(r => r.redCount > 0);
+      if (records.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 36px 16px; color: #10b981;">
+              <div style="font-size: 2rem; margin-bottom: 8px;">✅</div>
+              <strong>Nir-kartu merah! Tidak ada kartu merah pada kelas ${cat}.</strong>
+              <div style="font-size: 0.8rem; margin-top: 4px; color: #94a3b8;">Seluruh peserta menjunjung tinggi sportivitas dan rasa hormat.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = records.map((r, idx) => {
+        const pTarget = r.playerNo || r.playerName;
+        const waMsgText = `⚠️ PEMBERITAHUAN SANKSI DISIPLIN RESMI ACC 2026:\nPemain an. ${r.playerName} (#${r.playerNo}) dari tim *${r.teamName}* telah menerima Kartu Merah Langsung / 2 Kartu Kuning.\nStatus: *${r.status}*${r.actionNote ? ` (${r.actionNote})` : ''}.\nHarap official tim memastikan pemain yang bersangkutan mematuhi sanksi larangan bertanding.`;
+        const waUrl = this.getWhatsAppUrl(r.managerPhone, waMsgText);
+
+        return `
+          <tr class="stats-clickable-row" onclick="app.openPlayerDetailPage('${r.teamId}', '${encodeURIComponent(pTarget)}')">
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="stats-pos-num">${idx + 1}</span>
+            </td>
+            <td style="text-align: left; vertical-align: middle;">
+              <div class="stats-player-cell">
+                <img src="${safeImg(r.photo)}" alt="${r.playerName}" class="stats-player-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
+                <div class="stats-player-meta">
+                  <div class="stats-player-name-row">
+                    <strong class="stats-player-name">${r.playerName}</strong>
+                    <span class="stats-jersey-no">(#${r.playerNo})</span>
+                  </div>
+                  <div class="stats-player-sub-row">
+                    <span class="stats-mobile-team">${r.teamName}</span>
+                    <span class="stats-dot-sep">•</span>
+                    <span class="stats-pos-pill">${r.pos || 'Pemain'}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="col-secondary" style="text-align: left; vertical-align: middle; color: #e2e8f0; font-weight: 600;">
+              ${r.teamName}
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="stats-metric-pill metric-red">🟥 ${r.redCount}</span>
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <span class="suspension-badge">${r.status}</span>
+              ${r.actionNote ? `<div style="font-size: 0.68rem; color: #94a3b8; margin-top: 2px;">${r.actionNote}</div>` : ''}
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+              <a href="${waUrl}" target="_blank" onclick="event.stopPropagation();" class="stats-row-action" title="Kirim Pesan Resmi ke Official Tim">
+                📲 WA
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+  },
+
+  // Fallbacks for legacy calls
+  renderDiscipline() {
+    this.currentStatsTab = "yellow";
+    this.switchTab("stats", false);
+  },
+
+  renderTopScorers() {
+    this.currentStatsTab = "scorers";
+    this.switchTab("stats", false);
   },
 
   // 7. RENDER JUKNIS (Buku Panduan)

@@ -217,9 +217,7 @@
             style="display: none;">🎲 Draw Grup</button>
           <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
           <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
-          <button type="button" class="tab-btn" data-tab="scorers" onclick="app.switchTab('scorers')">Top Skor</button>
-          <button type="button" class="tab-btn" data-tab="discipline"
-            onclick="app.switchTab('discipline')">Disiplin</button>
+          <button type="button" class="tab-btn" data-tab="stats" onclick="app.switchTab('stats')">Statistik</button>
           <button type="button" class="tab-btn" data-tab="juknis" onclick="app.switchTab('juknis')">Regulasi</button>
         </nav>
       </div>
@@ -284,13 +282,8 @@
         <button type="button" class="mobile-nav-link" data-tab="teams" onclick="app.navigateTo('/tim', 'teams')">
           Daftar Tim
         </button>
-        <button type="button" class="mobile-nav-link" data-tab="scorers"
-          onclick="app.navigateTo('/top-skor', 'scorers')">
-          Top Skor
-        </button>
-        <button type="button" class="mobile-nav-link" data-tab="discipline"
-          onclick="app.navigateTo('/disiplin', 'discipline')">
-          Disiplin
+        <button type="button" class="mobile-nav-link" data-tab="stats" onclick="app.navigateTo('/statistik', 'stats')">
+          Statistik
         </button>
         <button type="button" class="mobile-nav-link" data-tab="juknis" onclick="app.navigateTo('/regulasi', 'juknis')">
           Regulasi
@@ -969,21 +962,20 @@
       </div>
     </section>
 
-    <!-- TAB 5: PAPAN DISIPLIN & SANKSI KARTU -->
-    <section id="pane-discipline" class="tab-pane">
+    <!-- TAB 5: STATISTIK TURNAMEN (TOP SKOR, TOP ASSIST, KARTU KUNING, KARTU MERAH) -->
+    <section id="pane-stats" class="tab-pane">
 
-      <!-- FEATURE HERO SECTION: DISIPLIN -->
+      <!-- FEATURE HERO SECTION: STATISTIK -->
       <div class="feature-hero-card scroll-reveal">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
-            <span>FAIR PLAY & DISCIPLINE</span>
+            <span>TOURNAMENT LEADERBOARDS &amp; STATS</span>
           </div>
-          <h2 class="feature-hero-title">Papan Disiplin & Fair Play</h2>
-          <p class="feature-hero-desc">Rekapitulasi kartu kuning, kartu merah, denda kedisiplinan, dan sanksi larangan
-            bertanding turnamen.</p>
+          <h2 class="feature-hero-title">Statistik Turnamen</h2>
+          <p class="feature-hero-desc">Pusat data statistik individu pemain: Top Skor (Golden Boot), Top Assist (Playmaker), Rekapitulasi Kartu Kuning, dan Kartu Merah.</p>
         </div>
-        <div class="feature-hero-badge" aria-hidden="true">🟨</div>
+        <div class="feature-hero-badge" aria-hidden="true">📊</div>
       </div>
 
       <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
@@ -994,7 +986,7 @@
               <span class="pulse-dot-green"></span>
               <span>PILIH KELAS PERTANDINGAN</span>
             </div>
-            <span class="category-selector-hint">Ketuk untuk beralih data disiplin turnamen</span>
+            <span class="category-selector-hint">Ketuk untuk beralih statistik kelas turnamen</span>
           </div>
           <div class="category-button-grid">
             <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
@@ -1007,121 +999,57 @@
               <span class="cat-select-icon">⚽</span>
               <div class="cat-select-info">
                 <span class="cat-select-name">KELAS SD (U-12)</span>
-
               </div>
             </button>
           </div>
         </div>
       </div>
-      <div class="section-header" style="margin-bottom: 12px;">
-        <span class="section-hint-badge" style="color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">
-          <span>🟨</span> Rekapitulasi Kartu Kuning &amp; Merah (Wajib Dipantau Pelatih &amp; Manajer Tim)
-        </span>
+
+      <!-- STATISTIK 4 SUB-NAVIGATION PILLS -->
+      <div class="stats-subnav-container scroll-reveal">
+        <button type="button" class="stats-tab-btn active" data-stat="scorers" onclick="app.setStatsTab('scorers')">
+          <span class="stat-tab-icon">⚽</span>
+          <span class="stat-tab-label">Top Skor</span>
+        </button>
+        <button type="button" class="stats-tab-btn" data-stat="assists" onclick="app.setStatsTab('assists')">
+          <span class="stat-tab-icon">🎯</span>
+          <span class="stat-tab-label">Top Assist</span>
+        </button>
+        <button type="button" class="stats-tab-btn" data-stat="yellow" onclick="app.setStatsTab('yellow')">
+          <span class="stat-tab-icon">🟨</span>
+          <span class="stat-tab-label">Kartu Kuning</span>
+        </button>
+        <button type="button" class="stats-tab-btn" data-stat="red" onclick="app.setStatsTab('red')">
+          <span class="stat-tab-icon">🟥</span>
+          <span class="stat-tab-label">Kartu Merah</span>
+        </button>
       </div>
 
-      <div class="discipline-alert">
-        <span style="font-size: 1.5rem;">⚠️</span>
-        <div>
-          <strong>Regulasi Akumulasi & Sanksi Bertanding:</strong>
-          <p style="margin-top: 3px;">
-            Pemain yang memperoleh <strong>2 Kartu Kuning</strong> pada laga berbeda atau <strong>1 Kartu Merah
-              Langsung</strong> dikenakan sanksi <strong>larangan bertanding 1 laga berikutnya</strong>. Pemutihan kartu
-            kuning dilakukan menjelang babak Semifinal.
-          </p>
+      <!-- QUICK STATS SUMMARY RIBBON (4 LEADER CARDS) -->
+      <div class="stats-summary-ribbon scroll-reveal" id="statsSummaryRibbon">
+        <!-- Rendered dynamically by app.js: 4 Cards (Top Skor Leader, Top Assist Leader, Kartu Kuning, Kartu Merah) -->
+      </div>
+
+      <!-- MAIN STATS LEADERBOARD TABLE CARD -->
+      <div class="group-card stats-table-card scroll-reveal">
+        <div class="section-header" style="margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+          <span class="section-hint-badge" id="statsHeaderBadge">
+            <span>⚽</span> Peringkat Pencetak Gol Terbanyak &amp; Kandidat Golden Boot
+          </span>
+          <span style="font-size: 0.72rem; color: #94a3b8;">
+            *Klik baris pemain untuk membuka profil &amp; riwayat lengkap
+          </span>
         </div>
-      </div>
 
-      <div class="discipline-table-card">
         <div class="table-responsive">
-          <table class="standings-table">
-            <thead>
-              <tr>
-                <th style="width: 35px;">#</th>
-                <th style="text-align: left;">Nama Pemain</th>
-                <th class="col-secondary" style="text-align: left;">Asal Sekolah / Tim</th>
-                <th>Total Kartu</th>
-                <th>Status Sanksi</th>
-                <th style="text-align: center;">Aksi</th>
-              </tr>
+          <table class="standings-table stats-main-table">
+            <thead id="statsTableHead">
+              <!-- Dynamically set by app.js based on current stat tab -->
             </thead>
-            <tbody id="disciplineTableBody">
-              <!-- Rendered by app.js -->
+            <tbody id="statsTableBody">
+              <!-- Rendered by app.js with photo and click navigation -->
             </tbody>
           </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 6: TOP SCORER (GOLDEN BOOT) -->
-    <section id="pane-scorers" class="tab-pane">
-
-      <!-- FEATURE HERO SECTION: TOP SKOR -->
-      <div class="feature-hero-card scroll-reveal">
-        <div class="feature-hero-content">
-          <div class="feature-hero-kicker">
-            <span class="pulse-dot"></span>
-            <span>GOLDEN BOOT RACE</span>
-          </div>
-          <h2 class="feature-hero-title">Papan Top Skor</h2>
-          <p class="feature-hero-desc">Peringkat pencetak gol terbanyak dan persaingan sepatu emas (Golden Boot)
-            turnamen ACC 2026.</p>
-        </div>
-        <div class="feature-hero-badge" aria-hidden="true">⚽</div>
-      </div>
-
-      <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
-      <div class="category-selector-space scroll-reveal">
-        <div class="category-selector-box">
-          <div class="category-selector-header">
-            <div class="category-selector-kicker">
-              <span class="pulse-dot-green"></span>
-              <span>PILIH KELAS PERTANDINGAN</span>
-            </div>
-            <span class="category-selector-hint">Ketuk untuk beralih top skor turnamen</span>
-          </div>
-          <div class="category-button-grid">
-            <button type="button" class="cat-select-btn btn-cat-smp active" onclick="app.setCategory('SMP')">
-              <span class="cat-select-icon">🏆</span>
-              <div class="cat-select-info">
-                <span class="cat-select-name">KELAS SMP (U-15)</span>
-
-              </div>
-            </button>
-            <button type="button" class="cat-select-btn btn-cat-sd" onclick="app.setCategory('SD')">
-              <span class="cat-select-icon">⚽</span>
-              <div class="cat-select-info">
-                <span class="cat-select-name">KELAS SD (U-12)</span>
-
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="section-header" style="margin-bottom: 12px;">
-        <span class="section-hint-badge">
-          <span>⚽</span> Peringkat Pencetak Gol Terbanyak &amp; Kandidat Golden Boot
-        </span>
-      </div>
-
-      <div class="top-scorers-layout">
-        <!-- Leaderboard Table with Featured 3-Row Leader at Rank 1 -->
-        <div class="group-card top-scorers-card">
-          <div class="table-responsive">
-            <table class="standings-table top-scorers-table">
-              <thead>
-                <tr>
-                  <th style="width: 48px; text-align: center;">#</th>
-                  <th style="text-align: left;">Pemain</th>
-                  <th class="col-secondary" style="text-align: left; width: 170px;">Sekolah / Tim</th>
-                  <th class="col-secondary" style="text-align: center; width: 75px;">Posisi</th>
-                  <th style="text-align: center; width: 70px;">GOL</th>
-                </tr>
-              </thead>
-              <tbody id="topScorersTableBody">
-                <!-- Rendered by app.js (Rank 1 is rendered as a featured leader) -->
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </section>
