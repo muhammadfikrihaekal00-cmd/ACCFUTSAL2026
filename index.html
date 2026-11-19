@@ -317,7 +317,7 @@
     <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
     <section id="pane-home" class="tab-pane active">
 
-      <!-- BORDERLESS FUTURISTIC HERO SECTION (ACC AL-FAYYADH KHUSUS BERANDA - FULL 1 HALAMAN) -->
+      <!-- BORDERLESS FUTURISTIC HERO SECTION (ACC AL-FAYYADH KHUSUS BERANDA - CLEAN FULL 1 HALAMAN) -->
       <div class="hero-card" id="homeHeroFullscreen">
         <div class="hero-identity-stack">
           <div class="hero-emblem-wrap">
@@ -325,60 +325,41 @@
               fetchpriority="high">
           </div>
           <div class="hero-details">
-            <div class="hero-kicker-pill">
-              <span class="hero-kicker-dot"></span>
-              <span>OFFICIAL TOURNAMENT PORTAL • ACC 2026</span>
-            </div>
             <div class="hero-badge-live" id="heroLiveBadge" onclick="app.scrollToLiveStream()"
               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.scrollToLiveStream();}"
               role="button" tabindex="0" title="Klik untuk menuju siaran langsung YouTube Live" style="display: none;">
               <span class="pulse-dot"></span>
-              <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
+              <span>LIVE MATCHDAY</span>
             </div>
-            <div class="hero-title" id="heroTitle">ACC "Al-Fayyadh Champions Cup" 2026</div>
+            <h1 class="hero-title" id="heroTitle">ACC 2026</h1>
             <p id="heroSub">
-              Turnamen Futsal Antar-Sekolah &amp; Pesantren se-Sulawesi Selatan • Ma'had Tahfizhul Qur'an Al Fayyadh
-              Maros
+              Turnamen Futsal Antar-Sekolah &amp; Pesantren se-Sulawesi Selatan
             </p>
             <div class="hero-meta">
-              <span>📍 <strong id="heroVenue">GOR Futsal Ma'had Al-Fayyadh Maros</strong></span>
-              <span>📅 <strong id="heroDates">22 - 26 November 2026</strong></span>
+              <span id="heroVenue">GOR Futsal Ma'had Al-Fayyadh Maros</span>
+              <span class="hero-meta-dot">•</span>
+              <span id="heroDates">22 - 26 November 2026</span>
             </div>
           </div>
         </div>
-
-        <!-- FLOATING SCROLL CUE TO EXPLORE DOWN -->
-        <div class="hero-scroll-cue" onclick="app.scrollPastHero()" role="button" tabindex="0"
-          title="Gulir ke bawah untuk menjelajahi informasi turnamen">
-          <span class="hero-scroll-cue-text">Jelajahi Turnamen</span>
-          <span class="hero-scroll-cue-icon">↓</span>
-        </div>
       </div>
 
-      <!-- 4 STAT BOX INFORMASI TURNAMEN (MUNCUL KETIKA DI-SCROLL KE BAWAH) -->
+      <!-- 4 STAT BOX INFORMASI TURNAMEN (CLEAN RECURSION STYLE - TANPA SIMBOL/EMOJI) -->
       <section class="home-stats-showcase-section scroll-reveal" id="homeStatsShowcase">
-        <div class="home-stats-header">
-          <span class="section-hint-badge"><span>📊</span> Skala Turnamen Resmi ACC 2026</span>
-          <h3 class="home-stats-title">Kompetisi Futsal Pelajar Terbesar di Maros &amp; Sulawesi Selatan</h3>
-        </div>
         <div class="hero-quick-stats">
           <div class="stat-pill">
-            <div class="stat-icon-wrap">🏆</div>
             <div class="stat-val">32</div>
             <div class="stat-lbl">Tim Peserta</div>
           </div>
           <div class="stat-pill">
-            <div class="stat-icon-wrap">📋</div>
             <div class="stat-val">8</div>
             <div class="stat-lbl">Grup Turnamen</div>
           </div>
           <div class="stat-pill">
-            <div class="stat-icon-wrap">🏟️</div>
             <div class="stat-val">1</div>
             <div class="stat-lbl">Lapangan Utama</div>
           </div>
           <div class="stat-pill">
-            <div class="stat-icon-wrap">⚽</div>
             <div class="stat-val">64</div>
             <div class="stat-lbl">Total Laga</div>
           </div>
@@ -394,27 +375,27 @@
       <div class="home-hero-banner scroll-reveal" id="homeHeroBanner">
         <button id="btnChangeBannerQuick" class="btn-banner-edit-overlay" onclick="admin.openHeroBannerModal()"
           title="Ubah Gambar Banner Turnamen" style="display: none;">
-          📷 Ganti Gambar Banner (Panitia)
+          Ganti Gambar Banner
         </button>
         <div class="home-banner-overlay">
           <div class="banner-cta-group">
             <button class="btn btn-primary" onclick="app.switchTab('matches')">
-              🏟️ Cek Jadwal & Live Skor
+              Jadwal &amp; Hasil
             </button>
             <button class="btn btn-outline"
               style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
               onclick="app.switchTab('standings')">
-              📊 Klasemen Sementara
+              Klasemen
             </button>
             <button class="btn btn-outline"
               style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
-              onclick="app.replaySplashScreen()" title="Putar Ulang Animasi Opening Sambutan">
-              ✨ Putar Opening
+              onclick="app.replaySplashScreen()" title="Putar Sambutan">
+              Putar Sambutan
             </button>
             <button class="btn btn-outline"
               style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
               onclick="app.switchTab('juknis')">
-              📋 Juknis
+              Regulasi
             </button>
           </div>
         </div>

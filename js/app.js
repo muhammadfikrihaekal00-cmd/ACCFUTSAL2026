@@ -1244,7 +1244,7 @@ var app = window.app = Object.assign(window.app || {}, {
     const cfg = (this.store && this.store.data && this.store.data.config) || {};
     const rawYtUrl = cfg.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
     const videoId = this.getYoutubeVideoId(rawYtUrl);
-    const title = cfg.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal Ma'had Al-Fayyadh Maros";
+    const title = (cfg.youtubeLiveTitle || "Siaran Langsung Lapangan Utama - GOR Futsal Ma'had Al-Fayyadh Maros").replace(/^[🔴\s]+/, "");
 
     // Cari apakah ada pertandingan yang sedang LIVE saat ini
     const matches = (this.store && this.store.data && this.store.data.matches) || [];
@@ -1264,13 +1264,13 @@ var app = window.app = Object.assign(window.app || {}, {
       liveTickerHtml = `
         <div class="live-stream-match-ticker live">
           <div class="ticker-left">
-            <span class="pulse-live-badge">🔴 LIVE${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
+            <span class="pulse-live-badge"><span class="pulse-dot"></span> LIVE${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
             <span class="ticker-match-title">${catBadge} [${stageName}]</span>
             <strong class="ticker-score-teams">${hTeam.name} <span class="score-highlight">${hScore} - ${aScore}</span> ${aTeam.name}</strong>
           </div>
           <div class="ticker-actions">
-            ${this.isAdmin() ? `<button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">✏️ Input Skor Laga</button>` : ''}
-            <button class="btn btn-sm btn-outline" onclick="app.showMatchDetail('${lm.id}')">ℹ️ Detail Laga</button>
+            ${this.isAdmin() ? `<button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">Input Skor</button>` : ''}
+            <button class="btn btn-sm btn-outline" onclick="app.showMatchDetail('${lm.id}')">Detail Laga</button>
           </div>
         </div>
       `;
@@ -1286,12 +1286,12 @@ var app = window.app = Object.assign(window.app || {}, {
         liveTickerHtml = `
           <div class="live-stream-match-ticker upcoming">
             <div class="ticker-left">
-              <span class="upcoming-status-badge">⏰ PERTANDINGAN BERIKUTNYA</span>
+              <span class="upcoming-status-badge">PERTANDINGAN BERIKUTNYA</span>
               <span class="ticker-match-title">${catBadge} [${stageName}] • ${nextMatch.date}, ${nextMatch.time}</span>
               <strong class="ticker-score-teams">${hTeam.name} <span class="vs-badge">VS</span> ${aTeam.name}</strong>
             </div>
             <div class="ticker-actions">
-              <button class="btn btn-sm btn-primary" onclick="app.switchTab('matches')">🏟️ Lihat Jadwal Lengkap ➔</button>
+              <button class="btn btn-sm btn-primary" onclick="app.switchTab('matches')">Lihat Jadwal Lengkap ➔</button>
             </div>
           </div>
         `;
@@ -1328,7 +1328,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="live-stream-header-right">
             ${this.isAdmin() ? `
               <button class="btn btn-outline btn-sm btn-edit-stream" onclick="admin.openYoutubeLiveModal()" title="Ubah Link Siaran Langsung YouTube (Panitia)">
-                ⚙️ Ganti Link YouTube Live
+                Ganti Link Live
               </button>
             ` : ''}
           </div>
