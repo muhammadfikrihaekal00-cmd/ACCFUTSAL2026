@@ -4311,7 +4311,7 @@ var app = window.app = Object.assign(window.app || {}, {
       <div class="stats-summary-card ${this.currentStatsTab === 'assists' ? 'active' : ''}" onclick="app.setStatsTab('assists')">
         <img src="${safeImg(topAssister.photo)}" alt="${topAssister.playerName}" class="stats-summary-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
         <div class="stats-summary-info">
-          <div class="stats-summary-kicker">🎯 TOP ASSIST</div>
+          <div class="stats-summary-kicker">👟 TOP ASSIST</div>
           <div class="stats-summary-name" title="${topAssister.playerName}">${topAssister.playerName}</div>
           <div class="stats-summary-sub">${topAssister.teamName}</div>
         </div>
@@ -4319,7 +4319,7 @@ var app = window.app = Object.assign(window.app || {}, {
       </div>
     ` : `
       <div class="stats-summary-card ${this.currentStatsTab === 'assists' ? 'active' : ''}" onclick="app.setStatsTab('assists')">
-        <div class="stats-summary-icon-fallback">🎯</div>
+        <div class="stats-summary-icon-fallback">👟</div>
         <div class="stats-summary-info">
           <div class="stats-summary-kicker">🎯 TOP ASSIST</div>
           <div class="stats-summary-name">Belum Ada Assist</div>
@@ -4449,7 +4449,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     } else if (tab === "assists") {
       if (badgeEl) {
-        badgeEl.innerHTML = `<span>🎯</span> Peringkat Assist Terbanyak &amp; Playmaker Turnamen`;
+        badgeEl.innerHTML = `<span>👟</span> Peringkat Assist Terbanyak &amp; Playmaker Turnamen`;
       }
       if (tableHead) {
         tableHead.innerHTML = `
@@ -4470,7 +4470,7 @@ var app = window.app = Object.assign(window.app || {}, {
             <td colspan="5" style="text-align: center; padding: 36px 16px; color: #94a3b8;">
               <div style="font-size: 2rem; margin-bottom: 8px;">🎯</div>
               <strong>Belum ada catatan assist pada kelas ${cat}.</strong>
-              <div style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Statistik assist diinput oleh panitia pada menu pencatat gol.</div>
+              <div style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Data akan otomatis bertambah seiring berlangsungnya laga.</div>
             </td>
           </tr>
         `;
