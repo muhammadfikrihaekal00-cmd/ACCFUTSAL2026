@@ -1,12 +1,12 @@
 {
-  "name": "ACC \"Al-Fayyadh Champions Cup\" 2026",
+  "name": "Al-Fayyadh Champions Cup 2026",
   "short_name": "ACC 2026",
   "description": "Portal Resmi Pemantauan Pertandingan, Skor Langsung, Klasemen, dan Disiplin Kartu ACC Al-Fayyadh Champions Cup 2026 - Ma'had Tahfizhul Qur'an Al Fayyadh",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#28050c",
-  "theme_color": "#28050c",
+  "background_color": "#060a17",
+  "theme_color": "#060a17",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -20,18 +20,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "assets/icon-maskable-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "assets/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }
