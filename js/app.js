@@ -1347,7 +1347,7 @@ var app = window.app = Object.assign(window.app || {}, {
     this.updateCategoryUI();
     this.renderCurrentView();
     if (showToastMsg) {
-      const lbl = cat === "SMP" ? "🏆 Kelas SMP (U-15)" : "⚽ Kelas SD (U-12)";
+      const lbl = cat === "SMP" ? " Kelas SMP (U-15)" : " Kelas SD (U-12)";
       this.showToast(`Beralih ke ${lbl}`);
     }
   },
@@ -5808,7 +5808,7 @@ var app = window.app = Object.assign(window.app || {}, {
       toast.className = "toast";
       document.body.appendChild(toast);
     }
-    toast.innerHTML = `<span>⚡</span> <span>${message}</span>`;
+    toast.innerHTML = `<span></span> <span>${message}</span>`;
     toast.classList.add("show");
     setTimeout(() => {
       toast.classList.remove("show");
