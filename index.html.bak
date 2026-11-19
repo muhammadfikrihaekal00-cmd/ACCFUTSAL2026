@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#28050c">
   <meta name="description"
     content="Portal Resmi Pemantauan Pertandingan, Skor Langsung, Klasemen, Bagan Gugur, dan Disiplin Kartu ACC Al-Fayyadh Champions Cup 2026 - Ma'had Tahfizhul Qur'an Al Fayyadh.">
-  <title>ACC "Al-Fayyadh Champions Cup" 2026 â€¢ Ma'had Tahfizhul Qur'an Al Fayyadh</title>
+  <title>Al-Fayyadh Champions Cup 2026 â€¢ Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
   <link rel="manifest" href="manifest.json?v=8.43">
@@ -186,7 +186,7 @@
     <div class="ticker-tag">ðŸ“¢ INFO RESMI ACC 2026</div>
     <div class="ticker-track">
       <div class="ticker-content" id="tickerText">
-        ðŸ† Selamat Datang Official & Peserta ACC "Al-Fayyadh Champions Cup" 2026 Ma'had Tahfizhul Qur'an Al Fayyadh!
+        ðŸ† Selamat Datang Official & Peserta Al-Fayyadh Champions Cup 2026 Ma'had Tahfizhul Qur'an Al Fayyadh!
         Harap registrasi line-up maksimal 30 menit sebelum kick-off di Meja Pertandingan. Junjung tinggi sportivitas,
         ukhuwah Islamiyah, dan fair play!
       </div>
@@ -270,7 +270,7 @@
             <span class="pulse-dot"></span>
             <span>LIVE MATCHDAY â€¢ SEDANG BERLANGSUNG</span>
           </div>
-          <div class="hero-title" id="heroTitle">ACC "Al-Fayyadh Champions Cup" 2026</div>
+          <div class="hero-title" id="heroTitle">Al-Fayyadh Champions Cup 2026</div>
           <p id="heroSub" style="color: var(--text-muted); font-size: 0.9rem;">
             Turnamen Futsal Antar-Sekolah & Pesantren â€¢ Ma'had Tahfizhul Qur'an Al Fayyadh
           </p>
