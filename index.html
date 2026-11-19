@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" class="snap-scroll-active">
 
 <head>
@@ -393,7 +393,7 @@
         <!-- Rendered dynamically by app.renderLiveStreamHero() -->
       </section>
 
-      
+
 
       <!-- SLIDE 5: MOMENT SHOWCASE BAR (POWERPOINT FULLPAGE SLIDE) -->
       <section class="acc-moments-section home-slide-section scroll-reveal" id="accMomentsContainer">
@@ -1060,7 +1060,8 @@
             <span>OFFICIAL RULES & REGULATIONS</span>
           </div>
           <h2 class="feature-hero-title">Regulasi & Petunjuk Teknis</h2>
-          <p class="feature-hero-desc">Buku pedoman resmi, ketentuan peserta, aturan adab pesantren, regulasi FIFA, sanksi kartu, dan pembagian hadiah ACC 2026.</p>
+          <p class="feature-hero-desc">Buku pedoman resmi, ketentuan peserta, aturan adab pesantren, regulasi FIFA,
+            sanksi kartu, dan pembagian hadiah ACC 2026.</p>
         </div>
         <div class="feature-hero-badge" aria-hidden="true">📋</div>
       </div>
@@ -1072,11 +1073,13 @@
             <div class="juknis-download-icon">📥</div>
             <div>
               <div class="juknis-download-title">Petunjuk Teknis Resmi ACC 2026 (PDF Asli)</div>
-              <div class="juknis-download-subtitle">Dokumen autentik kepanitiaan Al-Fayyadh Champions Cup 2026 (11 Bab Lengkap)</div>
+              <div class="juknis-download-subtitle">Dokumen autentik kepanitiaan Al-Fayyadh Champions Cup 2026 (11 Bab
+                Lengkap)</div>
             </div>
           </div>
           <div class="juknis-action-buttons">
-            <a href="assets/juknis_acc_2026.pdf" download="Juknis_Al_Fayyadh_Champions_Cup_2026.pdf" target="_blank" rel="noopener" class="btn btn-primary btn-sm juknis-download-btn">
+            <a href="assets/juknis_acc_2026.pdf" download="Juknis_Al_Fayyadh_Champions_Cup_2026.pdf" target="_blank"
+              rel="noopener" class="btn btn-primary btn-sm juknis-download-btn">
               <span>⬇️ Unduh PDF Resmi</span>
             </a>
             <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
@@ -1089,23 +1092,36 @@
           <input type="text" id="juknisSearchInput" class="form-input juknis-input"
             placeholder="🔍 Cari pasal, sistem poin, adu penalti, kick-in, denda kartu, hadiah..."
             oninput="app.filterJuknis(this.value)">
-          <button type="button" id="juknisSearchClearBtn" class="juknis-search-clear" onclick="app.clearJuknisSearch()" title="Hapus pencarian" style="display: none;">✕</button>
+          <button type="button" id="juknisSearchClearBtn" class="juknis-search-clear" onclick="app.clearJuknisSearch()"
+            title="Hapus pencarian" style="display: none;">✕</button>
         </div>
 
         <!-- QUICK CHAPTER NAV CHIPS -->
         <div class="juknis-quick-filter-bar" id="juknisFilterChips" aria-label="Navigasi Cepat Bab Juknis">
-          <button type="button" class="juknis-filter-chip active" data-chapter="ALL" onclick="app.filterJuknisChapter('ALL')">Semua Bab</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="A" onclick="app.filterJuknisChapter('A')">📌 A. Identitas</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="B" onclick="app.filterJuknisChapter('B')">📅 B. Timeline</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="C" onclick="app.filterJuknisChapter('C')">📋 C. Peserta & Dokumen</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="D" onclick="app.filterJuknisChapter('D')">👥 D. Ofisial & ID Card</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="E" onclick="app.filterJuknisChapter('E')">⏱️ E. Sistem Laga & Waktu</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="F" onclick="app.filterJuknisChapter('F')">⚽ F. Aturan FIFA & Kick-in</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="G" onclick="app.filterJuknisChapter('G')">🕌 G. Adab Pesantren</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="H" onclick="app.filterJuknisChapter('H')">🟨 H. Sanksi & Denda</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="I" onclick="app.filterJuknisChapter('I')">📣 I. Suporter</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="J" onclick="app.filterJuknisChapter('J')">⚖️ J. Gangguan & Medis</button>
-          <button type="button" class="juknis-filter-chip" data-chapter="K" onclick="app.filterJuknisChapter('K')">🏆 K. Hadiah Juara</button>
+          <button type="button" class="juknis-filter-chip active" data-chapter="ALL"
+            onclick="app.filterJuknisChapter('ALL')">Semua Bab</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="A" onclick="app.filterJuknisChapter('A')">📌 A.
+            Identitas</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="B" onclick="app.filterJuknisChapter('B')">📅 B.
+            Timeline</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="C" onclick="app.filterJuknisChapter('C')">📋 C.
+            Peserta & Dokumen</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="D" onclick="app.filterJuknisChapter('D')">👥 D.
+            Ofisial & ID Card</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="E" onclick="app.filterJuknisChapter('E')">⏱️ E.
+            Sistem Laga & Waktu</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="F" onclick="app.filterJuknisChapter('F')">⚽ F.
+            Aturan FIFA & Kick-in</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="G" onclick="app.filterJuknisChapter('G')">🕌 G.
+            Adab Pesantren</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="H" onclick="app.filterJuknisChapter('H')">🟨 H.
+            Sanksi & Denda</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="I" onclick="app.filterJuknisChapter('I')">📣 I.
+            Suporter</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="J" onclick="app.filterJuknisChapter('J')">⚖️ J.
+            Gangguan & Medis</button>
+          <button type="button" class="juknis-filter-chip" data-chapter="K" onclick="app.filterJuknisChapter('K')">🏆 K.
+            Hadiah Juara</button>
         </div>
       </div>
 
@@ -1125,7 +1141,8 @@
           </div>
         </div>
         <div class="juknis-helpdesk-actions">
-          <a href="https://wa.me/6281298765432?text=Halo%20Panitia%20ACC%202026,%20saya%20ingin%20bertanya%20seputar%20regulasi" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">
+          <a href="https://wa.me/6281298765432?text=Halo%20Panitia%20ACC%202026,%20saya%20ingin%20bertanya%20seputar%20regulasi"
+            target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">
             <span>💬 Hubungi via WhatsApp</span>
           </a>
         </div>
