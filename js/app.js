@@ -864,6 +864,7 @@ var app = window.app = Object.assign(window.app || {}, {
     try { this.initGlobalLiveMatchTimer(); } catch (e) { console.warn("LiveTimer init:", e); }
     try { this.initNetworkStatusListeners(); } catch (e) { console.warn("Network init:", e); }
     try { this.initScrollReveal(); } catch (e) { console.warn("ScrollReveal init:", e); }
+    try { this.initHomeSlideNavigation(); } catch (e) { console.warn("SlideNav init:", e); }
     try { this.updateFloatingLiveNotice(); } catch (e) { console.warn("FloatingLive init:", e); }
 
     // DOM-level guarantee
@@ -2298,22 +2299,53 @@ var app = window.app = Object.assign(window.app || {}, {
 
     this._scrollObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
+        const isSlide = entry.target.classList.contains("home-slide-section");
         if (entry.isIntersecting) {
           entry.target.classList.add("is-revealed");
-          observer.unobserve(entry.target);
+          if (!isSlide) {
+            observer.unobserve(entry.target);
+          } else {
+            // Update active dot in slide navigator
+            this.updateActiveSlideNav(entry.target.id);
+          }
+        } else if (isSlide) {
+          // Re-arm slide animation when completely leaving view for PowerPoint slide replay
+          entry.target.classList.remove("is-revealed");
         }
       });
     }, {
-      threshold: 0.1,
+      threshold: 0.2,
       rootMargin: "0px 0px -40px 0px"
     });
 
     // Observe all scroll-reveal containers and cards for dynamic staggered entrance
-    document.querySelectorAll(".scroll-reveal:not(.is-revealed), .match-card:not(.is-revealed), .sponsor-card-primary:not(.is-revealed), .sponsor-card-secondary:not(.is-revealed), .moment-card:not(.is-revealed), .group-card:not(.is-revealed), .team-card:not(.is-revealed)").forEach(el => {
+    document.querySelectorAll(".home-slide-section, .scroll-reveal:not(.is-revealed), .match-card:not(.is-revealed), .sponsor-card-primary:not(.is-revealed), .sponsor-card-secondary:not(.is-revealed), .moment-card:not(.is-revealed), .group-card:not(.is-revealed), .team-card:not(.is-revealed)").forEach(el => {
       if (!el.classList.contains("scroll-reveal")) {
         el.classList.add("scroll-reveal");
       }
       this._scrollObserver.observe(el);
+    });
+  },
+
+  updateActiveSlideNav(slideId) {
+    if (!slideId) return;
+    const dots = document.querySelectorAll(".slide-nav-dot");
+    dots.forEach(dot => {
+      dot.classList.toggle("active", dot.dataset.target === slideId);
+    });
+  },
+
+  initHomeSlideNavigation() {
+    const dots = document.querySelectorAll(".slide-nav-dot");
+    dots.forEach(dot => {
+      dot.addEventListener("click", () => {
+        const targetId = dot.dataset.target;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          this.updateActiveSlideNav(targetId);
+        }
+      });
     });
   },
 
@@ -3127,6 +3159,11 @@ var app = window.app = Object.assign(window.app || {}, {
         targetPane.classList.add("active");
         targetPane.style.display = "block";
       }
+
+      // PowerPoint Section-by-Section Snap Scroll mode khusus tab Beranda
+      const isHome = tabId === "home";
+      document.documentElement.classList.toggle("snap-scroll-active", isHome);
+      document.body.classList.toggle("snap-scroll-active", isHome);
 
       this.renderCurrentView();
       window.scrollTo({ top: 0, behavior: "smooth" });

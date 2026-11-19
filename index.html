@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="snap-scroll-active">
 
 <head>
   <meta charset="UTF-8">
@@ -44,7 +44,7 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.46";
+        var CURRENT_VER = "8.47";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -177,11 +177,11 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.46">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.46">
+  <link rel="stylesheet" href="css/styles.css?v=8.47">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.47">
 </head>
 
-<body>
+<body class="snap-scroll-active">
 
   <!-- AMBIENT MESH / STADIUM NIGHT AURA & ORBITAL RINGS (RECURSION-INSPIRED ACC PALETTE) -->
   <div class="ambient-mesh-bg" aria-hidden="true">
@@ -317,8 +317,17 @@
     <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
     <section id="pane-home" class="tab-pane active">
 
-      <!-- BORDERLESS FUTURISTIC HERO SECTION (ACC AL-FAYYADH KHUSUS BERANDA - CLEAN FULL 1 HALAMAN) -->
-      <div class="hero-card" id="homeHeroFullscreen">
+      <!-- DESKTOP SLIDE NAVIGATOR (POWERPOINT STYLE) -->
+      <nav class="home-slide-nav" id="homeSlideNav" aria-label="Navigasi Slide Beranda">
+        <button type="button" class="slide-nav-dot active" data-target="homeHeroFullscreen" title="Beranda Utama" aria-label="Slide 1: Beranda Utama"></button>
+        <button type="button" class="slide-nav-dot" data-target="homeStatsShowcase" title="Statistik Turnamen" aria-label="Slide 2: Statistik Turnamen"></button>
+        <button type="button" class="slide-nav-dot" data-target="homeBannerSection" title="Panggung Turnamen" aria-label="Slide 3: Panggung Turnamen"></button>
+        <button type="button" class="slide-nav-dot" data-target="accMomentsContainer" title="Momen Turnamen" aria-label="Slide 4: Momen Turnamen"></button>
+        <button type="button" class="slide-nav-dot" data-target="sponsorsShowcaseBar" title="Official Sponsors" aria-label="Slide 5: Official Sponsors"></button>
+      </nav>
+
+      <!-- SLIDE 1: BORDERLESS FUTURISTIC HERO SECTION (POWERPOINT FULLPAGE SLIDE) -->
+      <div class="hero-card home-slide-section" id="homeHeroFullscreen">
         <div class="hero-identity-stack">
           <div class="hero-emblem-wrap">
             <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="160" height="227"
@@ -342,10 +351,22 @@
             </div>
           </div>
         </div>
+        <!-- Scroll indicator / presentation slide hint -->
+        <div class="hero-scroll-hint" onclick="app.scrollPastHero()" role="button" tabindex="0" title="Gulir ke slide berikutnya">
+          <span class="scroll-hint-text">GULIR KE BAWAH</span>
+          <span class="scroll-hint-icon">⌄</span>
+        </div>
       </div>
 
-      <!-- 4 STAT BOX INFORMASI TURNAMEN (CLEAN RECURSION STYLE - TANPA SIMBOL/EMOJI) -->
-      <section class="home-stats-showcase-section scroll-reveal" id="homeStatsShowcase">
+      <!-- SLIDE 2: 4 STAT BOX INFORMASI TURNAMEN (POWERPOINT FULLPAGE SLIDE) -->
+      <section class="home-stats-showcase-section home-slide-section scroll-reveal" id="homeStatsShowcase">
+        <div class="slide-section-header">
+          <div class="slide-kicker-pill">
+            <span class="slide-kicker-dot"></span>
+            <span>RINGKASAN KEJUARAAN</span>
+          </div>
+          <h2 class="slide-main-title">Statistik Penyelenggaraan</h2>
+        </div>
         <div class="hero-quick-stats">
           <div class="stat-pill">
             <div class="stat-val">32</div>
@@ -366,43 +387,52 @@
         </div>
       </section>
 
-      <!-- 0. SIARAN LANGSUNG YOUTUBE & LIVE MATCH CENTER (PALING ATAS BERANDA) -->
-      <section class="live-stream-hero-section scroll-reveal" id="liveStreamHero">
+      <!-- SLIDE 3: SIARAN LANGSUNG YOUTUBE & LIVE MATCH CENTER (DITAMPILKAN JIKA AKTIF) -->
+      <section class="live-stream-hero-section home-slide-section scroll-reveal" id="liveStreamHero">
         <!-- Rendered dynamically by app.renderLiveStreamHero() -->
       </section>
 
-      <!-- 1. OPENING SHOWCASE BANNER -->
-      <div class="home-hero-banner scroll-reveal" id="homeHeroBanner">
-        <button id="btnChangeBannerQuick" class="btn-banner-edit-overlay" onclick="admin.openHeroBannerModal()"
-          title="Ubah Gambar Banner Turnamen" style="display: none;">
-          Ganti Gambar Banner
-        </button>
-        <div class="home-banner-overlay">
-          <div class="banner-cta-group">
-            <button class="btn btn-primary" onclick="app.switchTab('matches')">
-              Jadwal &amp; Hasil
-            </button>
-            <button class="btn btn-outline"
-              style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
-              onclick="app.switchTab('standings')">
-              Klasemen
-            </button>
-            <button class="btn btn-outline"
-              style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
-              onclick="app.replaySplashScreen()" title="Putar Sambutan">
-              Putar Sambutan
-            </button>
-            <button class="btn btn-outline"
-              style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
-              onclick="app.switchTab('juknis')">
-              Regulasi
-            </button>
+      <!-- SLIDE 4: OPENING SHOWCASE BANNER (POWERPOINT FULLPAGE SLIDE) -->
+      <section class="home-banner-slide-section home-slide-section scroll-reveal" id="homeBannerSection">
+        <div class="slide-section-header banner-slide-header">
+          <div class="slide-kicker-pill">
+            <span class="slide-kicker-dot"></span>
+            <span>PUSAT AKSES CEPAT</span>
+          </div>
+          <h2 class="slide-main-title">Panggung Turnamen</h2>
+        </div>
+        <div class="home-hero-banner" id="homeHeroBanner">
+          <button id="btnChangeBannerQuick" class="btn-banner-edit-overlay" onclick="admin.openHeroBannerModal()"
+            title="Ubah Gambar Banner Turnamen" style="display: none;">
+            Ganti Gambar Banner
+          </button>
+          <div class="home-banner-overlay">
+            <div class="banner-cta-group">
+              <button class="btn btn-primary" onclick="app.switchTab('matches')">
+                Jadwal &amp; Hasil
+              </button>
+              <button class="btn btn-outline"
+                style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
+                onclick="app.switchTab('standings')">
+                Klasemen
+              </button>
+              <button class="btn btn-outline"
+                style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
+                onclick="app.replaySplashScreen()" title="Putar Sambutan">
+                Putar Sambutan
+              </button>
+              <button class="btn btn-outline"
+                style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);"
+                onclick="app.switchTab('juknis')">
+                Regulasi
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- 2. MOMENT SHOWCASE BAR -->
-      <section class="acc-moments-section scroll-reveal" id="accMomentsContainer">
+      <!-- SLIDE 5: MOMENT SHOWCASE BAR (POWERPOINT FULLPAGE SLIDE) -->
+      <section class="acc-moments-section home-slide-section scroll-reveal" id="accMomentsContainer">
         <div class="moments-header-row">
           <div class="moments-title-wrap">
             <h2 class="moments-main-title">
@@ -434,8 +464,8 @@
         </div>
       </section>
 
-      <!-- 3. SPOTLIGHT PEMAIN TERBAIK / MVP OF THE MATCHDAY (Tampil dinamis jika diisi panitia) -->
-      <div id="mvpSpotlightSection" style="display: none;">
+      <!-- SLIDE 6: SPOTLIGHT PEMAIN TERBAIK / MVP OF THE MATCHDAY (Tampil dinamis jika diisi panitia) -->
+      <div id="mvpSpotlightSection" class="home-slide-section scroll-reveal" style="display: none;">
         <div class="section-header" style="margin-top: 10px;">
           <h2 class="section-title">
             <span>⭐</span> Bintang Lapangan (MVP of the Matchday)
@@ -497,8 +527,8 @@
         </div>
       </div>
 
-      <!-- 3. KILAS INFO & BERITA KEGIATAN TURNAMEN (Tampil dinamis dari data) -->
-      <div id="homeNewsSection" style="display: none;">
+      <!-- SLIDE 7: KILAS INFO & BERITA KEGIATAN TURNAMEN (Tampil dinamis dari data) -->
+      <div id="homeNewsSection" class="home-slide-section scroll-reveal" style="display: none;">
         <div class="section-header">
           <h2 class="section-title">
             <span>📰</span> Informasi &amp; Kilas Kegiatan Turnamen
@@ -513,8 +543,8 @@
         </div>
       </div>
 
-      <!-- 4. SPONSORSHIP & MITRA PENDUKUNG (Official Sponsors - Recursion Style + ACC Midnight Palette) -->
-      <div class="sponsors-showcase-bar scroll-reveal" id="sponsorsShowcaseBar">
+      <!-- SLIDE 8: SPONSORSHIP & MITRA PENDUKUNG (POWERPOINT FULLPAGE SLIDE) -->
+      <div class="sponsors-showcase-bar home-slide-section scroll-reveal" id="sponsorsShowcaseBar">
         <div class="sponsors-official-header">
           <h2 class="sponsors-official-title">Official <span class="gradient-text-gold">Sponsors</span></h2>
           <p class="sponsors-official-caption">
@@ -2840,7 +2870,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script src="js/supabase-client.js?v=8.44"></script>
   <script src="js/data.js?v=8.44"></script>
   <script src="js/admin.js?v=8.44"></script>
-  <script src="js/app.js?v=8.44"></script>
+  <script src="js/app.js?v=8.47"></script>
 
   <!-- Non-blocking External Libraries (CDN) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

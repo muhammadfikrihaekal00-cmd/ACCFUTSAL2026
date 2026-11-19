@@ -677,44 +677,233 @@ main.container {
   padding: 6px 16px !important;
 }
 
-/* Dedicated 4-Stat Box Showcase Section (Spacious clean layout on scroll) */
+/* ============================================================================
+   POWERPOINT FULL-PAGE SLIDE PRESENTATION ARCHITECTURE (BERANDA)
+   ============================================================================ */
+html.snap-scroll-active,
+body.snap-scroll-active {
+  scroll-snap-type: y mandatory !important;
+  scroll-padding-top: 76px !important;
+  scroll-behavior: smooth !important;
+  overflow-y: auto !important;
+}
+
+@media (min-width: 981px) {
+  html.snap-scroll-active,
+  body.snap-scroll-active {
+    scroll-padding-top: 88px !important;
+  }
+}
+
+/* Base Fullpage Slide Section */
+.home-slide-section {
+  min-height: calc(100svh - 76px) !important;
+  min-height: calc(100dvh - 76px) !important;
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: clamp(20px, 3.5vh, 44px) 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  scroll-snap-align: start !important;
+  scroll-snap-stop: always !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+
+@media (min-width: 981px) {
+  .home-slide-section {
+    min-height: calc(100vh - 88px) !important;
+    padding: 32px 24px !important;
+  }
+}
+
+/* Slide Section Headers (Clean Minimalist Presentation Style) */
+.slide-section-header {
+  text-align: center;
+  margin-bottom: clamp(16px, 2.8vh, 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.slide-kicker-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
+.slide-kicker-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.slide-main-title {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.35rem, 3.2vw, 2.15rem) !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+/* Hero Scroll Hint (Slide 1) */
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 10;
+  animation: heroHintBounce 2.5s ease-in-out infinite;
+  user-select: none;
+}
+
+.hero-scroll-hint:hover {
+  color: #fbbf24;
+}
+
+.hero-scroll-hint .scroll-hint-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+@keyframes heroHintBounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(-50%) translateY(6px);
+    opacity: 1;
+  }
+}
+
+/* Desktop Slide Nav (Floating Dots on Right Edge) */
+.home-slide-nav {
+  position: fixed;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 1100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+html.snap-scroll-active .home-slide-nav {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 860px) {
+  .home-slide-nav {
+    display: none !important;
+  }
+}
+
+.slide-nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+}
+
+.slide-nav-dot:hover {
+  background: rgba(245, 158, 11, 0.65);
+  transform: scale(1.3);
+}
+
+.slide-nav-dot.active {
+  background: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8), 0 0 24px rgba(245, 158, 11, 0.35);
+  transform: scale(1.5);
+  border-color: #fef3c7;
+}
+
+/* Dedicated Slide Sections */
 .home-stats-showcase-section {
   width: 100% !important;
   max-width: 980px !important;
-  margin: clamp(56px, 8vw, 96px) auto clamp(64px, 9vw, 108px) !important;
-  padding: 0 16px !important;
-  box-sizing: border-box !important;
+  margin: 0 auto !important;
 }
 
-/* Generous Breathing Room between Sections on Home */
 #pane-home .live-stream-hero-section {
-  margin: clamp(56px, 8vw, 96px) auto !important;
+  margin: 0 auto !important;
   max-width: 1080px !important;
 }
 
-#pane-home .home-hero-banner {
-  margin: clamp(56px, 8vw, 96px) auto !important;
+.home-banner-slide-section {
+  width: 100% !important;
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+}
+
+.home-banner-slide-section .home-hero-banner {
+  margin: 0 auto !important;
   max-width: 1080px !important;
+  width: 100% !important;
+  min-height: clamp(300px, 48vh, 440px) !important;
 }
 
 #pane-home .acc-moments-section {
-  margin: clamp(56px, 8vw, 96px) auto !important;
+  margin: 0 auto !important;
   max-width: 1080px !important;
+  width: 100% !important;
 }
 
 #pane-home #mvpSpotlightSection {
-  margin: clamp(56px, 8vw, 96px) auto !important;
+  margin: 0 auto !important;
   max-width: 1080px !important;
+  width: 100% !important;
 }
 
 #pane-home #homeNewsSection {
-  margin: clamp(56px, 8vw, 96px) auto !important;
+  margin: 0 auto !important;
   max-width: 1080px !important;
+  width: 100% !important;
 }
 
 #pane-home .sponsors-showcase-bar {
-  margin: clamp(64px, 9vw, 110px) auto clamp(54px, 7vw, 90px) !important;
+  margin: 0 auto !important;
   max-width: 1080px !important;
+  width: 100% !important;
 }
 
 /* 4 Horizontal Dark Glass Stat Cards (Clean Minimalist Recursion Style) */
