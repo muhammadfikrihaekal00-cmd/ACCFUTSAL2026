@@ -182,6 +182,11 @@ class TournamentStore {
     } else {
       data.config = { ...base.config, ...data.config };
     }
+    // Jamin regulasi petunjuk teknis 11 Bab (A s.d K) selalu memakai versi resmi mutakhir dan tidak tertimpa cache usang
+    const officialRules = (base.config && base.config.rulesText) ? base.config.rulesText : "";
+    if (officialRules && (!data.config.rulesText || data.config.rulesText.length < (officialRules.length - 200) || !data.config.rulesText.includes("### K. PENGHARGAAN"))) {
+      data.config.rulesText = officialRules;
+    }
     if (data.config && (!data.config.tournamentName || data.config.tournamentName.includes('ACC "Al-Fayyadh') || data.config.tournamentName === 'ACC 2026')) {
       data.config.tournamentName = 'Al-Fayyadh Champions Cup 2026';
     }
@@ -1555,7 +1560,14 @@ var app = window.app = Object.assign(window.app || {}, {
       if (data.config.venue !== undefined) cfg.venue = data.config.venue;
       if (data.config.dates !== undefined) cfg.dates = data.config.dates;
       if (data.config.rules_text !== undefined || data.config.rulesText !== undefined) {
-        cfg.rulesText = data.config.rules_text !== undefined ? data.config.rules_text : data.config.rulesText;
+        const incomingRules = (data.config.rules_text !== undefined ? data.config.rules_text : data.config.rulesText) || "";
+        const officialRules = (typeof DEFAULT_DATA !== "undefined" && DEFAULT_DATA.config && DEFAULT_DATA.config.rulesText)
+          ? DEFAULT_DATA.config.rulesText : "";
+        if (incomingRules && incomingRules.includes("### K. PENGHARGAAN") && incomingRules.length >= (officialRules.length - 200)) {
+          cfg.rulesText = incomingRules;
+        } else if (officialRules) {
+          cfg.rulesText = officialRules;
+        }
       }
       if (data.config.running_announcement !== undefined || data.config.runningAnnouncement !== undefined) {
         cfg.runningAnnouncement = data.config.running_announcement !== undefined ? data.config.running_announcement : data.config.runningAnnouncement;
@@ -1750,6 +1762,9 @@ var app = window.app = Object.assign(window.app || {}, {
     });
     deferTask(() => {
       if (this.currentTab !== "bracket") try { this.renderBracket(); } catch (_) { }
+    });
+    deferTask(() => {
+      if (this.currentTab !== "juknis") try { this.renderJuknis(); } catch (_) { }
     });
     deferTask(() => {
       if (typeof this.renderTopScorer === "function") try { this.renderTopScorer(); } catch (_) { }
@@ -2625,6 +2640,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (overlay) overlay.classList.remove("open");
     document.body.classList.remove("mobile-menu-active");
     document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
   },
 
   navigateTo(path, tabId, data = null, pushHistory = true) {
@@ -3194,6 +3210,10 @@ var app = window.app = Object.assign(window.app || {}, {
       const isHome = tabId === "home";
       document.documentElement.classList.toggle("snap-scroll-active", isHome);
       document.body.classList.toggle("snap-scroll-active", isHome);
+      if (!isHome) {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      }
 
       this.renderCurrentView();
       if ((window.scrollY || window.pageYOffset || 0) > 0) {
@@ -4770,14 +4790,37 @@ var app = window.app = Object.assign(window.app || {}, {
     const contactEl = document.getElementById("juknisContact");
     if (!container) return;
 
-    const rawText = (this.store && this.store.data && this.store.data.config && this.store.data.config.rulesText)
+    let rawText = (this.store && this.store.data && this.store.data.config && this.store.data.config.rulesText)
       ? this.store.data.config.rulesText
       : (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.config ? DEFAULT_DATA.config.rulesText : "");
+
+    const officialRules = (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.config && DEFAULT_DATA.config.rulesText)
+      ? DEFAULT_DATA.config.rulesText : "";
+
+    // Jamin regulasi selalu memakai teks resmi 11 Bab (A s.d K) lengkap tanpa tertimpa cache usang
+    if (officialRules && (!rawText || rawText.length < (officialRules.length - 200) || !rawText.includes("### K. PENGHARGAAN"))) {
+      rawText = officialRules;
+      if (this.store && this.store.data && this.store.data.config) {
+        this.store.data.config.rulesText = officialRules;
+      }
+    }
 
     const html = this.parseJuknisMarkdown(rawText);
     container.innerHTML = html;
     this._juknisRawText = rawText;
     this._currentJuknisChapter = 'ALL';
+
+    // Jamin semua kartu bab regulasi langsung tampil terang & terbaca tanpa tertahan efek scroll-reveal
+    container.querySelectorAll('.juknis-chapter-card').forEach(card => {
+      card.classList.add('is-revealed');
+      card.style.opacity = '1';
+      card.style.transform = 'none';
+      card.style.filter = 'none';
+    });
+
+    if (typeof this.initScrollReveal === "function") {
+      this.initScrollReveal();
+    }
 
     if (contactEl && this.store && this.store.data && this.store.data.config && this.store.data.config.contactCommittee) {
       contactEl.textContent = this.store.data.config.contactCommittee;
@@ -5062,7 +5105,7 @@ var app = window.app = Object.assign(window.app || {}, {
       }
 
       html += `
-        <div class="juknis-chapter-card scroll-reveal" id="juknisChap_${letter}" data-letter="${letter}">
+        <div class="juknis-chapter-card is-revealed" id="juknisChap_${letter}" data-letter="${letter}">
           <div class="juknis-chapter-header">
             <div class="juknis-chapter-badge">${letter}</div>
             <div class="juknis-chapter-meta">

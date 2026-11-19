@@ -7411,21 +7411,15 @@ body.dark-theme .fixture-team-row:hover {
 .mobile-menu-overlay {
   position: fixed;
   inset: 0;
-  background: #060a17;
-  background-image:
-    radial-gradient(ellipse 75% 45% at 90% 8%, rgba(29, 78, 216, 0.32) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 40% at 10% 92%, rgba(245, 158, 11, 0.16) 0%, transparent 55%),
-    linear-gradient(180deg, rgba(6, 10, 23, 0.97) 0%, rgba(11, 19, 43, 0.99) 100%);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
+  background: rgba(4, 7, 18, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99990;
+  display: block;
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
-  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: translateY(-10px) scale(0.99);
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -7434,7 +7428,6 @@ body.dark-theme .fixture-team-row:hover {
   opacity: 1;
   pointer-events: auto;
   visibility: visible;
-  transform: translateY(0) scale(1);
 }
 
 .mobile-menu-content {
