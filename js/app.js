@@ -2292,8 +2292,8 @@ var app = window.app = Object.assign(window.app || {}, {
         }
       });
     }, {
-      threshold: 0.04,
-      rootMargin: "0px 0px -25px 0px"
+      threshold: 0.1,
+      rootMargin: "0px 0px -40px 0px"
     });
 
     // Observe all scroll-reveal containers and cards for dynamic staggered entrance
@@ -2303,6 +2303,13 @@ var app = window.app = Object.assign(window.app || {}, {
       }
       this._scrollObserver.observe(el);
     });
+  },
+
+  scrollPastHero() {
+    const target = document.getElementById("homeStatsShowcase") || document.getElementById("liveStreamHero");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   },
 
   scrollToLiveStream() {

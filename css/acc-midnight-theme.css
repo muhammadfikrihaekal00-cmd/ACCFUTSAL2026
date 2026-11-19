@@ -496,14 +496,18 @@ main.container {
   box-shadow: none !important;
   backdrop-filter: none !important;
   border-radius: 0 !important;
-  padding: 44px 12px 24px !important;
-  margin: 0 auto 48px !important;
+  min-height: calc(100svh - 105px) !important;
+  min-height: calc(100dvh - 105px) !important;
+  padding: clamp(24px, 4vh, 56px) 14px clamp(28px, 5vh, 60px) !important;
+  margin: 0 auto !important;
   display: flex !important;
   flex-direction: column !important;
+  justify-content: center !important;
   align-items: center !important;
   text-align: center !important;
-  gap: 36px !important;
+  gap: clamp(16px, 2.8vh, 32px) !important;
   position: relative !important;
+  box-sizing: border-box !important;
 }
 
 .hero-card::before,
@@ -667,6 +671,131 @@ main.container {
   box-shadow: 0 0 24px rgba(239, 68, 68, 0.35) !important;
   border-radius: 9999px !important;
   padding: 6px 16px !important;
+}
+
+/* Floating Scroll Down Cue for Fullscreen Hero */
+.hero-scroll-cue {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: clamp(16px, 3.2vh, 36px);
+  padding: 8px 20px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  animation: heroScrollCueBob 2.6s ease-in-out infinite;
+  user-select: none;
+}
+
+.hero-scroll-cue:hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.6);
+  color: #ffffff;
+  transform: translateY(4px);
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.28);
+}
+
+.hero-scroll-cue-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-block;
+  animation: heroChevronBounce 1.8s ease-in-out infinite;
+}
+
+@keyframes heroScrollCueBob {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.88;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+@keyframes heroChevronBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+/* Dedicated 4-Stat Box Showcase Section (Spacious layout on scroll) */
+.home-stats-showcase-section {
+  width: 100% !important;
+  max-width: 1040px !important;
+  margin: clamp(56px, 8vw, 96px) auto clamp(64px, 9vw, 108px) !important;
+  padding: 0 14px !important;
+  box-sizing: border-box !important;
+}
+
+.home-stats-header {
+  text-align: center !important;
+  margin-bottom: clamp(24px, 4vw, 36px) !important;
+}
+
+.home-stats-title {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.25rem, 2.8vw, 1.85rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 60%, #f59e0b 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  margin: 10px 0 0 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.stat-icon-wrap {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  display: inline-block;
+  filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.35));
+}
+
+/* Generous Breathing Room between Sections on Home */
+#pane-home .live-stream-hero-section {
+  margin: clamp(56px, 8vw, 96px) auto !important;
+  max-width: 1080px !important;
+}
+
+#pane-home .home-hero-banner {
+  margin: clamp(56px, 8vw, 96px) auto !important;
+  max-width: 1080px !important;
+}
+
+#pane-home .acc-moments-section {
+  margin: clamp(56px, 8vw, 96px) auto !important;
+  max-width: 1080px !important;
+}
+
+#pane-home #mvpSpotlightSection {
+  margin: clamp(56px, 8vw, 96px) auto !important;
+  max-width: 1080px !important;
+}
+
+#pane-home #homeNewsSection {
+  margin: clamp(56px, 8vw, 96px) auto !important;
+  max-width: 1080px !important;
+}
+
+#pane-home .sponsors-showcase-bar {
+  margin: clamp(64px, 9vw, 110px) auto clamp(54px, 7vw, 90px) !important;
+  max-width: 1080px !important;
 }
 
 /* 4 Horizontal Dark Glass Stat Cards */
@@ -1797,13 +1926,19 @@ tr.zone-qualify {
    ============================================================================ */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(44px) scale(0.975);
+  filter: blur(4px);
+  transition:
+    opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1.05s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: opacity, transform, filter;
 }
 
 .scroll-reveal.is-revealed {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+  filter: blur(0) !important;
 }
 
 /* ============================================================================
@@ -2441,10 +2576,13 @@ body.mobile-menu-active .mobile-menu-content {
    ============================================================================ */
 @media (max-width: 768px) {
 
-  /* Hero section text breathing space */
+  /* Hero section text breathing space - Fullscreen Mobile Viewport */
   .hero-card {
-    padding: 22px 14px 18px 14px !important;
-    gap: 14px !important;
+    min-height: calc(100svh - 70px) !important;
+    min-height: calc(100dvh - 70px) !important;
+    padding: 24px 12px 32px !important;
+    gap: 16px !important;
+    justify-content: center !important;
   }
 
   .hero-details {
@@ -2570,14 +2708,19 @@ body.mobile-menu-active .mobile-menu-content {
    ============================================================================ */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  will-change: opacity, transform;
+  transform: translateY(44px) scale(0.975);
+  filter: blur(4px);
+  transition:
+    opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.05s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1.05s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: opacity, transform, filter;
 }
 
 .scroll-reveal.is-revealed {
   opacity: 1 !important;
-  transform: translateY(0) !important;
+  transform: translateY(0) scale(1) !important;
+  filter: blur(0) !important;
 }
 
 /* Staggered Box Reveal for child elements */
@@ -2586,7 +2729,7 @@ body.mobile-menu-active .mobile-menu-content {
 .scroll-reveal.is-revealed .sponsor-card-primary:nth-child(1),
 .scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(1),
 .scroll-reveal.is-revealed .stat-pill:nth-child(1) {
-  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
+  animation: cardStaggerUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
 }
 
 .scroll-reveal.is-revealed .match-card:nth-child(2),
@@ -2594,7 +2737,7 @@ body.mobile-menu-active .mobile-menu-content {
 .scroll-reveal.is-revealed .sponsor-card-primary:nth-child(2),
 .scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(2),
 .scroll-reveal.is-revealed .stat-pill:nth-child(2) {
-  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
+  animation: cardStaggerUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both;
 }
 
 .scroll-reveal.is-revealed .match-card:nth-child(3),
@@ -2602,7 +2745,7 @@ body.mobile-menu-active .mobile-menu-content {
 .scroll-reveal.is-revealed .sponsor-card-primary:nth-child(3),
 .scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(3),
 .scroll-reveal.is-revealed .stat-pill:nth-child(3) {
-  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+  animation: cardStaggerUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both;
 }
 
 .scroll-reveal.is-revealed .match-card:nth-child(4),
@@ -2610,23 +2753,25 @@ body.mobile-menu-active .mobile-menu-content {
 .scroll-reveal.is-revealed .sponsor-card-primary:nth-child(4),
 .scroll-reveal.is-revealed .sponsor-card-secondary:nth-child(4),
 .scroll-reveal.is-revealed .stat-pill:nth-child(4) {
-  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+  animation: cardStaggerUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.54s both;
 }
 
 .scroll-reveal.is-revealed .match-card:nth-child(n+5),
 .scroll-reveal.is-revealed .school-card:nth-child(n+5) {
-  animation: cardStaggerUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+  animation: cardStaggerUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.68s both;
 }
 
 @keyframes cardStaggerUp {
   0% {
     opacity: 0;
-    transform: translateY(16px) scale(0.98);
+    transform: translateY(34px) scale(0.96);
+    filter: blur(4px);
   }
 
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 

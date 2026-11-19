@@ -317,8 +317,8 @@
     <!-- TAB 0: BERANDA / HOME PORTAL UTAMA (PEMBUKA, MVP SPOTLIGHT, SPONSOR) -->
     <section id="pane-home" class="tab-pane active">
 
-      <!-- BORDERLESS FUTURISTIC HERO SECTION (ACC AL-FAYYADH KHUSUS BERANDA) -->
-      <div class="hero-card">
+      <!-- BORDERLESS FUTURISTIC HERO SECTION (ACC AL-FAYYADH KHUSUS BERANDA - FULL 1 HALAMAN) -->
+      <div class="hero-card" id="homeHeroFullscreen">
         <div class="hero-identity-stack">
           <div class="hero-emblem-wrap">
             <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="96" height="135"
@@ -347,25 +347,43 @@
           </div>
         </div>
 
-        <div class="hero-quick-stats scroll-reveal">
+        <!-- FLOATING SCROLL CUE TO EXPLORE DOWN -->
+        <div class="hero-scroll-cue" onclick="app.scrollPastHero()" role="button" tabindex="0"
+          title="Gulir ke bawah untuk menjelajahi informasi turnamen">
+          <span class="hero-scroll-cue-text">Jelajahi Turnamen</span>
+          <span class="hero-scroll-cue-icon">↓</span>
+        </div>
+      </div>
+
+      <!-- 4 STAT BOX INFORMASI TURNAMEN (MUNCUL KETIKA DI-SCROLL KE BAWAH) -->
+      <section class="home-stats-showcase-section scroll-reveal" id="homeStatsShowcase">
+        <div class="home-stats-header">
+          <span class="section-hint-badge"><span>📊</span> Skala Turnamen Resmi ACC 2026</span>
+          <h3 class="home-stats-title">Kompetisi Futsal Pelajar Terbesar di Maros &amp; Sulawesi Selatan</h3>
+        </div>
+        <div class="hero-quick-stats">
           <div class="stat-pill">
+            <div class="stat-icon-wrap">🏆</div>
             <div class="stat-val">32</div>
             <div class="stat-lbl">Tim Peserta</div>
           </div>
           <div class="stat-pill">
+            <div class="stat-icon-wrap">📋</div>
             <div class="stat-val">8</div>
             <div class="stat-lbl">Grup Turnamen</div>
           </div>
           <div class="stat-pill">
+            <div class="stat-icon-wrap">🏟️</div>
             <div class="stat-val">1</div>
             <div class="stat-lbl">Lapangan Utama</div>
           </div>
           <div class="stat-pill">
+            <div class="stat-icon-wrap">⚽</div>
             <div class="stat-val">64</div>
             <div class="stat-lbl">Total Laga</div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- 0. SIARAN LANGSUNG YOUTUBE & LIVE MATCH CENTER (PALING ATAS BERANDA) -->
       <section class="live-stream-hero-section scroll-reveal" id="liveStreamHero">
