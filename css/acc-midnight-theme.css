@@ -1917,29 +1917,564 @@ tr.zone-qualify {
   background: rgba(16, 185, 129, 0.09) !important;
 }
 
-/* Draw Grup Stage Polish */
-.draw-reel-box,
-.draw-slot-item,
+/* ============================================================================
+   PANITIA GROUP DRAW SIMULATOR (MIDNIGHT LUXURY STAGE - HARMONIOUS & READABLE)
+   ============================================================================ */
+/* 1. Main Draw Stage Arena Card */
+.draw-stage-card {
+  position: relative !important;
+  background: rgba(11, 19, 43, 0.78) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 22px !important;
+  padding: clamp(20px, 3.5vh, 32px) 20px !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(29, 78, 216, 0.15) !important;
+  margin-bottom: 24px !important;
+  overflow: hidden !important;
+  text-align: center !important;
+}
+
+/* 2. Target Pill Banner */
+.draw-target-banner {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.38) !important;
+  color: #fbbf24 !important;
+  padding: 8px 20px !important;
+  border-radius: 9999px !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+.draw-target-label {
+  color: #cbd5e1 !important;
+  font-weight: 600 !important;
+}
+
+.draw-target-slot {
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  color: #fbbf24 !important;
+}
+
+/* 3. Central Lottery Reel Box */
+.draw-reel-container {
+  position: relative !important;
+  max-width: 640px !important;
+  height: 116px !important;
+  margin: 0 auto 22px auto !important;
+  background: linear-gradient(180deg, rgba(6, 10, 23, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+  border: 2px solid rgba(245, 158, 11, 0.48) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 0 32px rgba(245, 158, 11, 0.2),
+    inset 0 3px 14px rgba(0, 0, 0, 0.8) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.draw-reel-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 16px !important;
+  padding: 0 20px !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.draw-reel-badge {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  background: #f59e0b !important;
+  border: 2px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.45) !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+
+.draw-reel-badge img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.draw-reel-info {
+  text-align: left !important;
+  min-width: 0 !important;
+}
+
+.draw-reel-name {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.15rem, 3.6vw, 1.5rem) !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+.draw-reel-sub {
+  font-size: 0.84rem !important;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+  margin-top: 3px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* 4. Action Buttons Bar */
+.draw-actions-bar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin-bottom: 20px !important;
+}
+
+.btn-draw-spin {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #0b132b !important;
+  font-weight: 800 !important;
+  font-size: 0.94rem !important;
+  padding: 12px 24px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.4) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.25s ease !important;
+}
+
+.btn-draw-spin:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.55) !important;
+}
+
+.btn-draw-spin:disabled {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #64748b !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+.btn-draw-auto {
+  background: rgba(14, 165, 233, 0.16) !important;
+  border: 1px solid rgba(14, 165, 233, 0.45) !important;
+  color: #38bdf8 !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  padding: 12px 20px !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-draw-auto:hover:not(:disabled) {
+  background: rgba(14, 165, 233, 0.28) !important;
+  border-color: rgba(14, 165, 233, 0.65) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-draw-auto:disabled {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+}
+
+.btn-draw-auto.is-running {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  color: #fca5a5 !important;
+}
+
+.btn-draw-reset {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #fca5a5 !important;
+  font-weight: 700 !important;
+  font-size: 0.86rem !important;
+  padding: 11px 18px !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-draw-reset:hover {
+  background: rgba(239, 68, 68, 0.22) !important;
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  color: #ffffff !important;
+}
+
+.btn-draw-copy {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #6ee7b7 !important;
+  font-weight: 700 !important;
+  font-size: 0.86rem !important;
+  padding: 11px 18px !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-draw-copy:hover {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: rgba(16, 185, 129, 0.55) !important;
+  color: #ffffff !important;
+}
+
+/* 5. Status Strip */
+.draw-status-strip {
+  background: rgba(6, 10, 23, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+  padding: 12px 18px !important;
+  color: #cbd5e1 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.draw-progress-badge {
+  font-size: 0.84rem !important;
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+}
+
+.draw-progress-badge strong {
+  color: #38bdf8 !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+}
+
+.draw-last-result {
+  font-size: 0.84rem !important;
+  color: #f1f5f9 !important;
+  font-weight: 600 !important;
+}
+
+/* 6. Four Group Display Boxes (Grup A, B, C, D) */
+.draw-group-box {
+  background: rgba(11, 19, 43, 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 18px !important;
+  padding: 18px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: all 0.25s ease !important;
+}
+
+.draw-group-box:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45) !important;
+}
+
+.draw-group-box-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 12px !important;
+  margin-bottom: 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.draw-group-tag {
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  padding: 5px 12px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.draw-group-tag.group-A {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border: 1px solid rgba(56, 189, 248, 0.45) !important;
+  color: #38bdf8 !important;
+}
+
+.draw-group-tag.group-B {
+  background: rgba(52, 211, 153, 0.15) !important;
+  border: 1px solid rgba(52, 211, 153, 0.45) !important;
+  color: #34d399 !important;
+}
+
+.draw-group-tag.group-C {
+  background: rgba(251, 191, 36, 0.15) !important;
+  border: 1px solid rgba(251, 191, 36, 0.45) !important;
+  color: #fbbf24 !important;
+}
+
+.draw-group-tag.group-D {
+  background: rgba(192, 132, 252, 0.15) !important;
+  border: 1px solid rgba(192, 132, 252, 0.45) !important;
+  color: #c084fc !important;
+}
+
+.draw-group-count {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+}
+
+/* 7. Slot Items Inside Group Boxes */
+.draw-slot-item {
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 52px !important;
+  transition: all 0.25s ease !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+/* Filled Slot */
+.draw-slot-item.filled {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.draw-slot-item.filled:hover {
+  background: rgba(21, 32, 58, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.draw-slot-item.filled .draw-slot-num {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f1f5f9 !important;
+  font-weight: 800 !important;
+}
+
+.draw-slot-name {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.draw-slot-city {
+  font-size: 0.74rem !important;
+  color: #94a3b8 !important;
+  margin-top: 1px !important;
+}
+
+/* Target Active Slot */
+.draw-slot-item.target-active {
+  background: rgba(245, 158, 11, 0.14) !important;
+  border: 1.5px solid #f59e0b !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.3) !important;
+  animation: drawSlotPulse 2s infinite ease-in-out !important;
+}
+
+@keyframes drawSlotPulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+    border-color: rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.55);
+    border-color: #fbbf24;
+  }
+}
+
+.draw-slot-item.target-active .draw-slot-num {
+  background: #f59e0b !important;
+  color: #0b132b !important;
+  font-weight: 900 !important;
+  font-size: 0.82rem !important;
+}
+
+.draw-slot-item.target-active .draw-slot-placeholder {
+  color: #fbbf24 !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Empty Waiting Slot */
+.draw-slot-item.empty {
+  background: rgba(6, 10, 23, 0.38) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.12) !important;
+  color: #64748b !important;
+}
+
+.draw-slot-item.empty .draw-slot-num {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #64748b !important;
+  font-weight: 700 !important;
+}
+
+.draw-slot-item.empty .draw-slot-placeholder {
+  color: #64748b !important;
+  font-size: 0.78rem !important;
+  font-style: normal !important;
+}
+
+.draw-slot-num {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 7px !important;
+  font-size: 0.76rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.draw-slot-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  overflow: hidden !important;
+}
+
+.draw-slot-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* 8. Undrawn Pool Card */
+.draw-pool-card {
+  background: rgba(11, 19, 43, 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 20px !important;
+  padding: 22px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+  margin-bottom: 24px !important;
+}
+
+.draw-pool-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.draw-pool-title {
+  font-family: var(--font-display) !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.draw-pool-hint {
+  font-size: 0.8rem !important;
+  color: #94a3b8 !important;
+}
+
+.draw-pool-badges {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
 .draw-pool-pill {
-  background: rgba(6, 10, 23, 0.68) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 7px 14px !important;
+  border-radius: 10px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.draw-pool-pill.available {
+  background: rgba(15, 23, 42, 0.8) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #f8fafc !important;
 }
 
-.draw-reel-item {
-  background: rgba(15, 23, 42, 0.85) !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
-  color: #f8fafc !important;
+.draw-pool-pill.available:hover {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  color: #fbbf24 !important;
+  transform: translateY(-1px) !important;
 }
 
-.draw-role-tag {
-  background: rgba(15, 23, 42, 0.78) !important;
-  border: 1px solid rgba(245, 158, 11, 0.35) !important;
-  color: #f8fafc !important;
+.draw-pool-pill.is-drawn {
+  background: rgba(6, 10, 23, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #64748b !important;
+  opacity: 0.6 !important;
+  text-decoration: line-through !important;
 }
 
-.draw-role-desc {
-  color: #94a3b8 !important;
+.draw-pool-avatar {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 0 6px currentColor !important;
 }
 
 /* Juknis Content */
