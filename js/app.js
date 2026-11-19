@@ -4070,7 +4070,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="bracket-header-cell col-final">
             <div class="bracket-header-pill" style="color: var(--accent-gold);">BABAK PUNCAK & JUARA 3</div>
             <div class="bracket-header-title">🏆 GRAND FINAL 🏆</div>
-            <div class="bracket-header-sub">📅 20 Nov 2026 • Penentuan Juara</div>
+            <div class="bracket-header-sub">📅 26 Nov 2026 • Penentuan Juara</div>
           </div>
         </div>
 
@@ -4150,9 +4150,6 @@ var app = window.app = Object.assign(window.app || {}, {
                 </div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
                   🥇 Juara 1 • 🥈 Juara 2 • 🥉 Juara 3
-                </div>
-                <div style="font-size: 0.68rem; color: var(--text-subtle); margin-top: 2px;">
-                  Nama & Logo Sekolah Kampiun Otomatis Muncul Di Sini
                 </div>
               </div>
             `}
