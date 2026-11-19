@@ -3354,7 +3354,7 @@ var app = window.app = Object.assign(window.app || {}, {
     window.open(waUrl, "_blank");
   },
 
-  // RENDER SPONSORSHIP (OFFICIAL SPONSORS - MINIMALIST SHOWCASE RECURSION STYLE + ACC PALETTE)
+  // RENDER SPONSORSHIP (SEAMLESS INFINITE MARQUEE - MENYATU LANGSUNG DENGAN BACKGROUND, KANAN KE KIRI)
   renderSponsors() {
     let sponsors = this.store.data.sponsors;
     if (!sponsors) return;
@@ -3370,49 +3370,67 @@ var app = window.app = Object.assign(window.app || {}, {
       btnManage.style.display = isPanitia ? "inline-flex" : "none";
     }
 
-    const gridContainer = document.getElementById("sponsorsOfficialGrid");
-    if (gridContainer) {
-      const platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
-      const goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
-      const mediaList = (sponsors.media || []).map(s => ({ ...s, tierKey: 'media' }));
-      const allSponsors = [...platinumList, ...goldList, ...mediaList];
+    const trackContainer = document.getElementById("sponsorsMarqueeTrack");
+    const wrapper = document.getElementById("sponsorsMarqueeWrapper");
+    if (!trackContainer) return;
 
-      if (allSponsors.length === 0) {
-        gridContainer.innerHTML = isPanitia ? `
-          <div class="sponsors-empty-box">
-            <p>Belum ada logo sponsor yang ditambahkan.</p>
-            <button type="button" class="btn btn-primary btn-sm" onclick="admin.openSponsorEditorModal()" style="margin-top: 8px;">➕ Tambah Logo Sponsor Sekarang</button>
-          </div>
-        ` : `
-          <div class="sponsors-empty-box muted">
-            <p>Mitra dan sponsor resmi turnamen akan segera diperbarui.</p>
+    const platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
+    const goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
+    const mediaList = (sponsors.media || []).map(s => ({ ...s, tierKey: 'media' }));
+    const allSponsors = [...platinumList, ...goldList, ...mediaList];
+
+    if (allSponsors.length === 0) {
+      trackContainer.innerHTML = isPanitia ? `
+        <div class="sponsors-empty-box">
+          <p>Belum ada logo sponsor yang ditambahkan.</p>
+          <button type="button" class="btn btn-primary btn-sm" onclick="admin.openSponsorEditorModal()" style="margin-top: 8px;">➕ Tambah Logo Sponsor Sekarang</button>
+        </div>
+      ` : `
+        <div class="sponsors-empty-box muted">
+          <p>Mitra dan sponsor resmi turnamen akan segera diperbarui.</p>
+        </div>
+      `;
+      if (wrapper) wrapper.classList.add("empty");
+      return;
+    }
+
+    if (wrapper) wrapper.classList.remove("empty");
+
+    // Pastikan item cukup panjang sebelum loop agar animasi mulus tanpa jeda
+    let baseList = [...allSponsors];
+    while (baseList.length < 6) {
+      baseList = baseList.concat(allSponsors);
+    }
+
+    const generateGroupHtml = () => {
+      return baseList.map(s => {
+        const logoHtml = s.image ?
+          `<img src="${s.image}" alt="${s.name}" class="sponsor-marquee-logo" loading="lazy">` :
+          `<div class="sponsor-marquee-fallback">
+            <span class="sponsor-fallback-icon">${s.icon || '🤝'}</span>
+            <span class="sponsor-fallback-name">${s.name}</span>
+          </div>`;
+
+        return `
+          <div class="sponsor-marquee-item" title="${s.name}${s.role ? ' - ' + s.role : ''}">
+            ${isPanitia ? `
+              <div class="sponsor-marquee-admin-actions">
+                <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${s.tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
+                <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${s.tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
+              </div>
+            ` : ''}
+            ${logoHtml}
           </div>
         `;
-      } else {
-        gridContainer.innerHTML = allSponsors.map(s => {
-          const logoHtml = s.image ?
-            `<img src="${s.image}" alt="${s.name}" class="sponsor-official-logo" loading="lazy">` :
-            `<div class="sponsor-fallback-content">
-              <span class="sponsor-fallback-icon">${s.icon || '🤝'}</span>
-              <span class="sponsor-fallback-name">${s.name}</span>
-            </div>`;
+      }).join("");
+    };
 
-          return `
-            <div class="sponsor-official-card" title="${s.name}${s.role ? ' - ' + s.role : ''}">
-              ${isPanitia ? `
-                <div class="sponsor-admin-actions">
-                  <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${s.tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
-                  <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${s.tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
-                </div>
-              ` : ''}
-              <div class="sponsor-official-logo-wrapper">
-                ${logoHtml}
-              </div>
-            </div>
-          `;
-        }).join("");
-      }
-    }
+    const groupHtml = generateGroupHtml();
+    // 2 grup identik untuk pergeseran tak terbatas 0% -> -50% tanpa patah-patah
+    trackContainer.innerHTML = `
+      <div class="sponsors-marquee-group">${groupHtml}</div>
+      <div class="sponsors-marquee-group" aria-hidden="true">${groupHtml}</div>
+    `;
   },
 
   // 1. RENDER MATCHES (UEFA & WORLD CUP STYLE - DUAL TEAM EVENTS SPLIT)
