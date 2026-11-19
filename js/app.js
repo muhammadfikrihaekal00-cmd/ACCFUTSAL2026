@@ -4869,15 +4869,17 @@ var app = window.app = Object.assign(window.app || {}, {
     const allTeams = this.getDrawCategoryTeams(cat);
     if (!allTeams || allTeams.length === 0) return false;
 
-    const state = this.getDrawState()[cat];
-    if (state && state.isReset) return false;
-
-    if (state && state.history && state.history.length >= Math.min(16, allTeams.length) && state.history.length > 0) {
+    // 1. Prioritas Utama: Jika tim di turnamen sudah memiliki grup sah A, B, C, D (dari Supabase / turnamen)
+    const validGroupTeams = allTeams.filter(t => t.group && ["A", "B", "C", "D"].includes(t.group) && t.group !== "-");
+    if (validGroupTeams.length >= Math.min(16, allTeams.length) && validGroupTeams.length > 0) {
       return true;
     }
 
-    const validGroupTeams = allTeams.filter(t => t.group && ["A", "B", "C", "D"].includes(t.group));
-    if (validGroupTeams.length >= Math.min(16, allTeams.length) && validGroupTeams.length > 0) {
+    const state = this.getDrawState()[cat];
+    if (state && state.isReset) return false;
+
+    // 2. Jika history undian di state lokal sudah lengkap
+    if (state && state.history && state.history.length >= Math.min(16, allTeams.length) && state.history.length > 0) {
       return true;
     }
 
@@ -5092,16 +5094,20 @@ var app = window.app = Object.assign(window.app || {}, {
 
       let groupsHtml = "";
       groups.forEach(g => {
-        let groupTeams = (state && state.groups && state.groups[g]) ? [...state.groups[g]] : [];
-        if (groupTeams.length === 0) {
-          groupTeams = allTeams.filter(t => t.group === g).map((t, idx) => ({
+        let groupTeams = [];
+        const tournamentGroupTeams = allTeams.filter(t => t.group === g && t.group !== "-");
+        if (tournamentGroupTeams.length > 0) {
+          groupTeams = tournamentGroupTeams.map((t, idx) => ({
             teamId: t.id,
             name: t.name,
+            shortName: t.shortName || t.name,
             logo: t.logo || "",
             instansi: t.instansi || "",
             badgeColor: t.badgeColor || "#0284c7",
             slot: idx + 1
           }));
+        } else if (state && state.groups && Array.isArray(state.groups[g]) && state.groups[g].length > 0) {
+          groupTeams = [...state.groups[g]];
         }
 
         let teamsListHtml = "";
@@ -6049,8 +6055,8 @@ var app = window.app = Object.assign(window.app || {}, {
       return;
     }
 
-    // Jangan timpa state undian jika sudah ada progres atau sedang dalam kondisi reset
-    if (!fromRemote && ((state && state.history && state.history.length > 0) || (state && state.isReset))) return;
+    // Jangan timpa jika sesi drawing sedang berlangsung aktif (misal baru terundi 5 dari 16 tim)
+    if (!fromRemote && state && state.history && state.history.length > 0 && state.history.length < 16) return;
     if (fromRemote && state && state.isReset && catAllTeams.some(t => !t.group || t.group === "-")) return;
 
     const catTeams = catAllTeams.filter(t => t.group && ["A", "B", "C", "D"].includes(t.group));
