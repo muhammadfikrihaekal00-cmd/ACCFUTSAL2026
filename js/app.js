@@ -995,7 +995,7 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     const tName = config.tournamentName || 'ACC 2026';
-    const venue = config.venue || "GOR Futsal MTQ Al-Fayyadh Maros";
+    const venue = config.venue || "GOR Futsal Ma'had Al-Fayyadh Maros";
 
     let text = `🏆 *REKAP HASIL PERTANDINGAN RESMI*\n`;
     text += `*${tName}*\n`;
@@ -1244,7 +1244,7 @@ var app = window.app = Object.assign(window.app || {}, {
     const cfg = (this.store && this.store.data && this.store.data.config) || {};
     const rawYtUrl = cfg.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
     const videoId = this.getYoutubeVideoId(rawYtUrl);
-    const title = cfg.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
+    const title = cfg.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal Ma'had Al-Fayyadh Maros";
 
     // Cari apakah ada pertandingan yang sedang LIVE saat ini
     const matches = (this.store && this.store.data && this.store.data.matches) || [];
@@ -1370,7 +1370,7 @@ var app = window.app = Object.assign(window.app || {}, {
       <iframe 
         id="mainYoutubeIframe" 
         src="https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0" 
-        title="YouTube Live Siaran ACC MTQ Al-Fayyadh" 
+        title="YouTube Live Siaran ACC Ma'had Al-Fayyadh" 
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
         allowfullscreen>
       </iframe>
@@ -5586,7 +5586,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     let text = `🏆 HASIL RESMI DRAWING GRUP ACC 2026 🏆\n`;
     text += `Kategori: ${catLabel}\n`;
-    text += `Lokasi: GOR Futsal MTQ Al-Fayyadh\n`;
+    text += `Lokasi: GOR Futsal Ma'had Al-Fayyadh\n`;
     text += `Status: ${state.history.length}/16 Tim Terundi\n`;
     text += `Tanggal: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}\n\n`;
 
