@@ -3691,17 +3691,21 @@ body.mobile-menu-active .mobile-menu-content {
     padding: 18px 16px !important;
     border-radius: 18px !important;
   }
+
   .draw-pre-info-grid {
     grid-template-columns: 1fr !important;
     gap: 8px !important;
   }
+
   .draw-user-groups-grid {
     grid-template-columns: 1fr !important;
     gap: 14px !important;
   }
+
   .draw-pool-teams-grid {
     grid-template-columns: 1fr !important;
   }
+
   .draw-pool-showcase-section,
   .draw-pre-groups-section {
     padding: 18px 14px !important;
