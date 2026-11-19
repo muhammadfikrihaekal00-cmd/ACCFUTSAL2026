@@ -2487,12 +2487,25 @@ body.mobile-menu-active .mobile-menu-content {
   overflow-x: auto !important;
   padding: 4px 2px 14px 2px !important;
   margin-bottom: 8px !important;
-  scrollbar-width: none !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(245, 158, 11, 0.4) transparent !important;
   -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x !important;
 }
 
 .stats-subnav-container::-webkit-scrollbar {
-  display: none !important;
+  height: 4px !important;
+  display: block !important;
+}
+
+.stats-subnav-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 99px !important;
+}
+
+.stats-subnav-container::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.4) !important;
+  border-radius: 99px !important;
 }
 
 .stats-tab-btn {
@@ -2542,9 +2555,47 @@ body.mobile-menu-active .mobile-menu-content {
 
 @media (max-width: 900px) {
   .stats-summary-ribbon {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    touch-action: pan-x !important;
+    gap: 12px !important;
+    padding: 4px 2px 14px 2px !important;
+    margin-bottom: 16px !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(245, 158, 11, 0.4) transparent !important;
   }
+
+  .stats-summary-ribbon::-webkit-scrollbar {
+    height: 5px !important;
+    display: block !important;
+  }
+
+  .stats-summary-ribbon::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-radius: 99px !important;
+  }
+
+  .stats-summary-ribbon::-webkit-scrollbar-thumb {
+    background: rgba(245, 158, 11, 0.5) !important;
+    border-radius: 99px !important;
+  }
+
+  .stats-summary-card {
+    flex: 0 0 250px !important;
+    min-width: 250px !important;
+    max-width: 270px !important;
+    scroll-snap-align: start !important;
+  }
+}
+
+.text-placeholder {
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+  font-style: italic !important;
 }
 
 .stats-summary-card {

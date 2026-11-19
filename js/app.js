@@ -449,80 +449,77 @@ class TournamentStore {
     const stC_SD = this.calculateGroupStandings("C", "SD");
     const stD_SD = this.calculateGroupStandings("D", "SD");
 
-    // 1. QF SMP: 1A vs 2B, 1C vs 2D, 1B vs 2A, 1D vs 2C
-    const qf1_smp = this.data.matches.find(m => m.id === "QF1_SMP" || m.id === "QF1");
-    if (qf1_smp) {
-      qf1_smp.category = "SMP";
-      if (isGroupCompleted("A", "SMP") && isGroupCompleted("B", "SMP") && stA_SMP[0] && stB_SMP[1]) {
-        qf1_smp.homeId = stA_SMP[0].team.id;
-        qf1_smp.awayId = stB_SMP[1].team.id;
-      }
-    }
-    const qf2_smp = this.data.matches.find(m => m.id === "QF2_SMP");
-    if (qf2_smp) {
-      qf2_smp.category = "SMP";
-      if (isGroupCompleted("C", "SMP") && isGroupCompleted("D", "SMP") && stC_SMP[0] && stD_SMP[1]) {
-        qf2_smp.homeId = stC_SMP[0].team.id;
-        qf2_smp.awayId = stD_SMP[1].team.id;
-      }
-    }
-    const qf3_smp = this.data.matches.find(m => m.id === "QF3_SMP" || m.id === "QF3");
-    if (qf3_smp) {
-      qf3_smp.category = "SMP";
-      if (isGroupCompleted("B", "SMP") && isGroupCompleted("A", "SMP") && stB_SMP[0] && stA_SMP[1]) {
-        qf3_smp.homeId = stB_SMP[0].team.id;
-        qf3_smp.awayId = stA_SMP[1].team.id;
-      }
-    }
-    const qf4_smp = this.data.matches.find(m => m.id === "QF4_SMP");
-    if (qf4_smp) {
-      qf4_smp.category = "SMP";
-      if (isGroupCompleted("D", "SMP") && isGroupCompleted("C", "SMP") && stD_SMP[0] && stC_SMP[1]) {
-        qf4_smp.homeId = stD_SMP[0].team.id;
-        qf4_smp.awayId = stC_SMP[1].team.id;
-      }
-    }
+    const syncQFMatch = (m, cat, homeGroup, isHomeWinner, awayGroup, isAwayWinner, homeStandings, awayStandings) => {
+      if (!m) return;
+      m.category = cat;
 
-    // 2. QF SD: 1A vs 2B, 1C vs 2D, 1B vs 2A, 1D vs 2C
+      const homeDone = isGroupCompleted(homeGroup, cat);
+      const awayDone = isGroupCompleted(awayGroup, cat);
+
+      const homeIdx = isHomeWinner ? 0 : 1;
+      const awayIdx = isAwayWinner ? 0 : 1;
+
+      m.homePlaceholder = `${isHomeWinner ? 'Juara' : 'Runner-up'} Grup ${homeGroup}`;
+      m.awayPlaceholder = `${isAwayWinner ? 'Juara' : 'Runner-up'} Grup ${awayGroup}`;
+
+      if (homeDone && homeStandings[homeIdx] && homeStandings[homeIdx].team) {
+        m.homeId = homeStandings[homeIdx].team.id;
+      } else {
+        m.homeId = "";
+      }
+
+      if (awayDone && awayStandings[awayIdx] && awayStandings[awayIdx].team) {
+        m.awayId = awayStandings[awayIdx].team.id;
+      } else {
+        m.awayId = "";
+      }
+
+      // Jika salah satu atau kedua tim belum pasti lolos, kosongkan data laga
+      if (!m.homeId || !m.awayId) {
+        m.status = "upcoming";
+        m.homeScore = null;
+        m.awayScore = null;
+        m.homeScoreLive = null;
+        m.awayScoreLive = null;
+        m.scorers = [];
+        m.cards = [];
+        m.penaltyHomeScore = null;
+        m.penaltyAwayScore = null;
+        m.penaltyWinner = null;
+      }
+    };
+
+    // 1. QF SMP
+    const qf1_smp = this.data.matches.find(m => m.id === "QF1_SMP" || m.id === "QF1");
+    syncQFMatch(qf1_smp, "SMP", "A", true, "B", false, stA_SMP, stB_SMP);
+
+    const qf2_smp = this.data.matches.find(m => m.id === "QF2_SMP");
+    syncQFMatch(qf2_smp, "SMP", "C", true, "D", false, stC_SMP, stD_SMP);
+
+    const qf3_smp = this.data.matches.find(m => m.id === "QF3_SMP" || m.id === "QF3");
+    syncQFMatch(qf3_smp, "SMP", "B", true, "A", false, stB_SMP, stA_SMP);
+
+    const qf4_smp = this.data.matches.find(m => m.id === "QF4_SMP");
+    syncQFMatch(qf4_smp, "SMP", "D", true, "C", false, stD_SMP, stC_SMP);
+
+    // 2. QF SD
     const qf1_sd = this.data.matches.find(m => m.id === "QF1_SD" || m.id === "QF2");
-    if (qf1_sd) {
-      qf1_sd.category = "SD";
-      if (isGroupCompleted("A", "SD") && isGroupCompleted("B", "SD") && stA_SD[0] && stB_SD[1]) {
-        qf1_sd.homeId = stA_SD[0].team.id;
-        qf1_sd.awayId = stB_SD[1].team.id;
-      }
-    }
+    syncQFMatch(qf1_sd, "SD", "A", true, "B", false, stA_SD, stB_SD);
+
     const qf2_sd = this.data.matches.find(m => m.id === "QF2_SD");
-    if (qf2_sd) {
-      qf2_sd.category = "SD";
-      if (isGroupCompleted("C", "SD") && isGroupCompleted("D", "SD") && stC_SD[0] && stD_SD[1]) {
-        qf2_sd.homeId = stC_SD[0].team.id;
-        qf2_sd.awayId = stD_SD[1].team.id;
-      }
-    }
+    syncQFMatch(qf2_sd, "SD", "C", true, "D", false, stC_SD, stD_SD);
+
     const qf3_sd = this.data.matches.find(m => m.id === "QF3_SD" || m.id === "QF4");
-    if (qf3_sd) {
-      qf3_sd.category = "SD";
-      if (isGroupCompleted("B", "SD") && isGroupCompleted("A", "SD") && stB_SD[0] && stA_SD[1]) {
-        qf3_sd.homeId = stB_SD[0].team.id;
-        qf3_sd.awayId = stA_SD[1].team.id;
-      }
-    }
+    syncQFMatch(qf3_sd, "SD", "B", true, "A", false, stB_SD, stA_SD);
+
     const qf4_sd = this.data.matches.find(m => m.id === "QF4_SD");
-    if (qf4_sd) {
-      qf4_sd.category = "SD";
-      if (isGroupCompleted("D", "SD") && isGroupCompleted("C", "SD") && stD_SD[0] && stC_SD[1]) {
-        qf4_sd.homeId = stD_SD[0].team.id;
-        qf4_sd.awayId = stC_SD[1].team.id;
-      }
-    }
+    syncQFMatch(qf4_sd, "SD", "D", true, "C", false, stD_SD, stC_SD);
 
     // Helper to get winner & loser from finished match (with Penalty Shootout support)
     const getWinnerId = (m) => {
       if (!m || m.status !== "finished" || m.homeScore === null || m.awayScore === null) return null;
       if (m.homeScore > m.awayScore) return m.homeId;
       if (m.awayScore > m.homeScore) return m.awayId;
-      // Knockout tie-breaker: Adu Penalti
       if (m.penaltyWinner) {
         if (m.penaltyWinner === m.homeId) return m.homeId;
         if (m.penaltyWinner === m.awayId) return m.awayId;
@@ -537,7 +534,6 @@ class TournamentStore {
       if (!m || m.status !== "finished" || m.homeScore === null || m.awayScore === null) return null;
       if (m.homeScore > m.awayScore) return m.awayId;
       if (m.awayScore > m.homeScore) return m.homeId;
-      // Knockout tie-breaker: Adu Penalti
       if (m.penaltyWinner) {
         if (m.penaltyWinner === m.homeId) return m.awayId;
         if (m.penaltyWinner === m.awayId) return m.homeId;
@@ -549,69 +545,56 @@ class TournamentStore {
       return null;
     };
 
-    // 3. SF SMP: Winner QF1 vs Winner QF2, Winner QF3 vs Winner QF4
+    const syncDownstream = (m, mHomeSource, isHomeWinner, mAwaySource, isAwayWinner, hPlaceholder, aPlaceholder) => {
+      if (!m) return;
+      m.homePlaceholder = hPlaceholder;
+      m.awayPlaceholder = aPlaceholder;
+
+      const wHome = mHomeSource ? (isHomeWinner ? getWinnerId(mHomeSource) : getLoserId(mHomeSource)) : null;
+      const wAway = mAwaySource ? (isAwayWinner ? getWinnerId(mAwaySource) : getLoserId(mAwaySource)) : null;
+
+      m.homeId = wHome || "";
+      m.awayId = wAway || "";
+
+      if (!m.homeId || !m.awayId) {
+        m.status = "upcoming";
+        m.homeScore = null;
+        m.awayScore = null;
+        m.homeScoreLive = null;
+        m.awayScoreLive = null;
+        m.scorers = [];
+        m.cards = [];
+        m.penaltyHomeScore = null;
+        m.penaltyAwayScore = null;
+        m.penaltyWinner = null;
+      }
+    };
+
+    // 3. SF, Final, 3RD SMP
     const sf1_smp = this.data.matches.find(m => m.id === "SF1_SMP");
-    if (sf1_smp) {
-      const w1 = getWinnerId(qf1_smp);
-      const w2 = getWinnerId(qf2_smp);
-      if (w1) sf1_smp.homeId = w1;
-      if (w2) sf1_smp.awayId = w2;
-    }
+    syncDownstream(sf1_smp, qf1_smp, true, qf2_smp, true, "Pemenang QF 1", "Pemenang QF 2");
+
     const sf2_smp = this.data.matches.find(m => m.id === "SF2_SMP");
-    if (sf2_smp) {
-      const w3 = getWinnerId(qf3_smp);
-      const w4 = getWinnerId(qf4_smp);
-      if (w3) sf2_smp.homeId = w3;
-      if (w4) sf2_smp.awayId = w4;
-    }
+    syncDownstream(sf2_smp, qf3_smp, true, qf4_smp, true, "Pemenang QF 3", "Pemenang QF 4");
 
-    // 4. Final & 3RD SMP
     const final_smp = this.data.matches.find(m => m.id === "FINAL_SMP");
-    if (final_smp) {
-      const wSF1 = getWinnerId(sf1_smp);
-      const wSF2 = getWinnerId(sf2_smp);
-      if (wSF1) final_smp.homeId = wSF1;
-      if (wSF2) final_smp.awayId = wSF2;
-    }
+    syncDownstream(final_smp, sf1_smp, true, sf2_smp, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2");
+
     const third_smp = this.data.matches.find(m => m.id === "3RD_SMP");
-    if (third_smp) {
-      const lSF1 = getLoserId(sf1_smp);
-      const lSF2 = getLoserId(sf2_smp);
-      if (lSF1) third_smp.homeId = lSF1;
-      if (lSF2) third_smp.awayId = lSF2;
-    }
+    syncDownstream(third_smp, sf1_smp, false, sf2_smp, false, "Kalah Semifinal 1", "Kalah Semifinal 2");
 
-    // 5. SF SD: Winner QF1 vs Winner QF2, Winner QF3 vs Winner QF4
+    // 4. SF, Final, 3RD SD
     const sf1_sd = this.data.matches.find(m => m.id === "SF1_SD");
-    if (sf1_sd) {
-      const w1 = getWinnerId(qf1_sd);
-      const w2 = getWinnerId(qf2_sd);
-      if (w1) sf1_sd.homeId = w1;
-      if (w2) sf1_sd.awayId = w2;
-    }
-    const sf2_sd = this.data.matches.find(m => m.id === "SF2_SD");
-    if (sf2_sd) {
-      const w3 = getWinnerId(qf3_sd);
-      const w4 = getWinnerId(qf4_sd);
-      if (w3) sf2_sd.homeId = w3;
-      if (w4) sf2_sd.awayId = w4;
-    }
+    syncDownstream(sf1_sd, qf1_sd, true, qf2_sd, true, "Pemenang QF 1", "Pemenang QF 2");
 
-    // 6. Final & 3RD SD
+    const sf2_sd = this.data.matches.find(m => m.id === "SF2_SD");
+    syncDownstream(sf2_sd, qf3_sd, true, qf4_sd, true, "Pemenang QF 3", "Pemenang QF 4");
+
     const final_sd = this.data.matches.find(m => m.id === "FINAL_SD");
-    if (final_sd) {
-      const wSF1 = getWinnerId(sf1_sd);
-      const wSF2 = getWinnerId(sf2_sd);
-      if (wSF1) final_sd.homeId = wSF1;
-      if (wSF2) final_sd.awayId = wSF2;
-    }
+    syncDownstream(final_sd, sf1_sd, true, sf2_sd, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2");
+
     const third_sd = this.data.matches.find(m => m.id === "3RD_SD");
-    if (third_sd) {
-      const lSF1 = getLoserId(sf1_sd);
-      const lSF2 = getLoserId(sf2_sd);
-      if (lSF1) third_sd.homeId = lSF1;
-      if (lSF2) third_sd.awayId = lSF2;
-    }
+    syncDownstream(third_sd, sf1_sd, false, sf2_sd, false, "Kalah Semifinal 1", "Kalah Semifinal 2");
   }
 
   // Calculate Disciplinary status (Yellow/Red Cards across all matches)
@@ -3523,11 +3506,31 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     container.innerHTML = matches.map((m, idx) => {
-      const home = this.store.getTeam(m.homeId) || { name: m.homePlaceholder || "TBD", shortName: "TBD", badgeColor: "#64748b", city: "-" };
-      const away = this.store.getTeam(m.awayId) || { name: m.awayPlaceholder || "TBD", shortName: "TBD", badgeColor: "#64748b", city: "-" };
+      const isKnockout = m.stage === "knockout" || /(QF|SF|3RD|FINAL)/i.test(m.id || "");
+      const realHomeTeam = m.homeId ? this.store.getTeam(m.homeId) : null;
+      const realAwayTeam = m.awayId ? this.store.getTeam(m.awayId) : null;
 
-      const isLive = m.status === "live";
-      const isFinished = m.status === "finished";
+      const hasDeterminedTeams = Boolean(realHomeTeam && realAwayTeam);
+
+      const home = realHomeTeam || {
+        id: "",
+        name: m.homePlaceholder || "Menunggu Tim Lolos",
+        shortName: m.homePlaceholder ? m.homePlaceholder.substring(0, 5) : "TBD",
+        badgeColor: "#334155",
+        city: isKnockout ? "Menunggu Laga Grup" : "-",
+        isPlaceholder: true
+      };
+      const away = realAwayTeam || {
+        id: "",
+        name: m.awayPlaceholder || "Menunggu Tim Lolos",
+        shortName: m.awayPlaceholder ? m.awayPlaceholder.substring(0, 5) : "TBD",
+        badgeColor: "#334155",
+        city: isKnockout ? "Menunggu Laga Grup" : "-",
+        isPlaceholder: true
+      };
+
+      const isLive = m.status === "live" && (!isKnockout || hasDeterminedTeams);
+      const isFinished = m.status === "finished" && (!isKnockout || hasDeterminedTeams);
       const isUpcoming = !isLive && !isFinished;
       const statusClass = isLive ? "status-live" : (isFinished ? "status-finished" : "status-upcoming");
       const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
@@ -3535,7 +3538,18 @@ var app = window.app = Object.assign(window.app || {}, {
       const cleanMinBadge = minOnly ? `${minOnly}'` : '';
 
       let statusBarHtml = "";
-      if (isLive) {
+      if (isKnockout && !hasDeterminedTeams) {
+        statusBarHtml = `
+          <div class="match-status-bar bar-upcoming">
+            <div class="bar-left">
+              <strong>AKAN DATANG • MENUNGGU TIM LOLOS</strong>
+            </div>
+            <div class="bar-right">
+              <span>${m.time || ''}</span>
+            </div>
+          </div>
+        `;
+      } else if (isLive) {
         statusBarHtml = `
           <div class="match-status-bar bar-live">
             <div class="bar-left">
@@ -3580,7 +3594,10 @@ var app = window.app = Object.assign(window.app || {}, {
       let homeScore = (isLive || isFinished) ? (m.homeScore ?? m.homeScoreLive ?? 0) : "-";
       let awayScore = (isLive || isFinished) ? (m.awayScore ?? m.awayScoreLive ?? 0) : "-";
 
-      if (isLive || isFinished) {
+      if (isKnockout && !hasDeterminedTeams) {
+        homeScore = "-";
+        awayScore = "-";
+      } else if (isLive || isFinished) {
         if (homeScorers.length > 0) {
           homeScore = Math.max(parseInt(homeScore, 10) || 0, homeScorers.length);
         }
@@ -3609,7 +3626,7 @@ var app = window.app = Object.assign(window.app || {}, {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="fixture-time-hint">${m.date}</span>
               <span class="match-status-tag ${m.status}">
-                ${isLive ? `<span class="pulse-dot"></span> LIVE ${cleanMinBadge}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time)}
+                ${(isKnockout && !hasDeterminedTeams) ? 'Menunggu Tim Lolos' : (isLive ? `<span class="pulse-dot"></span> LIVE ${cleanMinBadge}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time))}
               </span>
             </div>
           </div>
@@ -3618,13 +3635,13 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="match-fixture-content">
             
             <!-- BARIS 1: TIM HOME -->
-            <div class="fixture-team-row" onclick="app.openTeamModal('${home.id}')" title="Klik untuk lihat profil tim">
+            <div class="fixture-team-row" onclick="${home.id ? `app.openTeamModal('${home.id}')` : `app.showToast('Tim yang lolos belum ditentukan (menunggu hasil fase grup)')`}" title="${home.id ? 'Klik untuk lihat profil tim' : 'Menunggu tim lolos'}">
               <div class="fixture-team-left">
                 <div class="team-avatar-mini" style="background: ${home.badgeColor || '#10b981'};">
-                  ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : (home.shortName || 'TBD').substring(0, 3)}
+                  ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : `<span style="font-size:0.72rem;font-weight:800;color:#cbd5e1;">${(home.shortName || 'TBD').substring(0, 3)}</span>`}
                 </div>
                 <div class="fixture-team-name-wrap">
-                  <div class="fixture-team-fullname">${home.name}</div>
+                  <div class="fixture-team-fullname ${home.isPlaceholder ? 'text-placeholder' : ''}">${home.name}</div>
                   <div class="fixture-team-subcity">📍 ${home.city || '-'}</div>
                 </div>
               </div>
@@ -3656,13 +3673,13 @@ var app = window.app = Object.assign(window.app || {}, {
             <div class="fixture-row-divider"></div>
 
             <!-- BARIS 2: TIM AWAY -->
-            <div class="fixture-team-row" onclick="app.openTeamModal('${away.id}')" title="Klik untuk lihat profil tim">
+            <div class="fixture-team-row" onclick="${away.id ? `app.openTeamModal('${away.id}')` : `app.showToast('Tim yang lolos belum ditentukan (menunggu hasil fase grup)')`}" title="${away.id ? 'Klik untuk lihat profil tim' : 'Menunggu tim lolos'}">
               <div class="fixture-team-left">
                 <div class="team-avatar-mini" style="background: ${away.badgeColor || '#3b82f6'};">
-                  ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : (away.shortName || 'TBD').substring(0, 3)}
+                  ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : `<span style="font-size:0.72rem;font-weight:800;color:#cbd5e1;">${(away.shortName || 'TBD').substring(0, 3)}</span>`}
                 </div>
                 <div class="fixture-team-name-wrap">
-                  <div class="fixture-team-fullname">${away.name}</div>
+                  <div class="fixture-team-fullname ${away.isPlaceholder ? 'text-placeholder' : ''}">${away.name}</div>
                   <div class="fixture-team-subcity">📍 ${away.city || '-'}</div>
                 </div>
               </div>
@@ -3885,22 +3902,25 @@ var app = window.app = Object.assign(window.app || {}, {
 
     const renderBracketCard = (m, cardType = "qf") => {
       if (!m) return "";
-      const home = this.store.getTeam(m.homeId);
-      const away = this.store.getTeam(m.awayId);
+      const home = m.homeId ? this.store.getTeam(m.homeId) : null;
+      const away = m.awayId ? this.store.getTeam(m.awayId) : null;
 
-      const homeName = home ? home.name : (m.homePlaceholder || "TBD");
-      const awayName = away ? away.name : (m.awayPlaceholder || "TBD");
+      const hasDeterminedHome = Boolean(home);
+      const hasDeterminedAway = Boolean(away);
 
-      const isLive = m.status === "live";
-      const isFinished = m.status === "finished";
+      const homeName = hasDeterminedHome ? home.name : (m.homePlaceholder || "Menunggu Tim Lolos");
+      const awayName = hasDeterminedAway ? away.name : (m.awayPlaceholder || "Menunggu Tim Lolos");
+
+      const isLive = m.status === "live" && hasDeterminedHome && hasDeterminedAway;
+      const isFinished = m.status === "finished" && hasDeterminedHome && hasDeterminedAway;
 
       const hasPenalties = isFinished && (m.penaltyHomeScore !== null && m.penaltyAwayScore !== null && m.penaltyHomeScore !== undefined && m.penaltyAwayScore !== undefined);
-      const winnerId = getMatchWinnerId(m);
+      const winnerId = (hasDeterminedHome && hasDeterminedAway) ? getMatchWinnerId(m) : null;
       const isHomeWinner = isFinished && winnerId === m.homeId;
       const isAwayWinner = isFinished && winnerId === m.awayId;
 
-      const homeScore = isLive ? (m.homeScoreLive ?? 0) : (isFinished ? (hasPenalties ? `${m.homeScore} <small style="color:#ca8a04; font-size:0.72rem; font-weight:800;">(${m.penaltyHomeScore})</small>` : m.homeScore) : "-");
-      const awayScore = isLive ? (m.awayScoreLive ?? 0) : (isFinished ? (hasPenalties ? `${m.awayScore} <small style="color:#ca8a04; font-size:0.72rem; font-weight:800;">(${m.penaltyAwayScore})</small>` : m.awayScore) : "-");
+      const homeScore = (hasDeterminedHome && hasDeterminedAway) ? (isLive ? (m.homeScoreLive ?? 0) : (isFinished ? (hasPenalties ? `${m.homeScore} <small style="color:#ca8a04; font-size:0.72rem; font-weight:800;">(${m.penaltyHomeScore})</small>` : m.homeScore) : "-")) : "-";
+      const awayScore = (hasDeterminedHome && hasDeterminedAway) ? (isLive ? (m.awayScoreLive ?? 0) : (isFinished ? (hasPenalties ? `${m.awayScore} <small style="color:#ca8a04; font-size:0.72rem; font-weight:800;">(${m.penaltyAwayScore})</small>` : m.awayScore) : "-")) : "-";
 
       // Seed / placeholder hint (e.g., 1A, 2B, QF1)
       let homeSeed = "";
@@ -3930,7 +3950,8 @@ var app = window.app = Object.assign(window.app || {}, {
           ? `<span class="bracket-status-chip ft" style="background:rgba(234,179,8,0.15); color:#ca8a04; border-color:rgba(234,179,8,0.4);">FT (Pen. ${m.penaltyHomeScore}-${m.penaltyAwayScore})</span>`
           : `<span class="bracket-status-chip ft">FT • Selesai</span>`;
       } else {
-        statusBadge = `<span class="bracket-status-chip upcoming">📅 ${m.date ? m.date.replace(' Nov 2026', '') : ''} • ${m.time ? m.time.replace(' WIB', '') : ''}</span>`;
+        const timeOrHint = (!hasDeterminedHome || !hasDeterminedAway) ? 'Menunggu Tim Lolos' : (m.time ? m.time.replace(' WIB', '') : '');
+        statusBadge = `<span class="bracket-status-chip upcoming">📅 ${m.date ? m.date.replace(' Nov 2026', '') : ''} • ${timeOrHint}</span>`;
       }
 
       const isFinal = cardType === "final";
@@ -3954,10 +3975,10 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- HOME -->
             <div class="bracket-team-line ${isHomeWinner ? 'winner' : ''}">
               <div class="bracket-team-left">
-                <div class="bracket-team-avatar" style="background: ${home ? home.badgeColor : '#64748b'};">
-                  ${home && home.logo ? `<img src="${home.logo}" alt="${homeName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (home ? (home.shortName || 'TBD').substring(0, 2) : 'TBD')}
+                <div class="bracket-team-avatar" style="background: ${hasDeterminedHome ? (home.badgeColor || '#0284c7') : '#1e293b'};">
+                  ${hasDeterminedHome && home.logo ? `<img src="${home.logo}" alt="${homeName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-size:0.75rem;font-weight:800;color:#94a3b8;">${homeSeed || (home ? (home.shortName || 'TBD').substring(0, 3) : '⏳')}</span>`}
                 </div>
-                <div class="bracket-team-name" title="${homeName}">${homeName}</div>
+                <div class="bracket-team-name ${!hasDeterminedHome ? 'text-placeholder' : ''}" title="${homeName}">${homeName}</div>
                 ${homeSeed ? `<span class="bracket-team-seed">${homeSeed}</span>` : ''}
               </div>
               <div class="bracket-score-val">${homeScore}</div>
@@ -3966,10 +3987,10 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- AWAY -->
             <div class="bracket-team-line ${isAwayWinner ? 'winner' : ''}">
               <div class="bracket-team-left">
-                <div class="bracket-team-avatar" style="background: ${away ? away.badgeColor : '#64748b'};">
-                  ${away && away.logo ? `<img src="${away.logo}" alt="${awayName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (away ? (away.shortName || 'TBD').substring(0, 2) : 'TBD')}
+                <div class="bracket-team-avatar" style="background: ${hasDeterminedAway ? (away.badgeColor || '#0284c7') : '#1e293b'};">
+                  ${hasDeterminedAway && away.logo ? `<img src="${away.logo}" alt="${awayName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span style="font-size:0.75rem;font-weight:800;color:#94a3b8;">${awaySeed || (away ? (away.shortName || 'TBD').substring(0, 3) : '⏳')}</span>`}
                 </div>
-                <div class="bracket-team-name" title="${awayName}">${awayName}</div>
+                <div class="bracket-team-name ${!hasDeterminedAway ? 'text-placeholder' : ''}" title="${awayName}">${awayName}</div>
                 ${awaySeed ? `<span class="bracket-team-seed">${awaySeed}</span>` : ''}
               </div>
               <div class="bracket-score-val">${awayScore}</div>
@@ -4218,9 +4239,6 @@ var app = window.app = Object.assign(window.app || {}, {
                   🔍 Profil & Skuad
                 </button>
                 ${isPanitia ? `<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); admin.openTeamEditorModal('${t.id}')" title="Edit Data Tim & Pemain" style="font-size: 0.72rem; padding: 3px 8px; border-color: var(--primary); color: var(--primary); font-weight: 600;">✏️ Edit</button>` : ''}
-                <a href="${waLink}" target="_blank" class="btn-wa-direct" title="Hubungi Official via WA">
-                  💬 WA Official
-                </a>
               </div>
             </div>
           </div>
