@@ -11,18 +11,18 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.51">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.51">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.51">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.51">
+  <link rel="manifest" href="manifest.json?v=8.52">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.52">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.52">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.52">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- High-Priority LCP Discovery Preload for Emblem ACC 2026 -->
-  <link rel="preload" as="image" href="assets/acc_logo.png" fetchpriority="high">
+  <!-- High-Priority LCP Discovery Preload for Emblem ACC 2026 (WebP) -->
+  <link rel="preload" as="image" href="assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Google Fonts Preload & Optimized Loading -->
   <link rel="preload" as="style"
@@ -44,7 +44,7 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.48";
+        var CURRENT_VER = "8.52";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           if ('caches' in window) {
@@ -177,8 +177,8 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.51">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.51">
+  <link rel="stylesheet" href="css/styles.css?v=8.52">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.52">
 </head>
 
 <body class="snap-scroll-active">
@@ -335,8 +335,11 @@
       <div class="hero-card home-slide-section" id="homeHeroFullscreen">
         <div class="hero-identity-stack">
           <div class="hero-emblem-wrap">
-            <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="220" height="312"
-              fetchpriority="high" decoding="async">
+            <picture style="display: contents;">
+              <source srcset="assets/acc_logo.webp" type="image/webp">
+              <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="220" height="312"
+                fetchpriority="high" decoding="async">
+            </picture>
           </div>
           <div class="hero-details">
             <div class="hero-badge-live" id="heroLiveBadge" onclick="app.scrollToLiveStream()"
@@ -441,8 +444,11 @@
 
         <div class="mvp-spotlight-card">
           <div class="mvp-photo-wrapper">
-            <img src="assets/acc_logo.png" alt="Foto MVP Pemain" class="mvp-photo-img" id="mvpPhoto" width="160"
-              height="200" loading="lazy" decoding="async">
+            <picture style="display: contents;">
+              <source srcset="assets/acc_logo.webp" type="image/webp">
+              <img src="assets/acc_logo.png" alt="Foto MVP Pemain" class="mvp-photo-img" id="mvpPhoto" width="160"
+                height="200" loading="lazy" decoding="async">
+            </picture>
             <div class="mvp-badge-overlay">
               <span>🏆</span> <span>MVP MATCHDAY</span>
             </div>
@@ -2872,11 +2878,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.51"></script>
-  <script defer src="js/supabase-client.js?v=8.51"></script>
-  <script defer src="js/data.js?v=8.51"></script>
-  <script defer src="js/admin.js?v=8.51"></script>
-  <script defer src="js/app.js?v=8.51"></script>
+  <script defer src="js/security.js?v=8.52"></script>
+  <script defer src="js/supabase-client.js?v=8.52"></script>
+  <script defer src="js/data.js?v=8.52"></script>
+  <script defer src="js/admin.js?v=8.52"></script>
+  <script defer src="js/app.js?v=8.52"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

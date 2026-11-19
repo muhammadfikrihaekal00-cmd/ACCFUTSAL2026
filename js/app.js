@@ -1445,7 +1445,7 @@ var app = window.app = Object.assign(window.app || {}, {
             `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
           ).join("|") : "") +
             "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
-            "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.official_coach}:${t.official_manager}:${t.updated_at}:${(t.players || []).length}:${(t.players || []).map(p => p.name || '').join(',')}:${(t.coach_photo || '').length}:${(t.manager_photo || '').length}`).join("|") : "") +
+            "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.updated_at}:${(t.players || []).length}`).join("|") : "") +
             "#" + (data.teamMeta ? Object.keys(data.teamMeta).sort().map(k => `${k}:${data.teamMeta[k]?.category || ''}:${data.teamMeta[k]?.instansi || ''}`).join("|") : "") +
             "#" + (data.teamLogos ? Object.keys(data.teamLogos).map(k => `${k}:${(data.teamLogos[k] || '').length}`).join("|") : "");
 
@@ -1721,21 +1721,40 @@ var app = window.app = Object.assign(window.app || {}, {
     // Jika panitia sedang mengisi form/upload di modal editor, jangan re-render DOM supaya fokus ketikan tidak terganggu!
     if (this.isUserEditing()) return;
 
+    // Render current active view immediately (< 30ms CPU time)
     this.renderCurrentView();
-    this.renderTeams();
-    this.renderMatches();
-    this.renderStandings();
-    this.renderBracket();
-    if (typeof this.renderTopScorer === "function") this.renderTopScorer();
-    if (typeof this.renderDisciplinary === "function") this.renderDisciplinary();
-    if (typeof this.renderMoments === "function") this.renderMoments();
-    if (typeof this.renderSponsors === "function") this.renderSponsors();
     this.updateHeroLiveBadge();
     this.updateFloatingLiveNotice();
     this.renderHeader();
     this.renderLiveStreamHero();
     this.renderHeroBanner();
     this.refreshActiveMatchDetail();
+
+    // Defer non-active tab rendering to background idle slices to eliminate long tasks & reduce initial DOM size
+    const deferTask = (fn) => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(fn, { timeout: 3500 });
+      } else {
+        setTimeout(fn, 1200);
+      }
+    };
+
+    deferTask(() => {
+      if (this.currentTab !== "matches") try { this.renderMatches(); } catch (_) { }
+    });
+    deferTask(() => {
+      if (this.currentTab !== "standings") try { this.renderStandings(); } catch (_) { }
+    });
+    deferTask(() => {
+      if (this.currentTab !== "teams") try { this.renderTeams(); } catch (_) { }
+    });
+    deferTask(() => {
+      if (this.currentTab !== "bracket") try { this.renderBracket(); } catch (_) { }
+    });
+    deferTask(() => {
+      if (typeof this.renderTopScorer === "function") try { this.renderTopScorer(); } catch (_) { }
+      if (typeof this.renderDisciplinary === "function") try { this.renderDisciplinary(); } catch (_) { }
+    });
 
     // Jika modal tim sedang terbuka, perbarui tampilannya langsung dengan data terbaru
     const activeTeamModal = document.getElementById("teamModal");
@@ -2379,19 +2398,25 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   bindEvents() {
-    // Dynamic Scroll-Driven Size Transition on Sticky Header
+    // Dynamic Scroll-Driven Size Transition on Sticky Header (rAF Throttled)
     const headerEl = document.querySelector(".header");
     if (headerEl) {
       let isHeaderScrolled = false;
+      let headerTick = false;
       const onScrollHeader = () => {
-        const scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
-        if (scrolled !== isHeaderScrolled) {
-          isHeaderScrolled = scrolled;
-          headerEl.classList.toggle("scrolled", isHeaderScrolled);
+        if (!headerTick) {
+          window.requestAnimationFrame(() => {
+            const scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
+            if (scrolled !== isHeaderScrolled) {
+              isHeaderScrolled = scrolled;
+              headerEl.classList.toggle("scrolled", isHeaderScrolled);
+            }
+            headerTick = false;
+          });
+          headerTick = true;
         }
       };
       window.addEventListener("scroll", onScrollHeader, { passive: true });
-      onScrollHeader();
     }
 
     // Desktop Tabs
@@ -3171,7 +3196,11 @@ var app = window.app = Object.assign(window.app || {}, {
       document.body.classList.toggle("snap-scroll-active", isHome);
 
       this.renderCurrentView();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if ((window.scrollY || window.pageYOffset || 0) > 0) {
+        window.requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
     } catch (err) {
       console.error("switchTab error:", err);
     }
