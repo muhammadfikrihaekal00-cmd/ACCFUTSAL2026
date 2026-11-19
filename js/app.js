@@ -5283,28 +5283,22 @@ var app = window.app = Object.assign(window.app || {}, {
               <div class="draw-pre-info-icon">📅</div>
               <div class="draw-pre-info-content">
                 <div class="draw-pre-info-label">Jadwal Pengundian</div>
-                <div class="draw-pre-info-val">Sabtu, 21 November 2026 • 19:30 WITA</div>
+                <div class="draw-pre-info-val">Kamis, 19 November 2026 • 16:00 WITA</div>
               </div>
             </div>
             <div class="draw-pre-info-item">
               <div class="draw-pre-info-icon">📍</div>
               <div class="draw-pre-info-content">
                 <div class="draw-pre-info-label">Lokasi Drawing</div>
-                <div class="draw-pre-info-val">GOR MTQ Ma'had Al-Fayyadh Maros</div>
+                <div class="draw-pre-info-val">Ma'had Al-Fayyadh Maros</div>
               </div>
             </div>
-            <div class="draw-pre-info-item">
-              <div class="draw-pre-info-icon">🔴</div>
-              <div class="draw-pre-info-content">
-                <div class="draw-pre-info-label">Siaran Langsung</div>
-                <div class="draw-pre-info-val">Live Streaming Kanal YouTube Turnamen</div>
-              </div>
-            </div>
+            
             <div class="draw-pre-info-item">
               <div class="draw-pre-info-icon">🛡️</div>
               <div class="draw-pre-info-content">
                 <div class="draw-pre-info-label">Aturan Fair Play</div>
-                <div class="draw-pre-info-val">Sistem Anti-Satu-Grup (Tim 1 sekolah otomatis dipisah)</div>
+                <div class="draw-pre-info-val">Sistem Anti Satu Grup (Tim 1 sekolah otomatis dipisah)</div>
               </div>
             </div>
           </div>
