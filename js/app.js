@@ -1383,8 +1383,12 @@ var app = window.app = Object.assign(window.app || {}, {
   setCategory(cat, showToastMsg = true) {
     if (cat !== "SMP" && cat !== "SD") cat = "SMP";
     this.currentCategory = cat;
+    this.currentDrawCat = cat;
     localStorage.setItem("acc_active_category", cat);
     this.updateCategoryUI();
+    document.querySelectorAll(".btn-draw-cat").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.cat === cat);
+    });
     this.renderCurrentView();
     if (showToastMsg) {
       const lbl = cat === "SMP" ? " Kelas SMP (U-15)" : " Kelas SD (U-12)";
@@ -4858,7 +4862,10 @@ var app = window.app = Object.assign(window.app || {}, {
     if (this.isDrawingSpinning) return;
     if (this.isAutoDrawing) this.toggleAutoDraw(true);
     if (cat !== "SMP" && cat !== "SD") cat = "SMP";
+    this.currentCategory = cat;
     this.currentDrawCat = cat;
+    localStorage.setItem("acc_active_category", cat);
+    this.updateCategoryUI();
     document.querySelectorAll(".btn-draw-cat").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.cat === cat);
     });
@@ -4892,7 +4899,9 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   renderDrawView() {
-    const cat = this.currentDrawCat || "SMP";
+    const cat = this.currentDrawCat || this.currentCategory || "SMP";
+    this.currentDrawCat = cat;
+    this.currentCategory = cat;
     this.syncDrawStateFromTournament(cat);
 
     const isPanitia = this.isAdmin();
@@ -5162,7 +5171,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
       container.innerHTML = `
         <!-- STATUS ALERT SESUDAH DIUNDI -->
-        <div class="draw-status-card post-draw scroll-reveal">
+        <div class="draw-status-card post-draw">
           <div class="draw-status-header">
             <div class="draw-status-pill success">
               <span class="draw-status-dot green"></span>
@@ -5188,12 +5197,12 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
 
         <!-- 4 GRUP RESMI GRID -->
-        <div class="draw-user-groups-grid scroll-reveal">
+        <div class="draw-user-groups-grid">
           ${groupsHtml}
         </div>
 
         <!-- REGULASI KELOLOSAN NOTICE -->
-        <div class="draw-user-notice-strip scroll-reveal">
+        <div class="draw-user-notice-strip">
           <span class="draw-notice-icon">ℹ️</span>
           <div class="draw-notice-text">
             <strong>Format Kelolosan:</strong> Juara Grup (peringkat 1) dan Runner-up (peringkat 2) dari Grup A, B, C, dan D berhak melaju ke <strong>Babak Perempat Final (Bagan Fase Gugur)</strong>.
@@ -5264,7 +5273,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
       container.innerHTML = `
         <!-- STATUS ALERT SEBELUM DIUNDI -->
-        <div class="draw-status-card pre-draw scroll-reveal">
+        <div class="draw-status-card pre-draw">
           <div class="draw-status-header">
             <div class="draw-status-pill warning">
               <span class="draw-status-dot yellow"></span>
@@ -5305,7 +5314,7 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
 
         <!-- POT TIM MENUNGGU UNDIAN -->
-        <div class="draw-pool-showcase-section scroll-reveal">
+        <div class="draw-pool-showcase-section">
           <div class="draw-pool-section-header">
             <div>
               <h3 class="draw-pool-section-title">
@@ -5322,7 +5331,7 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
 
         <!-- PREVIEW STRUKTUR 4 GRUP KOSONG -->
-        <div class="draw-pre-groups-section scroll-reveal">
+        <div class="draw-pre-groups-section">
           <div class="draw-pre-section-header">
             <h3 class="draw-pre-section-title">
               <span>📋</span> Struktur 4 Grup Turnamen (Menunggu Hasil Undian)
@@ -5337,13 +5346,17 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
 
         <!-- NOTICE OTOMATIS UPDATE -->
-        <div class="draw-user-notice-strip scroll-reveal">
+        <div class="draw-user-notice-strip">
           <span class="draw-notice-icon">💡</span>
           <div class="draw-notice-text">
             <strong>Pembaruan Otomatis:</strong> Begitu panitia pelaksana menyelesaikan pengundian resmi dan menyimpannya, halaman ini akan langsung otomatis menampilkan hasil pembagian grup resmi tanpa perlu refresh manual.
           </div>
         </div>
       `;
+    }
+
+    if (typeof this.initScrollReveal === "function") {
+      this.initScrollReveal();
     }
   },
 
@@ -6063,7 +6076,7 @@ var app = window.app = Object.assign(window.app || {}, {
       });
 
       if (hasValidGroups) {
-        if (fromRemote && state.history && state.history.length === 16) {
+        if (state.history && state.history.length === 16) {
           const isSameSet = groups.every(g => {
             const localIds = (state.groups[g] || []).map(x => x.teamId).sort().join(",");
             const remoteIds = catTeams.filter(t => t.group === g).map(t => t.id).sort().join(",");
