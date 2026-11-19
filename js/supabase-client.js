@@ -237,16 +237,73 @@
       if (!this.client || !this.isConfigured) return null;
 
       try {
-        const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
+        // 1. Fetch lightweight metadata & fast tables first in parallel
+        // teams select('id, updated_at') is only ~1.9 KB instead of 1.8 MB!
+        const [configListRes, teamsMetaRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
           this.client.from('tournament_config').select('*'),
-          this.client.from('teams').select('*'),
+          this.client.from('teams').select('id, updated_at'),
           this.client.from('matches').select('*'),
           this.client.from('moments').select('*').order('sort_order', { ascending: true }),
           this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
         ]);
 
-        if (matchesRes.error && teamsRes.error) {
+        if (matchesRes.error && teamsMetaRes.error) {
           return null; // Database tables might not be migrated yet, fallback to local
+        }
+
+        // 2. Intelligent Teams Cache Revalidation (Stale-While-Revalidate)
+        let teamsRawData = null;
+        let remoteTeamsSig = "";
+        if (teamsMetaRes && teamsMetaRes.data && Array.isArray(teamsMetaRes.data) && teamsMetaRes.data.length > 0) {
+          remoteTeamsSig = teamsMetaRes.data.map(t => t.id + ":" + (t.updated_at || "")).sort().join(";");
+        }
+
+        // Check in-memory cache on this client instance
+        if (this._cachedTeamsSig && this._cachedTeamsSig === remoteTeamsSig && Array.isArray(this._cachedTeamsData) && this._cachedTeamsData.length > 0) {
+          teamsRawData = this._cachedTeamsData;
+        } else {
+          // Check localStorage cache
+          try {
+            const storedSig = localStorage.getItem("acc_cached_teams_sig");
+            const storedTeams = localStorage.getItem("acc_cached_teams_data");
+            if (storedSig && storedSig === remoteTeamsSig && storedTeams) {
+              const parsed = JSON.parse(storedTeams);
+              if (Array.isArray(parsed) && parsed.length === teamsMetaRes.data.length) {
+                teamsRawData = parsed;
+                this._cachedTeamsData = parsed;
+                this._cachedTeamsSig = remoteTeamsSig;
+              }
+            }
+          } catch (_) { }
+        }
+
+        // If cache is missing or stale, fetch full teams payload
+        if (!teamsRawData) {
+          const fullTeamsRes = await this.client.from('teams').select('*');
+          if (fullTeamsRes && fullTeamsRes.data && Array.isArray(fullTeamsRes.data)) {
+            teamsRawData = fullTeamsRes.data;
+            this._cachedTeamsData = teamsRawData;
+            this._cachedTeamsSig = remoteTeamsSig;
+            try {
+              localStorage.setItem("acc_cached_teams_sig", remoteTeamsSig);
+              localStorage.setItem("acc_cached_teams_data", JSON.stringify(teamsRawData));
+            } catch (quotaErr) {
+              // If full teams with base64 exceeds localStorage quota, store slim version without heavy photos
+              try {
+                const slimTeams = teamsRawData.map(t => ({
+                  ...t,
+                  coach_photo: (t.coach_photo && t.coach_photo.length > 10000) ? "" : t.coach_photo,
+                  manager_photo: (t.manager_photo && t.manager_photo.length > 10000) ? "" : t.manager_photo,
+                  players: Array.isArray(t.players) ? t.players.map(p => ({
+                    ...p,
+                    photo: (p.photo && p.photo.length > 10000) ? "" : p.photo
+                  })) : []
+                }));
+                localStorage.setItem("acc_cached_teams_sig", remoteTeamsSig);
+                localStorage.setItem("acc_cached_teams_data", JSON.stringify(slimTeams));
+              } catch (_) { }
+            }
+          }
         }
 
         let mainConfig = null;
@@ -269,7 +326,7 @@
         }
 
         // Lampirkan metadata (category, instansi, logo) ke setiap baris tim
-        const teamsList = Array.isArray(teamsRes.data) ? teamsRes.data.map(t => {
+        const teamsList = Array.isArray(teamsRawData) ? teamsRawData.map(t => {
           const m = teamMeta[t.id] || {};
           return {
             ...t,

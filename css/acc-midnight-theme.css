@@ -3981,13 +3981,11 @@ body.mobile-menu-active .mobile-menu-content {
   0% {
     opacity: 0;
     transform: translateY(34px) scale(0.96);
-    filter: blur(4px);
   }
 
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 

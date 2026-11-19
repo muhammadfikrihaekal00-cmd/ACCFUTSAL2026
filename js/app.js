@@ -1472,11 +1472,16 @@ var app = window.app = Object.assign(window.app || {}, {
       syncFromRemote();
     };
 
-    // Initial remote fetch segera setelah DOM siap (300ms) tanpa delay berat
+    // Initial remote fetch non-blocking agar tidak pernah mengganggu LCP & First Contentful Paint
     const startInitialSync = () => {
-      setTimeout(() => {
+      const runSync = () => {
         syncFromRemote();
-      }, 300);
+      };
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(runSync, { timeout: 3000 });
+      } else {
+        setTimeout(runSync, 1200);
+      }
     };
 
     if (document.readyState === "complete") {

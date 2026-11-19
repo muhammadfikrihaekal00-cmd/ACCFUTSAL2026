@@ -11,18 +11,18 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.50">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.50">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.50">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.50">
+  <link rel="manifest" href="manifest.json?v=8.51">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.51">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.51">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.51">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- High-Priority LCP Discovery Preload for Hero Banner -->
-  <link rel="preload" as="image" href="assets/hero_banner.jpg" fetchpriority="high">
+  <!-- High-Priority LCP Discovery Preload for Emblem ACC 2026 -->
+  <link rel="preload" as="image" href="assets/acc_logo.png" fetchpriority="high">
 
   <!-- Google Fonts Preload & Optimized Loading -->
   <link rel="preload" as="style"
@@ -177,8 +177,8 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.48">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.49">
+  <link rel="stylesheet" href="css/styles.css?v=8.51">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.51">
 </head>
 
 <body class="snap-scroll-active">
@@ -335,8 +335,8 @@
       <div class="hero-card home-slide-section" id="homeHeroFullscreen">
         <div class="hero-identity-stack">
           <div class="hero-emblem-wrap">
-            <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="160" height="227"
-              fetchpriority="high">
+            <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="220" height="312"
+              fetchpriority="high" decoding="async">
           </div>
           <div class="hero-details">
             <div class="hero-badge-live" id="heroLiveBadge" onclick="app.scrollToLiveStream()"
@@ -2870,17 +2870,13 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="appToast" class="toast"></div>
 
-  <!-- JAVASCRIPT & SUPABASE MODULES (Immediate Local Execution) -->
-  <script src="js/security.js?v=8.49"></script>
-  <script src="js/supabase-client.js?v=8.49"></script>
-  <script src="js/data.js?v=8.49"></script>
-  <script src="js/admin.js?v=8.49"></script>
-  <script src="js/app.js?v=8.49"></script>
-
-  <!-- Non-blocking External Libraries (CDN) -->
+  <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="js/security.js?v=8.51"></script>
+  <script defer src="js/supabase-client.js?v=8.51"></script>
+  <script defer src="js/data.js?v=8.51"></script>
+  <script defer src="js/admin.js?v=8.51"></script>
+  <script defer src="js/app.js?v=8.51"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
@@ -2894,20 +2890,28 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       }
     } catch (e) { }
   </script>
-  <!-- Immediate Dynamic Sticky Header Scroll-Driven Animation Init -->
+  <!-- Immediate Dynamic Sticky Header Scroll-Driven Animation Init (Throttled with rAF) -->
   <script>
     (function () {
       var h = document.querySelector(".header");
       if (!h) return;
       var isScrolled = false;
+      var ticking = false;
       function updateHeader() {
         var scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
         if (scrolled !== isScrolled) {
           isScrolled = scrolled;
           h.classList.toggle("scrolled", isScrolled);
         }
+        ticking = false;
       }
-      window.addEventListener("scroll", updateHeader, { passive: true });
+      function onScroll() {
+        if (!ticking) {
+          window.requestAnimationFrame(updateHeader);
+          ticking = true;
+        }
+      }
+      window.addEventListener("scroll", onScroll, { passive: true });
       updateHeader();
     })();
   </script>
