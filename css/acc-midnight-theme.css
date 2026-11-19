@@ -534,10 +534,10 @@ main.container {
 .hero-emblem-wrap::before {
   content: "";
   position: absolute;
-  inset: -14px;
+  inset: -22px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(245, 158, 11, 0.42) 0%, rgba(29, 78, 216, 0.2) 48%, transparent 72%);
-  filter: blur(22px);
+  filter: blur(30px);
   z-index: 0;
   animation: accGoldPulse 5s ease-in-out infinite;
 }
@@ -559,15 +559,15 @@ main.container {
 .hero-emblem-badge {
   position: relative;
   z-index: 1;
-  width: 96px !important;
+  width: clamp(140px, 16vw, 190px) !important;
   height: auto !important;
-  max-height: 132px !important;
+  max-height: 260px !important;
   object-fit: contain !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.5)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6)) !important;
+  filter: drop-shadow(0 0 32px rgba(245, 158, 11, 0.55)) drop-shadow(0 14px 28px rgba(0, 0, 0, 0.65)) !important;
   animation: accFloatEmblem 6s ease-in-out infinite;
 }
 
@@ -2102,7 +2102,8 @@ body.mobile-menu-active .mobile-menu-content {
   }
 
   .hero-emblem-badge {
-    width: 74px !important;
+    width: clamp(120px, 32vw, 150px) !important;
+    max-height: 215px !important;
   }
 
   .hero-quick-stats {
