@@ -2111,22 +2111,18 @@ var app = window.app = Object.assign(window.app || {}, {
     const btnAddMoment = document.getElementById("btnAddMomentBtn");
     if (btnAddMoment) btnAddMoment.style.display = isPanitia ? "inline-flex" : "none";
 
-    // Fitur Draw Grup HANYA tampil & aktif di akses Panitia (tersembunyi total dari pengunjung!)
+    // Fitur Draw Grup dapat diakses oleh SEMUA USER & Panitia
     document.querySelectorAll('.tab-btn[data-tab="draw"]').forEach(btn => {
-      btn.style.display = isPanitia ? "inline-flex" : "none";
+      btn.style.display = "inline-flex";
     });
     document.querySelectorAll('.mobile-nav-link[data-tab="draw"]').forEach(item => {
-      item.style.display = isPanitia ? "flex" : "none";
+      item.style.display = "flex";
     });
-
-    if (!isPanitia && this.currentTab === "draw") {
-      this.switchTab("home", false);
-    }
 
     const btnHeaderAturLawan = document.getElementById("btnHeaderAturLawan");
     if (btnHeaderAturLawan) btnHeaderAturLawan.style.display = isPanitia ? "inline-flex" : "none";
 
-    if (isPanitia && this.currentTab === "draw" && typeof this.renderDrawView === "function") {
+    if (this.currentTab === "draw" && typeof this.renderDrawView === "function") {
       this.renderDrawView();
     }
   },
@@ -3059,10 +3055,6 @@ var app = window.app = Object.assign(window.app || {}, {
 
   switchTab(tabId, pushHistory = true, customPath = null) {
     try {
-      if (tabId === "draw" && !this.isAdmin()) {
-        tabId = "home";
-      }
-
       const tabToPath = {
         home: "/beranda",
         matches: "/jadwal",
@@ -4873,9 +4865,32 @@ var app = window.app = Object.assign(window.app || {}, {
     this.renderDrawView();
   },
 
+  isCategoryDrawn(cat = this.currentDrawCat || "SMP") {
+    const allTeams = this.getDrawCategoryTeams(cat);
+    if (!allTeams || allTeams.length === 0) return false;
+
+    const state = this.getDrawState()[cat];
+    if (state && state.isReset) return false;
+
+    if (state && state.history && state.history.length >= Math.min(16, allTeams.length) && state.history.length > 0) {
+      return true;
+    }
+
+    const validGroupTeams = allTeams.filter(t => t.group && ["A", "B", "C", "D"].includes(t.group));
+    if (validGroupTeams.length >= Math.min(16, allTeams.length) && validGroupTeams.length > 0) {
+      return true;
+    }
+
+    return false;
+  },
+
+  setDrawPanitiaMode(mode) {
+    this.drawPanitiaMode = mode;
+    this.renderDrawView();
+  },
+
   renderDrawView() {
     const cat = this.currentDrawCat || "SMP";
-    // Sinkronkan state draw dari turnamen jika state undian masih kosong tapi data tim sudah memiliki grup
     this.syncDrawStateFromTournament(cat);
 
     const isPanitia = this.isAdmin();
@@ -4883,68 +4898,88 @@ var app = window.app = Object.assign(window.app || {}, {
     const undrawn = this.getUndrawnTeams(cat);
     const nextTarget = this.getNextDrawTarget(cat);
     const isFinished = !nextTarget;
+    const isDrawn = this.isCategoryDrawn(cat);
 
-    // 0. Update Role Banner (Mode Peserta vs Mode Panpel)
-    const roleBanner = document.getElementById("drawRoleBanner");
-    if (roleBanner) {
-      if (isPanitia) {
-        roleBanner.innerHTML = `
-          <div class="draw-role-tag role-panitia">
-            <span class="draw-role-icon">👑</span>
-            <div class="draw-role-info">
-              <div class="draw-role-badge">MODE PANITIA PELAKSANA (PANPEL)</div>
-              <div class="draw-role-desc">Anda memiliki wewenang penuh mengundi 1 per 1 atau otomatis. Setiap hasil undian otomatis terhubung langsung ke Klasemen, Jadwal Pertandingan, & Cloud Supabase.</div>
-              <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button type="button" class="btn btn-sm btn-primary" onclick="app.switchTab('teams')" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; padding: 4px 14px; font-size: 0.76rem; border-radius: 999px; cursor: pointer; color: #ffffff;">
-                  👥 Buka Tab Tim untuk Kelola & Edit Data Pemain ➔
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        roleBanner.innerHTML = `
-          <div class="draw-role-tag role-participant">
-            <span class="draw-role-icon">🛡️</span>
-            <div class="draw-role-info">
-              <div class="draw-role-badge">AKSES KHUSUS PANITIA PELAKSANA</div>
-              <div class="draw-role-desc">Halaman pengundian grup hanya tersedia pada Mode Panitia.</div>
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    // 1. Update Category Buttons
+    // Update Category Button States
     document.querySelectorAll(".btn-draw-cat").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.cat === cat);
     });
 
-    // 2. Update Target Banner
+    const userContainer = document.getElementById("drawUserContainer");
+    const panitiaContainer = document.getElementById("drawPanitiaStageContainer");
+    const roleBanner = document.getElementById("drawRoleBanner");
+
+    // KONTROL MODE PANITIA
+    if (isPanitia) {
+      if (!this.drawPanitiaMode) this.drawPanitiaMode = "simulator";
+
+      if (roleBanner) {
+        roleBanner.style.display = "block";
+        const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
+        roleBanner.innerHTML = `
+          <div class="draw-panitia-bar">
+            <div class="draw-panitia-bar-info">
+              <div class="draw-panitia-badge">👑 MODE PANITIA PELAKSANA (PANPEL)</div>
+              <div class="draw-panitia-desc">
+                Status Kategori <strong>${catLabel}</strong>:
+                <span style="color: ${isDrawn ? '#34d399' : '#fbbf24'}; font-weight: 700;">
+                  ${isDrawn ? '✅ Telah Selesai Diundi' : '⏳ Belum Selesai Diundi'}
+                </span>
+                ${state.history ? ` • (${state.history.length}/16 Tim Terundi)` : ''}
+              </div>
+            </div>
+            <div class="draw-panitia-mode-btns">
+              <button type="button" class="btn btn-sm ${this.drawPanitiaMode === 'simulator' ? 'btn-primary' : 'btn-outline'}" onclick="app.setDrawPanitiaMode('simulator')">
+                🎮 Simulator Undian
+              </button>
+              <button type="button" class="btn btn-sm ${this.drawPanitiaMode === 'user' ? 'btn-primary' : 'btn-outline'}" onclick="app.setDrawPanitiaMode('user')">
+                👁️ Tampilan Pengunjung (User View)
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (this.drawPanitiaMode === "simulator") {
+        if (panitiaContainer) panitiaContainer.style.display = "block";
+        if (userContainer) userContainer.style.display = "none";
+        this.renderDrawSimulator(cat, state, undrawn, nextTarget, isFinished);
+        return;
+      }
+    } else {
+      if (roleBanner) roleBanner.style.display = "none";
+    }
+
+    // TAMPILAN PENGUNJUNG / AKSES USER
+    if (panitiaContainer) panitiaContainer.style.display = "none";
+    if (userContainer) {
+      userContainer.style.display = "block";
+      this.renderDrawUserView(cat, isDrawn);
+    }
+  },
+
+  renderDrawSimulator(cat, state, undrawn, nextTarget, isFinished) {
+    const isPanitia = this.isAdmin();
+
+    // 1. Target Banner
     const targetSlotText = document.getElementById("drawTargetSlotText");
     if (targetSlotText && targetSlotText.parentElement) {
       if (isFinished) {
         targetSlotText.textContent = "SELESAI — SEMUA GRUP TELAH LENGKAP";
-        targetSlotText.parentElement.style.background = "#ecfdf5";
-        targetSlotText.parentElement.style.borderColor = "#a7f3d0";
-        targetSlotText.parentElement.style.color = "#047857";
-        targetSlotText.style.color = "#065f46";
-      } else if (!isPanitia) {
-        targetSlotText.textContent = `GRUP ${nextTarget.group} — SLOT ${nextTarget.slotIndex} (Menunggu Giliran Panpel)`;
-        targetSlotText.parentElement.style.background = "#f0f9ff";
-        targetSlotText.parentElement.style.borderColor = "#bae6fd";
-        targetSlotText.parentElement.style.color = "#0369a1";
-        targetSlotText.style.color = "#0c4a6e";
+        targetSlotText.parentElement.style.background = "rgba(16, 185, 129, 0.15)";
+        targetSlotText.parentElement.style.borderColor = "rgba(16, 185, 129, 0.35)";
+        targetSlotText.parentElement.style.color = "#34d399";
+        targetSlotText.style.color = "#34d399";
       } else {
         targetSlotText.textContent = `GRUP ${nextTarget.group} — SLOT ${nextTarget.slotIndex} (Urutan ke-${nextTarget.stepIndex})`;
-        targetSlotText.parentElement.style.background = "#fef3c7";
-        targetSlotText.parentElement.style.borderColor = "#fde68a";
-        targetSlotText.parentElement.style.color = "#92400e";
-        targetSlotText.style.color = "#b45309";
+        targetSlotText.parentElement.style.background = "rgba(245, 158, 11, 0.12)";
+        targetSlotText.parentElement.style.borderColor = "rgba(245, 158, 11, 0.35)";
+        targetSlotText.parentElement.style.color = "#fbbf24";
+        targetSlotText.style.color = "#fbbf24";
       }
     }
 
-    // 3. Update Progress Strip
+    // 2. Progress Strip
     const countText = document.getElementById("drawCountText");
     if (countText) {
       countText.textContent = `${state.history.length} / 16`;
@@ -4954,12 +4989,6 @@ var app = window.app = Object.assign(window.app || {}, {
     if (announce && !this.isDrawingSpinning) {
       if (isFinished) {
         announce.textContent = "🎉 Seluruh 16 tim telah selesai diundi secara sah ke dalam 4 grup (Grup A, B, C, D) dan tersambung otomatis ke Klasemen & Jadwal!";
-      } else if (!isPanitia) {
-        if (state.history.length === 0) {
-          announce.textContent = `Proses drawing resmi Kategori ${cat === "SMP" ? "SMP (U-15)" : "SD (U-12)"} akan segera dilakukan oleh Panitia Pelaksana.`;
-        } else {
-          announce.textContent = `Sebanyak ${state.history.length} dari 16 tim telah sah terundi oleh Panpel. Hubungi panitia untuk informasi siaran langsung.`;
-        }
       } else if (state.history.length === 0) {
         announce.textContent = `Siap melakukan drawing resmi 1 per 1 untuk Kategori ${cat === "SMP" ? "SMP (U-15)" : "SD (U-12)"}. Tekan tombol putar untuk mengundi tim pertama!`;
       } else {
@@ -4968,7 +4997,7 @@ var app = window.app = Object.assign(window.app || {}, {
       }
     }
 
-    // 4. Update Reel Default View
+    // 3. Update Reel Default View
     if (!this.isDrawingSpinning) {
       const reelName = document.getElementById("drawReelName");
       const reelSub = document.getElementById("drawReelSub");
@@ -4992,13 +5021,6 @@ var app = window.app = Object.assign(window.app || {}, {
         }
         if (reelName) reelName.textContent = last.teamName;
         if (reelSub) reelSub.textContent = `Terundi di Grup ${last.group} (Slot ${last.slot}) • ${undrawn.length} Tim Tersisa`;
-      } else if (!isPanitia) {
-        if (reelBadge) {
-          reelBadge.style.background = "#0284c7";
-          reelBadge.innerHTML = "⚽";
-        }
-        if (reelName) reelName.textContent = "Drawing Dipimpin oleh Panpel";
-        if (reelSub) reelSub.textContent = `16 Tim Siap Diundi ke Grup A, B, C, & D`;
       } else {
         if (reelBadge) {
           reelBadge.style.background = "#f59e0b";
@@ -5009,7 +5031,7 @@ var app = window.app = Object.assign(window.app || {}, {
       }
     }
 
-    // 5. Update Buttons Based On Panitia Authority
+    // 4. Update Buttons
     const btnSpin = document.getElementById("btnDrawSingle");
     const btnSpinText = document.getElementById("btnDrawSingleText");
     const btnAuto = document.getElementById("btnDrawAuto");
@@ -5035,18 +5057,294 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     if (btnCopy) {
-      btnCopy.style.display = "inline-flex"; // Dapat diakses oleh peserta & panitia
+      btnCopy.style.display = "inline-flex";
     }
 
     if (btnApply) {
       btnApply.style.display = isPanitia ? "inline-flex" : "none";
     }
 
-    // 6. Render 4 Groups Grid
+    // Render Slots & Pool
     this.renderDrawSlots();
-
-    // 7. Render Undrawn Pool
     this.renderDrawPool();
+  },
+
+  renderDrawUserView(cat, isDrawn) {
+    const container = document.getElementById("drawUserContainer");
+    if (!container) return;
+
+    const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
+    const allTeams = this.getDrawCategoryTeams(cat);
+    const state = this.getDrawState()[cat];
+    const groups = ["A", "B", "C", "D"];
+
+    const heroTitle = document.getElementById("drawHeroTitle");
+    const heroKicker = document.getElementById("drawHeroKicker");
+    const heroDesc = document.getElementById("drawHeroDesc");
+
+    if (isDrawn) {
+      // ========================================================
+      // KONDISI 2: SESUDAH DI-DRAW PANITIA (HASIL RESMI SAH)
+      // ========================================================
+      if (heroKicker) heroKicker.textContent = "HASIL RESMI TELAH DISAHKAN";
+      if (heroTitle) heroTitle.innerHTML = `Hasil Resmi Drawing Grup <span class="gradient-text-gold">${catLabel}</span>`;
+      if (heroDesc) heroDesc.textContent = `Seluruh 16 tim telah selesai diundi secara sah ke dalam 4 grup (Grup A, B, C, & D) untuk turnamen Al-Fayyadh Champions Cup 2026.`;
+
+      let groupsHtml = "";
+      groups.forEach(g => {
+        let groupTeams = (state && state.groups && state.groups[g]) ? [...state.groups[g]] : [];
+        if (groupTeams.length === 0) {
+          groupTeams = allTeams.filter(t => t.group === g).map((t, idx) => ({
+            teamId: t.id,
+            name: t.name,
+            logo: t.logo || "",
+            instansi: t.instansi || "",
+            badgeColor: t.badgeColor || "#0284c7",
+            slot: idx + 1
+          }));
+        }
+
+        let teamsListHtml = "";
+        for (let slot = 1; slot <= 4; slot++) {
+          const t = groupTeams.find(item => item.slot === slot) || groupTeams[slot - 1];
+          if (t) {
+            const teamObj = (t.teamId && this.store && typeof this.store.getTeam === "function") ? this.store.getTeam(t.teamId) : null;
+            const logoSrc = t.logo || (teamObj && teamObj.logo) || "";
+            const instansi = (teamObj && teamObj.instansi) || t.instansi || "";
+            const avatarHtml = logoSrc
+              ? `<img src="${logoSrc}" alt="${t.name}" class="draw-user-team-logo" loading="lazy">`
+              : `<span class="draw-user-team-abbr">${(t.shortName || t.name).substring(0, 2).toUpperCase()}</span>`;
+
+            teamsListHtml += `
+              <div class="draw-user-slot-row" onclick="app.navigateTo('/daftar-tim/detail-tim/${t.teamId || ''}', 'team-detail', { teamId: '${t.teamId || ''}' })" title="Klik untuk lihat profil tim ${t.name}">
+                <div class="draw-user-slot-badge">${g}${slot}</div>
+                <div class="draw-user-team-avatar" style="background: ${t.badgeColor || '#0284c7'};">
+                  ${avatarHtml}
+                </div>
+                <div class="draw-user-team-meta">
+                  <div class="draw-user-team-name">${t.name}</div>
+                  <div class="draw-user-team-instansi">🏫 ${instansi || 'Sulawesi Selatan'}</div>
+                </div>
+                <div class="draw-user-slot-verified" title="Terundi sah">✓ Sah</div>
+              </div>
+            `;
+          } else {
+            teamsListHtml += `
+              <div class="draw-user-slot-row empty">
+                <div class="draw-user-slot-badge empty">${g}${slot}</div>
+                <div class="draw-user-slot-placeholder">Slot ${slot} (Kosong)</div>
+              </div>
+            `;
+          }
+        }
+
+        groupsHtml += `
+          <div class="draw-user-group-card">
+            <div class="draw-user-group-header">
+              <div class="draw-user-group-title">
+                <span class="draw-group-trophy">🏆</span>
+                <span>GRUP ${g}</span>
+              </div>
+              <span class="draw-user-group-status-badge">4 Tim Terdaftar</span>
+            </div>
+            <div class="draw-user-slots-container">
+              ${teamsListHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = `
+        <!-- STATUS ALERT SESUDAH DIUNDI -->
+        <div class="draw-status-card post-draw scroll-reveal">
+          <div class="draw-status-header">
+            <div class="draw-status-pill success">
+              <span class="draw-status-dot green"></span>
+              <span>PENGUNDIAN SELESAI &amp; DISAHKAN</span>
+            </div>
+            <span class="draw-status-time">Resmi Turnamen ACC 2026</span>
+          </div>
+          <h3 class="draw-status-heading">Hasil Pembagian Grup Resmi Kategori ${catLabel}</h3>
+          <p class="draw-status-caption">
+            Pengundian grup resmi telah tuntas dilaksanakan. Setiap grup terdiri dari 4 tim yang akan saling bertanding memperebutkan tiket perempat final (fase gugur).
+          </p>
+          <div class="draw-user-actions-bar">
+            <button type="button" class="btn btn-primary btn-sm btn-draw-action" onclick="app.copyDrawResults()">
+              📋 Salin Teks Hasil Drawing
+            </button>
+            <button type="button" class="btn btn-outline btn-sm btn-draw-action" onclick="app.switchTab('matches')">
+              🏟️ Buka Jadwal Pertandingan
+            </button>
+            <button type="button" class="btn btn-outline btn-sm btn-draw-action" onclick="app.switchTab('standings')">
+              📊 Buka Klasemen Grup
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 GRUP RESMI GRID -->
+        <div class="draw-user-groups-grid scroll-reveal">
+          ${groupsHtml}
+        </div>
+
+        <!-- REGULASI KELOLOSAN NOTICE -->
+        <div class="draw-user-notice-strip scroll-reveal">
+          <span class="draw-notice-icon">ℹ️</span>
+          <div class="draw-notice-text">
+            <strong>Format Kelolosan:</strong> Juara Grup (peringkat 1) dan Runner-up (peringkat 2) dari Grup A, B, C, dan D berhak melaju ke <strong>Babak Perempat Final (Bagan Fase Gugur)</strong>.
+          </div>
+        </div>
+      `;
+
+    } else {
+      // ========================================================
+      // KONDISI 1: SEBELUM DI-DRAW PANITIA (MENUNGGU PENGUNDIAN)
+      // ========================================================
+      if (heroKicker) heroKicker.textContent = "STATUS: MENUNGGU PENGUNDIAN RESMI";
+      if (heroTitle) heroTitle.innerHTML = `Drawing Grup <span class="gradient-text-gold">${catLabel}</span> Belum Dimulai`;
+      if (heroDesc) heroDesc.textContent = `Panitia pelaksana akan segera melakukan pengundian resmi 16 tim peserta ke dalam 4 grup (Grup A, B, C, & D).`;
+
+      let emptyGroupsHtml = "";
+      groups.forEach(g => {
+        let emptySlotsHtml = "";
+        for (let slot = 1; slot <= 4; slot++) {
+          emptySlotsHtml += `
+            <div class="draw-user-slot-row empty-pre">
+              <div class="draw-user-slot-badge empty">${g}${slot}</div>
+              <div class="draw-user-slot-placeholder">Slot ${slot} • Menunggu Undian Panitia</div>
+              <span class="draw-user-slot-lock">🔒</span>
+            </div>
+          `;
+        }
+
+        emptyGroupsHtml += `
+          <div class="draw-user-group-card pre-draw">
+            <div class="draw-user-group-header">
+              <div class="draw-user-group-title">
+                <span class="draw-group-trophy pre">🎲</span>
+                <span>GRUP ${g}</span>
+              </div>
+              <span class="draw-user-group-status-badge pending">Belum Diundi</span>
+            </div>
+            <div class="draw-user-slots-container">
+              ${emptySlotsHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      let teamsBadgesHtml = "";
+      if (allTeams.length === 0) {
+        teamsBadgesHtml = `<div class="draw-empty-pool-text">Daftar tim kategori ${catLabel} sedang disiapkan oleh panitia.</div>`;
+      } else {
+        teamsBadgesHtml = allTeams.map((t, idx) => {
+          const avatarHtml = t.logo
+            ? `<img src="${t.logo}" alt="${t.name}" class="draw-pool-logo-img" loading="lazy">`
+            : `<span class="draw-pool-logo-abbr">${(t.shortName || t.name).substring(0, 2).toUpperCase()}</span>`;
+
+          return `
+            <div class="draw-pool-team-item" onclick="app.navigateTo('/daftar-tim/detail-tim/${t.id}', 'team-detail', { teamId: '${t.id}' })" style="cursor: pointer;" title="${t.name} - ${t.instansi || ''}">
+              <div class="draw-pool-team-num">#${idx + 1}</div>
+              <div class="draw-pool-team-avatar" style="background: ${t.badgeColor || '#0284c7'};">
+                ${avatarHtml}
+              </div>
+              <div class="draw-pool-team-info">
+                <div class="draw-pool-team-name">${t.name}</div>
+                <div class="draw-pool-team-instansi">🏫 ${t.instansi || 'Sulawesi Selatan'}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      container.innerHTML = `
+        <!-- STATUS ALERT SEBELUM DIUNDI -->
+        <div class="draw-status-card pre-draw scroll-reveal">
+          <div class="draw-status-header">
+            <div class="draw-status-pill warning">
+              <span class="draw-status-dot yellow"></span>
+              <span>BELUM DIMULAI • MENUNGGU PENGUNDIAN RESMI</span>
+            </div>
+            <span class="draw-status-time">Jadwal Drawing ACC 2026</span>
+          </div>
+          <h3 class="draw-status-heading">Pengundian Grup Kategori ${catLabel}</h3>
+          <p class="draw-status-caption">
+            Proses drawing resmi pembagian grup turnamen futsal Al-Fayyadh Champions Cup 2026 belum dilaksanakan oleh Panitia Pelaksana. Pengundian akan dilakukan secara terbuka, transparan, dan disiarkan langsung.
+          </p>
+
+          <!-- METADATA GRID INFO PELAKSANAAN -->
+          <div class="draw-pre-info-grid">
+            <div class="draw-pre-info-item">
+              <div class="draw-pre-info-icon">📅</div>
+              <div class="draw-pre-info-content">
+                <div class="draw-pre-info-label">Jadwal Pengundian</div>
+                <div class="draw-pre-info-val">Sabtu, 21 November 2026 • 19:30 WITA</div>
+              </div>
+            </div>
+            <div class="draw-pre-info-item">
+              <div class="draw-pre-info-icon">📍</div>
+              <div class="draw-pre-info-content">
+                <div class="draw-pre-info-label">Lokasi Drawing</div>
+                <div class="draw-pre-info-val">GOR MTQ Ma'had Al-Fayyadh Maros</div>
+              </div>
+            </div>
+            <div class="draw-pre-info-item">
+              <div class="draw-pre-info-icon">🔴</div>
+              <div class="draw-pre-info-content">
+                <div class="draw-pre-info-label">Siaran Langsung</div>
+                <div class="draw-pre-info-val">Live Streaming Kanal YouTube Turnamen</div>
+              </div>
+            </div>
+            <div class="draw-pre-info-item">
+              <div class="draw-pre-info-icon">🛡️</div>
+              <div class="draw-pre-info-content">
+                <div class="draw-pre-info-label">Aturan Fair Play</div>
+                <div class="draw-pre-info-val">Sistem Anti-Satu-Grup (Tim 1 sekolah otomatis dipisah)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- POT TIM MENUNGGU UNDIAN -->
+        <div class="draw-pool-showcase-section scroll-reveal">
+          <div class="draw-pool-section-header">
+            <div>
+              <h3 class="draw-pool-section-title">
+                <span>🗳️</span> Pot Tim Peserta Menunggu Undian (${allTeams.length} Tim Terdaftar)
+              </h3>
+              <p class="draw-pool-section-subtitle">
+                Daftar tim resmi kategori ${catLabel} yang siap diundi ke dalam Grup A, B, C, dan D
+              </p>
+            </div>
+          </div>
+          <div class="draw-pool-teams-grid">
+            ${teamsBadgesHtml}
+          </div>
+        </div>
+
+        <!-- PREVIEW STRUKTUR 4 GRUP KOSONG -->
+        <div class="draw-pre-groups-section scroll-reveal">
+          <div class="draw-pre-section-header">
+            <h3 class="draw-pre-section-title">
+              <span>📋</span> Struktur 4 Grup Turnamen (Menunggu Hasil Undian)
+            </h3>
+            <p class="draw-pre-section-subtitle">
+              Masing-masing grup akan diisi oleh 4 tim hasil undian resmi panitia pelaksana.
+            </p>
+          </div>
+          <div class="draw-user-groups-grid">
+            ${emptyGroupsHtml}
+          </div>
+        </div>
+
+        <!-- NOTICE OTOMATIS UPDATE -->
+        <div class="draw-user-notice-strip scroll-reveal">
+          <span class="draw-notice-icon">💡</span>
+          <div class="draw-notice-text">
+            <strong>Pembaruan Otomatis:</strong> Begitu panitia pelaksana menyelesaikan pengundian resmi dan menyimpannya, halaman ini akan langsung otomatis menampilkan hasil pembagian grup resmi tanpa perlu refresh manual.
+          </div>
+        </div>
+      `;
+    }
   },
 
   renderDrawSlots() {

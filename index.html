@@ -213,8 +213,7 @@
           <button type="button" class="tab-btn" data-tab="matches" onclick="app.switchTab('matches')">Jadwal</button>
           <button type="button" class="tab-btn" data-tab="standings"
             onclick="app.switchTab('standings')">Klasemen</button>
-          <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')"
-            style="display: none;">Draw Grup</button>
+          <button type="button" class="tab-btn" data-tab="draw" onclick="app.switchTab('draw')">Draw Grup</button>
           <button type="button" class="tab-btn" data-tab="bracket" onclick="app.switchTab('bracket')">Bagan</button>
           <button type="button" class="tab-btn" data-tab="teams" onclick="app.switchTab('teams')">Tim</button>
           <button type="button" class="tab-btn" data-tab="stats" onclick="app.switchTab('stats')">Statistik</button>
@@ -708,7 +707,7 @@
       </div>
     </section>
 
-    <!-- TAB: DRAWING & PENGUNDIAN GRUP INTERAKTIF 1 PER 1 (KHUSUS PANITIA) -->
+    <!-- TAB: DRAWING & PENGUNDIAN GRUP (AKSES USER & PANITIA) -->
     <section id="pane-draw" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: DRAWING GRUP -->
@@ -716,28 +715,27 @@
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
-            <span>PANITIA TOURNAMENT DRAW</span>
+            <span id="drawHeroKicker">DRAWING &amp; PENGUNDIAN GRUP</span>
           </div>
-          <h2 class="feature-hero-title">Drawing & Pengundian Grup</h2>
-          <p class="feature-hero-desc">Simulator pengundian pot grup turnamen resmi dengan mekanisme undian otomatis &
-            anti satu grup.</p>
+          <h2 class="feature-hero-title" id="drawHeroTitle">Drawing Pembagian Grup</h2>
+          <p class="feature-hero-desc" id="drawHeroDesc">
+            Informasi pembagian grup resmi dan pengundian tim turnamen futsal Al-Fayyadh Champions Cup 2026.
+          </p>
         </div>
         <div class="feature-hero-badge" aria-hidden="true">🎲</div>
       </div>
       <div class="draw-header-wrapper">
         <div class="draw-header-main">
           <span class="section-hint-badge" style="margin-bottom: 8px;">
-            <span>🎲</span> Mode Drawing Interaktif Panitia Pelaksana
+            <span>🎲</span> Portal Resmi Pengundian Grup ACC 2026
           </span>
           <p class="draw-header-desc">
-            Sistem pengundian grup turnamen interaktif dengan efek nama berputar (roulette spin) dan terisi secara acak
-            satu per satu ke dalam 4 grup (Grup A, B, C, D).
+            Sistem pengundian grup turnamen futsal dengan transparansi, sportivitas, dan aturan pemisah otomatis tim satu instansi.
           </p>
           <div
-            style="margin-top: 8px; padding: 8px 12px; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 8px; font-size: 0.78rem; color: #065f46; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            style="margin-top: 8px; padding: 8px 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; font-size: 0.78rem; color: #34d399; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
             <span>🛡️</span>
-            <span>Aturan Anti-Satu-Grup Aktif: Tim dengan kolom <strong>Instansi</strong> yang sama otomatis dipisahkan
-              ke grup berbeda!</span>
+            <span>Aturan Anti-Satu-Grup Aktif: Tim dengan <strong>Instansi/Sekolah</strong> yang sama otomatis dipisahkan ke grup berbeda!</span>
           </div>
         </div>
 
@@ -752,84 +750,92 @@
       <!-- ROLE BANNER: INFORMASI KONTROL PANITIA -->
       <div class="draw-role-banner" id="drawRoleBanner"></div>
 
-      <!-- MAIN DRAW STAGE / ARENA DISPLAY -->
-      <div class="draw-stage-card">
-        <div class="draw-stage-glow"></div>
+      <!-- USER VIEW CONTAINER: TAMPILAN 1 (SEBELUM DRAW) ATAU TAMPILAN 2 (SESUDAH DRAW) -->
+      <div id="drawUserContainer">
+        <!-- Injected dynamically by app.renderDrawUserView() -->
+      </div>
 
-        <div class="draw-target-banner">
-          <span class="draw-target-icon">🎯</span>
-          <span class="draw-target-label">Target Pengundian:</span>
-          <span class="draw-target-slot" id="drawTargetSlotText">GRUP A — SLOT 1</span>
-        </div>
+      <!-- PANITIA SIMULATOR STAGE CONTAINER (KHUSUS MODE PANITIA) -->
+      <div id="drawPanitiaStageContainer" style="display: none;">
+        <!-- MAIN DRAW STAGE / ARENA DISPLAY -->
+        <div class="draw-stage-card">
+          <div class="draw-stage-glow"></div>
 
-        <!-- REEL BOX: TAMPILAN NAMA BERPUTAR -->
-        <div class="draw-reel-container" id="drawReelContainer">
-          <div class="draw-reel-border-glow"></div>
-          <div class="draw-reel-window" id="drawReelWindow">
-            <div class="draw-reel-item" id="drawReelItem">
-              <div class="draw-reel-badge" id="drawReelBadge">🎲</div>
-              <div class="draw-reel-info">
-                <div class="draw-reel-name" id="drawReelName">Klik 'Putar Undian' untuk Mulai</div>
-                <div class="draw-reel-sub" id="drawReelSub">16 Tim Tersedia di Pot Undian</div>
+          <div class="draw-target-banner">
+            <span class="draw-target-icon">🎯</span>
+            <span class="draw-target-label">Target Pengundian:</span>
+            <span class="draw-target-slot" id="drawTargetSlotText">GRUP A — SLOT 1</span>
+          </div>
+
+          <!-- REEL BOX: TAMPILAN NAMA BERPUTAR -->
+          <div class="draw-reel-container" id="drawReelContainer">
+            <div class="draw-reel-border-glow"></div>
+            <div class="draw-reel-window" id="drawReelWindow">
+              <div class="draw-reel-item" id="drawReelItem">
+                <div class="draw-reel-badge" id="drawReelBadge">🎲</div>
+                <div class="draw-reel-info">
+                  <div class="draw-reel-name" id="drawReelName">Klik 'Putar Undian' untuk Mulai</div>
+                  <div class="draw-reel-sub" id="drawReelSub">16 Tim Tersedia di Pot Undian</div>
+                </div>
               </div>
             </div>
+            <div class="draw-reel-scanline"></div>
+            <div class="draw-confetti-container" id="drawConfettiContainer"></div>
           </div>
-          <div class="draw-reel-scanline"></div>
-          <div class="draw-confetti-container" id="drawConfettiContainer"></div>
-        </div>
 
-        <!-- ACTION BUTTONS -->
-        <div class="draw-actions-bar">
-          <button type="button" class="btn btn-draw-spin" id="btnDrawSingle" onclick="app.spinSingleDraw()">
-            <span class="btn-spin-icon">🎲</span>
-            <span class="btn-spin-text" id="btnDrawSingleText">Putar & Undi 1 Tim (Berikutnya)</span>
-          </button>
+          <!-- ACTION BUTTONS -->
+          <div class="draw-actions-bar">
+            <button type="button" class="btn btn-draw-spin" id="btnDrawSingle" onclick="app.spinSingleDraw()">
+              <span class="btn-spin-icon">🎲</span>
+              <span class="btn-spin-text" id="btnDrawSingleText">Putar & Undi 1 Tim (Berikutnya)</span>
+            </button>
 
-          <button type="button" class="btn btn-draw-auto" id="btnDrawAuto" onclick="app.toggleAutoDraw()">
-            <span class="btn-auto-icon">⚡</span>
-            <span class="btn-auto-text" id="btnDrawAutoText">Undi Otomatis 1 per 1</span>
-          </button>
+            <button type="button" class="btn btn-draw-auto" id="btnDrawAuto" onclick="app.toggleAutoDraw()">
+              <span class="btn-auto-icon">⚡</span>
+              <span class="btn-auto-text" id="btnDrawAutoText">Undi Otomatis 1 per 1</span>
+            </button>
 
-          <button type="button" class="btn btn-draw-reset" id="btnDrawReset" onclick="app.resetDraw()">
-            <span>🔄</span> Reset Undian
-          </button>
+            <button type="button" class="btn btn-draw-reset" id="btnDrawReset" onclick="app.resetDraw()">
+              <span>🔄</span> Reset Undian
+            </button>
 
-          <button type="button" class="btn btn-draw-copy" id="btnDrawCopy" onclick="app.copyDrawResults()">
-            <span>📋</span> Salin Hasil
-          </button>
+            <button type="button" class="btn btn-draw-copy" id="btnDrawCopy" onclick="app.copyDrawResults()">
+              <span>📋</span> Salin Hasil
+            </button>
 
-          <button type="button" class="btn btn-draw-apply" id="btnDrawApply" onclick="app.applyDrawToTournament()"
-            style="display: none;">
-            <span>💾</span> Simpan Hasil ke Turnamen (Panitia)
-          </button>
-        </div>
-
-        <!-- STATUS COUNTER & LIVE LOG -->
-        <div class="draw-status-strip">
-          <div class="draw-progress-badge">
-            Progres: <strong id="drawCountText">0 / 16</strong> Tim Terundi
+            <button type="button" class="btn btn-draw-apply" id="btnDrawApply" onclick="app.applyDrawToTournament()"
+              style="display: none;">
+              <span>💾</span> Simpan Hasil ke Turnamen (Panitia)
+            </button>
           </div>
-          <div class="draw-last-result" id="drawAnnouncement">
-            Siap melakukan drawing resmi 1 per 1. Tekan tombol putar untuk mengundi tim pertama!
+
+          <!-- STATUS COUNTER & LIVE LOG -->
+          <div class="draw-status-strip">
+            <div class="draw-progress-badge">
+              Progres: <strong id="drawCountText">0 / 16</strong> Tim Terundi
+            </div>
+            <div class="draw-last-result" id="drawAnnouncement">
+              Siap melakukan drawing resmi 1 per 1. Tekan tombol putar untuk mengundi tim pertama!
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- 4 GRUP DISPLAY CARDS (GRUP A, B, C, D) -->
-      <div class="draw-groups-grid" id="drawGroupsGrid">
-        <!-- Rendered by app.renderDrawSlots() -->
-      </div>
-
-      <!-- POT TIM YANG BELUM TERUNDI (UNDRAWN POOL) -->
-      <div class="draw-pool-card">
-        <div class="draw-pool-header">
-          <h3 class="draw-pool-title">
-            <span>🗳️</span> Pot Tim Menunggu Undian (<span id="drawPoolCount">16</span> Tim Tersisa)
-          </h3>
-          <span class="draw-pool-hint">Daftar tim yang belum terundi ke dalam grup</span>
+        <!-- 4 GRUP DISPLAY CARDS (GRUP A, B, C, D) -->
+        <div class="draw-groups-grid" id="drawGroupsGrid">
+          <!-- Rendered by app.renderDrawSlots() -->
         </div>
-        <div class="draw-pool-badges" id="drawPoolBadges">
-          <!-- Rendered by app.renderDrawPool() -->
+
+        <!-- POT TIM YANG BELUM TERUNDI (UNDRAWN POOL) -->
+        <div class="draw-pool-card">
+          <div class="draw-pool-header">
+            <h3 class="draw-pool-title">
+              <span>🗳️</span> Pot Tim Menunggu Undian (<span id="drawPoolCount">16</span> Tim Tersisa)
+            </h3>
+            <span class="draw-pool-hint">Daftar tim yang belum terundi ke dalam grup</span>
+          </div>
+          <div class="draw-pool-badges" id="drawPoolBadges">
+            <!-- Rendered by app.renderDrawPool() -->
+          </div>
         </div>
       </div>
     </section>

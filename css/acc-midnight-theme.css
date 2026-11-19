@@ -3093,6 +3093,568 @@ body.mobile-menu-active .mobile-menu-content {
   color: #f87171 !important;
 }
 
+/* ============================================================================
+   17. DRAWING GRUP - AKSES USER (2 KONDISI: PRE-DRAW & POST-DRAW)
+   ============================================================================ */
+
+/* Panitia Control Strip */
+.draw-panitia-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  border-radius: 16px !important;
+  padding: 12px 18px !important;
+  margin-bottom: 22px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.draw-panitia-badge {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: #fbbf24 !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 2px !important;
+}
+
+.draw-panitia-desc {
+  font-size: 0.82rem !important;
+  color: #cbd5e1 !important;
+}
+
+.draw-panitia-mode-btns {
+  display: flex !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+/* Status Cards (Pre-Draw & Post-Draw) */
+.draw-status-card {
+  background: rgba(10, 16, 32, 0.75) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 22px !important;
+  padding: 26px 24px !important;
+  margin-bottom: 24px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.draw-status-card.pre-draw {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.draw-status-card.pre-draw::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.8), transparent) !important;
+}
+
+.draw-status-card.post-draw {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+.draw-status-card.post-draw::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.8), transparent) !important;
+}
+
+.draw-status-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-bottom: 14px !important;
+}
+
+.draw-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  padding: 5px 14px !important;
+  border-radius: 999px !important;
+  letter-spacing: 0.03em !important;
+}
+
+.draw-status-pill.warning {
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+.draw-status-pill.success {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+.draw-status-dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  display: inline-block !important;
+}
+
+.draw-status-dot.yellow {
+  background: #f59e0b !important;
+  box-shadow: 0 0 10px #f59e0b !important;
+}
+
+.draw-status-dot.green {
+  background: #10b981 !important;
+  box-shadow: 0 0 10px #10b981 !important;
+}
+
+.draw-status-time {
+  font-size: 0.78rem !important;
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+}
+
+.draw-status-heading {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.3rem, 3.2vw, 1.75rem) !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  margin: 0 0 10px 0 !important;
+}
+
+.draw-status-caption {
+  font-size: clamp(0.85rem, 2.2vw, 0.94rem) !important;
+  color: #cbd5e1 !important;
+  line-height: 1.65 !important;
+  margin: 0 !important;
+  max-width: 850px !important;
+}
+
+/* Pre-Draw Metadata Grid */
+.draw-pre-info-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 20px !important;
+}
+
+.draw-pre-info-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  transition: border-color 0.2s ease !important;
+}
+
+.draw-pre-info-item:hover {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.draw-pre-info-icon {
+  font-size: 1.25rem !important;
+  flex-shrink: 0 !important;
+  margin-top: 2px !important;
+}
+
+.draw-pre-info-label {
+  font-size: 0.7rem !important;
+  color: #94a3b8 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  margin-bottom: 2px !important;
+}
+
+.draw-pre-info-val {
+  font-size: 0.84rem !important;
+  color: #f8fafc !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+}
+
+/* User Action Buttons */
+.draw-user-actions-bar {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  margin-top: 18px !important;
+}
+
+.btn-draw-action {
+  font-size: 0.8rem !important;
+  padding: 7px 16px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+}
+
+/* User 4 Groups Grid */
+.draw-user-groups-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 18px !important;
+  margin-bottom: 24px !important;
+}
+
+.draw-user-group-card {
+  background: rgba(10, 16, 32, 0.75) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  padding: 18px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.28s ease, border-color 0.28s ease !important;
+}
+
+.draw-user-group-card:hover {
+  transform: translateY(-3px) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+.draw-user-group-card.pre-draw {
+  border-style: dashed !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.draw-user-group-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  margin-bottom: 12px !important;
+}
+
+.draw-user-group-title {
+  font-family: var(--font-display) !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.draw-user-group-status-badge {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.draw-user-group-status-badge.pending {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.draw-user-slots-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.draw-user-slot-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  transition: all 0.22s ease !important;
+  cursor: pointer !important;
+}
+
+.draw-user-slot-row:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  transform: translateX(3px) !important;
+}
+
+.draw-user-slot-row.empty,
+.draw-user-slot-row.empty-pre {
+  cursor: default !important;
+  opacity: 0.65 !important;
+}
+
+.draw-user-slot-row.empty-pre:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  transform: none !important;
+}
+
+.draw-user-slot-badge {
+  font-size: 0.75rem !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, #fbbf24, #d97706) !important;
+  color: #000000 !important;
+  border-radius: 7px !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.draw-user-slot-badge.empty {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #94a3b8 !important;
+}
+
+.draw-user-team-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+
+.draw-user-team-logo {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.draw-user-team-abbr {
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+}
+
+.draw-user-team-meta {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.draw-user-team-name {
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.draw-user-team-instansi {
+  font-size: 0.72rem !important;
+  color: #94a3b8 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin-top: 1px !important;
+}
+
+.draw-user-slot-verified {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  color: #34d399 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+  flex-shrink: 0 !important;
+}
+
+.draw-user-slot-placeholder {
+  font-size: 0.8rem !important;
+  color: #94a3b8 !important;
+  flex: 1 !important;
+}
+
+.draw-user-slot-lock {
+  font-size: 0.85rem !important;
+  opacity: 0.6 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Pool Showcase Section (Pre-Draw) */
+.draw-pool-showcase-section,
+.draw-pre-groups-section {
+  background: rgba(10, 16, 32, 0.65) !important;
+  backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 22px !important;
+  padding: 22px 20px !important;
+  margin-bottom: 24px !important;
+}
+
+.draw-pool-section-header,
+.draw-pre-section-header {
+  margin-bottom: 16px !important;
+}
+
+.draw-pool-section-title,
+.draw-pre-section-title {
+  font-family: var(--font-display) !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 4px 0 !important;
+}
+
+.draw-pool-section-subtitle,
+.draw-pre-section-subtitle {
+  font-size: 0.82rem !important;
+  color: #94a3b8 !important;
+  margin: 0 !important;
+}
+
+.draw-pool-teams-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.draw-pool-team-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.draw-pool-team-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+
+.draw-pool-team-num {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: #94a3b8 !important;
+  width: 22px !important;
+  flex-shrink: 0 !important;
+}
+
+.draw-pool-team-avatar {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 7px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+
+.draw-pool-logo-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.draw-pool-logo-abbr {
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+}
+
+.draw-pool-team-info {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.draw-pool-team-name {
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.draw-pool-team-instansi {
+  font-size: 0.7rem !important;
+  color: #94a3b8 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.draw-empty-pool-text {
+  padding: 16px !important;
+  text-align: center !important;
+  color: #94a3b8 !important;
+  font-size: 0.82rem !important;
+  grid-column: 1 / -1 !important;
+}
+
+/* User Notice Strip */
+.draw-user-notice-strip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 14px 18px !important;
+  margin-top: 16px !important;
+  color: #cbd5e1 !important;
+  font-size: 0.84rem !important;
+  line-height: 1.55 !important;
+}
+
+.draw-notice-icon {
+  font-size: 1.25rem !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .draw-status-card {
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
+  }
+  .draw-pre-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .draw-user-groups-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .draw-pool-teams-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .draw-pool-showcase-section,
+  .draw-pre-groups-section {
+    padding: 18px 14px !important;
+    border-radius: 18px !important;
+  }
+}
+
 .stats-summary-unit {
   font-size: 0.68rem !important;
   font-weight: 600 !important;
