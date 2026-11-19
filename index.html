@@ -515,27 +515,28 @@
         </div>
       </div>
 
-      <!-- 4. SPONSORSHIP & MITRA PENDUKUNG (100% dinamis dari Database Online) -->
+      <!-- 4. SPONSORSHIP & MITRA PENDUKUNG (Official Sponsors - Recursion Style + ACC Midnight Palette) -->
       <div class="sponsors-showcase-bar scroll-reveal" id="sponsorsShowcaseBar">
-        <div class="section-header sponsors-header-row" style="margin-bottom: 16px;">
-          <div>
-            <h2 class="section-title sponsors-main-title" style="margin: 0;">
-              <span>🤝</span> Sponsor &amp; Mitra Resmi Turnamen
-            </h2>
+        <div class="sponsors-official-header">
+          <h2 class="sponsors-official-title">Official <span class="gradient-text-gold">Sponsors</span></h2>
+          <p class="sponsors-official-caption">
+            Turnamen ini terselenggara atas izin Allah SWT dan dukungan penuh para mitra strategis yang memiliki visi bersama dalam membina generasi muda Qur'ani yang berkarakter, berakhlak mulia, sehat jasmani, serta menjunjung tinggi nilai-nilai sportivitas dan ukhuwah Islamiyah.
+          </p>
+          <div class="sponsors-admin-toolbar" id="sponsorsAdminToolbar">
+            <button id="btnManageSponsors" class="btn btn-primary btn-sm btn-manage-sponsors"
+              onclick="admin.openSponsorEditorModal()" style="display: none;">
+              ⚙️ Kelola / Tambah Logo Sponsor (Panitia)
+            </button>
           </div>
-          <button id="btnManageSponsors" class="btn btn-primary btn-sm btn-manage-sponsors"
-            onclick="admin.openSponsorEditorModal()" style="display: none;">
-            ⚙️ Kelola / Tambah Sponsor (Panitia)
-          </button>
         </div>
 
-        <div class="sponsors-grid-primary" id="sponsorsPrimaryGrid">
+        <div class="sponsors-official-grid" id="sponsorsOfficialGrid">
           <!-- Injected dynamically from Supabase Online -->
         </div>
 
-        <div class="sponsors-grid-secondary" id="sponsorsSecondaryGrid">
-          <!-- Injected dynamically from Supabase Online -->
-        </div>
+        <!-- Hidden backward-compatibility anchors -->
+        <div id="sponsorsPrimaryGrid" style="display: none;"></div>
+        <div id="sponsorsSecondaryGrid" style="display: none;"></div>
       </div>
 
     </section>

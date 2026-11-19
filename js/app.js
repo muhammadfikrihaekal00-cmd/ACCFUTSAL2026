@@ -3354,7 +3354,7 @@ var app = window.app = Object.assign(window.app || {}, {
     window.open(waUrl, "_blank");
   },
 
-  // RENDER SPONSORSHIP (FOKUS LOGO FOTO SPONSOR, UKURAN BESAR & NORMAL TANPA TEKS KETERANGAN)
+  // RENDER SPONSORSHIP (OFFICIAL SPONSORS - MINIMALIST SHOWCASE RECURSION STYLE + ACC PALETTE)
   renderSponsors() {
     let sponsors = this.store.data.sponsors;
     if (!sponsors) return;
@@ -3365,71 +3365,49 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     const isPanitia = this.isAdmin();
-
-    // 1. Primary Grid: Sponsor Ukuran Besar (Baris Atas) - Tanpa tulisan 'Utama'
-    const primaryContainer = document.getElementById("sponsorsPrimaryGrid");
-    if (primaryContainer) {
-      const primaryList = sponsors.platinum || [];
-      if (primaryList.length === 0) {
-        primaryContainer.innerHTML = isPanitia ? `
-          <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; width: 100%; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border: 1px dashed rgba(255,255,255,0.15);">
-            Belum ada sponsor di baris atas. Klik tombol "Kelola / Tambah Sponsor" untuk menambah sponsor.
-          </div>
-        ` : '';
-      } else {
-        primaryContainer.innerHTML = primaryList.map(s => {
-          const logoHtml = s.image ?
-            `<img src="${s.image}" alt="${s.name}" class="sponsor-logo-img-lg">` :
-            `<span class="sponsor-emoji-lg">${s.icon || '🏦'}</span>`;
-
-          return `
-            <div class="sponsor-card-primary">
-              ${isPanitia ? `
-                <div class="sponsor-admin-actions">
-                  <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('platinum', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
-                  <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('platinum', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
-                </div>
-              ` : ''}
-              <div class="sponsor-logo-box-lg">
-                ${logoHtml}
-              </div>
-              <div class="sponsor-name-lg">${s.name}</div>
-              ${(s.role || s.type) ? `<div class="sponsor-sub-text">${s.role || s.type}</div>` : ''}
-            </div>
-          `;
-        }).join("");
-      }
+    const btnManage = document.getElementById("btnManageSponsors");
+    if (btnManage) {
+      btnManage.style.display = isPanitia ? "inline-flex" : "none";
     }
 
-    // 2. Secondary Grid: Sponsor Ukuran Normal (Baris Bawah) - Tanpa tulisan 'Normal'
-    const secondaryContainer = document.getElementById("sponsorsSecondaryGrid");
-    if (secondaryContainer) {
-      const secondaryList = [...(sponsors.gold || []), ...(sponsors.media || [])];
-      if (secondaryList.length === 0) {
-        secondaryContainer.innerHTML = isPanitia ? `
-          <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; width: 100%; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border: 1px dashed rgba(255,255,255,0.15);">
-            Belum ada sponsor di baris bawah.
+    const gridContainer = document.getElementById("sponsorsOfficialGrid");
+    if (gridContainer) {
+      const platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
+      const goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
+      const mediaList = (sponsors.media || []).map(s => ({ ...s, tierKey: 'media' }));
+      const allSponsors = [...platinumList, ...goldList, ...mediaList];
+
+      if (allSponsors.length === 0) {
+        gridContainer.innerHTML = isPanitia ? `
+          <div class="sponsors-empty-box">
+            <p>Belum ada logo sponsor yang ditambahkan.</p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="admin.openSponsorEditorModal()" style="margin-top: 8px;">➕ Tambah Logo Sponsor Sekarang</button>
           </div>
-        ` : '';
+        ` : `
+          <div class="sponsors-empty-box muted">
+            <p>Mitra dan sponsor resmi turnamen akan segera diperbarui.</p>
+          </div>
+        `;
       } else {
-        secondaryContainer.innerHTML = secondaryList.map(s => {
-          const tierKey = (sponsors.gold && sponsors.gold.some(g => (g.id && g.id === s.id) || g.name === s.name)) ? 'gold' : 'media';
+        gridContainer.innerHTML = allSponsors.map(s => {
           const logoHtml = s.image ?
-            `<img src="${s.image}" alt="${s.name}" class="sponsor-logo-img-sm">` :
-            `<span class="sponsor-emoji-sm">${s.icon || '⚽'}</span>`;
+            `<img src="${s.image}" alt="${s.name}" class="sponsor-official-logo" loading="lazy">` :
+            `<div class="sponsor-fallback-content">
+              <span class="sponsor-fallback-icon">${s.icon || '🤝'}</span>
+              <span class="sponsor-fallback-name">${s.name}</span>
+            </div>`;
 
           return `
-            <div class="sponsor-card-secondary">
+            <div class="sponsor-official-card" title="${s.name}${s.role ? ' - ' + s.role : ''}">
               ${isPanitia ? `
                 <div class="sponsor-admin-actions">
-                  <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
-                  <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
+                  <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${s.tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
+                  <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${s.tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
                 </div>
               ` : ''}
-              <div class="sponsor-logo-box-sm">
+              <div class="sponsor-official-logo-wrapper">
                 ${logoHtml}
               </div>
-              <div class="sponsor-name-sm">${s.name}</div>
             </div>
           `;
         }).join("");
