@@ -1438,14 +1438,14 @@ var app = window.app = Object.assign(window.app || {}, {
             </div>
             <div class="hero-upcoming-vs-box">
               <span class="hero-upcoming-vs">VS</span>
-              <span class="hero-upcoming-time">${nextMatch.time || 'WITA'}</span>
+              <span class="hero-upcoming-time">${nextMatch.time}</span>
             </div>
             <div class="hero-upcoming-team away">
               <span class="hero-upcoming-team-name">${aTeam.name}</span>
             </div>
           </div>
           <div class="hero-upcoming-footer">
-            <span class="hero-upcoming-meta">📅 ${nextMatch.date || 'Jadwal Resmi'} • ${nextMatch.pitch || 'Lapangan Utama'}</span>
+            <span class="hero-upcoming-meta">📅 ${nextMatch.date || 'Jadwal Resmi'}</span>
             <span class="hero-upcoming-cta">Lihat Jadwal Lengkap ➔</span>
           </div>
         </div>
