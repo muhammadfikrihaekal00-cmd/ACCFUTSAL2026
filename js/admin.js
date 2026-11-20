@@ -3500,16 +3500,16 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     let html = "";
 
-    // 1. Baris Atas (Ukuran Besar)
+    // 1. Sponsor Utama (Ukuran Besar - Baris Atas)
     html += `
       <div style="font-size: 0.78rem; font-weight: 800; color: #fbbf24; margin-top: 4px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-        <span>⭐ Baris Atas (Ukuran Besar)</span>
+        <span>⭐ Sponsor Utama (Ukuran Besar - Baris Atas)</span>
         <span style="font-size: 0.7rem; opacity: 0.8;">${primaryItems.length} Sponsor</span>
       </div>
     `;
 
     if (primaryItems.length === 0) {
-      html += `<div style="font-size: 0.72rem; color: var(--text-muted); padding: 4px; margin-bottom: 8px;">Belum ada sponsor di baris atas.</div>`;
+      html += `<div style="font-size: 0.72rem; color: var(--text-muted); padding: 4px; margin-bottom: 8px;">Belum ada Sponsor Utama di baris atas.</div>`;
     } else {
       primaryItems.forEach(s => {
         const idVal = s.id || s.name;
@@ -3531,16 +3531,16 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       });
     }
 
-    // 2. Baris Bawah (Ukuran Normal)
+    // 2. Sponsor Kedua (Ukuran Lebih Kecil - Dua Baris Bawah)
     html += `
       <div style="font-size: 0.78rem; font-weight: 800; color: #60a5fa; margin-top: 10px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-        <span>🔹 Baris Bawah (Ukuran Normal)</span>
+        <span>🔹 Sponsor Kedua (Ukuran Lebih Kecil - Dua Baris Bawah)</span>
         <span style="font-size: 0.7rem; opacity: 0.8;">${secondaryItems.length} Sponsor</span>
       </div>
     `;
 
     if (secondaryItems.length === 0) {
-      html += `<div style="font-size: 0.72rem; color: var(--text-muted); padding: 4px;">Belum ada sponsor di baris bawah.</div>`;
+      html += `<div style="font-size: 0.72rem; color: var(--text-muted); padding: 4px;">Belum ada Sponsor Kedua di dua baris bawah.</div>`;
     } else {
       secondaryItems.forEach(s => {
         const idVal = s.id || s.name;

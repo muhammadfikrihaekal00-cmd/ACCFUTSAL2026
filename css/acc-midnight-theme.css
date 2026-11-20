@@ -905,9 +905,12 @@ html.snap-scroll-active .home-slide-nav {
 }
 
 #pane-home .sponsors-showcase-bar {
-  margin: 0 auto !important;
-  max-width: 1080px !important;
-  width: 100% !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* 4 Horizontal Dark Glass Stat Cards (Clean Minimalist Recursion Style) */
@@ -1343,7 +1346,7 @@ html.snap-scroll-active .home-slide-nav {
 }
 
 /* ============================================================================
-   9. SPONSORS & MITRA RESMI (OFFICIAL SPONSORS SHOWCASE - RECURSION STYLE + ACC THEME)
+   9. SPONSORS & MITRA RESMI (FULL-BLEED, DUAL-TIER OPPOSITE MARQUEE)
    ============================================================================ */
 .sponsors-showcase-bar {
   background: transparent !important;
@@ -1352,10 +1355,15 @@ html.snap-scroll-active .home-slide-nav {
   -webkit-backdrop-filter: none !important;
   border: none !important;
   border-radius: 0 !important;
-  padding: 40px 0 32px 0 !important;
+  padding: 44px 0 36px 0 !important;
   box-shadow: none !important;
   position: relative !important;
   overflow: hidden !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  box-sizing: border-box !important;
 }
 
 .sponsors-showcase-bar::before {
@@ -1364,63 +1372,118 @@ html.snap-scroll-active .home-slide-nav {
 
 .sponsors-official-header {
   text-align: center !important;
-  max-width: 720px !important;
-  margin: 0 auto 28px auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto 30px auto !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
 }
 
 .sponsors-official-title {
-  font-family: var(--font-display) !important;
-  font-size: clamp(1.6rem, 3.8vw, 2.35rem) !important;
-  font-weight: 800 !important;
+  font-family: var(--font-display, "Montserrat", sans-serif) !important;
+  font-size: clamp(3rem, 8.5vw, 5.8rem) !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.04em !important;
   color: #ffffff !important;
-  letter-spacing: -0.025em !important;
-  margin: 0 0 12px 0 !important;
-  line-height: 1.2 !important;
+  margin: 0 0 14px 0 !important;
+  line-height: 0.95 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  text-shadow: 0 4px 28px rgba(0, 0, 0, 0.8) !important;
 }
 
 .sponsors-official-title .gradient-text-gold {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #d97706 100%) !important;
+  background: linear-gradient(135deg, #fde047 0%, #fbbf24 35%, #f59e0b 70%, #d97706 100%) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   display: inline-block !important;
+  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.4)) !important;
 }
 
 .sponsors-official-caption {
-  font-size: clamp(0.85rem, 2.2vw, 0.95rem) !important;
+  font-size: clamp(0.88rem, 2vw, 1.05rem) !important;
   color: #94a3b8 !important;
   line-height: 1.68 !important;
   margin: 0 auto !important;
+  max-width: 820px !important;
   text-align: center !important;
   font-weight: 400 !important;
+  padding: 0 14px !important;
 }
 
 .sponsors-admin-toolbar {
   display: flex !important;
   justify-content: center !important;
-  margin-top: 16px !important;
+  margin-top: 18px !important;
 }
 
 /* ============================================================================
-   SEAMLESS INFINITE MARQUEE (MENYATU LANGSUNG DENGAN BACKGROUND, TANPA BOX)
+   DUAL TIER SPONSORSHIP MARQUEE SYSTEM
    ============================================================================ */
-@keyframes marqueeScrollLeft {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: translate3d(-50%, 0, 0);
-  }
+.sponsors-dual-tier-container {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
 }
 
+.sponsors-tier-section {
+  width: 100% !important;
+  position: relative !important;
+}
+
+.sponsors-tier-tag {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  margin-bottom: 12px !important;
+  user-select: none !important;
+}
+
+.sponsors-tier-primary .sponsors-tier-tag {
+  color: #fbbf24 !important;
+}
+
+.sponsors-tier-secondary .sponsors-tier-tag {
+  color: #60a5fa !important;
+}
+
+.tier-tag-dot {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+}
+.tier-tag-dot.gold {
+  background: #f59e0b !important;
+  box-shadow: 0 0 12px #f59e0b !important;
+}
+.tier-tag-dot.blue {
+  background: #3b82f6 !important;
+  box-shadow: 0 0 12px #3b82f6 !important;
+}
+
+/* MARQUEE WRAPPER & FADE EDGES */
 .sponsors-marquee-wrapper {
   position: relative !important;
   width: 100% !important;
   overflow: hidden !important;
-  padding: 22px 0 16px 0 !important;
-  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%) !important;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%) !important;
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%) !important;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%) !important;
+}
+
+.sponsors-marquee-primary {
+  padding: 16px 0 !important;
+}
+
+.sponsors-marquee-secondary {
+  padding: 6px 0 !important;
 }
 
 .sponsors-marquee-wrapper.empty {
@@ -1428,13 +1491,44 @@ html.snap-scroll-active .home-slide-nav {
   -webkit-mask-image: none !important;
 }
 
+/* MARQUEE KEYFRAME ANIMATIONS */
+@keyframes marqueeScrollLeft {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marqueeScrollRight {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 .sponsors-marquee-track {
   display: flex !important;
   width: max-content !important;
   will-change: transform !important;
-  animation: marqueeScrollLeft 30s linear infinite !important;
   user-select: none !important;
   -webkit-user-select: none !important;
+}
+
+/* Arah Gerak: Sponsor Utama ke KIRI, Sponsor Kedua ke KANAN */
+.track-scroll-left {
+  animation: marqueeScrollLeft 32s linear infinite !important;
+}
+
+.track-scroll-right.track-sec-1 {
+  animation: marqueeScrollRight 28s linear infinite !important;
+}
+
+.track-scroll-right.track-sec-2 {
+  animation: marqueeScrollRight 34s linear infinite !important;
 }
 
 .sponsors-marquee-wrapper:hover .sponsors-marquee-track {
@@ -1447,6 +1541,7 @@ html.snap-scroll-active .home-slide-nav {
   flex-shrink: 0 !important;
 }
 
+/* MARQUEE ITEM & LOGO STYLING */
 .sponsor-marquee-item {
   display: inline-flex !important;
   align-items: center !important;
@@ -1457,49 +1552,92 @@ html.snap-scroll-active .home-slide-nav {
   box-shadow: none !important;
   outline: none !important;
   border-radius: 0 !important;
-  padding: 0 38px !important;
   flex-shrink: 0 !important;
   position: relative !important;
   cursor: default !important;
 }
 
-.sponsor-marquee-logo {
-  height: 56px !important;
-  max-height: 60px !important;
+/* Sponsor Utama: Ukuran Besar */
+.sponsor-marquee-item.tier-primary {
+  padding: 0 40px !important;
+}
+
+.sponsor-marquee-logo.tier-primary {
+  height: 72px !important;
+  max-height: 80px !important;
   width: auto !important;
-  max-width: 180px !important;
+  max-width: 220px !important;
   object-fit: contain !important;
-  filter: brightness(0.92) contrast(1.05) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45)) !important;
+  filter: brightness(0.95) contrast(1.08) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55)) !important;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease !important;
   pointer-events: auto !important;
 }
 
-.sponsor-marquee-item:hover .sponsor-marquee-logo {
-  transform: scale(1.12) !important;
-  filter: brightness(1.15) contrast(1.1) drop-shadow(0 6px 20px rgba(245, 158, 11, 0.4)) !important;
+.sponsor-marquee-item.tier-primary:hover .sponsor-marquee-logo.tier-primary {
+  transform: scale(1.15) !important;
+  filter: brightness(1.2) contrast(1.12) drop-shadow(0 8px 24px rgba(245, 158, 11, 0.5)) !important;
 }
 
-.sponsor-marquee-fallback {
+.sponsor-marquee-fallback.tier-primary {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 10px !important;
-  font-size: 1.05rem !important;
-  font-weight: 800 !important;
-  color: #f8fafc !important;
+  gap: 12px !important;
+  font-size: 1.35rem !important;
+  font-weight: 900 !important;
+  color: #fbbf24 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
   white-space: nowrap !important;
-  opacity: 0.9 !important;
+  text-shadow: 0 2px 14px rgba(245, 158, 11, 0.35) !important;
 }
 
-.sponsor-marquee-fallback .sponsor-fallback-icon {
-  font-size: 1.35rem !important;
+.sponsor-marquee-fallback.tier-primary .sponsor-fallback-icon {
+  font-size: 1.8rem !important;
 }
 
+/* Sponsor Kedua: Ukuran Lebih Kecil (Dua Baris) */
+.sponsor-marquee-item.tier-secondary {
+  padding: 0 24px !important;
+}
+
+.sponsor-marquee-logo.tier-secondary {
+  height: 40px !important;
+  max-height: 44px !important;
+  width: auto !important;
+  max-width: 140px !important;
+  object-fit: contain !important;
+  filter: brightness(0.88) contrast(1.05) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4)) !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease !important;
+  pointer-events: auto !important;
+}
+
+.sponsor-marquee-item.tier-secondary:hover .sponsor-marquee-logo.tier-secondary {
+  transform: scale(1.14) !important;
+  filter: brightness(1.15) contrast(1.1) drop-shadow(0 6px 16px rgba(59, 130, 246, 0.5)) !important;
+}
+
+.sponsor-marquee-fallback.tier-secondary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 0.92rem !important;
+  font-weight: 750 !important;
+  color: #cbd5e1 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+  opacity: 0.88 !important;
+}
+
+.sponsor-marquee-fallback.tier-secondary .sponsor-fallback-icon {
+  font-size: 1.25rem !important;
+}
+
+/* Admin Actions Overlay */
 .sponsor-marquee-admin-actions {
   position: absolute !important;
   top: -10px !important;
-  right: 24px !important;
+  right: 18px !important;
   display: flex !important;
   gap: 4px !important;
   opacity: 0 !important;
@@ -1512,15 +1650,15 @@ html.snap-scroll-active .home-slide-nav {
 }
 
 .btn-sponsor-act {
-  background: rgba(6, 10, 23, 0.9) !important;
+  background: rgba(6, 10, 23, 0.92) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 6px !important;
-  width: 22px !important;
-  height: 22px !important;
+  width: 24px !important;
+  height: 24px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 0.65rem !important;
+  font-size: 0.68rem !important;
   cursor: pointer !important;
   color: #f8fafc !important;
   transition: all 0.2s ease !important;
@@ -1551,44 +1689,42 @@ html.snap-scroll-active .home-slide-nav {
 
 @media (max-width: 640px) {
   .sponsors-showcase-bar {
-    padding: 28px 0 20px 0 !important;
-    border: none !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
+    padding: 30px 0 24px 0 !important;
   }
 
   .sponsors-official-header {
-    margin-bottom: 16px !important;
+    margin-bottom: 20px !important;
   }
 
   .sponsors-official-title {
-    font-size: 1.55rem !important;
+    font-size: 2.35rem !important;
   }
 
   .sponsors-official-caption {
     font-size: 0.82rem !important;
     line-height: 1.58 !important;
-    padding: 0 4px !important;
   }
 
-  .sponsors-marquee-wrapper {
-    padding: 16px 0 10px 0 !important;
+  .sponsor-marquee-logo.tier-primary {
+    height: 52px !important;
+    max-height: 56px !important;
+    max-width: 160px !important;
   }
 
-  .sponsors-marquee-track {
-    animation-duration: 22s !important;
-  }
-
-  .sponsor-marquee-item {
+  .sponsor-marquee-item.tier-primary {
     padding: 0 22px !important;
   }
 
-  .sponsor-marquee-logo {
-    height: 42px !important;
-    max-height: 46px !important;
-    max-width: 130px !important;
+  .sponsor-marquee-logo.tier-secondary {
+    height: 32px !important;
+    max-height: 36px !important;
+    max-width: 110px !important;
   }
+
+  .sponsor-marquee-item.tier-secondary {
+    padding: 0 14px !important;
+  }
+}
 
   .sponsor-marquee-fallback {
     font-size: 0.88rem !important;

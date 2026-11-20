@@ -10,10 +10,10 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.56">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.56">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.56">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.56">
+  <link rel="manifest" href="manifest.json?v=8.57">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.57">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.57">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.57">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -193,8 +193,8 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.56">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.56">
+  <link rel="stylesheet" href="css/styles.css?v=8.57">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.57">
 </head>
 
 <body class="snap-scroll-active">
@@ -537,14 +537,44 @@
           </div>
         </div>
 
-        <!-- SEAMLESS INFINITE MARQUEE (Menyatu langsung dengan background tanpa box, bergerak dari kanan ke kiri) -->
-        <div class="sponsors-marquee-wrapper" id="sponsorsMarqueeWrapper">
-          <div class="sponsors-marquee-track" id="sponsorsMarqueeTrack">
-            <!-- Injected dynamically from Supabase Online -->
+        <!-- DUAL TIER SPONSORSHIP MARQUEE (Sponsor Utama di Atas & Sponsor Kedua 2 Baris Arah Sebaliknya) -->
+        <div class="sponsors-dual-tier-container" id="sponsorsDualTierContainer">
+          <!-- TIER 1: SPONSOR UTAMA (UKURAN BESAR - BERJALAN KE KIRI) -->
+          <div class="sponsors-tier-section sponsors-tier-primary" id="sponsorsTierPrimary">
+            <div class="sponsors-tier-tag">
+              <span class="tier-tag-dot gold"></span>
+              <span>SPONSOR UTAMA</span>
+            </div>
+            <div class="sponsors-marquee-wrapper sponsors-marquee-primary" id="sponsorsMarqueePrimaryWrapper">
+              <div class="sponsors-marquee-track track-scroll-left" id="sponsorsMarqueeTrackPrimary">
+                <!-- Injected dynamically from Supabase Online -->
+              </div>
+            </div>
+          </div>
+
+          <!-- TIER 2: SPONSOR KEDUA (UKURAN LEBIH KECIL - 2 BARIS BERJALAN DARI ARAH SEBALIKNYA / KE KANAN) -->
+          <div class="sponsors-tier-section sponsors-tier-secondary" id="sponsorsTierSecondary">
+            <div class="sponsors-tier-tag">
+              <span class="tier-tag-dot blue"></span>
+              <span>MITRA &amp; SPONSOR PENDUKUNG</span>
+            </div>
+            <!-- Baris 1 Sponsor Kedua (Arah Sebaliknya / Ke Kanan) -->
+            <div class="sponsors-marquee-wrapper sponsors-marquee-secondary" id="sponsorsMarqueeSec1Wrapper">
+              <div class="sponsors-marquee-track track-scroll-right track-sec-1" id="sponsorsMarqueeTrackSec1">
+                <!-- Injected dynamically from Supabase Online -->
+              </div>
+            </div>
+            <!-- Baris 2 Sponsor Kedua (Arah Sebaliknya / Ke Kanan) -->
+            <div class="sponsors-marquee-wrapper sponsors-marquee-secondary" id="sponsorsMarqueeSec2Wrapper" style="margin-top: 10px;">
+              <div class="sponsors-marquee-track track-scroll-right track-sec-2" id="sponsorsMarqueeTrackSec2">
+                <!-- Injected dynamically from Supabase Online -->
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Hidden backward-compatibility anchors -->
+        <div id="sponsorsMarqueeWrapper" style="display: none;"><div id="sponsorsMarqueeTrack"></div></div>
         <div id="sponsorsOfficialGrid" style="display: none;"></div>
         <div id="sponsorsPrimaryGrid" style="display: none;"></div>
         <div id="sponsorsSecondaryGrid" style="display: none;"></div>
@@ -2338,8 +2368,8 @@
               <div class="form-group" style="flex: 1.5;">
                 <label class="form-label">Pilihan Ukuran Sponsor <span style="color:#ef4444;">*</span></label>
                 <select id="sponsorTierSelect" class="form-select" required>
-                  <option value="platinum">⭐ Ukuran Besar (Baris Atas)</option>
-                  <option value="gold">🔹 Ukuran Normal (Baris Bawah)</option>
+                  <option value="platinum">⭐ Sponsor Utama (Ukuran Besar - Baris Atas)</option>
+                  <option value="gold">🔹 Sponsor Kedua (Ukuran Lebih Kecil - Dua Baris Bawah)</option>
                 </select>
               </div>
             </div>

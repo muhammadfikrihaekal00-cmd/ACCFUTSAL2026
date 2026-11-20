@@ -1511,7 +1511,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (mainSub) mainSub.textContent = isSMP ? "U-15" : "U-12";
     if (altLabel) altLabel.textContent = isSMP ? "SD" : "SMP";
     if (altSub) altSub.textContent = isSMP ? "U-12" : "U-15";
-    if (altPillText) altPillText.textContent = isSMP ? "Beralih ke Kelas SD (U-12)" : "Beralih ke Kelas SMP (U-15)";
+
   },
 
   initSupabaseSync() {
@@ -3622,7 +3622,7 @@ var app = window.app = Object.assign(window.app || {}, {
     window.open(waUrl, "_blank");
   },
 
-  // RENDER SPONSORSHIP (SEAMLESS INFINITE MARQUEE - MENYATU LANGSUNG DENGAN BACKGROUND, KANAN KE KIRI)
+  // RENDER SPONSORSHIP (DUAL-TIER: SPONSOR UTAMA BESAR KE KIRI & SPONSOR KEDUA 2 BARIS KE KANAN)
   renderSponsors() {
     let sponsors = this.store.data.sponsors;
     if (!sponsors) return;
@@ -3638,17 +3638,20 @@ var app = window.app = Object.assign(window.app || {}, {
       btnManage.style.display = isPanitia ? "inline-flex" : "none";
     }
 
-    const trackContainer = document.getElementById("sponsorsMarqueeTrack");
-    const wrapper = document.getElementById("sponsorsMarqueeWrapper");
-    if (!trackContainer) return;
+    const dualContainer = document.getElementById("sponsorsDualTierContainer");
+    const trackPrimary = document.getElementById("sponsorsMarqueeTrackPrimary");
+    const trackSec1 = document.getElementById("sponsorsMarqueeTrackSec1");
+    const trackSec2 = document.getElementById("sponsorsMarqueeTrackSec2");
+    const legacyTrack = document.getElementById("sponsorsMarqueeTrack");
 
     const platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
     const goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
     const mediaList = (sponsors.media || []).map(s => ({ ...s, tierKey: 'media' }));
-    const allSponsors = [...platinumList, ...goldList, ...mediaList];
+    const allSecondary = [...goldList, ...mediaList];
+    const allSponsors = [...platinumList, ...allSecondary];
 
     if (allSponsors.length === 0) {
-      trackContainer.innerHTML = isPanitia ? `
+      const emptyHtml = isPanitia ? `
         <div class="sponsors-empty-box">
           <p>Belum ada logo sponsor yang ditambahkan.</p>
           <button type="button" class="btn btn-primary btn-sm" onclick="admin.openSponsorEditorModal()" style="margin-top: 8px;">➕ Tambah Logo Sponsor Sekarang</button>
@@ -3658,47 +3661,90 @@ var app = window.app = Object.assign(window.app || {}, {
           <p>Mitra dan sponsor resmi turnamen akan segera diperbarui.</p>
         </div>
       `;
-      if (wrapper) wrapper.classList.add("empty");
+      if (dualContainer) dualContainer.innerHTML = emptyHtml;
+      if (legacyTrack) legacyTrack.innerHTML = emptyHtml;
       return;
     }
 
-    if (wrapper) wrapper.classList.remove("empty");
+    // 1. Sponsor Utama (Tier 1 - Ukuran Besar, bergerak ke Kiri)
+    let primaryList = [...platinumList];
+    // 2. Sponsor Kedua (Tier 2 - Ukuran Lebih Kecil, 2 baris bergerak dari Arah Sebaliknya / ke Kanan)
+    let secondaryList = [...allSecondary];
 
-    // Pastikan item cukup panjang sebelum loop agar animasi mulus tanpa jeda
-    let baseList = [...allSponsors];
-    while (baseList.length < 6) {
-      baseList = baseList.concat(allSponsors);
+    // Distribusi cerdas jika salah satu tingkat belum memiliki data
+    if (primaryList.length === 0 && secondaryList.length > 0) {
+      primaryList = [secondaryList[0]];
+    }
+    if (secondaryList.length === 0 && primaryList.length > 0) {
+      secondaryList = [...primaryList];
     }
 
-    const generateGroupHtml = () => {
-      return baseList.map(s => {
-        const logoHtml = s.image ?
-          `<img src="${s.image}" alt="${s.name}" class="sponsor-marquee-logo" loading="lazy">` :
-          `<div class="sponsor-marquee-fallback">
-            <span class="sponsor-fallback-icon">${s.icon || '🤝'}</span>
-            <span class="sponsor-fallback-name">${s.name}</span>
-          </div>`;
+    // Bagi Sponsor Kedua menjadi 2 baris terpisah
+    let secRow1 = [];
+    let secRow2 = [];
+    if (secondaryList.length === 1) {
+      secRow1 = [...secondaryList];
+      secRow2 = [...secondaryList];
+    } else if (secondaryList.length === 2) {
+      secRow1 = [secondaryList[0]];
+      secRow2 = [secondaryList[1]];
+    } else {
+      secondaryList.forEach((s, idx) => {
+        if (idx % 2 === 0) secRow1.push(s);
+        else secRow2.push(s);
+      });
+      if (secRow2.length === 0) secRow2 = [...secRow1];
+    }
 
-        return `
-          <div class="sponsor-marquee-item" title="${s.name}${s.role ? ' - ' + s.role : ''}">
-            ${isPanitia ? `
-              <div class="sponsor-marquee-admin-actions">
-                <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${s.tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
-                <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${s.tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
-              </div>
-            ` : ''}
-            ${logoHtml}
-          </div>
-        `;
-      }).join("");
+    const buildTrackHtml = (items, tierClass = 'tier-primary') => {
+      if (!items || items.length === 0) return '';
+      let baseList = [...items];
+      while (baseList.length < 6) {
+        baseList = baseList.concat(items);
+      }
+
+      const generateGroup = () => {
+        return baseList.map(s => {
+          const logoHtml = s.image ?
+            `<img src="${s.image}" alt="${s.name}" class="sponsor-marquee-logo ${tierClass}" loading="lazy">` :
+            `<div class="sponsor-marquee-fallback ${tierClass}">
+              <span class="sponsor-fallback-icon">${s.icon || '🤝'}</span>
+              <span class="sponsor-fallback-name">${s.name}</span>
+            </div>`;
+
+          return `
+            <div class="sponsor-marquee-item ${tierClass}" title="${s.name}${s.role ? ' - ' + s.role : ''}">
+              ${isPanitia ? `
+                <div class="sponsor-marquee-admin-actions">
+                  <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${s.tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
+                  <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${s.tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
+                </div>
+              ` : ''}
+              ${logoHtml}
+            </div>
+          `;
+        }).join("");
+      };
+
+      const groupHtml = generateGroup();
+      return `
+        <div class="sponsors-marquee-group">${groupHtml}</div>
+        <div class="sponsors-marquee-group" aria-hidden="true">${groupHtml}</div>
+      `;
     };
 
-    const groupHtml = generateGroupHtml();
-    // 2 grup identik untuk pergeseran tak terbatas 0% -> -50% tanpa patah-patah
-    trackContainer.innerHTML = `
-      <div class="sponsors-marquee-group">${groupHtml}</div>
-      <div class="sponsors-marquee-group" aria-hidden="true">${groupHtml}</div>
-    `;
+    if (trackPrimary) {
+      trackPrimary.innerHTML = buildTrackHtml(primaryList, 'tier-primary');
+    }
+    if (trackSec1) {
+      trackSec1.innerHTML = buildTrackHtml(secRow1, 'tier-secondary');
+    }
+    if (trackSec2) {
+      trackSec2.innerHTML = buildTrackHtml(secRow2, 'tier-secondary');
+    }
+    if (legacyTrack && !trackPrimary) {
+      legacyTrack.innerHTML = buildTrackHtml(allSponsors, 'tier-primary');
+    }
   },
 
   // 1. RENDER MATCHES (UEFA & WORLD CUP STYLE - DUAL TEAM EVENTS SPLIT)
