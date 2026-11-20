@@ -3593,8 +3593,12 @@ var app = window.app = Object.assign(window.app || {}, {
         return m.pitch.toLowerCase().includes(this.filterPitch.toLowerCase());
       });
     }
-    // Filter by Group
-    if (this.filterGroup !== "all") {
+    // Filter by Group / Stage
+    if (this.filterGroup === "group_stage") {
+      matches = matches.filter(m => m.stage === "group" || (!m.stage && !/(QF|SF|3RD|FINAL)/i.test(m.id || "")));
+    } else if (this.filterGroup === "knockout") {
+      matches = matches.filter(m => m.stage === "knockout" || /(QF|SF|3RD|FINAL)/i.test(m.id || ""));
+    } else if (this.filterGroup !== "all") {
       matches = matches.filter(m => m.group === this.filterGroup);
     }
 
@@ -3848,15 +3852,15 @@ var app = window.app = Object.assign(window.app || {}, {
           <!-- FOOTER AKSI -->
           <div class="fixture-footer-bar">
             <span class="fixture-field-note" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
-              ${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : `Laga #${m.id}`}
+              ${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : ''}
             </span>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 10px;">
                 Detail
               </button>
               ${this.isAdmin() ? `
-                <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Tim Lawan & Jadwal" style="font-size: 0.72rem; padding: 4px 10px;">
-                  Atur Lawan
+                <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="${isKnockout ? 'Atur Waktu & Jadwal Babak Ini' : 'Atur Tim Lawan & Jadwal'}" style="font-size: 0.72rem; padding: 4px 10px; ${isKnockout ? 'background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #fbbf24;' : ''}">
+                  ${isKnockout ? '📅 Atur Jadwal' : '⚙️ Atur Lawan'}
                 </button>
                 <button class="btn btn-primary btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan" style="font-size: 0.72rem; padding: 4px 10px;">
                   Skor
@@ -4095,7 +4099,14 @@ var app = window.app = Object.assign(window.app || {}, {
         <div class="${cardClasses}" onclick="app.switchTab('matches')" title="Klik untuk lihat detail jadwal babak ini">
           <div class="bracket-card-header">
             <span class="bracket-round-label">${m.roundName || 'Babak Gugur'}</span>
-            ${statusBadge}
+            <div style="display: flex; align-items: center; gap: 6px;">
+              ${this.isAdmin() ? `
+                <button class="btn btn-admin btn-sm" onclick="event.stopPropagation(); admin.openMatchEditor('${m.id}')" title="Atur Jadwal Babak Ini" style="font-size: 0.68rem; padding: 2px 7px; background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; border-radius: 4px;">
+                  📅 Atur Jadwal
+                </button>
+              ` : ''}
+              ${statusBadge}
+            </div>
           </div>
 
           <div class="bracket-teams-container">
@@ -6841,7 +6852,9 @@ var app = window.app = Object.assign(window.app || {}, {
     const isFinished = match.status === 'finished';
 
     if (title) {
-      title.textContent = `Detail Laga #${match.id}`;
+      const hName = home.shortName && home.shortName !== "TBD" ? home.shortName : home.name;
+      const aName = away.shortName && away.shortName !== "TBD" ? away.shortName : away.name;
+      title.textContent = `Detail Pertandingan: ${hName} vs ${aName}`;
     }
 
     let hScore = "-";

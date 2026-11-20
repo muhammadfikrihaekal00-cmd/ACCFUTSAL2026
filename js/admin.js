@@ -1263,10 +1263,41 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (idInput) idInput.value = match.id;
 
     const cat = match.category || "SMP";
-    const stageName = match.stage === "knockout" ? (match.roundName || "Babak Gugur") : `Grup ${match.group || 'A'}`;
+    const isKnockout = match.stage === "knockout" || /(QF|SF|3RD|FINAL)/i.test(match.id || "");
+    const stageName = isKnockout ? (match.roundName || "Babak Gugur") : `Grup ${match.group || 'A'}`;
     const titleEl = document.getElementById("editMatchTitle");
     if (titleEl) {
-      titleEl.textContent = `⚙️ Atur Lawan: ${match.id} (${cat} - ${stageName})`;
+      if (isKnockout) {
+        titleEl.textContent = `📅 Atur Jadwal: ${stageName} (${cat})`;
+      } else {
+        titleEl.textContent = `⚙️ Atur Pertandingan: ${stageName} (${cat})`;
+      }
+    }
+
+    const koNotice = document.getElementById("editMatchKnockoutNotice");
+    const koStageBadge = document.getElementById("editMatchKnockoutStageBadge");
+    const koBracketText = document.getElementById("editMatchKnockoutBracketText");
+    const matchupBadge = document.getElementById("editMatchupBadge");
+    const subTitle = document.getElementById("editMatchSubtitle");
+    const submitBtn = document.getElementById("editMatchSubmitBtn");
+
+    const hTeamObj = app.store.getTeam(match.homeId);
+    const aTeamObj = app.store.getTeam(match.awayId);
+    const hPlaceholder = hTeamObj ? hTeamObj.name : (match.homePlaceholder || "Juara Grup");
+    const aPlaceholder = aTeamObj ? aTeamObj.name : (match.awayPlaceholder || "Runner-up Grup");
+
+    if (isKnockout) {
+      if (koNotice) koNotice.style.display = "block";
+      if (koStageBadge) koStageBadge.textContent = `🏆 ${stageName} (${cat})`;
+      if (koBracketText) koBracketText.textContent = `${hPlaceholder} vs ${aPlaceholder}`;
+      if (matchupBadge) matchupBadge.textContent = "Otomatis Sesuai Bagan (Atau Tim Manual)";
+      if (subTitle) subTitle.textContent = "Atur kapan tanggal dan waktu pelaksanaan babak gugur ini. Pasangan tim secara otomatis mengikuti hasil klasemen grup atau pemenang babak sebelumnya.";
+      if (submitBtn) submitBtn.textContent = "💾 Simpan Jadwal Babak Ini";
+    } else {
+      if (koNotice) koNotice.style.display = "none";
+      if (matchupBadge) matchupBadge.textContent = "Wajib Dipilih";
+      if (subTitle) subTitle.textContent = "Pilih pasangan tim yang bertanding (Home vs Away) serta sesuaikan waktu dan lapangan laga.";
+      if (submitBtn) submitBtn.textContent = "💾 Simpan Lawan & Jadwal";
     }
 
     // Populate Match Selector Dropdown if requested or if options don't match
@@ -1284,7 +1315,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
               const h = hTeam ? hTeam.shortName : (m.homePlaceholder || "TBD");
               const a = aTeam ? aTeam.shortName : (m.awayPlaceholder || "TBD");
               const stage = m.stage === "knockout" ? (m.roundName || "Gugur") : `Grup ${m.group}`;
-              optHtml += `<option value="${m.id}" ${m.id === match.id ? 'selected' : ''}>${m.id} [${stage}]: ${h} vs ${a} (${m.date || ''})</option>`;
+              optHtml += `<option value="${m.id}" ${m.id === match.id ? 'selected' : ''}>[${stage}]: ${h} vs ${a} (${m.date || ''})</option>`;
             });
             optHtml += `</optgroup>`;
           }
@@ -1304,7 +1335,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const inGroupTeams = teams.filter(t => t.group === match.group);
     const otherTeams = teams.filter(t => t.group !== match.group);
 
-    let teamOptions = `<option value="">-- Pilih Tim (TBD / Kosong) --</option>`;
+    const defaultOptionText = isKnockout 
+      ? `-- Otomatis Sesuai Bagan (${match.homePlaceholder || 'TBD'}) --`
+      : `-- Pilih Tim (TBD / Kosong) --`;
+    let teamOptions = `<option value="">${defaultOptionText}</option>`;
+
     if (match.stage === "group" && inGroupTeams.length > 0) {
       teamOptions += `<optgroup label="Tim Grup ${match.group || 'A'} (${inGroupTeams.length} Tim)">`;
       inGroupTeams.forEach(t => {
@@ -1327,15 +1362,20 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     if (homeSelect) homeSelect.innerHTML = teamOptions;
-    if (awaySelect) awaySelect.innerHTML = teamOptions;
+    if (awaySelect) {
+      const defaultAwayText = isKnockout
+        ? `-- Otomatis Sesuai Bagan (${match.awayPlaceholder || 'TBD'}) --`
+        : `-- Pilih Tim (TBD / Kosong) --`;
+      awaySelect.innerHTML = `<option value="">${defaultAwayText}</option>` + teamOptions.replace(`<option value="">${defaultOptionText}</option>`, '');
+    }
 
     if (homeSelect) homeSelect.value = match.homeId || "";
     if (awaySelect) awaySelect.value = match.awayId || "";
 
     const dateInput = document.getElementById("editMatchDateInput");
-    if (dateInput) dateInput.value = match.date || "22 Nov 2026";
+    if (dateInput) dateInput.value = match.date || (isKnockout ? "25 Nov 2026" : "22 Nov 2026");
     const timeInput = document.getElementById("editMatchTimeInput");
-    if (timeInput) timeInput.value = match.time || "08:00 - 08:40 WITA";
+    if (timeInput) timeInput.value = match.time || (isKnockout ? "14:00 - 14:45 WITA" : "08:00 - 08:40 WITA");
     const pitchInput = document.getElementById("editMatchPitchInput");
     if (pitchInput) {
       if (match.pitch && match.pitch.includes("2")) {
@@ -1358,6 +1398,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const match = matches.find(m => m.id === mId);
     if (!match) return;
 
+    const isKnockout = match.stage === "knockout" || /(QF|SF|3RD|FINAL)/i.test(match.id || "");
     const homeSelect = document.getElementById("editMatchHomeSelect");
     const awaySelect = document.getElementById("editMatchAwaySelect");
     const homeId = homeSelect ? homeSelect.value : "";
@@ -1368,9 +1409,20 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
 
-    match.homeId = homeId || null;
-    match.awayId = awayId || null;
-    match.isManualTeam = Boolean(homeId || awayId);
+    if (isKnockout) {
+      if (homeId || awayId) {
+        match.homeId = homeId || null;
+        match.awayId = awayId || null;
+        match.isManualTeam = true;
+      } else {
+        match.isManualTeam = false;
+      }
+    } else {
+      match.homeId = homeId || null;
+      match.awayId = awayId || null;
+      match.isManualTeam = Boolean(homeId || awayId);
+    }
+
     const dateInput = document.getElementById("editMatchDateInput");
     if (dateInput && dateInput.value.trim()) match.date = dateInput.value.trim();
     const timeInput = document.getElementById("editMatchTimeInput");
@@ -1394,8 +1446,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const awayTeam = app.store.getTeam(match.awayId);
     const hName = homeTeam ? homeTeam.shortName : (match.homePlaceholder || "TBD");
     const aName = awayTeam ? awayTeam.shortName : (match.awayPlaceholder || "TBD");
+    const stageName = isKnockout ? (match.roundName || 'Babak Gugur') : `Grup ${match.group || 'A'}`;
 
-    app.showToast(`✅ Jadwal laga ${match.id} berhasil disimpan: ${hName} vs ${aName}!`);
+    app.showToast(`✅ Jadwal ${stageName} (${match.date} • ${match.time}) berhasil disimpan!`);
     app.renderCurrentView();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
