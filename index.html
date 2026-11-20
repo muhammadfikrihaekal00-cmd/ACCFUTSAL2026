@@ -1306,21 +1306,31 @@
       <form id="quickScoreForm">
         <div class="modal-body" style="max-height: calc(88vh - 120px); overflow-y: auto;">
           <!-- SUB-NAVIGATION BAR UNTUK KONTROL MEJA PERTANDINGAN -->
-          <div class="qs-tabs-nav" style="display: flex; gap: 4px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); -webkit-overflow-scrolling: touch;">
-            <button type="button" class="qs-tab-btn active" id="qsTabBtn_score" onclick="admin.switchQuickScoreTab('score')">⏱️ Skor &amp; Laga</button>
-            <button type="button" class="qs-tab-btn" id="qsTabBtn_lineup" onclick="admin.switchQuickScoreTab('lineup')">📋 Starting 5</button>
-            <button type="button" class="qs-tab-btn" id="qsTabBtn_goal" onclick="admin.switchQuickScoreTab('goal')">⚽ Gol &amp; Assist</button>
-            <button type="button" class="qs-tab-btn" id="qsTabBtn_card" onclick="admin.switchQuickScoreTab('card')">🟨🟥 Kartu</button>
-            <button type="button" class="qs-tab-btn" id="qsTabBtn_sub" onclick="admin.switchQuickScoreTab('sub')">🔄 Pergantian</button>
-            <button type="button" class="qs-tab-btn" id="qsTabBtn_foul" onclick="admin.switchQuickScoreTab('foul')">⚠️ Foul</button>
+          <div class="qs-tabs-nav"
+            style="display: flex; gap: 4px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); -webkit-overflow-scrolling: touch;">
+            <button type="button" class="qs-tab-btn active" id="qsTabBtn_score"
+              onclick="admin.switchQuickScoreTab('score')">⏱️ Skor &amp; Laga</button>
+            <button type="button" class="qs-tab-btn" id="qsTabBtn_lineup"
+              onclick="admin.switchQuickScoreTab('lineup')">📋 Starting 5</button>
+            <button type="button" class="qs-tab-btn" id="qsTabBtn_goal" onclick="admin.switchQuickScoreTab('goal')">⚽
+              Gol &amp; Assist</button>
+            <button type="button" class="qs-tab-btn" id="qsTabBtn_card" onclick="admin.switchQuickScoreTab('card')">🟨🟥
+              Kartu</button>
+            <button type="button" class="qs-tab-btn" id="qsTabBtn_sub" onclick="admin.switchQuickScoreTab('sub')">🔄
+              Pergantian</button>
+            <button type="button" class="qs-tab-btn" id="qsTabBtn_foul" onclick="admin.switchQuickScoreTab('foul')">⚠️
+              Foul</button>
           </div>
 
           <!-- TAB 1: SKOR & STATUS LAGA -->
           <div id="qsPanel_score" class="qs-tab-panel">
             <!-- Counter Score Tap -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-surface-elevated); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-surface-elevated); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
               <div style="text-align: center;">
-                <strong id="homeTeamLabel" style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Home</strong>
+                <strong id="homeTeamLabel"
+                  style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim
+                  Home</strong>
                 <div class="tap-counter-wrap" style="margin-top: 6px;">
                   <button type="button" class="btn-tap" onclick="admin.adjustScore('home', -1)">-</button>
                   <div class="score-val-display" id="homeScoreDisplay">0</div>
@@ -1329,7 +1339,9 @@
               </div>
 
               <div style="text-align: center;">
-                <strong id="awayTeamLabel" style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Away</strong>
+                <strong id="awayTeamLabel"
+                  style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim
+                  Away</strong>
                 <div class="tap-counter-wrap" style="margin-top: 6px;">
                   <button type="button" class="btn-tap" onclick="admin.adjustScore('away', -1)">-</button>
                   <div class="score-val-display" id="awayScoreDisplay">0</div>
@@ -1344,18 +1356,27 @@
                 <label class="form-label" style="margin: 0; font-size: 0.78rem;">Status Pertandingan</label>
                 <div style="display: inline-flex; align-items: center; gap: 4px;">
                   <span class="form-label" style="margin: 0; font-size: 0.76rem;">Menit:</span>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(-1)" style="font-size: 0.68rem; padding: 2px 6px;" title="Kurangi 1 Menit">-1'</button>
-                  <input type="text" id="matchMinuteInput" class="form-input" style="width: 58px; text-align: center; font-weight: 800; padding: 4px 4px; font-size: 0.85rem;" placeholder="12'" oninput="admin.syncEventMinute(this.value)">
-                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(1)" style="font-size: 0.68rem; padding: 2px 6px;" title="Tambah 1 Menit">+1'</button>
-                  <button type="button" id="btnLiveTimerToggle" class="btn btn-outline btn-sm" onclick="admin.toggleLiveTimer()" style="font-size: 0.68rem; padding: 2px 6px;" title="Mulai / Jeda Stopwatch">⏱️</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(-1)"
+                    style="font-size: 0.68rem; padding: 2px 6px;" title="Kurangi 1 Menit">-1'</button>
+                  <input type="text" id="matchMinuteInput" class="form-input"
+                    style="width: 58px; text-align: center; font-weight: 800; padding: 4px 4px; font-size: 0.85rem;"
+                    placeholder="12'" oninput="admin.syncEventMinute(this.value)">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(1)"
+                    style="font-size: 0.68rem; padding: 2px 6px;" title="Tambah 1 Menit">+1'</button>
+                  <button type="button" id="btnLiveTimerToggle" class="btn btn-outline btn-sm"
+                    onclick="admin.toggleLiveTimer()" style="font-size: 0.68rem; padding: 2px 6px;"
+                    title="Mulai / Jeda Stopwatch">⏱️</button>
                 </div>
               </div>
 
               <!-- 1-Tap Status Selector Pills -->
               <div class="status-pill-group">
-                <button type="button" class="status-pill-btn" data-status="upcoming" onclick="admin.setStatus('upcoming')">⚪ Belum Mulai</button>
-                <button type="button" class="status-pill-btn active-live" data-status="live" onclick="admin.setStatus('live')">🔴 LIVE</button>
-                <button type="button" class="status-pill-btn" data-status="finished" onclick="admin.setStatus('finished')">🏁 Selesai (FT)</button>
+                <button type="button" class="status-pill-btn" data-status="upcoming"
+                  onclick="admin.setStatus('upcoming')">⚪ Belum Mulai</button>
+                <button type="button" class="status-pill-btn active-live" data-status="live"
+                  onclick="admin.setStatus('live')">🔴 LIVE</button>
+                <button type="button" class="status-pill-btn" data-status="finished"
+                  onclick="admin.setStatus('finished')">🏁 Selesai (FT)</button>
               </div>
               <select id="matchStatusSelect" style="display: none;">
                 <option value="upcoming">Belum Dimulai</option>
@@ -1365,27 +1386,40 @@
             </div>
 
             <!-- Adu Penalti Section (Khusus Babak Gugur jika Skor Seri) -->
-            <div id="penaltySection" style="display: none; background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.35); border-radius: var(--radius-md); padding: 10px 12px; margin-top: 10px;">
+            <div id="penaltySection"
+              style="display: none; background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.35); border-radius: var(--radius-md); padding: 10px 12px; margin-top: 10px;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                 <strong style="font-size: 0.8rem; color: #ca8a04; display: flex; align-items: center; gap: 5px;">
                   <span>🎯</span> Adu Penalti (Skor Seri Babak Gugur)
                 </strong>
                 <span style="font-size: 0.68rem; color: var(--text-muted);">Juknis: 3 Penendang</span>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; text-align: center;">
+              <div
+                style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; text-align: center;">
                 <div>
-                  <div id="penaltyHomeLabel" style="font-size: 0.74rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Home</div>
-                  <input type="number" id="penaltyHomeScore" class="form-input" style="text-align: center; font-weight: 800; font-size: 1.1rem; padding: 4px;" min="0" max="20" placeholder="0" oninput="admin.updatePenaltyWinnerSuggestion()">
+                  <div id="penaltyHomeLabel"
+                    style="font-size: 0.74rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    Tim Home</div>
+                  <input type="number" id="penaltyHomeScore" class="form-input"
+                    style="text-align: center; font-weight: 800; font-size: 1.1rem; padding: 4px;" min="0" max="20"
+                    placeholder="0" oninput="admin.updatePenaltyWinnerSuggestion()">
                 </div>
                 <span style="font-weight: 800; color: var(--text-muted); font-size: 1.1rem; padding-top: 14px;">-</span>
                 <div>
-                  <div id="penaltyAwayLabel" style="font-size: 0.74rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Away</div>
-                  <input type="number" id="penaltyAwayScore" class="form-input" style="text-align: center; font-weight: 800; font-size: 1.1rem; padding: 4px;" min="0" max="20" placeholder="0" oninput="admin.updatePenaltyWinnerSuggestion()">
+                  <div id="penaltyAwayLabel"
+                    style="font-size: 0.74rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    Tim Away</div>
+                  <input type="number" id="penaltyAwayScore" class="form-input"
+                    style="text-align: center; font-weight: 800; font-size: 1.1rem; padding: 4px;" min="0" max="20"
+                    placeholder="0" oninput="admin.updatePenaltyWinnerSuggestion()">
                 </div>
               </div>
               <div style="margin-top: 8px;">
-                <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight: 600;">Tim Pemenang Lolos:</label>
-                <select id="penaltyWinnerSelect" class="form-select" style="font-size: 0.8rem; padding: 5px 8px; font-weight: 700;">
+                <label
+                  style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight: 600;">Tim
+                  Pemenang Lolos:</label>
+                <select id="penaltyWinnerSelect" class="form-select"
+                  style="font-size: 0.8rem; padding: 5px 8px; font-weight: 700;">
                   <option value="">-- Pilih Tim Pemenang Adu Penalti --</option>
                 </select>
               </div>
@@ -1394,8 +1428,11 @@
 
           <!-- TAB 2: KONFIRMASI 5 PEMAIN PERTAMA (STARTING 5) -->
           <div id="qsPanel_lineup" class="qs-tab-panel" style="display: none;">
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #10b981;">
-              💡 <strong>Aturan Futsal:</strong> Konfirmasi 5 pemain pertama yang bertanding di lapangan untuk masing-masing tim. Pemain lain otomatis berstatus cadangan. Hanya 5 pemain di lapangan yang dapat dicatat gol/assist.
+            <div
+              style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #10b981;">
+              💡 <strong>Aturan Futsal:</strong> Konfirmasi 5 pemain pertama yang bertanding di lapangan untuk
+              masing-masing tim. Pemain lain otomatis berstatus cadangan. Hanya 5 pemain di lapangan yang dapat dicatat
+              gol/assist.
             </div>
             <div id="starting5Container">
               <!-- Rendered dynamically by admin.renderStarting5UI() -->
@@ -1404,25 +1441,30 @@
 
           <!-- TAB 3: CATAT GOL & ASSIST (HANYA 5 PEMAIN DI LAPANGAN) -->
           <div id="qsPanel_goal" class="qs-tab-panel" style="display: none;">
-            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #f59e0b;">
-              ⚽ <strong>Khusus 5 Pemain Aktif:</strong> Hanya 5 pemain yang sedang bermain di lapangan yang dapat dipilih sebagai pencetak gol dan pemberi assist.
+            <div
+              style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #f59e0b;">
+              ⚽ <strong>Khusus 5 Pemain Aktif:</strong> Hanya 5 pemain yang sedang bermain di lapangan yang dapat
+              dipilih sebagai pencetak gol dan pemberi assist.
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div>
                 <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Tim Pencetak Gol:</label>
-                <select id="goalTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;" onchange="admin.onGoalTeamChange()">
+                <select id="goalTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
+                  onchange="admin.onGoalTeamChange()">
                   <option value="">-- Pilih Tim --</option>
                 </select>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
-                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol (5 di Lapangan):</label>
+                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol (5 di
+                    Lapangan):</label>
                   <select id="goalScorerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
                     <option value="">Pilih Pencetak Gol</option>
                   </select>
                 </div>
                 <div>
-                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pemberi Assist (Opsional):</label>
+                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pemberi Assist
+                    (Opsional):</label>
                   <select id="goalAssistSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
                     <option value="">(Tanpa Assist)</option>
                   </select>
@@ -1431,10 +1473,15 @@
               <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
                 <div style="display: flex; align-items: center; gap: 4px;">
                   <span style="font-size: 0.75rem; color: var(--text-muted);">Menit:</span>
-                  <input type="text" id="goalMinuteInput" class="form-input" style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;" placeholder="12'">
-                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.useLiveMinuteFor('goalMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;" title="Gunakan Menit Live">⏱️</button>
+                  <input type="text" id="goalMinuteInput" class="form-input"
+                    style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;"
+                    placeholder="12'">
+                  <button type="button" class="btn btn-outline btn-sm"
+                    onclick="admin.useLiveMinuteFor('goalMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;"
+                    title="Gunakan Menit Live">⏱️</button>
                 </div>
-                <button type="button" class="btn btn-primary btn-sm" onclick="admin.addGoalWithAssist()" style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 0.82rem; justify-content: center;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="admin.addGoalWithAssist()"
+                  style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 0.82rem; justify-content: center;">
                   ⚽ Simpan Gol &amp; Assist
                 </button>
               </div>
@@ -1443,18 +1490,23 @@
 
           <!-- TAB 4: CATAT KARTU (PEMAIN LAPANGAN, CADANGAN, OFISIAL) -->
           <div id="qsPanel_card" class="qs-tab-panel" style="display: none;">
-            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #fca5a5;">
-              🟨🟥 <strong>Disiplin Kartu Lengkap:</strong> Kartu dapat diberikan kepada 5 pemain utama, pemain cadangan, maupun ofisial tim (Pelatih, Asisten, Manajer, Tim Medis).
+            <div
+              style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #fca5a5;">
+              🟨🟥 <strong>Disiplin Kartu Lengkap:</strong> Kartu dapat diberikan kepada 5 pemain utama, pemain
+              cadangan, maupun ofisial tim (Pelatih, Asisten, Manajer, Tim Medis).
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Tim Penerima Kartu:</label>
-                <select id="cardTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;" onchange="admin.onCardTeamChange()">
+                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Tim Penerima
+                  Kartu:</label>
+                <select id="cardTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
+                  onchange="admin.onCardTeamChange()">
                   <option value="">-- Pilih Tim --</option>
                 </select>
               </div>
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Penerima Kartu (Pemain / Ofisial):</label>
+                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Penerima Kartu (Pemain /
+                  Ofisial):</label>
                 <select id="cardRecipientSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
                   <option value="">-- Pilih Orang yang Diberi Kartu --</option>
                 </select>
@@ -1462,13 +1514,19 @@
               <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
                 <div style="display: flex; align-items: center; gap: 4px;">
                   <span style="font-size: 0.75rem; color: var(--text-muted);">Menit:</span>
-                  <input type="text" id="cardMinuteInput" class="form-input" style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;" placeholder="12'">
-                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.useLiveMinuteFor('cardMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;" title="Gunakan Menit Live">⏱️</button>
+                  <input type="text" id="cardMinuteInput" class="form-input"
+                    style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;"
+                    placeholder="12'">
+                  <button type="button" class="btn btn-outline btn-sm"
+                    onclick="admin.useLiveMinuteFor('cardMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;"
+                    title="Gunakan Menit Live">⏱️</button>
                 </div>
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.addCardEventWithRole('yellow')" style="flex: 1; padding: 8px 8px; font-weight: 800; font-size: 0.8rem; color: #fbbf24; border-color: rgba(251,191,36,0.5); justify-content: center;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="admin.addCardEventWithRole('yellow')"
+                  style="flex: 1; padding: 8px 8px; font-weight: 800; font-size: 0.8rem; color: #fbbf24; border-color: rgba(251,191,36,0.5); justify-content: center;">
                   🟨 Kartu Kuning
                 </button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="admin.addCardEventWithRole('red')" style="flex: 1; padding: 8px 8px; font-weight: 800; font-size: 0.8rem; color: #ef4444; border-color: rgba(239,68,68,0.5); justify-content: center;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="admin.addCardEventWithRole('red')"
+                  style="flex: 1; padding: 8px 8px; font-weight: 800; font-size: 0.8rem; color: #ef4444; border-color: rgba(239,68,68,0.5); justify-content: center;">
                   🟥 Kartu Merah
                 </button>
               </div>
@@ -1477,25 +1535,31 @@
 
           <!-- TAB 5: PERGANTIAN PEMAIN (ROLLING SUBS) -->
           <div id="qsPanel_sub" class="qs-tab-panel" style="display: none;">
-            <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #60a5fa;">
-              🔄 <strong>Rolling Substitution Futsal:</strong> Pemain yang masuk langsung aktif di 5 pemain lapangan dan berhak mencetak gol/assist. Pemain yang keluar kembali ke bangku cadangan.
+            <div
+              style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #60a5fa;">
+              🔄 <strong>Rolling Substitution Futsal:</strong> Pemain yang masuk langsung aktif di 5 pemain lapangan dan
+              berhak mencetak gol/assist. Pemain yang keluar kembali ke bangku cadangan.
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Tim yang Berganti:</label>
-                <select id="subTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;" onchange="admin.onSubTeamChange()">
+                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Tim yang
+                  Berganti:</label>
+                <select id="subTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
+                  onchange="admin.onSubTeamChange()">
                   <option value="">-- Pilih Tim --</option>
                 </select>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
-                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px; color: #ef4444;">🔴 Pemain Keluar (Dari 5 di Lapangan):</label>
+                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px; color: #ef4444;">🔴 Pemain
+                    Keluar (Dari 5 di Lapangan):</label>
                   <select id="subPlayerOutSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
                     <option value="">Pilih Pemain Keluar</option>
                   </select>
                 </div>
                 <div>
-                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px; color: #10b981;">🟢 Pemain Masuk (Dari Cadangan):</label>
+                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px; color: #10b981;">🟢 Pemain
+                    Masuk (Dari Cadangan):</label>
                   <select id="subPlayerInSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
                     <option value="">Pilih Pemain Masuk</option>
                   </select>
@@ -1504,10 +1568,15 @@
               <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
                 <div style="display: flex; align-items: center; gap: 4px;">
                   <span style="font-size: 0.75rem; color: var(--text-muted);">Menit:</span>
-                  <input type="text" id="subMinuteInput" class="form-input" style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;" placeholder="14'">
-                  <button type="button" class="btn btn-outline btn-sm" onclick="admin.useLiveMinuteFor('subMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;" title="Gunakan Menit Live">⏱️</button>
+                  <input type="text" id="subMinuteInput" class="form-input"
+                    style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;"
+                    placeholder="14'">
+                  <button type="button" class="btn btn-outline btn-sm"
+                    onclick="admin.useLiveMinuteFor('subMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;"
+                    title="Gunakan Menit Live">⏱️</button>
                 </div>
-                <button type="button" class="btn btn-primary btn-sm" onclick="admin.executeSubstitution()" style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 0.82rem; justify-content: center; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                <button type="button" class="btn btn-primary btn-sm" onclick="admin.executeSubstitution()"
+                  style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 0.82rem; justify-content: center; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
                   🔄 Proses Pergantian Pemain
                 </button>
               </div>
@@ -1516,31 +1585,42 @@
 
           <!-- TAB 6: PENCATATAN & PENJUMLAHAN FOULS -->
           <div id="qsPanel_foul" class="qs-tab-panel" style="display: none;">
-            <div style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #fbbf24;">
-              ⚠️ <strong>Akumulasi Pelanggaran:</strong> Catat pelanggaran tim secara langsung. Pada futsal, pelanggaran ke-6 dalam 1 babak menghasilkan second penalty (titik 10 meter tanpa pagar betis).
+            <div
+              style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; font-size: 0.75rem; color: #fbbf24;">
+              ⚠️ <strong>Akumulasi Pelanggaran:</strong> Catat pelanggaran tim secara langsung. Pada futsal, pelanggaran
+              ke-6 dalam 1 babak menghasilkan second penalty (titik 10 meter tanpa pagar betis).
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
               <div>
-                <strong id="foulHomeTeamLabel" style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Home</strong>
+                <strong id="foulHomeTeamLabel"
+                  style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim
+                  Home</strong>
                 <div class="tap-counter-wrap" style="margin-top: 6px;">
                   <button type="button" class="btn-tap" onclick="admin.adjustFouls('home', -1)">-</button>
                   <div class="score-val-display" id="foulHomeDisplay" style="color: #fbbf24;">0</div>
                   <button type="button" class="btn-tap" onclick="admin.adjustFouls('home', 1)">+1</button>
                 </div>
-                <div id="foulHomeAlert" style="font-size: 0.7rem; color: #ef4444; font-weight: 700; margin-top: 4px; min-height: 16px;"></div>
+                <div id="foulHomeAlert"
+                  style="font-size: 0.7rem; color: #ef4444; font-weight: 700; margin-top: 4px; min-height: 16px;"></div>
               </div>
               <div>
-                <strong id="foulAwayTeamLabel" style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim Away</strong>
+                <strong id="foulAwayTeamLabel"
+                  style="font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tim
+                  Away</strong>
                 <div class="tap-counter-wrap" style="margin-top: 6px;">
                   <button type="button" class="btn-tap" onclick="admin.adjustFouls('away', -1)">-</button>
                   <div class="score-val-display" id="foulAwayDisplay" style="color: #fbbf24;">0</div>
                   <button type="button" class="btn-tap" onclick="admin.adjustFouls('away', 1)">+1</button>
                 </div>
-                <div id="foulAwayAlert" style="font-size: 0.7rem; color: #ef4444; font-weight: 700; margin-top: 4px; min-height: 16px;"></div>
+                <div id="foulAwayAlert"
+                  style="font-size: 0.7rem; color: #ef4444; font-weight: 700; margin-top: 4px; min-height: 16px;"></div>
               </div>
             </div>
-            <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">
-              Total Penjumlahan Pelanggaran: <span id="foulTotalDisplay" style="color: #ffffff; font-weight: 800;">0 - 0</span>
+            <div
+              style="text-align: center; margin-top: 10px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">
+              Total Penjumlahan Pelanggaran: <span id="foulTotalDisplay" style="color: #ffffff; font-weight: 800;">0 -
+                0</span>
             </div>
           </div>
 
@@ -1550,7 +1630,8 @@
               <label class="form-label" style="font-size: 0.75rem; margin: 0;">📜 Catatan Kejadian Laga</label>
               <span id="eventCountBadge" style="font-size: 0.68rem; color: var(--text-muted);">0 Kejadian</span>
             </div>
-            <div id="adminEventsList" style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto;">
+            <div id="adminEventsList"
+              style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto;">
               <!-- Rendered by admin.renderAdminEventsList -->
             </div>
           </div>
