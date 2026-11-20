@@ -2262,7 +2262,23 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     const dateInput = document.getElementById("editMatchDateInput");
-    if (dateInput && dateInput.value.trim()) match.date = dateInput.value.trim();
+    if (dateInput && dateInput.value.trim()) {
+      const dVal = dateInput.value.trim();
+      match.date = dVal;
+      let parsedDay = null;
+      if (/hari\s*1|matchday\s*1|\b22\b/i.test(dVal)) parsedDay = 1;
+      else if (/hari\s*2|matchday\s*2|\b23\b/i.test(dVal)) parsedDay = 2;
+      else if (/hari\s*3|matchday\s*3|\b24\b/i.test(dVal)) parsedDay = 3;
+      else if (/hari\s*4|matchday\s*4|\b25\b/i.test(dVal)) parsedDay = 4;
+      else if (/hari\s*5|matchday\s*5|\b26\b/i.test(dVal)) parsedDay = 5;
+      else if (/hari\s*6|matchday\s*6|\b27\b/i.test(dVal)) parsedDay = 6;
+      else if (/hari\s*7|matchday\s*7|\b28\b/i.test(dVal)) parsedDay = 7;
+      else if (/hari\s*8|matchday\s*8|\b29\b/i.test(dVal)) parsedDay = 8;
+      if (parsedDay) {
+        match.day = parsedDay;
+        match.matchday = parsedDay;
+      }
+    }
     const timeInput = document.getElementById("editMatchTimeInput");
     if (timeInput && timeInput.value.trim()) match.time = timeInput.value.trim();
     const pitchInput = document.getElementById("editMatchPitchInput");

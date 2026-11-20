@@ -104,13 +104,21 @@ class TournamentStore {
     const awayScore = isUpcoming ? null : (rAway !== null && rAway !== undefined ? parseInt(rAway, 10) : 0);
 
     const dateStr = m.date || "";
-    let day = m.day;
+    let day = (m.day !== undefined && m.day !== null) ? parseInt(m.day, 10) : ((m.matchday !== undefined && m.matchday !== null) ? parseInt(m.matchday, 10) : null);
     if (!day && dateStr) {
-      if (dateStr.includes("22")) day = 1;
-      else if (dateStr.includes("23")) day = 2;
-      else if (dateStr.includes("24")) day = 3;
-      else if (dateStr.includes("25")) day = 4;
-      else if (dateStr.includes("26")) day = 5;
+      if (/hari\s*1|matchday\s*1|\b22\b/i.test(dateStr)) day = 1;
+      else if (/hari\s*2|matchday\s*2|\b23\b/i.test(dateStr)) day = 2;
+      else if (/hari\s*3|matchday\s*3|\b24\b/i.test(dateStr)) day = 3;
+      else if (/hari\s*4|matchday\s*4|\b25\b/i.test(dateStr)) day = 4;
+      else if (/hari\s*5|matchday\s*5|\b26\b/i.test(dateStr)) day = 5;
+      else if (/hari\s*6|matchday\s*6|\b27\b/i.test(dateStr)) day = 6;
+      else if (/hari\s*7|matchday\s*7|\b28\b/i.test(dateStr)) day = 7;
+      else if (/hari\s*8|matchday\s*8|\b29\b/i.test(dateStr)) day = 8;
+    }
+    if (!day) {
+      if (stage === "qf") day = 6;
+      else if (stage === "sf") day = 7;
+      else if (stage === "3rd" || stage === "final") day = 8;
     }
 
     const pitch = m.pitch || m.venue || "Lapangan Utama";
@@ -139,6 +147,7 @@ class TournamentStore {
       stage,
       roundName,
       day: day || 1,
+      matchday: (m.matchday !== undefined && m.matchday !== null) ? parseInt(m.matchday, 10) : (day || 1),
       date: dateStr,
       time: m.time || "",
       pitch,
@@ -951,7 +960,7 @@ var app = window.app = Object.assign(window.app || {}, {
   currentStatsTab: "scorers", // Default sub-tab di statistik: scorers | assists | yellow | red
   currentCategory: _safeStorageGet(localStorage, "acc_active_category") || "SMP",
   filterDay: "all",
-  filterPitch: "all",
+  filterTeam: "all",
   filterGroup: "all",
   filterStatus: "all", // "all", "live", "upcoming", "finished"
   splashTimeout: null,
@@ -1599,6 +1608,8 @@ var app = window.app = Object.assign(window.app || {}, {
     if (cat !== "SMP" && cat !== "SD") cat = "SMP";
     this.currentCategory = cat;
     this.currentDrawCat = cat;
+    this.filterTeam = "all";
+    this._lastTeamFilterKey = null;
     localStorage.setItem("acc_active_category", cat);
     this.updateCategoryUI();
     document.querySelectorAll(".btn-draw-cat").forEach(btn => {
@@ -2846,10 +2857,10 @@ var app = window.app = Object.assign(window.app || {}, {
       });
     }
 
-    const pitchFilter = document.getElementById("filterPitch");
-    if (pitchFilter) {
-      pitchFilter.addEventListener("change", (e) => {
-        this.filterPitch = e.target.value;
+    const teamFilter = document.getElementById("filterTeam");
+    if (teamFilter) {
+      teamFilter.addEventListener("change", (e) => {
+        this.filterTeam = e.target.value;
         this.renderMatches();
       });
     }
@@ -4038,10 +4049,73 @@ var app = window.app = Object.assign(window.app || {}, {
     }
   },
 
+  populateTeamFilter() {
+    const teamSelect = document.getElementById("filterTeam");
+    if (!teamSelect) return;
+
+    const cat = this.currentCategory;
+    let teams = (this.store && this.store.data && this.store.data.teams) || [];
+    if (cat && cat !== "all") {
+      teams = teams.filter(t => (t.category || "SMP") === cat);
+    }
+    teams = [...teams].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+    const prevVal = this.filterTeam || "all";
+    const cacheKey = `${cat}_${teams.map(t => t.id).join(",")}`;
+    if (this._lastTeamFilterKey === cacheKey && teamSelect.options.length > 1) {
+      teamSelect.value = prevVal;
+      return;
+    }
+    this._lastTeamFilterKey = cacheKey;
+
+    let html = `<option value="all">⚽ Semua Klub / Tim (${teams.length})</option>`;
+    teams.forEach(t => {
+      const gBadge = t.group ? ` [Grup ${t.group}]` : "";
+      html += `<option value="${t.id}">${t.name}${gBadge}</option>`;
+    });
+
+    teamSelect.innerHTML = html;
+    if (teams.some(t => t.id === prevVal)) {
+      teamSelect.value = prevVal;
+    } else {
+      teamSelect.value = "all";
+      this.filterTeam = "all";
+    }
+  },
+
+  resetMatchFilters() {
+    this.filterDay = "all";
+    this.filterTeam = "all";
+    this.filterGroup = "all";
+    this.filterStatus = "all";
+    const dSelect = document.getElementById("filterDay");
+    if (dSelect) dSelect.value = "all";
+    const tSelect = document.getElementById("filterTeam");
+    if (tSelect) tSelect.value = "all";
+    const gSelect = document.getElementById("filterGroup");
+    if (gSelect) gSelect.value = "all";
+    document.querySelectorAll(".match-status-filter-pills .status-pill").forEach(p => {
+      p.classList.toggle("active", p.dataset.status === "all");
+    });
+    this.renderMatches();
+  },
+
+  filterMatchesByTeam(teamId) {
+    if (!teamId) return;
+    this.filterTeam = teamId;
+    this.switchTab("matches");
+    const tSelect = document.getElementById("filterTeam");
+    if (tSelect) tSelect.value = teamId;
+    this.renderMatches();
+  },
+
   // 1. RENDER MATCHES (UEFA & WORLD CUP STYLE - DUAL TEAM EVENTS SPLIT)
   renderMatches() {
     const container = document.getElementById("matchesList");
     if (!container) return;
+
+    // Pastikan daftar filter klub selalu sinkron dengan kategori aktif
+    this.populateTeamFilter();
 
     let matches = this.store.data.matches;
 
@@ -4050,23 +4124,46 @@ var app = window.app = Object.assign(window.app || {}, {
       matches = matches.filter(m => (m.category || "SMP") === this.currentCategory);
     }
 
-    // Filter by Day
+    // Filter by Matchday (Matchday 1 - 8)
     if (this.filterDay !== "all") {
-      matches = matches.filter(m => String(m.day || m.matchday) === this.filterDay);
-    }
-    // Filter by Pitch
-    if (this.filterPitch !== "all") {
+      const selectedMd = String(this.filterDay);
       matches = matches.filter(m => {
-        if (!m.pitch) return false;
-        if (this.filterPitch === "1" || this.filterPitch === "lapangan_1") {
-          return m.pitch.includes("1") || m.pitch.includes("Utama") || m.pitch.includes("Vinyl");
-        }
-        if (this.filterPitch === "2" || this.filterPitch === "lapangan_2") {
-          return m.pitch.includes("2");
-        }
-        return m.pitch.toLowerCase().includes(this.filterPitch.toLowerCase());
+        const mDay = String(m.matchday || m.day || "");
+        if (mDay === selectedMd) return true;
+
+        const dStr = (m.date || "").toLowerCase();
+        if (dStr.includes(`matchday ${selectedMd}`) || dStr.includes(`hari ${selectedMd}`) || dStr.includes(`hari ke-${selectedMd}`) || dStr.includes(`md ${selectedMd}`) || dStr.includes(`md${selectedMd}`)) return true;
+
+        const dayDateMap = { "1": "22", "2": "23", "3": "24", "4": "25", "5": "26", "6": "27", "7": "28", "8": "29" };
+        if (dayDateMap[selectedMd] && dStr.includes(dayDateMap[selectedMd])) return true;
+
+        if (selectedMd === "6" && m.stage === "qf") return true;
+        if (selectedMd === "7" && m.stage === "sf") return true;
+        if (selectedMd === "8" && (m.stage === "final" || m.stage === "3rd")) return true;
+
+        return false;
       });
     }
+
+    // Filter by Club / Tim (Klub A, Klub B, dst)
+    if (this.filterTeam && this.filterTeam !== "all") {
+      const selectedTeamId = this.filterTeam;
+      const teamObj = this.getTeam(selectedTeamId);
+      const teamName = teamObj ? (teamObj.name || "").toLowerCase().trim() : "";
+      const teamShort = teamObj && teamObj.shortName ? teamObj.shortName.toLowerCase().trim() : "";
+
+      matches = matches.filter(m => {
+        if (m.homeId === selectedTeamId || m.awayId === selectedTeamId) return true;
+        if (teamName) {
+          const hName = (m.homeName || m.homePlaceholder || "").toLowerCase().trim();
+          const aName = (m.awayName || m.awayPlaceholder || "").toLowerCase().trim();
+          if (hName === teamName || aName === teamName) return true;
+          if (teamShort && (hName === teamShort || aName === teamShort)) return true;
+        }
+        return false;
+      });
+    }
+
     // Filter by Group / Stage
     if (this.filterGroup === "group_stage") {
       matches = matches.filter(m => m.stage === "group" || (!m.stage && !/(QF|SF|3RD|FINAL)/i.test(m.id || "")));
@@ -4127,16 +4224,27 @@ var app = window.app = Object.assign(window.app || {}, {
     });
 
     if (matches.length === 0) {
+      const hasActiveFilters = this.filterDay !== "all" || (this.filterTeam && this.filterTeam !== "all") || this.filterGroup !== "all" || this.filterStatus !== "all";
       container.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed rgba(255,255,255,0.12);">
-          <div style="font-size: 2.4rem; margin-bottom: 12px;">📅</div>
-          <h3 style="color: #fff; margin-bottom: 6px; font-size: 1.15rem; font-weight: 800;">Belum Ada Jadwal Pertandingan</h3>
-          <p style="font-size: 0.88rem; max-width: 480px; margin: 0 auto 16px auto; line-height: 1.5; color: #94a3b8;">Jadwal pertandingan turnamen kategori ${this.currentCategory === 'all' ? 'semua' : this.currentCategory} belum ditambahkan oleh panitia pelaksana.</p>
-          ${this.isAdmin() ? `
+          <div style="font-size: 2.4rem; margin-bottom: 12px;">${hasActiveFilters ? "🔍" : "📅"}</div>
+          <h3 style="color: #fff; margin-bottom: 6px; font-size: 1.15rem; font-weight: 800;">
+            ${hasActiveFilters ? "Tidak Ada Pertandingan yang Cocok" : "Belum Ada Jadwal Pertandingan"}
+          </h3>
+          <p style="font-size: 0.88rem; max-width: 480px; margin: 0 auto 16px auto; line-height: 1.5; color: #94a3b8;">
+            ${hasActiveFilters
+              ? "Tidak ditemukan pertandingan yang sesuai dengan filter Matchday, Klub, atau Babak yang dipilih."
+              : `Jadwal pertandingan turnamen kategori ${this.currentCategory === 'all' ? 'semua' : this.currentCategory} belum ditambahkan oleh panitia pelaksana.`}
+          </p>
+          ${hasActiveFilters ? `
+            <button type="button" class="btn btn-outline btn-sm" onclick="app.resetMatchFilters()" style="font-weight: 700; color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); padding: 8px 18px; margin-top: 6px;">
+              🔄 Reset Semua Filter
+            </button>
+          ` : (this.isAdmin() ? `
             <button type="button" class="btn btn-primary btn-sm" onclick="admin.openAddNewMatchModal()" style="font-weight: 700; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #000; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);">
               ➕ Tambah Pertandingan Pertama
             </button>
-          ` : ''}
+          ` : '')}
         </div>
       `;
       return;
@@ -5939,6 +6047,8 @@ var app = window.app = Object.assign(window.app || {}, {
     if (cat !== "SMP" && cat !== "SD") cat = "SMP";
     this.currentCategory = cat;
     this.currentDrawCat = cat;
+    this.filterTeam = "all";
+    this._lastTeamFilterKey = null;
     localStorage.setItem("acc_active_category", cat);
     this.updateCategoryUI();
     document.querySelectorAll(".btn-draw-cat").forEach(btn => {

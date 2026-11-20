@@ -193,8 +193,8 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.65">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.65">
+  <link rel="stylesheet" href="css/styles.css?v=8.66">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.66">
 </head>
 
 <body class="snap-scroll-active">
@@ -623,19 +623,22 @@
           </button>
         </div>
         <div class="filter-group">
-          <select id="filterDay" class="filter-select" aria-label="Pilih Hari Pertandingan">
-            <option value="all">Semua Hari / Matchday</option>
-            <option value="1">Hari Ke-1 (Matchday 1)</option>
-            <option value="2">Hari Ke-2 (Matchday 2)</option>
-            <option value="3">Hari Ke-3 (Matchday 3)</option>
+          <select id="filterDay" class="filter-select" aria-label="Pilih Matchday Pertandingan">
+            <option value="all">📅 Semua Matchday (1 - 8)</option>
+            <option value="1">Matchday 1</option>
+            <option value="2">Matchday 2</option>
+            <option value="3">Matchday 3</option>
+            <option value="4">Matchday 4</option>
+            <option value="5">Matchday 5</option>
+            <option value="6">Matchday 6</option>
+            <option value="7">Matchday 7</option>
+            <option value="8">Matchday 8</option>
           </select>
-          <select id="filterPitch" class="filter-select" aria-label="Pilih Lapangan Pertandingan">
-            <option value="all">🏟️ Semua Lapangan</option>
-            <option value="1">🏟️ Lapangan 1 (Utama Vinyl)</option>
-            <option value="2">🏟️ Lapangan 2</option>
+          <select id="filterTeam" class="filter-select" aria-label="Pilih Klub / Tim">
+            <option value="all">⚽ Semua Klub / Tim</option>
           </select>
           <select id="filterGroup" class="filter-select" aria-label="Pilih Grup atau Babak">
-            <option value="all">Semua Laga</option>
+            <option value="all">Semua Babak &amp; Grup</option>
             <option value="group_stage">⚽ Semua Fase Grup (A - D)</option>
             <option value="knockout">🏆 Babak Gugur (8 Besar - Final)</option>
             <option value="A">Grup A</option>
@@ -1696,14 +1699,14 @@
                 <input type="text" id="editMatchDateInput" class="form-input" list="matchDateSuggestions"
                   placeholder="contoh: 22 Nov 2026" required>
                 <datalist id="matchDateSuggestions">
-                  <option value="22 Nov 2026">22 Nov 2026 (Hari 1)</option>
-                  <option value="23 Nov 2026">23 Nov 2026 (Hari 2)</option>
-                  <option value="24 Nov 2026">24 Nov 2026 (Hari 3)</option>
-                  <option value="25 Nov 2026">25 Nov 2026 (Hari 4)</option>
-                  <option value="26 Nov 2026">26 Nov 2026 (Hari 5)</option>
-                  <option value="27 Nov 2026">27 Nov 2026 (Hari 6 - Quarter-Final)</option>
-                  <option value="28 Nov 2026">28 Nov 2026 (Hari 7 - Semifinal)</option>
-                  <option value="29 Nov 2026">29 Nov 2026 (Hari 8 - Grand Final)</option>
+                  <option value="22 Nov 2026">22 Nov 2026 (Matchday 1)</option>
+                  <option value="23 Nov 2026">23 Nov 2026 (Matchday 2)</option>
+                  <option value="24 Nov 2026">24 Nov 2026 (Matchday 3)</option>
+                  <option value="25 Nov 2026">25 Nov 2026 (Matchday 4)</option>
+                  <option value="26 Nov 2026">26 Nov 2026 (Matchday 5)</option>
+                  <option value="27 Nov 2026">27 Nov 2026 (Matchday 6 - Quarter-Final)</option>
+                  <option value="28 Nov 2026">28 Nov 2026 (Matchday 7 - Semifinal)</option>
+                  <option value="29 Nov 2026">29 Nov 2026 (Matchday 8 - Grand Final)</option>
                   <option value="Menunggu Selesai Fase Grup">Menunggu Selesai Fase Grup</option>
                   <option value="Jadwal Menyesuaikan (TBD)">Jadwal Menyesuaikan (TBD)</option>
                 </datalist>
@@ -3161,11 +3164,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=20261121_v7"></script>
-  <script defer src="js/supabase-client.js?v=20261121_v7"></script>
-  <script defer src="js/data.js?v=20261121_v7"></script>
-  <script defer src="js/admin.js?v=20261121_v7"></script>
-  <script defer src="js/app.js?v=20261121_v7"></script>
+  <script defer src="js/security.js?v=20261121_v8"></script>
+  <script defer src="js/supabase-client.js?v=20261121_v8"></script>
+  <script defer src="js/data.js?v=20261121_v8"></script>
+  <script defer src="js/admin.js?v=20261121_v8"></script>
+  <script defer src="js/app.js?v=20261121_v8"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
