@@ -412,7 +412,23 @@
         console.error('[Supabase] syncMatch error:', e);
         return false;
       }
-    }
+    },
+
+    // Delete Match from Supabase
+    async deleteMatch(matchId) {
+      if (!this.client || !this.isConfigured || !matchId) return false;
+      try {
+        const { error } = await this.client.from('matches').delete().eq('id', matchId);
+        if (error) {
+          console.error('[Supabase] deleteMatch error:', error);
+          return false;
+        }
+        return true;
+      } catch (e) {
+        console.error('[Supabase] deleteMatch error:', e);
+        return false;
+      }
+    },
 
     // Push Config Data
     async syncConfig(config) {

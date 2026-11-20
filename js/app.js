@@ -74,7 +74,7 @@ class TournamentStore {
 
     const homeId = m.homeId !== undefined ? m.homeId : (m.home_id !== undefined && m.home_id !== null ? m.home_id : "");
     const awayId = m.awayId !== undefined ? m.awayId : (m.away_id !== undefined && m.away_id !== null ? m.away_id : "");
-    const stage = m.stage || (/(QF|SF|3RD|FINAL)/i.test(id) ? "knockout" : "group");
+    const stage = (m.stage === "group" || m.stage === "knockout") ? m.stage : (/(QF|SF|3RD|FINAL)/i.test(id) ? "knockout" : "group");
     const group = m.group !== undefined ? m.group : (m.group_letter || "");
     const roundName = m.roundName !== undefined ? m.roundName : (m.round_name || "");
     const status = m.status || "upcoming";
@@ -459,7 +459,7 @@ class TournamentStore {
     const stD_SD = this.calculateGroupStandings("D", "SD");
 
     const syncQFMatch = (m, cat, homeGroup, isHomeWinner, awayGroup, isAwayWinner, homeStandings, awayStandings) => {
-      if (!m) return;
+      if (!m || m.stage === "group") return;
       m.category = cat;
 
       const homeDone = isGroupCompleted(homeGroup, cat);
@@ -560,7 +560,7 @@ class TournamentStore {
     };
 
     const syncDownstream = (m, mHomeSource, isHomeWinner, mAwaySource, isAwayWinner, hPlaceholder, aPlaceholder) => {
-      if (!m) return;
+      if (!m || m.stage === "group") return;
       m.homePlaceholder = hPlaceholder;
       m.awayPlaceholder = aPlaceholder;
 
@@ -2197,6 +2197,8 @@ var app = window.app = Object.assign(window.app || {}, {
 
     const btnHeaderAturLawan = document.getElementById("btnHeaderAturLawan");
     if (btnHeaderAturLawan) btnHeaderAturLawan.style.display = isPanitia ? "inline-flex" : "none";
+    const btnHeaderTambahLaga = document.getElementById("btnHeaderTambahLaga");
+    if (btnHeaderTambahLaga) btnHeaderTambahLaga.style.display = isPanitia ? "inline-flex" : "none";
 
     if (this.currentTab === "draw" && typeof this.renderDrawView === "function") {
       this.renderDrawView();
@@ -3852,15 +3854,15 @@ var app = window.app = Object.assign(window.app || {}, {
           <!-- FOOTER AKSI -->
           <div class="fixture-footer-bar">
             <span class="fixture-field-note" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
-              ${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : ''}
+              ${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : (m.group ? `Grup ${m.group}` : '')}
             </span>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 10px;">
                 Detail
               </button>
               ${this.isAdmin() ? `
-                <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="${isKnockout ? 'Atur Waktu & Jadwal Babak Ini' : 'Atur Tim Lawan & Jadwal'}" style="font-size: 0.72rem; padding: 4px 10px; ${isKnockout ? 'background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #fbbf24;' : ''}">
-                  ${isKnockout ? '📅 Atur Jadwal' : '⚙️ Atur Lawan'}
+                <button class="btn btn-admin btn-sm" onclick="admin.openMatchEditor('${m.id}')" title="Atur Pertandingan & Jadwal" style="font-size: 0.72rem; padding: 4px 10px;">
+                  ⚙️ Atur Laga
                 </button>
                 <button class="btn btn-primary btn-sm" onclick="admin.openQuickScore('${m.id}')" title="Input Skor & Kartu Pertandingan" style="font-size: 0.72rem; padding: 4px 10px;">
                   Skor
