@@ -1511,7 +1511,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (mainSub) mainSub.textContent = isSMP ? "U-15" : "U-12";
     if (altLabel) altLabel.textContent = isSMP ? "SD" : "SMP";
     if (altSub) altSub.textContent = isSMP ? "U-12" : "U-15";
-
+    if (altPillText) altPillText.textContent = isSMP ? "Beralih ke Kelas SD (U-12)" : "Beralih ke Kelas SMP (U-15)";
   },
 
   initSupabaseSync() {
