@@ -1393,7 +1393,7 @@ var app = window.app = Object.assign(window.app || {}, {
         <div class="hero-live-score-card" onclick="app.showMatchDetail('${lm.id}')" role="button" tabindex="0" title="Klik untuk lihat detail pertandingan &amp; statistik laga">
           <div class="hero-live-score-badge">
             <span class="pulse-dot"></span>
-            <span>SEDANG BERLANGSUNG${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
+            <span>LIVE${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
             <span class="hero-live-cat-pill">${catBadge} [${stageName}]</span>
           </div>
           <div class="hero-live-score-matchup">
