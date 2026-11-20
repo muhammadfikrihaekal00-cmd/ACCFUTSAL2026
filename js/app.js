@@ -4564,14 +4564,7 @@ var app = window.app = Object.assign(window.app || {}, {
           </span>
         </div>
 
-        <div class="bracket-cat-switcher">
-          <button type="button" class="bracket-switch-btn ${isSMP ? 'active' : ''}" onclick="app.setCategory('SMP')">
-            🏆 SMP (U-15)
-          </button>
-          <button type="button" class="bracket-switch-btn ${!isSMP ? 'active' : ''}" onclick="app.setCategory('SD')">
-            🎒 SD (U-12)
-          </button>
-        </div>
+        
       </div>
 
       <div class="bracket-mobile-hint">
