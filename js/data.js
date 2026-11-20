@@ -10,7 +10,7 @@ const DEFAULT_DATA = {
     venue: "GOR Futsal Ma'had Tahfizhul Qur'an Al Fayyadh",
     pitch1Name: "Lapangan Utama",
     pitch2Name: "Lapangan 2",
-    dates: "22 - 28 November 2026",
+    dates: "22 - 29 November 2026",
     adminPinHash: "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348",
     runningAnnouncement: "",
     contactCommittee: "0812-9876-5432 (Kak Harun - Sie. Pertandingan)",
@@ -24,7 +24,7 @@ const DEFAULT_DATA = {
 - Masa Pendaftaran: 19 Oktober - 17 November 2026
 - Jadwal Verifikasi Berkas: Sabtu & Ahad, 14 - 15 November 2026
 - Technical Meeting (TM): 19 November 2026, Pukul 16.00 WITA (Offline di Ma'had Al-Fayyadh)
-- Waktu Pelaksanaan Turnamen: 22 - 28 November 2026
+- Waktu Pelaksanaan Turnamen: 22 - 29 November 2026
 
 ### B. TIMELINE & TANGGAL PENTING
 - 19 Oktober - 17 November 2026: Masa pendaftaran dan penerimaan berkas peserta.
@@ -32,7 +32,7 @@ const DEFAULT_DATA = {
 - 19 November 2026 (16.00 WITA): Technical Meeting (TM) & drawing grup resmi secara offline.
 - 21 November 2026: Acara Malam Pembukaan (Opening Ceremony).
 - 22 - 26 November 2026: Fase Grup dan Babak 8 Besar (Perempat Final).
-- 27 - 28 November 2026: Babak Semifinal, Grand Final, dan Upacara Penutupan.
+- 27 - 29 November 2026: Babak Semifinal, Grand Final, dan Upacara Penutupan.
 
 ### C. KETENTUAN PESERTA & VERIFIKASI
 - Status Pemain: Peserta wajib berstatus siswa putra/santri aktif dari sekolah/pesantren yang sama. Dilarang keras menggunakan pemain cabutan atau alumni.
