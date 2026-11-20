@@ -1229,13 +1229,64 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (dashModal) dashModal.classList.remove("active");
 
     const matches = (app.store && app.store.data && app.store.data.matches) || [];
-    if (!matches.length) {
-      alert("Belum ada data pertandingan!");
+    if (!matches.length && !matchId) {
+      this.openAddNewMatchModal();
       return;
     }
 
+    // Jika matchId adalah knockout match yang belum ada di daftar pertandingan, inisialisasi slotnya
+    if (matchId && !matches.some(m => m.id === matchId) && /^(QF\d|SF\d|3RD|FINAL)_(SMP|SD)$/i.test(matchId)) {
+      const isSD = /_SD$/i.test(matchId);
+      const cat = isSD ? "SD" : "SMP";
+      let stage = "knockout";
+      let roundName = matchId;
+      if (matchId.startsWith("QF")) {
+        stage = "qf";
+        roundName = `Perempat Final ${matchId.slice(2, 3)} (${cat})`;
+      } else if (matchId.startsWith("SF")) {
+        stage = "sf";
+        roundName = `Semifinal ${matchId.slice(2, 3)} (${cat})`;
+      } else if (matchId.startsWith("3RD")) {
+        stage = "3rd";
+        roundName = `Perebutan Juara 3 (${cat})`;
+      } else if (matchId.startsWith("FINAL")) {
+        stage = "final";
+        roundName = `Grand Final (${cat})`;
+      }
+
+      const newKnockout = {
+        id: matchId,
+        category: cat,
+        stage: stage,
+        group: null,
+        roundName: roundName,
+        homeId: "",
+        awayId: "",
+        homePlaceholder: "",
+        awayPlaceholder: "",
+        date: "25 Nov 2026",
+        time: isSD ? "08:00 - 08:35 WITA" : "08:00 - 08:45 WITA",
+        pitch: "Lapangan 1 (Utama Vinyl)",
+        status: "upcoming",
+        homeScore: null,
+        awayScore: null,
+        homeScoreLive: null,
+        awayScoreLive: null,
+        liveMinute: 1,
+        scorers: [],
+        cards: [],
+        isManualTeam: true
+      };
+      matches.push(newKnockout);
+      app.store.saveData();
+    }
+
     if (!matchId || matchId === "first") {
-      matchId = matches[0].id;
+      matchId = matches[0] ? matches[0].id : null;
+    }
+    if (!matchId) {
+      this.openAddNewMatchModal();
+      return;
     }
 
     this.activeMatchId = matchId;
@@ -1265,21 +1316,25 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
     const cat = (app.currentCategory === "all" || !app.currentCategory) ? "SMP" : app.currentCategory;
+    const prefix = cat === "SD" ? "M_SD_" : "M_SMP_";
     const matches = (app.store && app.store.data && app.store.data.matches) || [];
 
     let maxNum = 0;
     matches.forEach(m => {
-      const matchNum = parseInt(String(m.id || "").replace(/\D/g, ""), 10);
-      if (matchNum && matchNum > maxNum) maxNum = matchNum;
+      if (m.id && m.id.startsWith(prefix)) {
+        const num = parseInt(m.id.replace(prefix, ""), 10);
+        if (num && num > maxNum) maxNum = num;
+      }
     });
-    const newId = `M${maxNum + 1}`;
+    const nextSeq = String(maxNum + 1).padStart(2, "0");
+    const newId = `${prefix}${nextSeq}`;
 
     const newMatch = {
       id: newId,
       category: cat,
       stage: "group",
       group: "A",
-      roundName: "Grup A",
+      roundName: `Grup A (${cat})`,
       homeId: "",
       awayId: "",
       homePlaceholder: "",
@@ -1515,10 +1570,13 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
 
+    const cat = match.category || ((app.currentCategory === "all" || !app.currentCategory) ? "SMP" : app.currentCategory);
+    match.category = cat;
+
     if (selectedStage === "group") {
       match.stage = "group";
       match.group = groupSelect ? groupSelect.value : (match.group || "A");
-      match.roundName = `Grup ${match.group}`;
+      match.roundName = `Grup ${match.group} (${cat})`;
       match.homePlaceholder = "";
       match.awayPlaceholder = "";
       match.homeId = homeId || null;
@@ -1528,19 +1586,19 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       match.stage = "knockout";
       match.group = null;
       if (selectedStage === "qf") {
-        match.roundName = "Perempat Final";
+        match.roundName = `Perempat Final (${cat})`;
         if (!match.homePlaceholder) match.homePlaceholder = "Juara Grup";
         if (!match.awayPlaceholder) match.awayPlaceholder = "Runner-up Grup";
       } else if (selectedStage === "sf") {
-        match.roundName = "Semifinal";
+        match.roundName = `Semifinal (${cat})`;
         if (!match.homePlaceholder) match.homePlaceholder = "Pemenang QF";
         if (!match.awayPlaceholder) match.awayPlaceholder = "Pemenang QF";
       } else if (selectedStage === "3rd") {
-        match.roundName = "Perebutan Juara 3";
+        match.roundName = `Perebutan Juara 3 (${cat})`;
         if (!match.homePlaceholder) match.homePlaceholder = "Kalah SF 1";
         if (!match.awayPlaceholder) match.awayPlaceholder = "Kalah SF 2";
       } else if (selectedStage === "final") {
-        match.roundName = "Grand Final";
+        match.roundName = `Grand Final (${cat})`;
         if (!match.homePlaceholder) match.homePlaceholder = "Pemenang SF 1";
         if (!match.awayPlaceholder) match.awayPlaceholder = "Pemenang SF 2";
       }

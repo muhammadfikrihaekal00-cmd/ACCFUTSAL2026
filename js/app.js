@@ -82,9 +82,9 @@ class TournamentStore {
     // Infer category secara dinamis dari properti match, ID/nama babak, atau kategori tim
     let category = m.category || "";
     if (!category) {
-      if (/_SD$/i.test(id) || /\bSD\b/i.test(roundName)) {
+      if (/_SD\b/i.test(id) || /_SD_/i.test(id) || /\bSD\b/i.test(roundName) || /_SD$/i.test(id)) {
         category = "SD";
-      } else if (/_SMP$/i.test(id) || /\bSMP\b/i.test(roundName)) {
+      } else if (/_SMP\b/i.test(id) || /_SMP_/i.test(id) || /\bSMP\b/i.test(roundName) || /_SMP$/i.test(id)) {
         category = "SMP";
       } else {
         const hTeam = homeId ? teams.find(t => t.id === homeId) : null;
@@ -92,13 +92,7 @@ class TournamentStore {
         if (hTeam && hTeam.category) category = hTeam.category;
         else if (aTeam && aTeam.category) category = aTeam.category;
         else {
-          const mNumMatch = id.match(/^M(\d+)$/i);
-          if (mNumMatch) {
-            const mNum = parseInt(mNumMatch[1], 10);
-            category = ((mNum >= 9 && mNum <= 16) || mNum >= 33) ? "SD" : "SMP";
-          } else {
-            category = "SMP";
-          }
+          category = (window.app && window.app.currentCategory && window.app.currentCategory !== "all") ? window.app.currentCategory : "SMP";
         }
       }
     }
@@ -193,6 +187,12 @@ class TournamentStore {
     }
     if (!Array.isArray(data.teams)) data.teams = [];
     if (!Array.isArray(data.matches)) data.matches = [];
+
+    // Bersihkan cache jadwal dummy lama (M01, T04, dll) agar jadwal pertandingan dimulai dari keadaan bersih
+    if (!_safeStorageGet(localStorage, "acc_matches_cleaned_v854") || data.matches.some(m => m.id === "M01" && (m.homeId === "T04" || !m.homeId))) {
+      data.matches = [];
+      _safeStorageSet(localStorage, "acc_matches_cleaned_v854", "true");
+    }
     if (!Array.isArray(data.moments)) data.moments = [];
     if (!data.sponsors || typeof data.sponsors !== "object") {
       data.sponsors = { platinum: [], gold: [], media: [] };
@@ -472,7 +472,7 @@ class TournamentStore {
       m.awayPlaceholder = `${isAwayWinner ? 'Juara' : 'Runner-up'} Grup ${awayGroup}`;
 
       // Respect manual team assignment if panitia explicitly set it
-      if (m.isManualTeam && m.homeId && m.awayId) {
+      if (m.isManualTeam) {
         return;
       }
 
@@ -564,7 +564,7 @@ class TournamentStore {
       m.homePlaceholder = hPlaceholder;
       m.awayPlaceholder = aPlaceholder;
 
-      if (m.isManualTeam && m.homeId && m.awayId) {
+      if (m.isManualTeam) {
         return;
       }
 
@@ -1717,10 +1717,10 @@ var app = window.app = Object.assign(window.app || {}, {
       }).filter(Boolean);
 
       const matchOrderWeight = (id) => {
-        const mNum = String(id).match(/^M(\d+)$/i);
+        const mNum = String(id).match(/^M(?:_(?:SMP|SD)_)?(\d+)$/i);
         if (mNum) return parseInt(mNum[1], 10);
-        if (/^QF/i.test(id)) return 100 + (parseInt(id.replace(/\D/g, ""), 10) || 0);
-        if (/^SF/i.test(id)) return 200 + (parseInt(id.replace(/\D/g, ""), 10) || 0);
+        if (/^QF/i.test(id)) return 100 + (parseInt(String(id).replace(/\D/g, ""), 10) || 0);
+        if (/^SF/i.test(id)) return 200 + (parseInt(String(id).replace(/\D/g, ""), 10) || 0);
         if (/^3RD/i.test(id)) return 300;
         if (/^FINAL/i.test(id)) return 400;
         return 500;
@@ -1796,6 +1796,17 @@ var app = window.app = Object.assign(window.app || {}, {
   handleRemoteSync(table, payload) {
     if (!payload) return;
     if (table === 'matches') {
+      if (payload._deleted && payload.id) {
+        this.store.data.matches = (this.store.data.matches || []).filter(m => m.id !== payload.id);
+        this.store.syncPlayerStatsFromMatches();
+        this.store.saveData();
+        this.store.syncKnockoutFromStandings();
+        this.renderCurrentView();
+        this.renderMatches();
+        this.renderStandings();
+        this.renderBracket();
+        return;
+      }
       const idx = this.store.data.matches.findIndex(m => m.id === payload.id);
       if (idx !== -1) {
         const mapped = {};
@@ -1909,6 +1920,34 @@ var app = window.app = Object.assign(window.app || {}, {
         this.updateFloatingLiveNotice();
         this.renderLiveStreamHero();
         this.refreshActiveMatchDetail();
+      } else if (payload.id && !payload._deleted) {
+        const rawM = {
+          id: payload.id,
+          category: payload.category || "",
+          stage: payload.stage || "group",
+          group: payload.group_letter || null,
+          roundName: payload.round_name || "",
+          homeId: payload.home_id || "",
+          awayId: payload.away_id || "",
+          homePlaceholder: payload.home_placeholder || "",
+          awayPlaceholder: payload.away_placeholder || "",
+          date: payload.date || "",
+          time: payload.time || "",
+          pitch: payload.pitch || "Lapangan 1 (Utama Vinyl)",
+          status: payload.status || "upcoming",
+          homeScore: payload.home_score !== undefined ? payload.home_score : null,
+          awayScore: payload.away_score !== undefined ? payload.away_score : null,
+          scorers: payload.scorers || [],
+          cards: payload.cards || [],
+          isManualTeam: Boolean(payload.is_manual_team)
+        };
+        const normalized = this.store.normalizeMatch(rawM);
+        this.store.data.matches.push(normalized);
+        this.store.saveData();
+        this.renderCurrentView();
+        this.renderMatches();
+        this.renderStandings();
+        this.renderBracket();
       }
     } else if (table === 'teams') {
       if (payload._deleted && payload.id) {
@@ -3629,10 +3668,42 @@ var app = window.app = Object.assign(window.app || {}, {
       matches = matches.filter(m => m.status === "finished");
     }
 
+    // Urutkan pertandingan secara logis:
+    // 1. Live match di posisi teratas
+    // 2. Berdasarkan tanggal
+    // 3. Berdasarkan jam kick-off
+    matches.sort((a, b) => {
+      if (a.status === "live" && b.status !== "live") return -1;
+      if (b.status === "live" && a.status !== "live") return 1;
+
+      const dA = String(a.date || "");
+      const dB = String(b.date || "");
+      if (dA && dB && dA !== dB) {
+        const numA = parseInt(dA.replace(/\D/g, ""), 10) || 0;
+        const numB = parseInt(dB.replace(/\D/g, ""), 10) || 0;
+        if (numA !== numB) return numA - numB;
+      }
+
+      const tA = (a.time || "").replace(/\D/g, "").substring(0, 4);
+      const tB = (b.time || "").replace(/\D/g, "").substring(0, 4);
+      const timeNumA = parseInt(tA, 10) || 9999;
+      const timeNumB = parseInt(tB, 10) || 9999;
+      if (timeNumA !== timeNumB) return timeNumA - timeNumB;
+
+      return (a.id || "").localeCompare(b.id || "");
+    });
+
     if (matches.length === 0) {
       container.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg);">
-          <p>Tidak ada jadwal pertandingan pada kategori atau filter status yang dipilih.</p>
+        <div style="grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed rgba(255,255,255,0.12);">
+          <div style="font-size: 2.4rem; margin-bottom: 12px;">📅</div>
+          <h3 style="color: #fff; margin-bottom: 6px; font-size: 1.15rem; font-weight: 800;">Belum Ada Jadwal Pertandingan</h3>
+          <p style="font-size: 0.88rem; max-width: 480px; margin: 0 auto 16px auto; line-height: 1.5; color: #94a3b8;">Jadwal pertandingan turnamen kategori ${this.currentCategory === 'all' ? 'semua' : this.currentCategory} belum ditambahkan oleh panitia pelaksana.</p>
+          ${this.isAdmin() ? `
+            <button type="button" class="btn btn-primary btn-sm" onclick="admin.openAddNewMatchModal()" style="font-weight: 700; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #000; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);">
+              ➕ Tambah Pertandingan Pertama
+            </button>
+          ` : ''}
         </div>
       `;
       return;
@@ -3979,21 +4050,47 @@ var app = window.app = Object.assign(window.app || {}, {
     const activeCat = this.currentCategory;
     const isSMP = activeCat === "SMP";
 
-    // Sort knockout matches properly
+    const getOrBuildKnockoutMatch = (id, roundName, hPlaceholder, aPlaceholder, defaultTime) => {
+      let m = (this.store.data.matches || []).find(match => (match.category === activeCat || match.id.endsWith("_" + activeCat)) && (match.id === id || match.id === id.replace("_" + activeCat, "")));
+      if (!m) {
+        m = {
+          id: id,
+          category: activeCat,
+          stage: "knockout",
+          group: null,
+          roundName: roundName,
+          homeId: "",
+          awayId: "",
+          homePlaceholder: hPlaceholder,
+          awayPlaceholder: aPlaceholder,
+          date: isSMP ? "25 Nov 2026" : "25 Nov 2026",
+          time: defaultTime || (activeCat === "SD" ? "08:00 - 08:35 WITA" : "08:00 - 08:45 WITA"),
+          pitch: "Lapangan 1 (Utama Vinyl)",
+          status: "upcoming",
+          homeScore: null,
+          awayScore: null,
+          isManualTeam: false,
+          isPlaceholderShell: true
+        };
+      }
+      return m;
+    };
+
+    // Struktur bagan 8 besar resmi per kategori (UEFA / FIFA Tournament Tree)
     const qfMatches = [
-      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF1_" + activeCat || m.id === "QF1")),
-      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF2_" + activeCat || m.id === "QF2")),
-      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF3_" + activeCat || m.id === "QF3")),
-      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "QF4_" + activeCat || m.id === "QF4")),
+      getOrBuildKnockoutMatch(`QF1_${activeCat}`, `Perempat Final 1`, `Juara Grup A`, `Runner-up Grup B`, isSMP ? "08:00 - 08:45 WITA" : "08:00 - 08:35 WITA"),
+      getOrBuildKnockoutMatch(`QF2_${activeCat}`, `Perempat Final 2`, `Juara Grup C`, `Runner-up Grup D`, isSMP ? "09:00 - 09:45 WITA" : "08:50 - 09:25 WITA"),
+      getOrBuildKnockoutMatch(`QF3_${activeCat}`, `Perempat Final 3`, `Juara Grup B`, `Runner-up Grup A`, isSMP ? "10:00 - 10:45 WITA" : "09:40 - 10:15 WITA"),
+      getOrBuildKnockoutMatch(`QF4_${activeCat}`, `Perempat Final 4`, `Juara Grup D`, `Runner-up Grup C`, isSMP ? "11:00 - 11:45 WITA" : "10:30 - 11:05 WITA"),
     ];
 
     const sfMatches = [
-      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "SF1_" + activeCat || m.id === "SF1")),
-      this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id === "SF2_" + activeCat || m.id === "SF2")),
+      getOrBuildKnockoutMatch(`SF1_${activeCat}`, `Semifinal 1`, `Pemenang QF 1`, `Pemenang QF 2`, isSMP ? "14:00 - 14:50 WITA" : "13:30 - 14:10 WITA"),
+      getOrBuildKnockoutMatch(`SF2_${activeCat}`, `Semifinal 2`, `Pemenang QF 3`, `Pemenang QF 4`, isSMP ? "15:00 - 15:50 WITA" : "14:20 - 15:00 WITA"),
     ];
 
-    const thirdMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id.startsWith("3RD")));
-    const finalMatch = this.store.data.matches.find(m => (m.category === activeCat || m.id.endsWith("_" + activeCat)) && (m.id.startsWith("FINAL")));
+    const thirdMatch = getOrBuildKnockoutMatch(`3RD_${activeCat}`, `Perebutan Juara 3`, `Kalah Semifinal 1`, `Kalah Semifinal 2`, isSMP ? "16:00 - 16:50 WITA" : "15:15 - 15:55 WITA");
+    const finalMatch = getOrBuildKnockoutMatch(`FINAL_${activeCat}`, `Grand Final`, `Pemenang Semifinal 1`, `Pemenang Semifinal 2`, isSMP ? "17:00 - 18:00 WITA" : "16:15 - 17:15 WITA");
 
     let champTeam = null;
     let runnerUpTeam = null;
@@ -6489,33 +6586,33 @@ var app = window.app = Object.assign(window.app || {}, {
 
       // Matchday 1: Slot 1 vs Slot 2, Slot 3 vs Slot 4
       const md1 = gMatches.filter(m => Number(m.matchday) === 1).sort((a, b) => a.id.localeCompare(b.id));
-      if (md1[0]) {
+      if (md1[0] && !md1[0].isManualTeam) {
         if (slotMap[1]) md1[0].homeId = slotMap[1];
         if (slotMap[2]) md1[0].awayId = slotMap[2];
       }
-      if (md1[1]) {
+      if (md1[1] && !md1[1].isManualTeam) {
         if (slotMap[3]) md1[1].homeId = slotMap[3];
         if (slotMap[4]) md1[1].awayId = slotMap[4];
       }
 
       // Matchday 2: Slot 1 vs Slot 3, Slot 2 vs Slot 4
       const md2 = gMatches.filter(m => Number(m.matchday) === 2).sort((a, b) => a.id.localeCompare(b.id));
-      if (md2[0]) {
+      if (md2[0] && !md2[0].isManualTeam) {
         if (slotMap[1]) md2[0].homeId = slotMap[1];
         if (slotMap[3]) md2[0].awayId = slotMap[3];
       }
-      if (md2[1]) {
+      if (md2[1] && !md2[1].isManualTeam) {
         if (slotMap[2]) md2[1].homeId = slotMap[2];
         if (slotMap[4]) md2[1].awayId = slotMap[4];
       }
 
       // Matchday 3: Slot 1 vs Slot 4, Slot 2 vs Slot 3
       const md3 = gMatches.filter(m => Number(m.matchday) === 3).sort((a, b) => a.id.localeCompare(b.id));
-      if (md3[0]) {
+      if (md3[0] && !md3[0].isManualTeam) {
         if (slotMap[1]) md3[0].homeId = slotMap[1];
         if (slotMap[4]) md3[0].awayId = slotMap[4];
       }
-      if (md3[1]) {
+      if (md3[1] && !md3[1].isManualTeam) {
         if (slotMap[2]) md3[1].homeId = slotMap[2];
         if (slotMap[3]) md3[1].awayId = slotMap[3];
       }
