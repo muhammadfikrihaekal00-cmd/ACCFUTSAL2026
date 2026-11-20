@@ -1429,7 +1429,7 @@ var app = window.app = Object.assign(window.app || {}, {
         <div class="hero-upcoming-match-card" onclick="app.switchTab('matches')" role="button" tabindex="0" title="Klik untuk lihat jadwal lengkap turnamen">
           <div class="hero-upcoming-badge">
             <span class="upcoming-indicator-icon">📅</span>
-            <span>PERTANDINGAN BERIKUTNYA</span>
+            <span>NEXT MATCH</span>
             <span class="hero-upcoming-cat-pill">${catBadge} [${stageName}]</span>
           </div>
           <div class="hero-upcoming-matchup">
