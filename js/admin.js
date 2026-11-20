@@ -1356,6 +1356,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     matches.push(newMatch);
     app.store.saveData();
 
+    // Sinkronkan match baru ke Supabase Cloud segera agar aman saat refresh
+    if (window.SupabaseService && typeof window.SupabaseService.syncMatch === 'function') {
+      window.SupabaseService.syncMatch(newMatch, this.adminPinHash);
+    }
+
     this.openMatchEditor(newId);
     app.showToast(`➕ Pertandingan baru (${newId} - ${cat}) berhasil dibuat! Silakan atur tim & jadwal.`);
   },
@@ -1398,7 +1403,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const inGroupTeams = teams.filter(t => t.group === groupVal);
     const otherTeams = teams.filter(t => t.group !== groupVal);
 
-    const defaultOptionText = isGroup 
+    const defaultOptionText = isGroup
       ? `-- Pilih Tim (TBD / Kosong) --`
       : `-- Otomatis Sesuai Bagan (Atau Pilih Manual) --`;
 
@@ -1456,6 +1461,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (idx !== -1) {
       matches.splice(idx, 1);
     }
+    if (!app.store._deletedMatchIds) app.store._deletedMatchIds = new Set();
+    app.store._deletedMatchIds.add(mId);
     app.store.saveData();
 
     if (window.SupabaseService && typeof window.SupabaseService.deleteMatch === 'function') {

@@ -188,8 +188,8 @@ class TournamentStore {
     if (!Array.isArray(data.teams)) data.teams = [];
     if (!Array.isArray(data.matches)) data.matches = [];
 
-    // Bersihkan cache jadwal dummy lama (M01, T04, dll) agar jadwal pertandingan dimulai dari keadaan bersih
-    if (!_safeStorageGet(localStorage, "acc_matches_cleaned_v854") || data.matches.some(m => m.id === "M01" && (m.homeId === "T04" || !m.homeId))) {
+    // Bersihkan cache jadwal dummy lama (M01, T04, dll) satu kali saja saat migrasi
+    if (!_safeStorageGet(localStorage, "acc_matches_cleaned_v854")) {
       data.matches = [];
       _safeStorageSet(localStorage, "acc_matches_cleaned_v854", "true");
     }
@@ -1716,6 +1716,17 @@ var app = window.app = Object.assign(window.app || {}, {
         return norm;
       }).filter(Boolean);
 
+      // Pertahankan pertandingan lokal jika belum sempat tersinkronkan ke Cloud Supabase, dan push ke Cloud
+      const remoteIds = new Set(data.matches.map(m => m && m.id).filter(Boolean));
+      (this.store.data.matches || []).forEach(localM => {
+        if (localM && localM.id && !remoteIds.has(localM.id) && !localM._deleted && !(this.store._deletedMatchIds && this.store._deletedMatchIds.has(localM.id))) {
+          syncedMatches.push(localM);
+          if (window.SupabaseService && typeof window.SupabaseService.syncMatch === 'function') {
+            window.SupabaseService.syncMatch(localM, window.admin ? window.admin.adminPinHash : "");
+          }
+        }
+      });
+
       const matchOrderWeight = (id) => {
         const mNum = String(id).match(/^M(?:_(?:SMP|SD)_)?(\d+)$/i);
         if (mNum) return parseInt(mNum[1], 10);
@@ -1727,6 +1738,7 @@ var app = window.app = Object.assign(window.app || {}, {
       };
       syncedMatches.sort((a, b) => matchOrderWeight(a.id) - matchOrderWeight(b.id) || String(a.id).localeCompare(String(b.id)));
       this.store.data.matches = syncedMatches;
+      this.store.saveData();
     }
 
     // 3. Sinkronkan MOMENTS & SPONSORS dari Database Online Supabase

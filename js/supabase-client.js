@@ -367,12 +367,13 @@
           : 0;
 
         // Persist all match details (schedule, pitch, teams, stage, scores) to Supabase
-        const updatePayload = {
+        const upsertPayload = {
+          id: match.id,
           home_id: (match.homeId !== undefined && match.homeId !== null) ? String(match.homeId) : "",
           away_id: (match.awayId !== undefined && match.awayId !== null) ? String(match.awayId) : "",
           date: match.date || "22 Nov 2026",
           time: match.time || "08:00 - 08:40 WITA",
-          pitch: match.pitch || match.venue || "Lapangan Utama (Vinyl)",
+          pitch: match.pitch || match.venue || "Lapangan 1 (Utama Vinyl)",
           stage: match.stage || (/(QF|SF|3RD|FINAL)/i.test(match.id) ? "knockout" : "group"),
           group_letter: match.group || match.group_letter || null,
           round_name: match.roundName || match.round_name || "",
@@ -389,20 +390,19 @@
           updated_at: new Date().toISOString()
         };
 
-        let { error: updateErr } = await this.client
+        const { error: upsertErr } = await this.client
           .from('matches')
-          .update(updatePayload)
-          .eq('id', match.id);
+          .upsert(upsertPayload, { onConflict: 'id' });
 
-        // Fallback: If row doesn't exist yet, upsert full row
-        if (updateErr) {
-          const upsertPayload = {
-            id: match.id,
-            ...updatePayload
-          };
-          const { error: upsertErr } = await this.client.from('matches').upsert(upsertPayload);
-          if (upsertErr) {
-            console.error('[Supabase] syncMatch upsert error:', upsertErr);
+        if (upsertErr) {
+          console.error('[Supabase] syncMatch upsert error:', upsertErr);
+          // Fallback coba update
+          const { error: updateErr } = await this.client
+            .from('matches')
+            .update(upsertPayload)
+            .eq('id', match.id);
+          if (updateErr) {
+            console.error('[Supabase] syncMatch update error:', updateErr);
             return false;
           }
         }
