@@ -3308,13 +3308,12 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (cancelBtn) cancelBtn.style.display = "none";
   },
 
-  handleSponsorLogoUpload(event) {
+  async handleSponsorLogoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target.result;
+    try {
+      const dataUrl = await this.compressImageToDataUrl(file, 280, 0.75);
       document.getElementById("editSponsorImage").value = dataUrl;
 
       const previewRow = document.getElementById("sponsorLogoPreviewRow");
@@ -3323,8 +3322,21 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         previewImg.src = dataUrl;
         previewRow.style.display = "flex";
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (e) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dUrl = ev.target.result;
+        document.getElementById("editSponsorImage").value = dUrl;
+
+        const previewRow = document.getElementById("sponsorLogoPreviewRow");
+        const previewImg = document.getElementById("sponsorLogoPreviewImg");
+        if (previewRow && previewImg) {
+          previewImg.src = dUrl;
+          previewRow.style.display = "flex";
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   },
 
   removeSponsorLogo() {
@@ -3341,11 +3353,17 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const tier = document.getElementById("sponsorTierSelect").value;
     const role = document.getElementById("sponsorRoleInput").value.trim();
     const icon = document.getElementById("sponsorIconSelect").value;
-    const image = document.getElementById("editSponsorImage").value;
+    let image = document.getElementById("editSponsorImage").value;
 
     if (!name) {
       alert("Nama Sponsor wajib diisi!");
       return;
+    }
+
+    if (image && image.startsWith("data:image") && image.length > 30000) {
+      try {
+        image = await this.compressImageToDataUrl(image, 280, 0.75);
+      } catch (_) { }
     }
 
     if (!app.store.data.sponsors) {

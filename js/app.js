@@ -207,7 +207,9 @@ class TournamentStore {
           data.sponsors = parsedBackup;
         }
       } catch (_) { }
-    } else if (hasAnySponsor === 0 && base.sponsors && (base.sponsors.platinum?.length || 0) > 0) {
+    }
+    const currentSponsorCount = (data.sponsors.platinum?.length || 0) + (data.sponsors.gold?.length || 0) + (data.sponsors.media?.length || 0);
+    if (currentSponsorCount === 0 && base.sponsors && (base.sponsors.platinum?.length || 0) > 0) {
       data.sponsors = JSON.parse(JSON.stringify(base.sponsors));
     }
     if (!data.homeData || typeof data.homeData !== "object") {
@@ -227,11 +229,25 @@ class TournamentStore {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {
-      // Tangani QuotaExceededError agar aplikasi TIDAK PERNAH crash/error saat foto tim sudah banyak!
+      // Tangani QuotaExceededError agar aplikasi TIDAK PERNAH crash/error saat foto tim/sponsor sudah banyak!
       try {
         // Simpan salinan ringan ke localStorage (foto base64 besar tetap aman di RAM & Supabase Cloud)
         const slim = {
           ...this.data,
+          sponsors: this.data.sponsors ? {
+            platinum: (this.data.sponsors.platinum || []).map(s => ({
+              ...s,
+              image: (s.image && s.image.startsWith("data:image") && s.image.length > 25000) ? "" : (s.image || "")
+            })),
+            gold: (this.data.sponsors.gold || []).map(s => ({
+              ...s,
+              image: (s.image && s.image.startsWith("data:image") && s.image.length > 25000) ? "" : (s.image || "")
+            })),
+            media: (this.data.sponsors.media || []).map(s => ({
+              ...s,
+              image: (s.image && s.image.startsWith("data:image") && s.image.length > 25000) ? "" : (s.image || "")
+            }))
+          } : undefined,
           teams: (this.data.teams || []).map(t => ({
             ...t,
             logo: (t.logo && t.logo.startsWith("data:image") && t.logo.length > 15000) ? "" : (t.logo || ""),
@@ -1356,77 +1372,126 @@ var app = window.app = Object.assign(window.app || {}, {
     const videoId = this.getYoutubeVideoId(rawYtUrl);
     const title = (cfg.youtubeLiveTitle || "Siaran Langsung Lapangan Utama - GOR Futsal Ma'had Al-Fayyadh Maros").replace(/^[🔴\s]+/, "");
 
-    // Cari apakah ada pertandingan yang sedang LIVE saat ini
+    // 1. Cari apakah ada pertandingan yang sedang LIVE saat ini
     const matches = (this.store && this.store.data && this.store.data.matches) || [];
     const liveMatches = matches.filter(m => m.status === "live");
     const upcomingMatches = matches.filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled"));
 
-    let liveTickerHtml = "";
+    // 2. BOX TERPISAH: Skor Pertandingan yang Sedang Berlangsung (Hanya tampil jika ada laga LIVE)
+    // Cukup tampilkan nama tim dan skornya, apabila diklik menuju ke detail laganya
+    let liveScoreBoxHtml = "";
     if (liveMatches.length > 0) {
       const lm = liveMatches[0];
       const hTeam = this.store.getTeam(lm.homeId) || { name: lm.homePlaceholder || "Home", shortName: "HOME" };
       const aTeam = this.store.getTeam(lm.awayId) || { name: lm.awayPlaceholder || "Away", shortName: "AWAY" };
-      const hScore = lm.homeScoreLive ?? 0;
-      const aScore = lm.awayScoreLive ?? 0;
+      const hScore = lm.homeScoreLive ?? (lm.homeScore ?? 0);
+      const aScore = lm.awayScoreLive ?? (lm.awayScore ?? 0);
       const catBadge = (lm.category || "SMP") === "SD" ? "SD (U-12)" : "SMP (U-15)";
-      const stageName = lm.stage === "knockout" ? (lm.roundName || "Babak Gugur") : `Grup ${lm.group}`;
+      const stageName = lm.stage === "knockout" ? (lm.roundName || "Babak Gugur") : `Grup ${lm.group || ''}`;
 
-      liveTickerHtml = `
-        <div class="live-stream-match-ticker live">
-          <div class="ticker-left">
-            <span class="pulse-live-badge"><span class="pulse-dot"></span> LIVE${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
-            <span class="ticker-match-title">${catBadge} [${stageName}]</span>
-            <strong class="ticker-score-teams">${hTeam.name} <span class="score-highlight">${hScore} - ${aScore}</span> ${aTeam.name}</strong>
+      liveScoreBoxHtml = `
+        <div class="hero-live-score-card" onclick="app.showMatchDetail('${lm.id}')" role="button" tabindex="0" title="Klik untuk lihat detail pertandingan &amp; statistik laga">
+          <div class="hero-live-score-badge">
+            <span class="pulse-dot"></span>
+            <span>SEDANG BERLANGSUNG${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
+            <span class="hero-live-cat-pill">${catBadge} [${stageName}]</span>
           </div>
-          <div class="ticker-actions">
-            ${this.isAdmin() ? `<button class="btn btn-sm btn-primary" onclick="admin.openQuickScore('${lm.id}')">Input Skor</button>` : ''}
-            <button class="btn btn-sm btn-outline" onclick="app.showMatchDetail('${lm.id}')">Detail Laga</button>
+          <div class="hero-live-score-matchup">
+            <div class="hero-live-team home">
+              <span class="hero-live-team-name">${hTeam.name}</span>
+            </div>
+            <div class="hero-live-score-box">
+              <span class="hero-live-digit">${hScore}</span>
+              <span class="hero-live-colon">-</span>
+              <span class="hero-live-digit">${aScore}</span>
+            </div>
+            <div class="hero-live-team away">
+              <span class="hero-live-team-name">${aTeam.name}</span>
+            </div>
+          </div>
+          <div class="hero-live-score-footer">
+            <span class="hero-live-tap-hint">Tap untuk Detail Laga &amp; Statistik ➔</span>
           </div>
         </div>
       `;
-    } else {
-      // Tampilkan info laga berikutnya
-      const nextMatch = upcomingMatches[0] || matches[0];
-      if (nextMatch) {
-        const hTeam = this.store.getTeam(nextMatch.homeId) || { name: nextMatch.homePlaceholder || "Home" };
-        const aTeam = this.store.getTeam(nextMatch.awayId) || { name: nextMatch.awayPlaceholder || "Away" };
-        const catBadge = (nextMatch.category || "SMP") === "SD" ? "SD (U-12)" : "SMP (U-15)";
-        const stageName = nextMatch.stage === "knockout" ? (nextMatch.roundName || "Babak Gugur") : `Grup ${nextMatch.group}`;
+    }
 
-        liveTickerHtml = `
-          <div class="live-stream-match-ticker upcoming">
-            <div class="ticker-left">
-              <span class="upcoming-status-badge">PERTANDINGAN BERIKUTNYA</span>
-              <span class="ticker-match-title">${catBadge} [${stageName}] • ${nextMatch.date}, ${nextMatch.time}</span>
-              <strong class="ticker-score-teams">${hTeam.name} <span class="vs-badge">VS</span> ${aTeam.name}</strong>
+    // 3. BOX TERPISAH: Informasi Pertandingan Selanjutnya (Taro di bawahnya beda box)
+    let upcomingMatchBoxHtml = "";
+    const nextMatch = upcomingMatches[0] || (liveMatches.length === 0 ? matches[0] : null);
+    if (nextMatch) {
+      const hTeam = this.store.getTeam(nextMatch.homeId) || { name: nextMatch.homePlaceholder || "Home" };
+      const aTeam = this.store.getTeam(nextMatch.awayId) || { name: nextMatch.awayPlaceholder || "Away" };
+      const catBadge = (nextMatch.category || "SMP") === "SD" ? "SD (U-12)" : "SMP (U-15)";
+      const stageName = nextMatch.stage === "knockout" ? (nextMatch.roundName || "Babak Gugur") : `Grup ${nextMatch.group || ''}`;
+
+      upcomingMatchBoxHtml = `
+        <div class="hero-upcoming-match-card" onclick="app.switchTab('matches')" role="button" tabindex="0" title="Klik untuk lihat jadwal lengkap turnamen">
+          <div class="hero-upcoming-badge">
+            <span class="upcoming-indicator-icon">📅</span>
+            <span>PERTANDINGAN BERIKUTNYA</span>
+            <span class="hero-upcoming-cat-pill">${catBadge} [${stageName}]</span>
+          </div>
+          <div class="hero-upcoming-matchup">
+            <div class="hero-upcoming-team home">
+              <span class="hero-upcoming-team-name">${hTeam.name}</span>
             </div>
-            <div class="ticker-actions">
-              <button class="btn btn-sm btn-primary" onclick="app.switchTab('matches')">Lihat Jadwal Lengkap ➔</button>
+            <div class="hero-upcoming-vs-box">
+              <span class="hero-upcoming-vs">VS</span>
+              <span class="hero-upcoming-time">${nextMatch.time || 'WITA'}</span>
+            </div>
+            <div class="hero-upcoming-team away">
+              <span class="hero-upcoming-team-name">${aTeam.name}</span>
             </div>
           </div>
-        `;
-      }
+          <div class="hero-upcoming-footer">
+            <span class="hero-upcoming-meta">📅 ${nextMatch.date || 'Jadwal Resmi'} • ${nextMatch.pitch || 'Lapangan Utama'}</span>
+            <span class="hero-upcoming-cta">Lihat Jadwal Lengkap ➔</span>
+          </div>
+        </div>
+      `;
     }
 
     // Cek apakah video player iframe sudah sedang aktif berputar
     const existingPlayer = document.getElementById("mainYoutubeIframe");
     const isAlreadyPlaying = Boolean(existingPlayer);
 
-    // Jika video sedang aktif ditonton, cukup update header & ticker tanpa me-reset iframe video
+    // Jika video sedang aktif ditonton, update title dan box luar tanpa me-reset iframe video yang sedang diputar
     if (isAlreadyPlaying) {
       const titleEl = container.querySelector(".live-stream-title");
       if (titleEl) titleEl.textContent = title;
-      const tickerWrapper = container.querySelector(".live-stream-match-ticker");
-      if (tickerWrapper) {
-        tickerWrapper.outerHTML = liveTickerHtml;
+
+      // Update Box Live Score
+      let curLiveBox = container.querySelector(".hero-live-score-card");
+      if (liveScoreBoxHtml) {
+        if (curLiveBox) {
+          curLiveBox.outerHTML = liveScoreBoxHtml;
+        } else {
+          const liveCard = container.querySelector(".live-stream-card");
+          if (liveCard) liveCard.insertAdjacentHTML("afterend", liveScoreBoxHtml);
+        }
+      } else if (curLiveBox) {
+        curLiveBox.remove();
+      }
+
+      // Update Box Pertandingan Selanjutnya
+      let curUpBox = container.querySelector(".hero-upcoming-match-card");
+      if (upcomingMatchBoxHtml) {
+        if (curUpBox) {
+          curUpBox.outerHTML = upcomingMatchBoxHtml;
+        } else {
+          container.insertAdjacentHTML("beforeend", upcomingMatchBoxHtml);
+        }
+      } else if (curUpBox) {
+        curUpBox.remove();
       }
       return;
     }
 
-    // Default: Lite YouTube Facade (Sangat cepat, hemat payload 2.5MB & 0 cookie pelacak saat muat)
+    // Default: Lite YouTube Facade Bersih (Bebas dari ticker laga di dalam box video) + Box Terpisah di Bawahnya
     container.innerHTML = `
+      <!-- BOX 1: SIARAN LANGSUNG YOUTUBE (FOKUS NONTON LIVE STREAM, PANDANGAN 100% BEBAS & BERSIH) -->
       <div class="live-stream-card">
-        <!-- HEADER SIARAN LANGSUNG -->
         <div class="live-stream-header">
           <div class="live-stream-header-left">
             <div class="live-on-air-pill">
@@ -1443,9 +1508,6 @@ var app = window.app = Object.assign(window.app || {}, {
             ` : ''}
           </div>
         </div>
-
-        <!-- BANNER PERTANDINGAN BERIKUTNYA / LIVE TICKER TERINTEGRASI DI ATAS VIDEO -->
-        ${liveTickerHtml}
 
         <!-- LITE YOUTUBE FACADE (On-demand video loading) -->
         <div class="live-video-player-wrapper yt-facade" id="ytVideoPlayerContainer" onclick="app.playYoutubeLiveStream('${videoId}')" title="Klik untuk memutar siaran langsung YouTube">
@@ -1469,6 +1531,12 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
         </div>
       </div>
+
+      <!-- BOX 2: INFORMASI SKOR YANG SEDANG BERLANGSUNG (HANYA MUNCUL JIKA ADA LAGA LIVE) -->
+      ${liveScoreBoxHtml}
+
+      <!-- BOX 3: INFORMASI PERTANDINGAN SELANJUTNYA (BOX TERPISAH DI BAWAH) -->
+      ${upcomingMatchBoxHtml}
     `;
   },
 
@@ -2292,9 +2360,13 @@ var app = window.app = Object.assign(window.app || {}, {
       if (window.SupabaseService && typeof window.SupabaseService.fetchTournamentData === 'function') {
         window.SupabaseService.fetchTournamentData().then(data => {
           if (data && data.sponsors) {
-            this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
-            this.store.saveData();
-            this.renderSponsors();
+            const formatted = this.formatSponsorsFromDb(data.sponsors);
+            const count = (formatted.platinum?.length || 0) + (formatted.gold?.length || 0) + (formatted.media?.length || 0);
+            if (count > 0) {
+              this.store.data.sponsors = formatted;
+              this.store.saveData();
+              this.renderSponsors();
+            }
           }
         });
       }
@@ -3743,11 +3815,26 @@ var app = window.app = Object.assign(window.app || {}, {
     const legacyTrack = document.getElementById("sponsorsMarqueeTrack");
     if (!dualContainer) return;
 
-    const platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
-    const goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
-    const mediaList = (sponsors.media || []).map(s => ({ ...s, tierKey: 'media' }));
-    const allSecondary = [...goldList, ...mediaList];
-    const allSponsors = [...platinumList, ...allSecondary];
+    let platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
+    let goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
+    let mediaList = (sponsors.media || []).map(s => ({ ...s, tierKey: 'media' }));
+    let allSecondary = [...goldList, ...mediaList];
+    let allSponsors = [...platinumList, ...allSecondary];
+
+    if (allSponsors.length === 0 && window.DEFAULT_DATA && window.DEFAULT_DATA.sponsors) {
+      const defSponsors = JSON.parse(JSON.stringify(window.DEFAULT_DATA.sponsors));
+      const defPlat = (defSponsors.platinum || []);
+      const defGold = (defSponsors.gold || []);
+      if (defPlat.length > 0 || defGold.length > 0) {
+        sponsors = defSponsors;
+        this.store.data.sponsors = sponsors;
+        platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
+        goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
+        mediaList = (sponsors.media || []).map(s => ({ ...s, tierKey: 'media' }));
+        allSecondary = [...goldList, ...mediaList];
+        allSponsors = [...platinumList, ...allSecondary];
+      }
+    }
 
     if (allSponsors.length === 0) {
       const emptyHtml = isPanitia ? `
