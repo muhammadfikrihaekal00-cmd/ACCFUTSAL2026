@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" class="snap-scroll-active">
 
 <head>
@@ -1187,14 +1187,17 @@
         <span class="pill-dot"></span>
         <span id="floatingCatAltPillText">Beralih ke Kelas SD (U-12)</span>
       </div>
-      <button type="button" id="floatingCatAltBtn" class="floating-cat-circle-btn floating-cat-alt-btn" onclick="app.selectAlternateCategory()" aria-label="Pilih Kategori">
+      <button type="button" id="floatingCatAltBtn" class="floating-cat-circle-btn floating-cat-alt-btn"
+        onclick="app.selectAlternateCategory()" aria-label="Pilih Kategori">
         <span class="floating-cat-badge-label" id="floatingCatAltText">SD</span>
         <span class="floating-cat-badge-sub" id="floatingCatAltSub">U-12</span>
       </button>
     </div>
 
     <!-- Tombol Lingkaran Utama (Kategori Aktif Saat Ini) -->
-    <button type="button" id="floatingCatMainBtn" class="floating-cat-circle-btn floating-cat-main-btn" onclick="app.toggleFloatingCategoryMenu()" aria-expanded="false" aria-label="Pilih Kelas Turnamen" title="Ketuk untuk beralih kelas (SMP / SD)">
+    <button type="button" id="floatingCatMainBtn" class="floating-cat-circle-btn floating-cat-main-btn"
+      onclick="app.toggleFloatingCategoryMenu()" aria-expanded="false" aria-label="Pilih Kelas Turnamen"
+      title="Ketuk untuk beralih kelas (SMP / SD)">
       <span class="floating-cat-arrow" id="floatingCatArrow" aria-hidden="true">▲</span>
       <span class="floating-cat-badge-label" id="floatingCatMainText">SMP</span>
       <span class="floating-cat-badge-sub" id="floatingCatMainSub">U-15</span>
@@ -1478,14 +1481,17 @@
         <input type="hidden" id="editMatchId">
         <div class="modal-body">
           <p id="editMatchSubtitle" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-            Pilih jenis babak (Pertandingan Biasa / Babak Gugur), tim yang bertanding, serta tanggal, jam, dan lapangan laga.
+            Pilih jenis babak (Pertandingan Biasa / Babak Gugur), tim yang bertanding, serta tanggal, jam, dan lapangan
+            laga.
           </p>
 
           <!-- Pilihan Jenis / Babak Pertandingan & Pilihan Grup -->
-          <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
+          <div
+            style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
             <div class="form-row">
               <div class="form-group" style="flex: 1;">
-                <label class="form-label" style="font-weight: 700; color: var(--accent-gold);">🏆 Jenis / Babak Pertandingan</label>
+                <label class="form-label" style="font-weight: 700; color: var(--accent-gold);">🏆 Jenis / Babak
+                  Pertandingan</label>
                 <select id="editMatchStageSelect" class="form-select" onchange="admin.onMatchStageChange()">
                   <option value="group">⚽ Pertandingan Biasa (Fase Grup)</option>
                   <option value="qf">🏆 Perempat Final (8 Besar)</option>
@@ -1509,13 +1515,15 @@
           <!-- Schedule Row (Tanggal, Jam Kick-off, Lapangan) -->
           <div
             style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
-            <div style="font-weight: 700; font-size: 0.85rem; color: var(--accent-gold); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <div
+              style="font-weight: 700; font-size: 0.85rem; color: var(--accent-gold); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
               <span>📅</span> <span>Jadwal & Waktu Pelaksanaan Laga</span>
             </div>
             <div class="form-row">
               <div class="form-group" style="flex: 1;">
                 <label class="form-label" style="font-weight: 600;">Tanggal Laga</label>
-                <input type="text" id="editMatchDateInput" class="form-input" list="matchDateSuggestions" placeholder="contoh: 22 Nov 2026" required>
+                <input type="text" id="editMatchDateInput" class="form-input" list="matchDateSuggestions"
+                  placeholder="contoh: 22 Nov 2026" required>
                 <datalist id="matchDateSuggestions">
                   <option value="22 Nov 2026">22 Nov 2026 (Hari 1)</option>
                   <option value="23 Nov 2026">23 Nov 2026 (Hari 2)</option>
@@ -1530,7 +1538,8 @@
               </div>
               <div class="form-group" style="flex: 1;">
                 <label class="form-label" style="font-weight: 600;">Waktu Kick-off</label>
-                <input type="text" id="editMatchTimeInput" class="form-input" list="matchTimeSuggestions" placeholder="contoh: 08:00 - 08:35 WITA" required>
+                <input type="text" id="editMatchTimeInput" class="form-input" list="matchTimeSuggestions"
+                  placeholder="contoh: 08:00 - 08:35 WITA" required>
                 <datalist id="matchTimeSuggestions">
                   <option value="08:00 - 08:35 WITA">08:00 - 08:35 WITA</option>
                   <option value="08:45 - 09:20 WITA">08:45 - 09:20 WITA</option>
@@ -1593,7 +1602,9 @@
           <div style="display: flex; gap: 8px;">
             <button type="button" class="btn btn-outline"
               onclick="document.getElementById('matchEditorModal').classList.remove('active')">Batal</button>
-            <button type="button" class="btn btn-outline" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" onclick="admin.deleteCurrentMatch()" title="Hapus pertandingan ini secara permanen">🗑️ Hapus Laga</button>
+            <button type="button" class="btn btn-outline" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);"
+              onclick="admin.deleteCurrentMatch()" title="Hapus pertandingan ini secara permanen">🗑️ Hapus
+              Laga</button>
           </div>
           <div style="display: flex; gap: 8px;">
             <button type="button" class="btn btn-outline" onclick="admin.saveMatchSchedule(true)"
