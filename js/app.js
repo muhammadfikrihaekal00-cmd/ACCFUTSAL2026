@@ -2872,7 +2872,7 @@ var app = window.app = Object.assign(window.app || {}, {
         if (parentModal) {
           parentModal.classList.remove("active");
           if (parentModal.id === "sponsorEditorModal") {
-            try { app.renderSponsors(); } catch (_) {}
+            try { app.renderSponsors(); } catch (_) { }
           }
         }
         if (!document.querySelector(".modal-overlay.active")) {
@@ -7561,7 +7561,7 @@ var app = window.app = Object.assign(window.app || {}, {
         <div class="md-lineup-col-card">
           <div class="md-lineup-team-header">
             <div style="width:36px; height:36px; border-radius:50%; background:${team.badgeColor || '#0284c7'}; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
-              ${team.logo ? `<img src="${team.logo}" alt="${team.name}" style="width:100%;height:100%;object-fit:contain;">` : `<span style="font-weight:800;font-size:0.75rem;color:#fff;">${(team.shortName || 'TBD').substring(0,3)}</span>`}
+              ${team.logo ? `<img src="${team.logo}" alt="${team.name}" style="width:100%;height:100%;object-fit:contain;">` : `<span style="font-weight:800;font-size:0.75rem;color:#fff;">${(team.shortName || 'TBD').substring(0, 3)}</span>`}
             </div>
             <div>
               <strong style="font-size:0.92rem; color:#fff; display:block;">${team.name}</strong>
@@ -7572,21 +7572,21 @@ var app = window.app = Object.assign(window.app || {}, {
           <!-- 5 PEMAIN DI LAPANGAN (STARTING 5) -->
           <div style="margin-bottom: 14px;">
             <div style="font-size: 0.76rem; font-weight: 800; color: #10b981; margin-bottom: 6px; display:flex; align-items:center; justify-content:space-between;">
-              <span>🟢 5 PEMAIN DI LAPANGAN (ON-COURT)</span>
-              <span style="font-size: 0.68rem; opacity: 0.85;">Starting 5</span>
+              <span>🟢 STARTING 5</span>
+             
             </div>
             ${onCourt.length === 0 ? `
               <div style="font-size:0.75rem; color:var(--text-muted); padding:6px;">Belum dikonfirmasi panitia (standar: 5 pemain awal).</div>
             ` : onCourt.map(name => {
-              const p = findP(name);
-              return `
+        const p = findP(name);
+        return `
                 <div class="md-player-row on-court">
                   <span class="md-player-num">#${p.no || '-'}</span>
                   <span class="md-player-name">${p.name} ${getPlayerExtraInfo(team.id, p.name)}</span>
                   <span class="md-player-pos">${p.pos || 'Pemain'}</span>
                 </div>
               `;
-            }).join("")}
+      }).join("")}
           </div>
 
           <!-- PEMAIN CADANGAN -->
@@ -7598,15 +7598,15 @@ var app = window.app = Object.assign(window.app || {}, {
             ${bench.length === 0 ? `
               <div style="font-size:0.75rem; color:var(--text-muted); padding:6px;">Tidak ada pemain cadangan terdaftar.</div>
             ` : bench.map(name => {
-              const p = findP(name);
-              return `
+        const p = findP(name);
+        return `
                 <div class="md-player-row bench">
                   <span class="md-player-num">#${p.no || '-'}</span>
                   <span class="md-player-name">${p.name} ${getPlayerExtraInfo(team.id, p.name)}</span>
                   <span class="md-player-pos">${p.pos || 'Cadangan'}</span>
                 </div>
               `;
-            }).join("")}
+      }).join("")}
           </div>
 
           <!-- STAF & OFISIAL TIM -->
@@ -7619,11 +7619,11 @@ var app = window.app = Object.assign(window.app || {}, {
             ` : `
               <div style="display:flex; flex-wrap:wrap; gap:4px;">
                 ${officials.map(o => {
-                  const oCards = (match.cards || []).filter(c => c.team === team.id && c.player === o.name);
-                  let cBadge = '';
-                  if (oCards.some(c => c.type === 'yellow')) cBadge += ' <span class="card-icon-y" title="Kartu Kuning Ofisial"></span>';
-                  if (oCards.some(c => c.type === 'red')) cBadge += ' <span class="card-icon-r" title="Kartu Merah Ofisial"></span>';
-                  return `
+        const oCards = (match.cards || []).filter(c => c.team === team.id && c.player === o.name);
+        let cBadge = '';
+        if (oCards.some(c => c.type === 'yellow')) cBadge += ' <span class="card-icon-y" title="Kartu Kuning Ofisial"></span>';
+        if (oCards.some(c => c.type === 'red')) cBadge += ' <span class="card-icon-r" title="Kartu Merah Ofisial"></span>';
+        return `
                     <div class="md-official-chip">
                       ${o.photo ? `<img src="${o.photo}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">` : `<span>👤</span>`}
                       <strong>${o.name}</strong>
@@ -7631,7 +7631,7 @@ var app = window.app = Object.assign(window.app || {}, {
                       ${cBadge}
                     </div>
                   `;
-                }).join("")}
+      }).join("")}
               </div>
             `}
           </div>
@@ -7738,32 +7738,32 @@ var app = window.app = Object.assign(window.app || {}, {
             Belum ada gol, kartu, atau pergantian pemain yang dicatat pada pertandingan ini.
           </div>
         ` : eventsList.map(e => {
-          let iconHtml = '⚽';
-          let descHtml = '';
-          const teamName = app.store.getTeam(e.team)?.shortName || e.team;
+      let iconHtml = '⚽';
+      let descHtml = '';
+      const teamName = app.store.getTeam(e.team)?.shortName || e.team;
 
-          if (e.type === 'goal') {
-            iconHtml = '⚽';
-            descHtml = `Gol oleh <strong>${e.player}</strong> (${teamName})${e.assist ? ` • <span style="color:#94a3b8;">Assist: <strong>${e.assist}</strong></span>` : ''}`;
-          } else if (e.type === 'yellow_card') {
-            iconHtml = '<span class="card-icon-y"></span>';
-            descHtml = `Kartu Kuning: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;
-          } else if (e.type === 'red_card') {
-            iconHtml = '<span class="card-icon-r"></span>';
-            descHtml = `Kartu Merah: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;
-          } else if (e.type === 'sub') {
-            iconHtml = '🔄';
-            descHtml = `Pergantian: <span style="color:#10b981; font-weight:700;">${e.playerIn} 🟢 (Masuk)</span> menggantikan <span style="color:#ef4444; font-weight:700;">${e.playerOut} 🔴 (Keluar)</span> - ${teamName}`;
-          }
+      if (e.type === 'goal') {
+        iconHtml = '⚽';
+        descHtml = `Gol oleh <strong>${e.player}</strong> (${teamName})${e.assist ? ` • <span style="color:#94a3b8;">Assist: <strong>${e.assist}</strong></span>` : ''}`;
+      } else if (e.type === 'yellow_card') {
+        iconHtml = '<span class="card-icon-y"></span>';
+        descHtml = `Kartu Kuning: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;
+      } else if (e.type === 'red_card') {
+        iconHtml = '<span class="card-icon-r"></span>';
+        descHtml = `Kartu Merah: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;
+      } else if (e.type === 'sub') {
+        iconHtml = '🔄';
+        descHtml = `Pergantian: <span style="color:#10b981; font-weight:700;">${e.playerIn} 🟢 (Masuk)</span> menggantikan <span style="color:#ef4444; font-weight:700;">${e.playerOut} 🔴 (Keluar)</span> - ${teamName}`;
+      }
 
-          return `
+      return `
             <div class="md-timeline-item">
               <span class="md-timeline-min">${e.minStr}</span>
               <span class="md-timeline-icon">${iconHtml}</span>
               <span class="md-timeline-desc">${descHtml}</span>
             </div>
           `;
-        }).join("")}
+    }).join("")}
       </div>
 
       <!-- SUSUNAN PEMAIN & OFISIAL (DUAL COLUMN) -->
