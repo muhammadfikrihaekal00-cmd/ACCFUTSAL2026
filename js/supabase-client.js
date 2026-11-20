@@ -366,83 +366,66 @@
           ? (parseInt(String(match.liveMinute || "1").replace(/\D/g, ''), 10) || 1)
           : 0;
 
-        // 1. Try secure RPC if pinHash is provided
-        if (pinHash) {
-          try {
-            const { error: rpcErr } = await this.client.rpc('secure_update_match', {
-              p_match_id: match.id,
-              p_home_score: hScoreNum,
-              p_away_score: aScoreNum,
-              p_home_score_live: hScoreNum,
-              p_away_score_live: aScoreNum,
-              p_minute_live: minuteNum,
-              p_status: match.status || 'scheduled',
-              p_scorers: match.scorers || [],
-              p_cards: match.cards || [],
-              p_penalty_home_score: match.penaltyHomeScore !== undefined ? match.penaltyHomeScore : null,
-              p_penalty_away_score: match.penaltyAwayScore !== undefined ? match.penaltyAwayScore : null,
-              p_penalty_winner: match.penaltyWinner || null,
-              p_pin_hash: pinHash
-            });
-            if (!rpcErr) {
-              return true;
-            }
-          } catch (rpcErr) {
-            console.warn('[Supabase] secure_update_match info:', rpcErr);
-          }
-        }
-
-        // 2. Direct table update: Persists minute_live, scores & triggers Supabase Realtime across all devices
+        // Persist all match details (schedule, pitch, teams, stage, scores) to Supabase
         const updatePayload = {
+          home_id: (match.homeId !== undefined && match.homeId !== null) ? String(match.homeId) : "",
+          away_id: (match.awayId !== undefined && match.awayId !== null) ? String(match.awayId) : "",
+          date: match.date || "22 Nov 2026",
+          time: match.time || "08:00 - 08:40 WITA",
+          pitch: match.pitch || match.venue || "Lapangan Utama (Vinyl)",
+          stage: match.stage || (/(QF|SF|3RD|FINAL)/i.test(match.id) ? "knockout" : "group"),
+          group_letter: match.group || match.group_letter || null,
+          round_name: match.roundName || match.round_name || "",
+          home_placeholder: match.homePlaceholder || null,
+          away_placeholder: match.awayPlaceholder || null,
+          status: match.status || 'scheduled',
           home_score: hScoreNum,
           away_score: aScoreNum,
           home_score_live: hScoreNum,
           away_score_live: aScoreNum,
           minute_live: minuteNum,
-          status: match.status || 'scheduled',
-          scorers: match.scorers || [],
-          cards: match.cards || [],
+          scorers: Array.isArray(match.scorers) ? match.scorers : [],
+          cards: Array.isArray(match.cards) ? match.cards : [],
           updated_at: new Date().toISOString()
         };
-
-        if (match.penaltyHomeScore !== undefined) updatePayload.penalty_home_score = match.penaltyHomeScore;
-        if (match.penaltyAwayScore !== undefined) updatePayload.penalty_away_score = match.penaltyAwayScore;
-        if (match.penaltyWinner !== undefined) updatePayload.penalty_winner = match.penaltyWinner;
 
         let { error: updateErr } = await this.client
           .from('matches')
           .update(updatePayload)
           .eq('id', match.id);
 
-        if (updateErr && (updateErr.code === '42703' || (updateErr.message && updateErr.message.includes('penalty')))) {
-          delete updatePayload.penalty_home_score;
-          delete updatePayload.penalty_away_score;
-          delete updatePayload.penalty_winner;
-          const retry = await this.client.from('matches').update(updatePayload).eq('id', match.id);
-          updateErr = retry.error;
-        }
-
-        // 3. Fallback: If row doesn't exist yet, upsert full row
+        // Fallback: If row doesn't exist yet, upsert full row
         if (updateErr) {
           const upsertPayload = {
             id: match.id,
-            home_id: match.homeId,
-            away_id: match.awayId,
-            date: match.date || "22 Nov 2026",
-            time: match.time || "08:00",
-            pitch: match.pitch || match.venue || "Lapangan 1",
-            stage: match.stage || "group",
-            group_letter: match.group || null,
-            round_name: match.roundName || "",
             ...updatePayload
           };
           const { error: upsertErr } = await this.client.from('matches').upsert(upsertPayload);
-          return !upsertErr;
+          if (upsertErr) {
+            console.error('[Supabase] syncMatch upsert error:', upsertErr);
+            return false;
+          }
         }
 
         return true;
       } catch (e) {
         console.error('[Supabase] syncMatch error:', e);
+        return false;
+      }
+    }
+
+    // Delete Match from Supabase
+    async deleteMatch(matchId) {
+      if (!this.client || !this.isConfigured || !matchId) return false;
+      try {
+        const { error } = await this.client.from('matches').delete().eq('id', matchId);
+        if (error) {
+          console.error('[Supabase] deleteMatch error:', error);
+          return false;
+        }
+        return true;
+      } catch (e) {
+        console.error('[Supabase] deleteMatch error:', e);
         return false;
       }
     }

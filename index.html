@@ -3,7 +3,6 @@
 
 <head>
   <meta charset="UTF-8">
-  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#060a17">
   <meta name="description"
@@ -589,9 +588,13 @@
           </span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <button id="btnHeaderAturLawan" class="btn btn-primary btn-sm" onclick="admin.openMatchEditor()"
-            style="font-weight: 700; background: linear-gradient(135deg, #10b981, #0284c7); border: none; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); display: none;">
-            ⚙️ Atur Lawan (Drawing Panitia)
+          <button id="btnHeaderTambahLaga" class="btn btn-primary btn-sm" onclick="admin.openAddNewMatchModal()"
+            style="font-weight: 700; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); color: #000; display: none;">
+            ➕ Tambah Pertandingan Baru
+          </button>
+          <button id="btnHeaderAturLawan" class="btn btn-outline btn-sm" onclick="admin.openMatchEditor()"
+            style="font-weight: 700; display: none;">
+            ⚙️ Atur Pertandingan
           </button>
         </div>
         <div class="filter-group">
@@ -606,8 +609,10 @@
             <option value="1">🏟️ Lapangan 1 (Utama Vinyl)</option>
             <option value="2">🏟️ Lapangan 2</option>
           </select>
-          <select id="filterGroup" class="filter-select" aria-label="Pilih Grup">
-            <option value="all">Semua Grup</option>
+          <select id="filterGroup" class="filter-select" aria-label="Pilih Grup atau Babak">
+            <option value="all">Semua Laga</option>
+            <option value="group_stage">⚽ Semua Fase Grup (A - D)</option>
+            <option value="knockout">🏆 Babak Gugur (8 Besar - Final)</option>
             <option value="A">Grup A</option>
             <option value="B">Grup B</option>
             <option value="C">Grup C</option>
@@ -1425,34 +1430,107 @@
   <div id="matchEditorModal" class="modal-overlay">
     <div class="modal-box" style="max-width: 580px;">
       <div class="modal-header">
-        <h3 class="modal-title" id="editMatchTitle">⚙️ Atur Tim Lawan & Jadwal</h3>
+        <h3 class="modal-title" id="editMatchTitle">⚙️ Atur Pertandingan</h3>
         <button class="modal-close"
           onclick="document.getElementById('matchEditorModal').classList.remove('active')">&times;</button>
       </div>
       <form id="matchEditorForm" onsubmit="event.preventDefault(); admin.saveMatchSchedule(false);">
         <input type="hidden" id="editMatchId">
         <div class="modal-body">
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-            Pilih pasangan tim yang bertanding (Home vs Away) sesuai hasil undian teknikal meeting, serta sesuaikan
-            waktu dan lapangan laga.
+          <p id="editMatchSubtitle" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+            Pilih jenis babak (Pertandingan Biasa / Babak Gugur), tim yang bertanding, serta tanggal, jam, dan lapangan laga.
           </p>
 
-          <!-- Match Selector Row -->
-          <div class="form-group" style="margin-bottom: 14px;">
-            <label class="form-label" style="font-weight: 700; color: var(--accent-gold);">🎯 Pilih Pertandingan yang
-              Ingin Diatur:</label>
-            <select id="editMatchSelect" class="form-select" onchange="admin.switchEditorMatch(this.value)"
-              style="font-weight: 600; font-size: 0.88rem;">
-              <!-- Populated dynamically -->
-            </select>
+          <!-- Pilihan Jenis / Babak Pertandingan & Pilihan Grup -->
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
+            <div class="form-row">
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label" style="font-weight: 700; color: var(--accent-gold);">🏆 Jenis / Babak Pertandingan</label>
+                <select id="editMatchStageSelect" class="form-select" onchange="admin.onMatchStageChange()">
+                  <option value="group">⚽ Pertandingan Biasa (Fase Grup)</option>
+                  <option value="qf">🏆 Perempat Final (8 Besar)</option>
+                  <option value="sf">🔥 Semifinal</option>
+                  <option value="3rd">🥉 Perebutan Juara 3</option>
+                  <option value="final">👑 Grand Final</option>
+                </select>
+              </div>
+              <div class="form-group" id="editMatchGroupWrap" style="flex: 1;">
+                <label class="form-label" style="font-weight: 700; color: #10b981;">🏷️ Pilihan Grup</label>
+                <select id="editMatchGroupSelect" class="form-select" onchange="admin.onMatchGroupChange()">
+                  <option value="A">Grup A</option>
+                  <option value="B">Grup B</option>
+                  <option value="C">Grup C</option>
+                  <option value="D">Grup D</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schedule Row (Tanggal, Jam Kick-off, Lapangan) -->
+          <div
+            style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--accent-gold); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <span>📅</span> <span>Jadwal & Waktu Pelaksanaan Laga</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label" style="font-weight: 600;">Tanggal Laga</label>
+                <input type="text" id="editMatchDateInput" class="form-input" list="matchDateSuggestions" placeholder="contoh: 22 Nov 2026" required>
+                <datalist id="matchDateSuggestions">
+                  <option value="22 Nov 2026">22 Nov 2026 (Hari 1)</option>
+                  <option value="23 Nov 2026">23 Nov 2026 (Hari 2)</option>
+                  <option value="24 Nov 2026">24 Nov 2026 (Hari 3)</option>
+                  <option value="25 Nov 2026">25 Nov 2026 (Hari 4)</option>
+                  <option value="26 Nov 2026">26 Nov 2026 (Hari 5)</option>
+                  <option value="27 Nov 2026">27 Nov 2026 (Hari 6 - Semifinal)</option>
+                  <option value="28 Nov 2026">28 Nov 2026 (Hari 7 - Grand Final)</option>
+                  <option value="Menunggu Selesai Fase Grup">Menunggu Selesai Fase Grup</option>
+                  <option value="Jadwal Menyesuaikan (TBD)">Jadwal Menyesuaikan (TBD)</option>
+                </datalist>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label" style="font-weight: 600;">Waktu Kick-off</label>
+                <input type="text" id="editMatchTimeInput" class="form-input" list="matchTimeSuggestions" placeholder="contoh: 08:00 - 08:35 WITA" required>
+                <datalist id="matchTimeSuggestions">
+                  <option value="08:00 - 08:35 WITA">08:00 - 08:35 WITA</option>
+                  <option value="08:45 - 09:20 WITA">08:45 - 09:20 WITA</option>
+                  <option value="09:30 - 10:05 WITA">09:30 - 10:05 WITA</option>
+                  <option value="10:15 - 10:50 WITA">10:15 - 10:50 WITA</option>
+                  <option value="13:30 - 14:15 WITA">13:30 - 14:15 WITA</option>
+                  <option value="14:30 - 15:15 WITA">14:30 - 15:15 WITA</option>
+                  <option value="15:30 - 16:15 WITA">15:30 - 16:15 WITA</option>
+                  <option value="16:30 - 17:15 WITA">16:30 - 17:15 WITA</option>
+                  <option value="19:30 - 20:15 WITA">19:30 - 20:15 WITA</option>
+                  <option value="20:30 - 21:15 WITA">20:30 - 21:15 WITA</option>
+                  <option value="Menyesuaikan">Menyesuaikan</option>
+                </datalist>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 8px;">
+              <label class="form-label" style="font-weight: 600;">Lapangan Pertandingan</label>
+              <select id="editMatchPitchInput" class="form-select">
+                <option value="Lapangan 1 (Utama Vinyl)">🏟️ Lapangan 1 (Utama Vinyl)</option>
+                <option value="Lapangan 2">🏟️ Lapangan 2</option>
+              </select>
+            </div>
           </div>
 
           <!-- Matchup Row -->
-          <div
+          <div id="editMatchupContainer"
             style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span id="editMatchupHeaderLabel" style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);">
+                ⚽ Pasangan Tim Bertanding
+              </span>
+              <span id="editMatchupBadge" style="font-size: 0.72rem; color: var(--text-muted);">
+                Pilih Tim atau Otomatis
+              </span>
+            </div>
+
             <div class="form-group" style="margin-bottom: 12px;">
               <label class="form-label" style="font-weight: 700; color: #10b981;">🟢 Tim 1 (Tuan Rumah / Home)</label>
-              <select id="editMatchHomeSelect" class="form-select" required>
+              <select id="editMatchHomeSelect" class="form-select">
                 <!-- Populated dynamically -->
               </select>
             </div>
@@ -1464,41 +1542,23 @@
 
             <div class="form-group">
               <label class="form-label" style="font-weight: 700; color: #3b82f6;">🔵 Tim 2 (Tamu / Away)</label>
-              <select id="editMatchAwaySelect" class="form-select" required>
+              <select id="editMatchAwaySelect" class="form-select">
                 <!-- Populated dynamically -->
               </select>
             </div>
           </div>
-
-          <!-- Schedule Row -->
-          <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label class="form-label">Tanggal Laga</label>
-              <input type="text" id="editMatchDateInput" class="form-input" placeholder="contoh: 22 Nov 2026" required>
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label class="form-label">Waktu Kick-off</label>
-              <input type="text" id="editMatchTimeInput" class="form-input" placeholder="contoh: 08:00 - 08:40 WITA"
-                required>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-top: 8px;">
-            <label class="form-label">Lapangan Pertandingan</label>
-            <select id="editMatchPitchInput" class="form-select">
-              <option value="Lapangan 1 (Utama Vinyl)">🏟️ Lapangan 1 (Utama Vinyl)</option>
-              <option value="Lapangan 2">🏟️ Lapangan 2</option>
-            </select>
-          </div>
         </div>
 
         <div class="modal-footer" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-          <button type="button" class="btn btn-outline"
-            onclick="document.getElementById('matchEditorModal').classList.remove('active')">Batal</button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-outline"
+              onclick="document.getElementById('matchEditorModal').classList.remove('active')">Batal</button>
+            <button type="button" class="btn btn-outline" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" onclick="admin.deleteCurrentMatch()" title="Hapus pertandingan ini secara permanen">🗑️ Hapus Laga</button>
+          </div>
           <div style="display: flex; gap: 8px;">
             <button type="button" class="btn btn-outline" onclick="admin.saveMatchSchedule(true)"
               title="Simpan perubahan ini dan langsung buka laga berikutnya">💾 Simpan & Lanjut ➔</button>
-            <button type="submit" class="btn btn-primary">💾 Simpan Lawan & Jadwal</button>
+            <button type="submit" class="btn btn-primary" id="editMatchSubmitBtn">💾 Simpan Pertandingan</button>
           </div>
         </div>
       </form>
@@ -2876,23 +2936,23 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="appToast" class="toast"></div>
 
-  <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint) -->
+  <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.53"></script>
-  <script defer src="js/supabase-client.js?v=8.53"></script>
-  <script defer src="js/data.js?v=8.53"></script>
-  <script defer src="js/admin.js?v=8.53"></script>
-  <script defer src="js/app.js?v=8.53"></script>
+  <script defer src="js/security.js?v=20261120_v3"></script>
+  <script defer src="js/supabase-client.js?v=20261120_v3"></script>
+  <script defer src="js/data.js?v=20261120_v3"></script>
+  <script defer src="js/admin.js?v=20261120_v3"></script>
+  <script defer src="js/app.js?v=20261120_v3"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
     try {
-      if ('serviceWorker' in navigator) {
+      if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
           for (var i = 0; i < regs.length; i++) {
             regs[i].unregister();
           }
-        });
+        }).catch(function () { });
       }
     } catch (e) { }
   </script>
