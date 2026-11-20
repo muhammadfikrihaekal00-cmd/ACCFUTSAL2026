@@ -1481,7 +1481,7 @@ html.snap-scroll-active .home-slide-nav {
 
 .hero-upcoming-time {
   font-family: var(--font-mono, "JetBrains Mono", monospace) !important;
-  font-size: 0.60rem !important;
+  font-size: 0.40rem !important;
   color: #94a3b8 !important;
   font-weight: 700 !important;
 }
