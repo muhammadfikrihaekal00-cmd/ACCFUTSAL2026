@@ -1481,7 +1481,7 @@ html.snap-scroll-active .home-slide-nav {
 
 .hero-upcoming-time {
   font-family: var(--font-mono, "JetBrains Mono", monospace) !important;
-  font-size: 0.74rem !important;
+  font-size: 0.60rem !important;
   color: #94a3b8 !important;
   font-weight: 700 !important;
 }
@@ -1711,10 +1711,12 @@ html.snap-scroll-active .home-slide-nav {
   height: 7px !important;
   border-radius: 50% !important;
 }
+
 .tier-tag-dot.gold {
   background: #f59e0b !important;
   box-shadow: 0 0 12px #f59e0b !important;
 }
+
 .tier-tag-dot.blue {
   background: #3b82f6 !important;
   box-shadow: 0 0 12px #3b82f6 !important;
@@ -1747,6 +1749,7 @@ html.snap-scroll-active .home-slide-nav {
   0% {
     transform: translate3d(0, 0, 0);
   }
+
   100% {
     transform: translate3d(-50%, 0, 0);
   }
@@ -1756,6 +1759,7 @@ html.snap-scroll-active .home-slide-nav {
   0% {
     transform: translate3d(-50%, 0, 0);
   }
+
   100% {
     transform: translate3d(0, 0, 0);
   }
@@ -3507,6 +3511,7 @@ tr.zone-qualify {
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
+
 .toast.active,
 .toast.show {
   opacity: 1 !important;
@@ -4070,9 +4075,11 @@ body.mobile-menu-active .mobile-menu-content {
   border-color: rgba(56, 189, 248, 0.8) !important;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.52), 0 0 20px rgba(56, 189, 248, 0.3) !important;
 }
+
 .floating-cat-switcher.is-sd .floating-cat-main-btn:hover {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), 0 0 26px rgba(56, 189, 248, 0.45) !important;
 }
+
 .floating-cat-switcher.is-sd .floating-cat-badge-label,
 .floating-cat-switcher.is-sd .floating-cat-arrow {
   color: #38bdf8 !important;
@@ -4087,14 +4094,26 @@ body.mobile-menu-active .mobile-menu-content {
   animation: floatingPulse 2.8s infinite ease-out !important;
   pointer-events: none !important;
 }
+
 .floating-cat-switcher.is-sd .floating-cat-pulse-ring {
   border-color: rgba(56, 189, 248, 0.4) !important;
 }
 
 @keyframes floatingPulse {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.14); opacity: 0; }
-  100% { transform: scale(1.14); opacity: 0; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.14);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1.14);
+    opacity: 0;
+  }
 }
 
 /* Opsi Dropdown ke Atas */
@@ -4132,6 +4151,7 @@ body.mobile-menu-active .mobile-menu-content {
   border-color: rgba(56, 189, 248, 0.7) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 16px rgba(56, 189, 248, 0.3) !important;
 }
+
 .floating-cat-switcher.is-smp .floating-cat-alt-btn .floating-cat-badge-label {
   color: #38bdf8 !important;
   font-size: 1rem !important;
@@ -4141,6 +4161,7 @@ body.mobile-menu-active .mobile-menu-content {
   border-color: rgba(245, 158, 11, 0.7) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 16px rgba(245, 158, 11, 0.3) !important;
 }
+
 .floating-cat-switcher.is-sd .floating-cat-alt-btn .floating-cat-badge-label {
   color: #fbbf24 !important;
   font-size: 1rem !important;
@@ -4149,6 +4170,7 @@ body.mobile-menu-active .mobile-menu-content {
 .floating-cat-alt-btn:hover {
   transform: scale(1.1) !important;
 }
+
 .floating-cat-alt-btn:active {
   transform: scale(0.92) !important;
 }
@@ -4202,17 +4224,21 @@ body.mobile-menu-active .mobile-menu-content {
     right: 18px !important;
     bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
   }
+
   .floating-cat-main-btn {
     width: 52px !important;
     height: 52px !important;
   }
+
   .floating-cat-badge-label {
     font-size: 1.05rem !important;
   }
+
   .floating-cat-alt-btn {
     width: 44px !important;
     height: 44px !important;
   }
+
   .floating-cat-pill-tooltip {
     padding: 6px 12px !important;
     font-size: 0.74rem !important;
