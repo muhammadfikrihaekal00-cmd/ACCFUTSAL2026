@@ -2280,7 +2280,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     let html = `<option value="">➕ [ BUAT / TAMBAH TIM BARU ]</option>`;
     if (smpTeams.length > 0) {
-      html += `<optgroup label="🏆 KATEGORI SMP (U-15)">`;
+      html += `<optgroup label="🏆 KATEGORI SMP">`;
       smpTeams.forEach(t => {
         const grp = t.group && t.group !== '-' ? ` • Grup ${t.group}` : ' • Belum Diundi';
         html += `<option value="${t.id}">${t.id} - ${t.name}${grp}</option>`;
@@ -2288,7 +2288,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       html += `</optgroup>`;
     }
     if (sdTeams.length > 0) {
-      html += `<optgroup label="⚽ KATEGORI SD (U-12)">`;
+      html += `<optgroup label="⚽ KATEGORI SD">`;
       sdTeams.forEach(t => {
         const grp = t.group && t.group !== '-' ? ` • Grup ${t.group}` : ' • Belum Diundi';
         html += `<option value="${t.id}">${t.id} - ${t.name}${grp}</option>`;

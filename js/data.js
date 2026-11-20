@@ -20,7 +20,7 @@ const DEFAULT_DATA = {
     rulesText: `### A. IDENTITAS & WAKTU PELAKSANAAN
 - Nama Kegiatan: Al Fayyadh Champions Cup 2026
 - Slogan Resmi: "Maksimal dalam Perjuangan, Mulia dalam Persaudaraan"
-- Kategori Turnamen: Kategori SD (U-12) dan Kategori SMP (U-15)
+- Kategori Turnamen: Kategori SD dan Kategori SMP
 - Masa Pendaftaran: 19 Oktober - 17 November 2026
 - Jadwal Verifikasi Berkas: Sabtu & Ahad, 14 - 15 November 2026
 - Technical Meeting (TM): 19 November 2026, Pukul 16.00 WITA (Offline di Ma'had Al-Fayyadh)

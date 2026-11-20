@@ -1386,7 +1386,7 @@ var app = window.app = Object.assign(window.app || {}, {
       const aTeam = this.store.getTeam(lm.awayId) || { name: lm.awayPlaceholder || "Away", shortName: "AWAY" };
       const hScore = lm.homeScoreLive ?? (lm.homeScore ?? 0);
       const aScore = lm.awayScoreLive ?? (lm.awayScore ?? 0);
-      const catBadge = (lm.category || "SMP") === "SD" ? "SD (U-12)" : "SMP (U-15)";
+      const catBadge = (lm.category || "SMP") === "SD" ? "SD" : "SMP";
       const stageName = lm.stage === "knockout" ? (lm.roundName || "Babak Gugur") : `Grup ${lm.group || ''}`;
 
       liveScoreBoxHtml = `
@@ -1422,7 +1422,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (nextMatch) {
       const hTeam = this.store.getTeam(nextMatch.homeId) || { name: nextMatch.homePlaceholder || "Home" };
       const aTeam = this.store.getTeam(nextMatch.awayId) || { name: nextMatch.awayPlaceholder || "Away" };
-      const catBadge = (nextMatch.category || "SMP") === "SD" ? "SD (U-12)" : "SMP (U-15)";
+      const catBadge = (nextMatch.category || "SMP") === "SD" ? "SD" : "SMP";
       const stageName = nextMatch.stage === "knockout" ? (nextMatch.roundName || "Babak Gugur") : `Grup ${nextMatch.group || ''}`;
 
       upcomingMatchBoxHtml = `
@@ -1571,7 +1571,7 @@ var app = window.app = Object.assign(window.app || {}, {
     });
     this.renderCurrentView();
     if (showToastMsg) {
-      const lbl = cat === "SMP" ? " Kelas SMP (U-15)" : " Kelas SD (U-12)";
+      const lbl = cat === "SMP" ? " Kelas SMP" : " Kelas SD";
       this.showToast(`Beralih ke ${lbl}`);
     }
   },
@@ -4181,8 +4181,8 @@ var app = window.app = Object.assign(window.app || {}, {
       const penWinnerTeam = m.penaltyWinner ? this.store.getTeam(m.penaltyWinner) : null;
 
       const catBadge = (m.category || "SMP") === "SD" ?
-        `<span class="match-category-tag cat-sd">SD (U-12)</span>` :
-        `<span class="match-category-tag cat-smp">SMP (U-15)</span>`;
+        `<span class="match-category-tag cat-sd">SD</span>` :
+        `<span class="match-category-tag cat-smp">SMP</span>`;
 
       return `
         <div class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''} ${swipeClass}">
@@ -4644,7 +4644,7 @@ var app = window.app = Object.assign(window.app || {}, {
       <div class="bracket-top-bar">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
           <span class="bracket-category-badge">
-            ${isSMP ? '🏆 KATEGORI SMP (U-15) • BABAK 8 BESAR S/D GRAND FINAL' : '🎒 KATEGORI SD (U-12) • BABAK 8 BESAR S/D GRAND FINAL'}
+            ${isSMP ? '🏆 KATEGORI SMP • BABAK 8 BESAR S/D GRAND FINAL' : '🎒 KATEGORI SD • BABAK 8 BESAR S/D GRAND FINAL'}
           </span>
           <span style="font-size: 0.78rem; color: var(--text-muted);">
             *Juara & Runner-up Grup otomatis masuk ke bagan sistem gugur
@@ -4746,7 +4746,7 @@ var app = window.app = Object.assign(window.app || {}, {
                     <div class="champ-crown-badge">👑</div>
                   </div>
                   <div class="champ-info-text">
-                    <div class="champ-podium-label">JUARA 1 (CHAMPION) • ${isSMP ? 'SMP (U-15)' : 'SD (U-12)'}</div>
+                    <div class="champ-podium-label">JUARA 1 (CHAMPION) • ${isSMP ? 'SMP' : 'SD'}</div>
                     <div class="champ-school-title" title="${champTeam.name}">${champTeam.name}</div>
                     <div class="champ-school-sub">📍 ${champTeam.city || 'Maros'} • Kampiun & Pemegang Trofi ACC 2026</div>
                   </div>
@@ -5413,8 +5413,8 @@ var app = window.app = Object.assign(window.app || {}, {
               <thead>
                 <tr>
                   <th>Jenis Pelanggaran / Kartu</th>
-                  <th>Kategori SD (U-12)</th>
-                  <th>Kategori SMP (U-15)</th>
+                  <th>Kategori SD</th>
+                  <th>Kategori SMP</th>
                 </tr>
               </thead>
               <tbody>
@@ -5476,8 +5476,8 @@ var app = window.app = Object.assign(window.app || {}, {
               <thead>
                 <tr>
                   <th>Penghargaan Resmi</th>
-                  <th>Kategori SD (U-12)</th>
-                  <th>Kategori SMP (U-15)</th>
+                  <th>Kategori SD</th>
+                  <th>Kategori SMP</th>
                 </tr>
               </thead>
               <tbody>
@@ -5935,7 +5935,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
       if (roleBanner) {
         roleBanner.style.display = "block";
-        const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
+        const catLabel = cat === "SMP" ? "SMP" : "SD";
         roleBanner.innerHTML = `
           <div class="draw-panitia-bar">
             <div class="draw-panitia-bar-info">
@@ -6010,7 +6010,7 @@ var app = window.app = Object.assign(window.app || {}, {
       if (isFinished) {
         announce.textContent = "🎉 Seluruh 16 tim telah selesai diundi secara sah ke dalam 4 grup (Grup A, B, C, D) dan tersambung otomatis ke Klasemen & Jadwal!";
       } else if (state.history.length === 0) {
-        announce.textContent = `Siap melakukan drawing resmi 1 per 1 untuk Kategori ${cat === "SMP" ? "SMP (U-15)" : "SD (U-12)"}. Tekan tombol putar untuk mengundi tim pertama!`;
+        announce.textContent = `Siap melakukan drawing resmi 1 per 1 untuk Kategori ${cat === "SMP" ? "SMP" : "SD"}. Tekan tombol putar untuk mengundi tim pertama!`;
       } else {
         const last = state.history[state.history.length - 1];
         announce.textContent = `Langkah Terakhir: ${last.teamName} diundi ke Grup ${last.group} (Slot ${last.slot}). Target berikutnya: Grup ${nextTarget.group} Slot ${nextTarget.slotIndex}.`;
@@ -6093,7 +6093,7 @@ var app = window.app = Object.assign(window.app || {}, {
     const container = document.getElementById("drawUserContainer");
     if (!container) return;
 
-    const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
+    const catLabel = cat === "SMP" ? "SMP" : "SD";
     const allTeams = this.getDrawCategoryTeams(cat);
     const state = this.getDrawState()[cat];
     const groups = ["A", "B", "C", "D"];
@@ -6830,7 +6830,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     if (this.isDrawingSpinning) return;
     const cat = this.currentDrawCat || "SMP";
-    const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
+    const catLabel = cat === "SMP" ? "SMP" : "SD";
 
     if (!confirm(`Apakah Anda yakin ingin me-reset hasil undian grup ${catLabel}? Seluruh tim akan dikembalikan ke pot undian dan dikosongkan dari klasemen & jadwal.`)) {
       return;
@@ -6900,7 +6900,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
   copyDrawResults() {
     const cat = this.currentDrawCat || "SMP";
-    const catLabel = cat === "SMP" ? "SMP (U-15)" : "SD (U-12)";
+    const catLabel = cat === "SMP" ? "SMP" : "SD";
     const state = this.getDrawState()[cat];
     const groups = ["A", "B", "C", "D"];
 
@@ -7393,7 +7393,7 @@ var app = window.app = Object.assign(window.app || {}, {
       <div class="md-scoreboard-card">
         <!-- META BAR -->
         <div class="md-meta-bar">
-          <span class="match-category-tag ${match.category === 'SD' ? 'cat-sd' : 'cat-smp'}">${match.category === 'SD' ? 'SD (U-12)' : 'SMP (U-15)'}</span>
+          <span class="match-category-tag ${match.category === 'SD' ? 'cat-sd' : 'cat-smp'}">${match.category === 'SD' ? 'SD' : 'SMP'}</span>
           <span class="fixture-group-pill">${match.stage === 'knockout' ? (match.roundName || 'Babak Gugur') : 'Grup ' + match.group}</span>
           <span class="fixture-pitch-pill">${match.pitch || 'Lapangan Utama'}</span>
           <span>📅 ${match.date} • ⏰ ${match.time}</span>
