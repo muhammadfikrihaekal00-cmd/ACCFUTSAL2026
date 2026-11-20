@@ -1457,9 +1457,9 @@ var app = window.app = Object.assign(window.app || {}, {
       window.SupabaseService.fetchAllData().then(data => {
         isSyncing = false;
         if (data) {
-          // Generate signature lengkap: pertandingan, skor, menit, kartu, config, DAN DATA TIM BESERTA SKUAD & LOGO
+          // Generate signature lengkap: pertandingan, waktu, skor, menit, kartu, config, DAN DATA TIM BESERTA SKUAD & LOGO
           const signature = (data.matches ? data.matches.map(m =>
-            `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
+            `${m.id}:${m.date}:${m.time}:${m.pitch}:${m.stage}:${m.group_letter}:${m.round_name}:${m.home_id}:${m.away_id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${m.penalty_home_score}:${m.penalty_away_score}:${m.updated_at}`
           ).join("|") : "") +
             "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
             "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.updated_at}:${(t.players || []).length}`).join("|") : "") +
@@ -1803,9 +1803,9 @@ var app = window.app = Object.assign(window.app || {}, {
         if (payload.status) mapped.status = payload.status;
         if (payload.home_id !== undefined) mapped.homeId = payload.home_id || "";
         if (payload.away_id !== undefined) mapped.awayId = payload.away_id || "";
-        if (payload.date !== undefined && payload.date) mapped.date = payload.date;
-        if (payload.time !== undefined && payload.time) mapped.time = payload.time;
-        if (payload.pitch !== undefined && payload.pitch) mapped.pitch = payload.pitch;
+        if (payload.date !== undefined) mapped.date = payload.date || "";
+        if (payload.time !== undefined) mapped.time = payload.time || "";
+        if (payload.pitch !== undefined) mapped.pitch = payload.pitch || "";
         if (payload.home_placeholder !== undefined) mapped.homePlaceholder = payload.home_placeholder || "";
         if (payload.away_placeholder !== undefined) mapped.awayPlaceholder = payload.away_placeholder || "";
         if (payload.stage !== undefined) mapped.stage = payload.stage;
@@ -3580,7 +3580,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Filter by Day
     if (this.filterDay !== "all") {
-      matches = matches.filter(m => String(m.matchday) === this.filterDay);
+      matches = matches.filter(m => String(m.day || m.matchday) === this.filterDay);
     }
     // Filter by Pitch
     if (this.filterPitch !== "all") {
@@ -3759,7 +3759,7 @@ var app = window.app = Object.assign(window.app || {}, {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="fixture-time-hint">${m.date}</span>
               <span class="match-status-tag ${m.status}">
-                ${(isKnockout && !hasDeterminedTeams) ? 'Menunggu Tim Lolos' : (isLive ? `<span class="pulse-dot"></span> LIVE ${cleanMinBadge}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : m.time))}
+                ${isLive ? `<span class="pulse-dot"></span> LIVE ${cleanMinBadge}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : (m.time || 'Waktu Belum Diatur'))}
               </span>
             </div>
           </div>
@@ -4083,8 +4083,8 @@ var app = window.app = Object.assign(window.app || {}, {
           ? `<span class="bracket-status-chip ft" style="background:rgba(234,179,8,0.15); color:#ca8a04; border-color:rgba(234,179,8,0.4);">FT (Pen. ${m.penaltyHomeScore}-${m.penaltyAwayScore})</span>`
           : `<span class="bracket-status-chip ft">FT • Selesai</span>`;
       } else {
-        const timeOrHint = (!hasDeterminedHome || !hasDeterminedAway) ? 'Menunggu Tim Lolos' : (m.time ? m.time.replace(' WIB', '') : '');
-        statusBadge = `<span class="bracket-status-chip upcoming">📅 ${m.date ? m.date.replace(' Nov 2026', '') : ''} • ${timeOrHint}</span>`;
+        const timeDisplay = m.time ? m.time.replace(' WIB', '') : 'Waktu TBD';
+        statusBadge = `<span class="bracket-status-chip upcoming">📅 ${m.date ? m.date.replace(' Nov 2026', '') : ''} • ${timeDisplay}</span>`;
       }
 
       const isFinal = cardType === "final";

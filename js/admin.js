@@ -1285,7 +1285,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       homePlaceholder: "",
       awayPlaceholder: "",
       date: "22 Nov 2026",
-      time: "08:00 - 08:35 WITA",
+      time: cat === "SD" ? "08:00 - 08:30 WITA" : "08:00 - 08:40 WITA",
       pitch: "Lapangan 1 (Utama Vinyl)",
       status: "scheduled",
       homeScore: null,
@@ -1478,7 +1478,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const dateInput = document.getElementById("editMatchDateInput");
     if (dateInput) dateInput.value = match.date || "22 Nov 2026";
     const timeInput = document.getElementById("editMatchTimeInput");
-    if (timeInput) timeInput.value = match.time || "08:00 - 08:35 WITA";
+    if (timeInput) timeInput.value = match.time || (cat === "SD" ? "08:00 - 08:30 WITA" : "08:00 - 08:40 WITA");
     const pitchInput = document.getElementById("editMatchPitchInput");
     if (pitchInput) {
       if (match.pitch && match.pitch.includes("2")) {
