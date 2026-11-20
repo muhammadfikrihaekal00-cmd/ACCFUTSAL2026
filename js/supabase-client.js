@@ -366,6 +366,18 @@
           ? (parseInt(String(match.liveMinute || "1").replace(/\D/g, ''), 10) || 1)
           : 0;
 
+        // Siapkan kartu dan sematkan metadata laga (lineup 5 pemain, pergantian, & foul) secara aman tanpa merusak skema database
+        const cleanCards = (Array.isArray(match.cards) ? [...match.cards] : []).filter(c => c && !c._meta);
+        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined) {
+          cleanCards.push({
+            _meta: true,
+            lineup: match.lineup || null,
+            substitutions: Array.isArray(match.substitutions) ? match.substitutions : [],
+            homeFouls: parseInt(match.homeFouls, 10) || 0,
+            awayFouls: parseInt(match.awayFouls, 10) || 0
+          });
+        }
+
         // Persist all match details (schedule, pitch, teams, stage, scores) to Supabase
         const upsertPayload = {
           id: match.id,
@@ -386,7 +398,7 @@
           away_score_live: aScoreNum,
           minute_live: minuteNum,
           scorers: Array.isArray(match.scorers) ? match.scorers : [],
-          cards: Array.isArray(match.cards) ? match.cards : [],
+          cards: cleanCards,
           updated_at: new Date().toISOString()
         };
 

@@ -567,8 +567,13 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       }
     }
 
+    this.ensureMatchLineup(match);
     this.renderAdminEventsList(match);
-    this.populateEventTeamSelectors(match);
+    this.populateGoalAssistSelectors(match);
+    this.populateCardSelectors(match);
+    this.populateSubstitutionSelectors(match);
+    this.updateFoulDisplays(match);
+    this.switchQuickScoreTab('score');
 
     // Setup penalty shootout section for knockout matches
     const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
@@ -947,31 +952,612 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (match) this.checkPenaltySectionVisibility(match);
   },
 
-  populateEventTeamSelectors(match) {
-    const teamSelect = document.getElementById("eventTeamSelect");
+  // ==========================================
+  // QUICK SCORE 6-TABS CONTROLLER & SYSTEM
+  // ==========================================
+  switchQuickScoreTab(tabName) {
+    const tabs = ['score', 'lineup', 'goal', 'card', 'sub', 'foul'];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`qsTabBtn_${t}`);
+      const panel = document.getElementById(`qsPanel_${t}`);
+      if (btn) btn.classList.toggle('active', t === tabName);
+      if (panel) panel.style.display = (t === tabName) ? 'block' : 'none';
+    });
+
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    if (tabName === 'lineup') {
+      this.renderStarting5UI(match);
+    } else if (tabName === 'goal') {
+      this.populateGoalAssistSelectors(match);
+    } else if (tabName === 'card') {
+      this.populateCardSelectors(match);
+    } else if (tabName === 'sub') {
+      this.populateSubstitutionSelectors(match);
+    } else if (tabName === 'foul') {
+      this.updateFoulDisplays(match);
+    }
+  },
+
+  useLiveMinuteFor(inputId) {
+    const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
+    const target = document.getElementById(inputId);
+    if (target) {
+      target.value = matchMin ? `${matchMin}'` : "1'";
+      app.showToast(`⏱️ Menit disetel ke ${target.value}`);
+    }
+  },
+
+  ensureMatchLineup(match) {
+    if (!match.lineup) match.lineup = {};
+    if (!match.lineup.home) match.lineup.home = { onCourt: [], bench: [] };
+    if (!match.lineup.away) match.lineup.away = { onCourt: [], bench: [] };
+
+    const home = app.store.getTeam(match.homeId);
+    const away = app.store.getTeam(match.awayId);
+
+    // Inisialisasi tim home jika belum ada 5 pemain onCourt
+    if ((!match.lineup.home.onCourt || match.lineup.home.onCourt.length === 0) && home && Array.isArray(home.players)) {
+      const pNames = home.players.map(p => p.name).filter(Boolean);
+      match.lineup.home.onCourt = pNames.slice(0, 5);
+      match.lineup.home.bench = pNames.slice(5);
+    }
+
+    // Inisialisasi tim away jika belum ada 5 pemain onCourt
+    if ((!match.lineup.away.onCourt || match.lineup.away.onCourt.length === 0) && away && Array.isArray(away.players)) {
+      const pNames = away.players.map(p => p.name).filter(Boolean);
+      match.lineup.away.onCourt = pNames.slice(0, 5);
+      match.lineup.away.bench = pNames.slice(5);
+    }
+
+    if (!Array.isArray(match.substitutions)) match.substitutions = [];
+    if (match.homeFouls === undefined || match.homeFouls === null) match.homeFouls = 0;
+    if (match.awayFouls === undefined || match.awayFouls === null) match.awayFouls = 0;
+  },
+
+  renderStarting5UI(match) {
+    const container = document.getElementById("starting5Container");
+    if (!container) return;
+    this.ensureMatchLineup(match);
+
+    const home = app.store.getTeam(match.homeId) || { name: match.homePlaceholder || "Home", players: [] };
+    const away = app.store.getTeam(match.awayId) || { name: match.awayPlaceholder || "Away", players: [] };
+
+    const renderTeamLineupPicker = (team, side, teamTitle) => {
+      const onCourt = match.lineup[side]?.onCourt || [];
+      const players = team.players || [];
+
+      return `
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px; margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="font-size: 0.82rem; color: var(--text-main);">${teamTitle}</strong>
+            <span id="st5_badge_${side}" style="font-size: 0.7rem; font-weight: 800; color: ${onCourt.length === 5 ? '#10b981' : '#f59e0b'}; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 999px;">
+              ${onCourt.length} / 5 Terpilih
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 160px; overflow-y: auto; padding-right: 4px;">
+            ${players.length === 0 ? `<div style="font-size:0.75rem; color:var(--text-muted);">Belum ada skuad pemain terdaftar di tim ini.</div>` : players.map(p => {
+              const isChecked = onCourt.includes(p.name);
+              return `
+                <label style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 6px 8px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; border-left: 3px solid ${isChecked ? '#10b981' : '#64748b'};">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" name="st5_${side}" value="${p.name}" ${isChecked ? 'checked' : ''} onchange="admin.onStarting5CheckChange('${side}')" style="cursor: pointer;">
+                    <span style="font-weight: 700; color: #94a3b8;">#${p.no || '-'}</span>
+                    <span style="color: var(--text-main); font-weight: 600;">${p.name}</span>
+                  </div>
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">${p.pos || 'Pemain'}</span>
+                </label>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    };
+
+    container.innerHTML = `
+      <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
+        ${renderTeamLineupPicker(home, 'home', `🏠 ${home.name} (Starting 5)`)}
+        ${renderTeamLineupPicker(away, 'away', `✈️ ${away.name} (Starting 5)`)}
+      </div>
+      <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="admin.saveStarting5()" style="padding: 8px 16px; font-weight: 800;">
+          💾 Konfirmasi &amp; Kunci Starting 5
+        </button>
+      </div>
+    `;
+  },
+
+  onStarting5CheckChange(side) {
+    const checked = Array.from(document.querySelectorAll(`input[name="st5_${side}"]:checked`));
+    const badge = document.getElementById(`st5_badge_${side}`);
+    if (badge) {
+      badge.textContent = `${checked.length} / 5 Terpilih`;
+      badge.style.color = checked.length === 5 ? '#10b981' : '#f59e0b';
+    }
+  },
+
+  saveStarting5() {
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const homeChecked = Array.from(document.querySelectorAll(`input[name="st5_home"]:checked`)).map(el => el.value);
+    const awayChecked = Array.from(document.querySelectorAll(`input[name="st5_away"]:checked`)).map(el => el.value);
+
+    if (homeChecked.length !== 5 && homeChecked.length > 0) {
+      if (!confirm(`Pemain on-court tim Home ada ${homeChecked.length} (aturan standar futsal: 5 pemain). Lanjutkan simpan susunan ini?`)) return;
+    }
+    if (awayChecked.length !== 5 && awayChecked.length > 0) {
+      if (!confirm(`Pemain on-court tim Away ada ${awayChecked.length} (aturan standar futsal: 5 pemain). Lanjutkan simpan susunan ini?`)) return;
+    }
+
+    const homeTeam = app.store.getTeam(match.homeId);
+    const awayTeam = app.store.getTeam(match.awayId);
+
+    const homeAll = (homeTeam?.players || []).map(p => p.name);
+    const awayAll = (awayTeam?.players || []).map(p => p.name);
+
+    match.lineup = {
+      home: {
+        onCourt: homeChecked,
+        bench: homeAll.filter(name => !homeChecked.includes(name))
+      },
+      away: {
+        onCourt: awayChecked,
+        bench: awayAll.filter(name => !awayChecked.includes(name))
+      }
+    };
+
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+    app.showToast("✅ Susunan Starting 5 berhasil dikonfirmasi!");
+    this.populateGoalAssistSelectors(match);
+    this.populateCardSelectors(match);
+    this.populateSubstitutionSelectors(match);
+    this.switchQuickScoreTab('score');
+    if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
+  },
+
+  populateGoalAssistSelectors(match) {
+    const teamSelect = document.getElementById("goalTeamSelect");
     if (!teamSelect) return;
+    this.ensureMatchLineup(match);
 
     const home = app.store.getTeam(match.homeId);
     const away = app.store.getTeam(match.awayId);
 
     teamSelect.innerHTML = `
-      <option value="">Pilih Tim</option>
+      <option value="">-- Pilih Tim Pencetak Gol --</option>
       ${home ? `<option value="${home.id}">${home.name}</option>` : ''}
       ${away ? `<option value="${away.id}">${away.name}</option>` : ''}
     `;
 
-    teamSelect.onchange = () => {
-      const selectedTeamId = teamSelect.value;
-      const playerSelect = document.getElementById("eventPlayerSelect");
-      if (!selectedTeamId) {
-        playerSelect.innerHTML = `<option value="">Pilih Pemain</option>`;
-        return;
-      }
-      const team = app.store.getTeam(selectedTeamId);
-      playerSelect.innerHTML = team.players.map(p => `
-        <option value="${p.name}">#${p.no} - ${p.name} (${p.pos})</option>
+    this.onGoalTeamChange();
+  },
+
+  onGoalTeamChange() {
+    const teamSelect = document.getElementById("goalTeamSelect");
+    const scorerSelect = document.getElementById("goalScorerSelect");
+    const assistSelect = document.getElementById("goalAssistSelect");
+    if (!teamSelect || !scorerSelect || !assistSelect) return;
+
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const teamId = teamSelect.value;
+    if (!teamId) {
+      scorerSelect.innerHTML = `<option value="">Pilih Pencetak Gol</option>`;
+      assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>`;
+      return;
+    }
+
+    const side = (teamId === match.homeId) ? 'home' : 'away';
+    const onCourt = match.lineup?.[side]?.onCourt || [];
+    const team = app.store.getTeam(teamId);
+
+    if (onCourt.length === 0) {
+      // Fallback jika starting 5 belum dikunci
+      const list = (team?.players || []).slice(0, 5);
+      scorerSelect.innerHTML = `<option value="">-- Pilih 5 Pemain Lapangan --</option>` + list.map(p => `
+        <option value="${p.name}">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>
       `).join("");
-    };
+      assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + list.map(p => `
+        <option value="${p.name}">#${p.no || '-'} ${p.name}</option>
+      `).join("");
+      return;
+    }
+
+    scorerSelect.innerHTML = `<option value="">-- Pilih Pencetak Gol (5 di Lapangan) --</option>` + onCourt.map(name => {
+      const p = team?.players.find(x => x.name === name);
+      return `<option value="${name}">#${p?.no || '-'} ${name} (${p?.pos || 'Pemain'})</option>`;
+    }).join("");
+
+    assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + onCourt.map(name => {
+      const p = team?.players.find(x => x.name === name);
+      return `<option value="${name}">#${p?.no || '-'} ${name}</option>`;
+    }).join("");
+  },
+
+  addGoalWithAssist() {
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const teamId = document.getElementById("goalTeamSelect")?.value;
+    const scorer = document.getElementById("goalScorerSelect")?.value;
+    const assist = document.getElementById("goalAssistSelect")?.value;
+    let minute = document.getElementById("goalMinuteInput")?.value?.trim() || "";
+
+    if (!teamId || !scorer) {
+      alert("Harap pilih tim dan pemain yang mencetak gol!");
+      return;
+    }
+
+    if (!minute) {
+      const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
+      minute = (matchMin || "1") + "'";
+    } else {
+      const cleanMin = minute.replace(/[^0-9]/g, "");
+      minute = (cleanMin || "1") + "'";
+    }
+
+    if (scorer === assist && assist) {
+      alert("Pencetak gol dan pemberi assist tidak boleh pemain yang sama!");
+      return;
+    }
+
+    if (!match.scorers) match.scorers = [];
+    match.scorers.push({
+      team: teamId,
+      player: scorer,
+      assist: assist || "",
+      minute: minute
+    });
+
+    // Perbarui statistik pemain
+    const team = app.store.getTeam(teamId);
+    const pScorer = team?.players.find(x => x.name === scorer);
+    if (pScorer) pScorer.goals = (pScorer.goals || 0) + 1;
+
+    if (assist) {
+      const pAssist = team?.players.find(x => x.name === assist);
+      if (pAssist) pAssist.assists = (pAssist.assists || 0) + 1;
+    }
+
+    // Auto increment skor laga
+    const hCount = match.scorers.filter(s => s.team === match.homeId).length;
+    const aCount = match.scorers.filter(s => s.team === match.awayId).length;
+    const curH = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
+    const curA = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
+    document.getElementById("homeScoreDisplay").textContent = Math.max(curH, hCount);
+    document.getElementById("awayScoreDisplay").textContent = Math.max(curA, aCount);
+
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+
+    this.renderAdminEventsList(match);
+    app.showToast(`⚽ Gol dicatat: ${scorer}${assist ? ` (Assist: ${assist})` : ''} - Menit ${minute}`);
+    this.switchQuickScoreTab('score');
+    if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
+  },
+
+  populateCardSelectors(match) {
+    const teamSelect = document.getElementById("cardTeamSelect");
+    if (!teamSelect) return;
+    this.ensureMatchLineup(match);
+
+    const home = app.store.getTeam(match.homeId);
+    const away = app.store.getTeam(match.awayId);
+
+    teamSelect.innerHTML = `
+      <option value="">-- Pilih Tim Penerima Kartu --</option>
+      ${home ? `<option value="${home.id}">${home.name}</option>` : ''}
+      ${away ? `<option value="${away.id}">${away.name}</option>` : ''}
+    `;
+
+    this.onCardTeamChange();
+  },
+
+  onCardTeamChange() {
+    const teamSelect = document.getElementById("cardTeamSelect");
+    const recSelect = document.getElementById("cardRecipientSelect");
+    if (!teamSelect || !recSelect) return;
+
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const teamId = teamSelect.value;
+    if (!teamId) {
+      recSelect.innerHTML = `<option value="">-- Pilih Orang yang Diberi Kartu --</option>`;
+      return;
+    }
+
+    const side = (teamId === match.homeId) ? 'home' : 'away';
+    const onCourt = match.lineup?.[side]?.onCourt || [];
+    const bench = match.lineup?.[side]?.bench || [];
+    const team = app.store.getTeam(teamId);
+
+    let html = `<option value="">-- Pilih Penerima Kartu --</option>`;
+
+    // 1. 5 Pemain di Lapangan
+    if (onCourt.length > 0) {
+      html += `<optgroup label="🟢 5 Pemain di Lapangan (On-Court)">`;
+      onCourt.forEach(name => {
+        const p = team?.players.find(x => x.name === name);
+        html += `<option value="${name}|Pemain Lapangan">#${p?.no || '-'} ${name} (Lapangan)</option>`;
+      });
+      html += `</optgroup>`;
+    }
+
+    // 2. Pemain Cadangan
+    if (bench.length > 0) {
+      html += `<optgroup label="⚪ Pemain Cadangan (Bench)">`;
+      bench.forEach(name => {
+        const p = team?.players.find(x => x.name === name);
+        html += `<option value="${name}|Pemain Cadangan">#${p?.no || '-'} ${name} (Cadangan)</option>`;
+      });
+      html += `</optgroup>`;
+    }
+
+    // 3. Staf / Ofisial Tim (Coach, Asisten, Manager, Medis)
+    const officials = [];
+    if (team?.coach) officials.push({ name: team.coach, role: "Pelatih" });
+    if (team?.manager) officials.push({ name: team.manager, role: "Asisten Pelatih / Manajer" });
+    if (team?.official?.manager && team.official.manager !== team.manager) officials.push({ name: team.official.manager, role: "Manajer Tim" });
+    if (team?.official?.asstCoach && team.official.asstCoach !== team.manager) officials.push({ name: team.official.asstCoach, role: "Asisten Pelatih" });
+    if (team?.medic) officials.push({ name: team.medic, role: "Tim Medis" });
+    if (team?.official?.medic && team.official.medic !== team.medic) officials.push({ name: team.official.medic, role: "Tim Medis" });
+
+    if (officials.length > 0) {
+      html += `<optgroup label="👔 Staf / Ofisial Tim">`;
+      officials.forEach(o => {
+        html += `<option value="${o.name}|${o.role}">${o.name} (${o.role})</option>`;
+      });
+      html += `</optgroup>`;
+    }
+
+    recSelect.innerHTML = html;
+  },
+
+  addCardEventWithRole(type) {
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const teamId = document.getElementById("cardTeamSelect")?.value;
+    const rawVal = document.getElementById("cardRecipientSelect")?.value;
+    let minute = document.getElementById("cardMinuteInput")?.value?.trim() || "";
+
+    if (!teamId || !rawVal) {
+      alert("Harap pilih tim dan orang penerima kartu!");
+      return;
+    }
+
+    const [recipient, role] = rawVal.split("|");
+
+    if (!minute) {
+      const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
+      minute = (matchMin || "1") + "'";
+    } else {
+      const cleanMin = minute.replace(/[^0-9]/g, "");
+      minute = (cleanMin || "1") + "'";
+    }
+
+    if (!match.cards) match.cards = [];
+    match.cards.push({
+      team: teamId,
+      player: recipient,
+      role: role || "Pemain",
+      type: type,
+      minute: minute
+    });
+
+    // Update stats jika penerima kartu adalah pemain
+    const team = app.store.getTeam(teamId);
+    const p = team?.players.find(x => x.name === recipient);
+    if (p) {
+      if (type === "yellow") p.yc = (p.yc || 0) + 1;
+      if (type === "red") p.rc = (p.rc || 0) + 1;
+    }
+
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+
+    this.renderAdminEventsList(match);
+    app.showToast(`Kartu ${type === 'yellow' ? 'Kuning 🟨' : 'Merah 🟥'} dicatat: ${recipient} (${role || 'Pemain'}) - Menit ${minute}`);
+    this.switchQuickScoreTab('score');
+    if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
+  },
+
+  populateSubstitutionSelectors(match) {
+    const teamSelect = document.getElementById("subTeamSelect");
+    if (!teamSelect) return;
+    this.ensureMatchLineup(match);
+
+    const home = app.store.getTeam(match.homeId);
+    const away = app.store.getTeam(match.awayId);
+
+    teamSelect.innerHTML = `
+      <option value="">-- Pilih Tim yang Berganti --</option>
+      ${home ? `<option value="${home.id}">${home.name}</option>` : ''}
+      ${away ? `<option value="${away.id}">${away.name}</option>` : ''}
+    `;
+
+    this.onSubTeamChange();
+  },
+
+  onSubTeamChange() {
+    const teamSelect = document.getElementById("subTeamSelect");
+    const outSelect = document.getElementById("subPlayerOutSelect");
+    const inSelect = document.getElementById("subPlayerInSelect");
+    if (!teamSelect || !outSelect || !inSelect) return;
+
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const teamId = teamSelect.value;
+    if (!teamId) {
+      outSelect.innerHTML = `<option value="">Pilih Pemain Keluar</option>`;
+      inSelect.innerHTML = `<option value="">Pilih Pemain Masuk</option>`;
+      return;
+    }
+
+    const side = (teamId === match.homeId) ? 'home' : 'away';
+    const onCourt = match.lineup?.[side]?.onCourt || [];
+    const bench = match.lineup?.[side]?.bench || [];
+    const team = app.store.getTeam(teamId);
+
+    outSelect.innerHTML = `<option value="">-- Pilih Pemain Keluar (5 di Lapangan) --</option>` + onCourt.map(name => {
+      const p = team?.players.find(x => x.name === name);
+      return `<option value="${name}">#${p?.no || '-'} ${name} (${p?.pos || 'Pemain'})</option>`;
+    }).join("");
+
+    inSelect.innerHTML = `<option value="">-- Pilih Pemain Masuk (Cadangan) --</option>` + bench.map(name => {
+      const p = team?.players.find(x => x.name === name);
+      return `<option value="${name}">#${p?.no || '-'} ${name} (${p?.pos || 'Pemain'})</option>`;
+    }).join("");
+  },
+
+  executeSubstitution() {
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const teamId = document.getElementById("subTeamSelect")?.value;
+    const pOut = document.getElementById("subPlayerOutSelect")?.value;
+    const pIn = document.getElementById("subPlayerInSelect")?.value;
+    let minute = document.getElementById("subMinuteInput")?.value?.trim() || "";
+
+    if (!teamId || !pOut || !pIn) {
+      alert("Harap pilih tim, pemain yang keluar dari lapangan, dan pemain yang masuk dari cadangan!");
+      return;
+    }
+
+    if (pOut === pIn) {
+      alert("Pemain keluar dan pemain masuk tidak boleh sama!");
+      return;
+    }
+
+    if (!minute) {
+      const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
+      minute = (matchMin || "1") + "'";
+    } else {
+      const cleanMin = minute.replace(/[^0-9]/g, "");
+      minute = (cleanMin || "1") + "'";
+    }
+
+    this.ensureMatchLineup(match);
+    const side = (teamId === match.homeId) ? 'home' : 'away';
+
+    // Swap: pOut keluar ke bench, pIn masuk ke onCourt
+    const onCourt = match.lineup[side].onCourt || [];
+    const bench = match.lineup[side].bench || [];
+
+    const outIdx = onCourt.indexOf(pOut);
+    if (outIdx !== -1) {
+      onCourt.splice(outIdx, 1);
+    }
+    const inIdx = bench.indexOf(pIn);
+    if (inIdx !== -1) {
+      bench.splice(inIdx, 1);
+    }
+
+    onCourt.push(pIn);
+    bench.push(pOut);
+
+    if (!Array.isArray(match.substitutions)) match.substitutions = [];
+    match.substitutions.push({
+      team: teamId,
+      playerOut: pOut,
+      playerIn: pIn,
+      minute: minute
+    });
+
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+
+    // Refresh selectors agar pemain yang baru masuk langsung dapat dicatat gol/assist
+    this.populateGoalAssistSelectors(match);
+    this.populateCardSelectors(match);
+    this.populateSubstitutionSelectors(match);
+    this.renderAdminEventsList(match);
+
+    app.showToast(`🔄 Pergantian Berhasil: ${pIn} (Masuk 🟢) menggantikan ${pOut} (Keluar 🔴) - Menit ${minute}`);
+    this.switchQuickScoreTab('score');
+    if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
+  },
+
+  adjustFouls(side, delta) {
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    this.ensureMatchLineup(match);
+    if (side === 'home') {
+      match.homeFouls = Math.max(0, (parseInt(match.homeFouls, 10) || 0) + delta);
+    } else {
+      match.awayFouls = Math.max(0, (parseInt(match.awayFouls, 10) || 0) + delta);
+    }
+
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+
+    this.updateFoulDisplays(match);
+    if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
+  },
+
+  updateFoulDisplays(match) {
+    this.ensureMatchLineup(match);
+    const home = app.store.getTeam(match.homeId);
+    const away = app.store.getTeam(match.awayId);
+
+    const hLabel = document.getElementById("foulHomeTeamLabel");
+    const aLabel = document.getElementById("foulAwayTeamLabel");
+    if (hLabel) hLabel.textContent = home ? (home.shortName || home.name) : "Home";
+    if (aLabel) aLabel.textContent = away ? (away.shortName || away.name) : "Away";
+
+    const hFouls = parseInt(match.homeFouls, 10) || 0;
+    const aFouls = parseInt(match.awayFouls, 10) || 0;
+
+    const hDisp = document.getElementById("foulHomeDisplay");
+    const aDisp = document.getElementById("foulAwayDisplay");
+    const totDisp = document.getElementById("foulTotalDisplay");
+
+    if (hDisp) hDisp.textContent = hFouls;
+    if (aDisp) aDisp.textContent = aFouls;
+    if (totDisp) totDisp.textContent = `${hFouls} - ${aFouls}`;
+
+    const hAlert = document.getElementById("foulHomeAlert");
+    const aAlert = document.getElementById("foulAwayAlert");
+    if (hAlert) {
+      if (hFouls >= 5) {
+        hAlert.textContent = `🚨 LIMIT! Pelanggaran ke-${hFouls} (Second Penalty 10m)`;
+      } else {
+        hAlert.textContent = `${5 - hFouls} foul menuju penalti 10m`;
+      }
+    }
+    if (aAlert) {
+      if (aFouls >= 5) {
+        aAlert.textContent = `🚨 LIMIT! Pelanggaran ke-${aFouls} (Second Penalty 10m)`;
+      } else {
+        aAlert.textContent = `${5 - aFouls} foul menuju penalti 10m`;
+      }
+    }
   },
 
   addGoalEvent() {
@@ -1043,23 +1629,81 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
   renderAdminEventsList(match) {
     const listEl = document.getElementById("adminEventsList");
+    const countBadge = document.getElementById("eventCountBadge");
     if (!listEl) return;
 
+    this.ensureMatchLineup(match);
+
     const scorers = (match.scorers || []).map((s, idx) => `
-      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px; font-size:0.75rem;">
-        <span>⚽ <strong>${s.player}</strong> (${this.cleanMinuteDisplay(s.minute)}) - ${app.store.getTeam(s.team)?.shortName || s.team}</span>
-        <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeScorer(${idx})" style="padding:2px 6px; color:#ef4444;">Hapus</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid #f59e0b;">
+        <span>⚽ <strong>${s.player}</strong> (${this.cleanMinuteDisplay(s.minute)})${s.assist ? ` <em style="color:#94a3b8;">[Assist: ${s.assist}]</em>` : ''} - <span style="color:#fbbf24;">${app.store.getTeam(s.team)?.shortName || s.team}</span></span>
+        <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeScorer(${idx})" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;">Hapus</button>
       </div>
     `).join("");
 
     const cards = (match.cards || []).map((c, idx) => `
-      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px; font-size:0.75rem;">
-        <span><span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span> <strong>${c.player}</strong> (${this.cleanMinuteDisplay(c.minute)}) - ${app.store.getTeam(c.team)?.shortName || c.team}</span>
-        <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeCard(${idx})" style="padding:2px 6px; color:#ef4444;">Hapus</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid ${c.type === 'yellow' ? '#fbbf24' : '#ef4444'};">
+        <span><span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span> <strong>${c.player}</strong> (${this.cleanMinuteDisplay(c.minute)})${c.role && c.role !== 'Pemain' ? ` <span style="font-size:0.68rem; color:#94a3b8;">(${c.role})</span>` : ''} - <span style="color:#fbbf24;">${app.store.getTeam(c.team)?.shortName || c.team}</span></span>
+        <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeCard(${idx})" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;">Hapus</button>
       </div>
     `).join("");
 
-    listEl.innerHTML = scorers + cards || `<p style="font-size:0.72rem; color:var(--text-subtle);">Belum ada gol atau kartu di laga ini.</p>`;
+    const subs = (match.substitutions || []).map((sub, idx) => `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(59,130,246,0.08); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid #3b82f6;">
+        <span>🔄 <strong>${this.cleanMinuteDisplay(sub.minute)}</strong>: <span style="color:#10b981; font-weight:700;">${sub.playerIn} 🟢</span> ganti <span style="color:#ef4444; font-weight:700;">${sub.playerOut} 🔴</span> - ${app.store.getTeam(sub.team)?.shortName || sub.team}</span>
+        <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeSub(${idx})" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;" title="Batalkan pergantian ini">Batalkan</button>
+      </div>
+    `).join("");
+
+    const foulSummary = (match.homeFouls > 0 || match.awayFouls > 0) ? `
+      <div style="background:rgba(234,179,8,0.08); padding:5px 8px; border-radius:4px; font-size:0.72rem; color:#fbbf24; display:flex; justify-content:space-between; align-items:center;">
+        <span>⚠️ Akumulasi Pelanggaran: ${app.store.getTeam(match.homeId)?.shortName || 'Home'} (${match.homeFouls}) - (${match.awayFouls}) ${app.store.getTeam(match.awayId)?.shortName || 'Away'}</span>
+        <span>${(match.homeFouls >= 5 || match.awayFouls >= 5) ? '🚨 LIMIT 10m!' : 'Normal'}</span>
+      </div>
+    ` : '';
+
+    const allEvents = scorers + cards + subs + foulSummary;
+    listEl.innerHTML = allEvents || `<p style="font-size:0.72rem; color:var(--text-subtle); margin:0;">Belum ada kejadian tercatat di laga ini.</p>`;
+
+    const totalCount = (match.scorers?.length || 0) + (match.cards?.length || 0) + (match.substitutions?.length || 0);
+    if (countBadge) countBadge.textContent = `${totalCount} Kejadian`;
+  },
+
+  removeSub(index) {
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match || !match.substitutions || !match.substitutions[index]) return;
+
+    const removed = match.substitutions[index];
+    match.substitutions.splice(index, 1);
+
+    // Kembalikan posisi pemain jika dibatalkan
+    this.ensureMatchLineup(match);
+    const side = (removed.team === match.homeId) ? 'home' : 'away';
+    const onCourt = match.lineup[side].onCourt || [];
+    const bench = match.lineup[side].bench || [];
+
+    // Balikkan: playerIn kembali ke bench, playerOut kembali ke onCourt
+    const inIdx = onCourt.indexOf(removed.playerIn);
+    if (inIdx !== -1) onCourt.splice(inIdx, 1);
+
+    const outIdx = bench.indexOf(removed.playerOut);
+    if (outIdx !== -1) bench.splice(outIdx, 1);
+
+    onCourt.push(removed.playerOut);
+    bench.push(removed.playerIn);
+
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+
+    this.populateGoalAssistSelectors(match);
+    this.populateCardSelectors(match);
+    this.populateSubstitutionSelectors(match);
+    this.renderAdminEventsList(match);
+    app.showToast(`Pergantian ${removed.playerIn} dibatalkan`);
+    if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
   },
 
   removeScorer(index) {
@@ -1210,6 +1854,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (app && typeof app.renderMatches === 'function') app.renderMatches();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
+    }
+    if (app && typeof app.refreshActiveMatchDetail === 'function') {
+      app.refreshActiveMatchDetail();
     }
   },
 
@@ -1640,6 +2287,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (app && typeof app.renderMatches === 'function') app.renderMatches();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
+    }
+    if (app && typeof app.refreshActiveMatchDetail === 'function') {
+      app.refreshActiveMatchDetail();
     }
 
     if (andNext) {
@@ -3219,6 +3869,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (app && typeof app.renderMatches === 'function') app.renderMatches();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
+    }
+    if (app && typeof app.refreshActiveMatchDetail === 'function') {
+      app.refreshActiveMatchDetail();
     }
 
     document.getElementById("mediaHubModal")?.classList.remove("active");
