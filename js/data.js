@@ -132,7 +132,7 @@ const DEFAULT_DATA = {
   },
   moments: [],
   teams: [],
-matches: []
+  matches: []
 };
 
 window.DEFAULT_DATA = DEFAULT_DATA;
