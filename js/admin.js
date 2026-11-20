@@ -1131,7 +1131,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     match.liveMinute = status === 'live' ? (minute || "1'") : minute;
 
     // Handle Knockout Penalty Shootout if tied
-    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
+    const isKnockout = match.stage !== "group" && (app.store && typeof app.store.classifyKnockoutStage === 'function' ? Boolean(app.store.classifyKnockoutStage(match)) : (match.stage === "knockout" || /(QF|SF|FINAL|3RD)/i.test(match.id)));
     if (isKnockout && status === "finished" && hScore === aScore) {
       const penHVal = document.getElementById("penaltyHomeScore") ? parseInt(document.getElementById("penaltyHomeScore").value, 10) : NaN;
       const penAVal = document.getElementById("penaltyAwayScore") ? parseInt(document.getElementById("penaltyAwayScore").value, 10) : NaN;
@@ -1206,6 +1206,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     app.showToast(status === 'finished' ? "🏁 Pertandingan selesai & hasil resmi disimpan!" : "💾 Skor pertandingan berhasil disimpan!");
     app.renderCurrentView();
+    if (app && typeof app.renderBracket === 'function') app.renderBracket();
+    if (app && typeof app.renderMatches === 'function') app.renderMatches();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
     }
@@ -1498,18 +1500,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     // Tentukan pilihan stage dari data laga
     let stageVal = "group";
-    if (match.stage === "knockout") {
-      const rName = (match.roundName || "").toLowerCase();
-      const mId = (match.id || "").toUpperCase();
-      if (rName.includes("semi") || mId.includes("SF")) {
-        stageVal = "sf";
-      } else if (rName.includes("juara 3") || rName.includes("3rd") || mId.includes("3RD")) {
-        stageVal = "3rd";
-      } else if ((rName.includes("final") || mId.includes("FINAL")) && !rName.includes("semi") && !rName.includes("perempat")) {
-        stageVal = "final";
-      } else {
-        stageVal = "qf";
-      }
+    const classified = app.store && typeof app.store.classifyKnockoutStage === 'function' ? app.store.classifyKnockoutStage(match) : null;
+    if (classified) {
+      stageVal = classified;
+    } else if (match.stage && match.stage !== "group") {
+      stageVal = match.stage;
     } else {
       stageVal = "group";
     }
@@ -1590,24 +1585,24 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       match.awayId = awayId || null;
       match.isManualTeam = Boolean(homeId || awayId);
     } else {
-      match.stage = "knockout";
+      match.stage = selectedStage;
       match.group = null;
       if (selectedStage === "qf") {
-        match.roundName = `Perempat Final (${cat})`;
+        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Perempat Final (${cat})`;
         if (!match.homePlaceholder) match.homePlaceholder = "Juara Grup";
         if (!match.awayPlaceholder) match.awayPlaceholder = "Runner-up Grup";
       } else if (selectedStage === "sf") {
-        match.roundName = `Semifinal (${cat})`;
+        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Semifinal (${cat})`;
         if (!match.homePlaceholder) match.homePlaceholder = "Pemenang QF";
         if (!match.awayPlaceholder) match.awayPlaceholder = "Pemenang QF";
       } else if (selectedStage === "3rd") {
-        match.roundName = `Perebutan Juara 3 (${cat})`;
-        if (!match.homePlaceholder) match.homePlaceholder = "Kalah SF 1";
-        if (!match.awayPlaceholder) match.awayPlaceholder = "Kalah SF 2";
+        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Perebutan Juara 3 (${cat})`;
+        if (!match.homePlaceholder) match.homePlaceholder = "Kalah Semifinal 1";
+        if (!match.awayPlaceholder) match.awayPlaceholder = "Kalah Semifinal 2";
       } else if (selectedStage === "final") {
-        match.roundName = `Grand Final (${cat})`;
-        if (!match.homePlaceholder) match.homePlaceholder = "Pemenang SF 1";
-        if (!match.awayPlaceholder) match.awayPlaceholder = "Pemenang SF 2";
+        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Grand Final (${cat})`;
+        if (!match.homePlaceholder) match.homePlaceholder = "Pemenang Semifinal 1";
+        if (!match.awayPlaceholder) match.awayPlaceholder = "Pemenang Semifinal 2";
       }
 
       if (homeId || awayId) {
@@ -1641,6 +1636,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const stageDesc = match.stage === "group" ? `Grup ${match.group}` : (match.roundName || 'Babak Gugur');
     app.showToast(`✅ Pertandingan (${stageDesc} • ${match.date} • ${match.time}) berhasil disimpan!`);
     app.renderCurrentView();
+    if (app && typeof app.renderBracket === 'function') app.renderBracket();
+    if (app && typeof app.renderMatches === 'function') app.renderMatches();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
     }
@@ -3218,6 +3215,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     app.store.saveData();
     app.renderHeroBanner();
     app.renderCurrentView();
+    if (app && typeof app.renderBracket === 'function') app.renderBracket();
+    if (app && typeof app.renderMatches === 'function') app.renderMatches();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
     }
