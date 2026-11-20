@@ -3,7 +3,6 @@
 
 <head>
   <meta charset="UTF-8">
-  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#060a17">
   <meta name="description"
@@ -2876,23 +2875,23 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="appToast" class="toast"></div>
 
-  <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint) -->
+  <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=8.53"></script>
-  <script defer src="js/supabase-client.js?v=8.53"></script>
-  <script defer src="js/data.js?v=8.53"></script>
-  <script defer src="js/admin.js?v=8.53"></script>
-  <script defer src="js/app.js?v=8.53"></script>
+  <script defer src="js/security.js"></script>
+  <script defer src="js/supabase-client.js"></script>
+  <script defer src="js/data.js"></script>
+  <script defer src="js/admin.js"></script>
+  <script defer src="js/app.js"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
     try {
-      if ('serviceWorker' in navigator) {
+      if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
           for (var i = 0; i < regs.length; i++) {
             regs[i].unregister();
           }
-        });
+        }).catch(function () { });
       }
     } catch (e) { }
   </script>

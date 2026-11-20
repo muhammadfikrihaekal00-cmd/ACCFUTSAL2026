@@ -1346,7 +1346,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
   },
 
-  saveMatchSchedule(andNext = false) {
+  async saveMatchSchedule(andNext = false) {
     if (!this.isAuthenticated) {
       app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
       return;
@@ -1370,6 +1370,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     match.homeId = homeId || null;
     match.awayId = awayId || null;
+    match.isManualTeam = Boolean(homeId || awayId);
     const dateInput = document.getElementById("editMatchDateInput");
     if (dateInput && dateInput.value.trim()) match.date = dateInput.value.trim();
     const timeInput = document.getElementById("editMatchTimeInput");
@@ -1382,10 +1383,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     app.store.saveData();
     app.store.syncKnockoutFromStandings();
+    app.store.saveData();
 
-    // Sinkronisasi ke Supabase jika terhubung
-    if (window.SupabaseService) {
-      window.SupabaseService.syncMatch(match, this.adminPinHash);
+    // Sinkronisasi permanen ke Supabase Cloud (Awaited agar pasti tersimpan saat di-refresh)
+    if (window.SupabaseService && typeof window.SupabaseService.syncMatch === 'function') {
+      await window.SupabaseService.syncMatch(match, this.adminPinHash);
     }
 
     const homeTeam = app.store.getTeam(match.homeId);
@@ -1393,7 +1395,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const hName = homeTeam ? homeTeam.shortName : (match.homePlaceholder || "TBD");
     const aName = awayTeam ? awayTeam.shortName : (match.awayPlaceholder || "TBD");
 
-    app.showToast(`✅ Lawan laga ${match.id} berhasil disimpan: ${hName} vs ${aName}!`);
+    app.showToast(`✅ Jadwal laga ${match.id} berhasil disimpan: ${hName} vs ${aName}!`);
     app.renderCurrentView();
     if (app && typeof app.updateHeroLiveBadge === 'function') {
       app.updateHeroLiveBadge();
