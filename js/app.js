@@ -457,30 +457,30 @@ class TournamentStore {
 
     // 1. Perebutan Juara 3 (Cek lebih awal karena teks round sering mengandung kata 'final')
     if (stage === '3rd' || stage === 'bronze' || stage === 'third' ||
-        round.includes('juara 3') || round.includes('peringkat 3') || round.includes('3rd') ||
-        id.includes('3RD') || id.includes('BRONZE')) {
+      round.includes('juara 3') || round.includes('peringkat 3') || round.includes('3rd') ||
+      id.includes('3RD') || id.includes('BRONZE')) {
       return '3rd';
     }
 
     // 2. Grand Final (Puncak)
     if (stage === 'final' || stage === 'grand_final' ||
-        round.includes('grand final') || round.includes('puncak') ||
-        (round.includes('final') && !round.includes('perempat') && !round.includes('semi')) ||
-        (id.includes('FINAL') && !id.includes('QF') && !id.includes('SF'))) {
+      round.includes('grand final') || round.includes('puncak') ||
+      (round.includes('final') && !round.includes('perempat') && !round.includes('semi')) ||
+      (id.includes('FINAL') && !id.includes('QF') && !id.includes('SF'))) {
       return 'final';
     }
 
     // 3. Semifinal (4 Besar)
     if (stage === 'sf' || stage === 'semifinal' || stage === 'semi' ||
-        round.includes('semifinal') || round.includes('semi-final') || round.includes('semi final') ||
-        id.includes('SF')) {
+      round.includes('semifinal') || round.includes('semi-final') || round.includes('semi final') ||
+      id.includes('SF')) {
       return 'sf';
     }
 
     // 4. Perempat Final / Quarterfinal (8 Besar)
     if (stage === 'qf' || stage === 'quarterfinal' || stage === 'quarter' || stage === '8besar' ||
-        round.includes('perempat') || round.includes('quarter') || round.includes('8 besar') ||
-        id.includes('QF')) {
+      round.includes('perempat') || round.includes('quarter') || round.includes('8 besar') ||
+      id.includes('QF')) {
       return 'qf';
     }
 
@@ -4606,7 +4606,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="bracket-header-cell col-final">
             <div class="bracket-header-pill" style="color: var(--accent-gold);">BABAK PUNCAK & JUARA 3</div>
             <div class="bracket-header-title">🏆 GRAND FINAL 🏆</div>
-            <div class="bracket-header-sub">📅 26 Nov 2026 • Penentuan Juara</div>
+            <div class="bracket-header-sub">📅 29 Nov 2026 • Penentuan Juara</div>
           </div>
         </div>
 
