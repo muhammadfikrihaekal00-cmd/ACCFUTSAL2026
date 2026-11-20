@@ -10,10 +10,10 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.55">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.55">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.55">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.55">
+  <link rel="manifest" href="manifest.json?v=8.56">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.56">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.56">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.56">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -105,6 +105,23 @@
           window.app._realSetCategory(cat);
         }
       },
+      toggleFloatingCategoryMenu: function (force) {
+        if (window.app && typeof window.app._realToggleFloatingCategoryMenu === 'function') {
+          window.app._realToggleFloatingCategoryMenu(force);
+        } else {
+          var wrap = document.getElementById("floatingCategorySwitcher");
+          if (wrap) wrap.classList.toggle("menu-open", force !== undefined ? force : !wrap.classList.contains("menu-open"));
+        }
+      },
+      selectAlternateCategory: function () {
+        if (window.app && typeof window.app._realSelectAlternateCategory === 'function') {
+          window.app._realSelectAlternateCategory();
+        } else {
+          var isSMP = !document.getElementById("floatingCategorySwitcher") || document.getElementById("floatingCategorySwitcher").classList.contains("is-smp");
+          window.app.setCategory(isSMP ? "SD" : "SMP");
+          window.app.toggleFloatingCategoryMenu(false);
+        }
+      },
       toggleTheme: function () {
         if (window.app && window.app._realToggleTheme) window.app._realToggleTheme();
       },
@@ -176,8 +193,8 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.55">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.55">
+  <link rel="stylesheet" href="css/styles.css?v=8.56">
+  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.56">
 </head>
 
 <body class="snap-scroll-active">
@@ -1161,6 +1178,29 @@
     </section>
 
   </main>
+
+  <!-- ==================== FLOATING CIRCULAR CATEGORY SWITCHER (POJOK KANAN BAWAH) ==================== -->
+  <div id="floatingCategorySwitcher" class="floating-cat-switcher is-smp" aria-label="Pemilih Kategori Kelas Futsal">
+    <!-- Pop-up Opsi Alternatif (Muncul Meluncur ke Atas) -->
+    <div id="floatingCatDropdown" class="floating-cat-dropdown" aria-hidden="true">
+      <div class="floating-cat-pill-tooltip" id="floatingCatAltPill" onclick="app.selectAlternateCategory()">
+        <span class="pill-dot"></span>
+        <span id="floatingCatAltPillText">Beralih ke Kelas SD (U-12)</span>
+      </div>
+      <button type="button" id="floatingCatAltBtn" class="floating-cat-circle-btn floating-cat-alt-btn" onclick="app.selectAlternateCategory()" aria-label="Pilih Kategori">
+        <span class="floating-cat-badge-label" id="floatingCatAltText">SD</span>
+        <span class="floating-cat-badge-sub" id="floatingCatAltSub">U-12</span>
+      </button>
+    </div>
+
+    <!-- Tombol Lingkaran Utama (Kategori Aktif Saat Ini) -->
+    <button type="button" id="floatingCatMainBtn" class="floating-cat-circle-btn floating-cat-main-btn" onclick="app.toggleFloatingCategoryMenu()" aria-expanded="false" aria-label="Pilih Kelas Turnamen" title="Ketuk untuk beralih kelas (SMP / SD)">
+      <span class="floating-cat-arrow" id="floatingCatArrow" aria-hidden="true">▲</span>
+      <span class="floating-cat-badge-label" id="floatingCatMainText">SMP</span>
+      <span class="floating-cat-badge-sub" id="floatingCatMainSub">U-15</span>
+      <span class="floating-cat-pulse-ring"></span>
+    </button>
+  </div>
 
 
   <!-- ==================== MODALS ==================== -->

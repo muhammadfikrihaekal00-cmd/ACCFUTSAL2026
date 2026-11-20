@@ -868,6 +868,7 @@ var app = window.app = Object.assign(window.app || {}, {
     } catch (e) { }
     try { this.updateAdminVisibility(); } catch (e) { }
     try { this.renderCurrentView(); } catch (e) { console.warn("View init:", e); }
+    try { this.initFloatingCategorySwitcher(); } catch (e) { console.warn("FloatingCat init:", e); }
     try { this.initPwa(); } catch (e) { console.warn("PWA init:", e); }
     try { this.initSupabaseSync(); } catch (e) { console.warn("Supabase init:", e); }
     // Cek jika ada draft pengisian tim / folder yang sempat terhenti (tampilkan banner pengingat non-blocking)
@@ -1402,6 +1403,8 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   setCategory(cat, showToastMsg = true) {
+    if (this.isDrawingSpinning) return;
+    if (this.isAutoDrawing && typeof this.toggleAutoDraw === "function") this.toggleAutoDraw(true);
     if (cat !== "SMP" && cat !== "SD") cat = "SMP";
     this.currentCategory = cat;
     this.currentDrawCat = cat;
@@ -1421,6 +1424,68 @@ var app = window.app = Object.assign(window.app || {}, {
     return this.setCategory(cat, showToastMsg);
   },
 
+  toggleFloatingCategoryMenu(forceState = null) {
+    const floatWrap = document.getElementById("floatingCategorySwitcher");
+    const mainBtn = document.getElementById("floatingCatMainBtn");
+    const dropdown = document.getElementById("floatingCatDropdown");
+    if (!floatWrap) return;
+
+    const isOpen = forceState !== null ? Boolean(forceState) : !floatWrap.classList.contains("menu-open");
+    floatWrap.classList.toggle("menu-open", isOpen);
+    if (mainBtn) mainBtn.setAttribute("aria-expanded", String(isOpen));
+    if (dropdown) dropdown.setAttribute("aria-hidden", String(!isOpen));
+  },
+
+  selectAlternateCategory() {
+    const targetCat = this.currentCategory === "SMP" ? "SD" : "SMP";
+    try {
+      if (window.navigator && typeof window.navigator.vibrate === "function") {
+        window.navigator.vibrate(20);
+      }
+    } catch (e) { }
+    this.setCategory(targetCat, true);
+    this.toggleFloatingCategoryMenu(false);
+  },
+
+  updateFloatingCategoryVisibility() {
+    const floatWrap = document.getElementById("floatingCategorySwitcher");
+    if (!floatWrap) return;
+    const allowedTabs = ["matches", "standings", "draw", "bracket", "teams", "stats"];
+    const shouldShow = allowedTabs.includes(this.currentTab);
+    floatWrap.classList.toggle("is-visible", shouldShow);
+    if (!shouldShow) {
+      this.toggleFloatingCategoryMenu(false);
+    }
+  },
+
+  initFloatingCategorySwitcher() {
+    this.updateCategoryUI();
+    this.updateFloatingCategoryVisibility();
+
+    // Auto-dismiss saat klik di luar area floating switcher
+    document.addEventListener("click", (e) => {
+      const wrap = document.getElementById("floatingCategorySwitcher");
+      if (wrap && wrap.classList.contains("menu-open")) {
+        if (!wrap.contains(e.target)) {
+          this.toggleFloatingCategoryMenu(false);
+        }
+      }
+    });
+
+    // Auto-dismiss saat pengguna melakukan scroll signifikan
+    let lastScrollPos = window.scrollY || window.pageYOffset || 0;
+    window.addEventListener("scroll", () => {
+      const currentScroll = window.scrollY || window.pageYOffset || 0;
+      if (Math.abs(currentScroll - lastScrollPos) > 40) {
+        lastScrollPos = currentScroll;
+        const wrap = document.getElementById("floatingCategorySwitcher");
+        if (wrap && wrap.classList.contains("menu-open")) {
+          this.toggleFloatingCategoryMenu(false);
+        }
+      }
+    }, { passive: true });
+  },
+
   updateCategoryUI() {
     const isSMP = this.currentCategory === "SMP";
     document.querySelectorAll(".btn-cat-smp, #btnCatSMP, #mobCatSMP").forEach(el => {
@@ -1429,6 +1494,24 @@ var app = window.app = Object.assign(window.app || {}, {
     document.querySelectorAll(".btn-cat-sd, #btnCatSD, #mobCatSD").forEach(el => {
       el.classList.toggle("active", !isSMP);
     });
+
+    // Update Floating Circular Category Switcher
+    const floatWrap = document.getElementById("floatingCategorySwitcher");
+    const mainLabel = document.getElementById("floatingCatMainText");
+    const mainSub = document.getElementById("floatingCatMainSub");
+    const altLabel = document.getElementById("floatingCatAltText");
+    const altSub = document.getElementById("floatingCatAltSub");
+    const altPillText = document.getElementById("floatingCatAltPillText");
+
+    if (floatWrap) {
+      floatWrap.classList.toggle("is-smp", isSMP);
+      floatWrap.classList.toggle("is-sd", !isSMP);
+    }
+    if (mainLabel) mainLabel.textContent = isSMP ? "SMP" : "SD";
+    if (mainSub) mainSub.textContent = isSMP ? "U-15" : "U-12";
+    if (altLabel) altLabel.textContent = isSMP ? "SD" : "SMP";
+    if (altSub) altSub.textContent = isSMP ? "U-12" : "U-15";
+    if (altPillText) altPillText.textContent = isSMP ? "Beralih ke Kelas SD (U-12)" : "Beralih ke Kelas SMP (U-15)";
   },
 
   initSupabaseSync() {
@@ -3294,6 +3377,7 @@ var app = window.app = Object.assign(window.app || {}, {
       }
 
       this.renderCurrentView();
+      this.updateFloatingCategoryVisibility();
       if ((window.scrollY || window.pageYOffset || 0) > 0) {
         window.requestAnimationFrame(() => {
           window.scrollTo({ top: 0, behavior: "smooth" });
