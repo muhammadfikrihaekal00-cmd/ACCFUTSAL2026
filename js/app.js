@@ -195,7 +195,20 @@ class TournamentStore {
     }
     if (!Array.isArray(data.moments)) data.moments = [];
     if (!data.sponsors || typeof data.sponsors !== "object") {
-      data.sponsors = { platinum: [], gold: [], media: [] };
+      data.sponsors = JSON.parse(JSON.stringify(base.sponsors || { platinum: [], gold: [], media: [] }));
+    }
+    const hasAnySponsor = (data.sponsors.platinum?.length || 0) + (data.sponsors.gold?.length || 0) + (data.sponsors.media?.length || 0);
+    const backupSponsors = _safeStorageGet(localStorage, "acc_tournament_sponsors_backup");
+    if (backupSponsors) {
+      try {
+        const parsedBackup = JSON.parse(backupSponsors);
+        const countBackup = (parsedBackup.platinum?.length || 0) + (parsedBackup.gold?.length || 0) + (parsedBackup.media?.length || 0);
+        if (countBackup > hasAnySponsor) {
+          data.sponsors = parsedBackup;
+        }
+      } catch (_) { }
+    } else if (hasAnySponsor === 0 && base.sponsors && (base.sponsors.platinum?.length || 0) > 0) {
+      data.sponsors = JSON.parse(JSON.stringify(base.sponsors));
     }
     if (!data.homeData || typeof data.homeData !== "object") {
       data.homeData = { mvp: null, news: [], moments: [], sponsors: { platinum: [], gold: [], media: [] } };
@@ -1830,7 +1843,14 @@ var app = window.app = Object.assign(window.app || {}, {
       if (this.store.data.homeData) this.store.data.homeData.moments = data.moments;
     }
     if (data.sponsors) {
-      this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
+      if (Array.isArray(data.sponsors) && data.sponsors.length > 0) {
+        this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
+      } else if (!Array.isArray(data.sponsors) && typeof data.sponsors === 'object') {
+        const count = (data.sponsors.platinum?.length || 0) + (data.sponsors.gold?.length || 0) + (data.sponsors.media?.length || 0);
+        if (count > 0) {
+          this.store.data.sponsors = this.formatSponsorsFromDb(data.sponsors);
+        }
+      }
     }
 
     this.store.syncPlayerStatsFromMatches();
@@ -3625,7 +3645,13 @@ var app = window.app = Object.assign(window.app || {}, {
   // RENDER SPONSORSHIP (DUAL-TIER: SPONSOR UTAMA BESAR KE KIRI & SPONSOR KEDUA 2 BARIS KE KANAN)
   renderSponsors() {
     let sponsors = this.store.data.sponsors;
-    if (!sponsors) return;
+    if (!sponsors) {
+      const backup = _safeStorageGet(localStorage, "acc_tournament_sponsors_backup");
+      if (backup) {
+        try { sponsors = JSON.parse(backup); this.store.data.sponsors = sponsors; } catch (_) { }
+      }
+    }
+    if (!sponsors) sponsors = { platinum: [], gold: [], media: [] };
 
     if (Array.isArray(sponsors)) {
       sponsors = this.formatSponsorsFromDb(sponsors);
@@ -3639,10 +3665,8 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     const dualContainer = document.getElementById("sponsorsDualTierContainer");
-    const trackPrimary = document.getElementById("sponsorsMarqueeTrackPrimary");
-    const trackSec1 = document.getElementById("sponsorsMarqueeTrackSec1");
-    const trackSec2 = document.getElementById("sponsorsMarqueeTrackSec2");
     const legacyTrack = document.getElementById("sponsorsMarqueeTrack");
+    if (!dualContainer) return;
 
     const platinumList = (sponsors.platinum || []).map(s => ({ ...s, tierKey: 'platinum' }));
     const goldList = (sponsors.gold || []).map(s => ({ ...s, tierKey: 'gold' }));
@@ -3661,9 +3685,48 @@ var app = window.app = Object.assign(window.app || {}, {
           <p>Mitra dan sponsor resmi turnamen akan segera diperbarui.</p>
         </div>
       `;
-      if (dualContainer) dualContainer.innerHTML = emptyHtml;
+      dualContainer.innerHTML = emptyHtml;
       if (legacyTrack) legacyTrack.innerHTML = emptyHtml;
       return;
+    }
+
+    // Pastikan struktur track dual-tier selalu ada dan utuh di dalam dualContainer
+    let trackPrimary = document.getElementById("sponsorsMarqueeTrackPrimary");
+    let trackSec1 = document.getElementById("sponsorsMarqueeTrackSec1");
+    let trackSec2 = document.getElementById("sponsorsMarqueeTrackSec2");
+
+    if (!trackPrimary || !trackSec1 || !trackSec2) {
+      dualContainer.innerHTML = `
+        <!-- TIER 1: SPONSOR UTAMA (UKURAN BESAR - BERJALAN KE KIRI) -->
+        <div class="sponsors-tier-section sponsors-tier-primary" id="sponsorsTierPrimary">
+          <div class="sponsors-tier-tag">
+            <span class="tier-tag-dot gold"></span>
+            <span>SPONSOR UTAMA</span>
+          </div>
+          <div class="sponsors-marquee-wrapper sponsors-marquee-primary" id="sponsorsMarqueePrimaryWrapper">
+            <div class="sponsors-marquee-track track-scroll-left" id="sponsorsMarqueeTrackPrimary"></div>
+          </div>
+        </div>
+
+        <!-- TIER 2: SPONSOR KEDUA (UKURAN LEBIH KECIL - 2 BARIS BERJALAN DARI ARAH SEBALIKNYA / KE KANAN) -->
+        <div class="sponsors-tier-section sponsors-tier-secondary" id="sponsorsTierSecondary">
+          <div class="sponsors-tier-tag">
+            <span class="tier-tag-dot blue"></span>
+            <span>MITRA &amp; SPONSOR PENDUKUNG</span>
+          </div>
+          <!-- Baris 1 Sponsor Kedua (Arah Sebaliknya / Ke Kanan) -->
+          <div class="sponsors-marquee-wrapper sponsors-marquee-secondary" id="sponsorsMarqueeSec1Wrapper">
+            <div class="sponsors-marquee-track track-scroll-right track-sec-1" id="sponsorsMarqueeTrackSec1"></div>
+          </div>
+          <!-- Baris 2 Sponsor Kedua (Arah Sebaliknya / Ke Kanan) -->
+          <div class="sponsors-marquee-wrapper sponsors-marquee-secondary" id="sponsorsMarqueeSec2Wrapper" style="margin-top: 10px;">
+            <div class="sponsors-marquee-track track-scroll-right track-sec-2" id="sponsorsMarqueeTrackSec2"></div>
+          </div>
+        </div>
+      `;
+      trackPrimary = document.getElementById("sponsorsMarqueeTrackPrimary");
+      trackSec1 = document.getElementById("sponsorsMarqueeTrackSec1");
+      trackSec2 = document.getElementById("sponsorsMarqueeTrackSec2");
     }
 
     // 1. Sponsor Utama (Tier 1 - Ukuran Besar, bergerak ke Kiri)
@@ -3673,7 +3736,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Distribusi cerdas jika salah satu tingkat belum memiliki data
     if (primaryList.length === 0 && secondaryList.length > 0) {
-      primaryList = [secondaryList[0]];
+      primaryList = [...secondaryList];
     }
     if (secondaryList.length === 0 && primaryList.length > 0) {
       secondaryList = [...primaryList];

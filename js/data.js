@@ -123,7 +123,10 @@ const DEFAULT_DATA = {
     }
   },
   sponsors: {
-    platinum: [],
+    platinum: [
+      { id: "sp_warkop", name: "WARKOP AL FAYYADH", role: "Mitra Resmi Turnamen", type: "Official Partner", icon: "☕", image: "" },
+      { id: "sp_laundry", name: "AL-FAYYADH LAUNDRY", role: "Mitra Resmi Turnamen", type: "Official Partner", icon: "👕", image: "" }
+    ],
     gold: [],
     media: []
   },

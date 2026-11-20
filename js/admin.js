@@ -3381,6 +3381,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     app.store.saveData();
+    try {
+      localStorage.setItem("acc_tournament_sponsors_backup", JSON.stringify(app.store.data.sponsors));
+    } catch (_) { }
     app.renderSponsors();
     this.renderSponsorsList();
     this.resetSponsorForm();
