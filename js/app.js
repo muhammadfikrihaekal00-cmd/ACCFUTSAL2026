@@ -15,6 +15,7 @@ window.admin = window.admin || {
 class TournamentStore {
   constructor() {
     this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v7";
+    this.cleanObsoleteStorageKeys();
     try {
       this.data = this.loadData();
     } catch (e) {
@@ -23,6 +24,69 @@ class TournamentStore {
     }
     try { this.syncPlayerStatsFromMatches(); } catch (e) { console.warn("syncPlayerStats notice:", e); }
     try { this.syncKnockoutFromStandings(); } catch (e) { console.warn("syncKnockout notice:", e); }
+  }
+
+  cleanObsoleteStorageKeys() {
+    try {
+      if (typeof localStorage === "undefined") return;
+      const currentKey = this.STORAGE_KEY;
+      const keysToRemove = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+
+        // 1. Bersihkan versi cache lama (v1 s.d v6, dll.)
+        if (k.startsWith("acc_futsal_tournament_2026_") && k !== currentKey && k !== (currentKey + "_min")) {
+          keysToRemove.push(k);
+        }
+        // 2. Bersihkan cache lama/legacy yang memakan kuota besar
+        if (k.startsWith("pondok_futsal_tournament_data") || k.startsWith("acc_tournament_data_")) {
+          keysToRemove.push(k);
+        }
+        // 3. Bersihkan redundansi cache ganda yang memakan MB besar di localStorage
+        if (k === "acc_cached_teams_data" || k === "acc_tournament_sponsors_backup") {
+          keysToRemove.push(k);
+        }
+      }
+
+      keysToRemove.forEach(k => {
+        try { localStorage.removeItem(k); } catch (_) { }
+      });
+    } catch (_) { }
+  }
+
+  createSlimStoragePayload(data) {
+    if (!data || typeof data !== "object") return {};
+    const stripHeavyImg = (str) => (typeof str === "string" && str.startsWith("data:image")) ? "" : (str || "");
+
+    return {
+      ...data,
+      sponsors: data.sponsors ? {
+        platinum: (data.sponsors.platinum || []).map(s => ({ ...s, image: stripHeavyImg(s.image) })),
+        gold: (data.sponsors.gold || []).map(s => ({ ...s, image: stripHeavyImg(s.image) })),
+        media: (data.sponsors.media || []).map(s => ({ ...s, image: stripHeavyImg(s.image) }))
+      } : undefined,
+      moments: (data.moments || []).map(m => ({ ...m, image: stripHeavyImg(m.image) })),
+      homeData: data.homeData ? {
+        ...data.homeData,
+        moments: (data.homeData.moments || []).map(m => ({ ...m, image: stripHeavyImg(m.image) }))
+      } : undefined,
+      teams: (data.teams || []).map(t => ({
+        ...t,
+        logo: stripHeavyImg(t.logo),
+        official: t.official ? {
+          ...t.official,
+          coachPhoto: stripHeavyImg(t.official.coachPhoto),
+          managerPhoto: stripHeavyImg(t.official.managerPhoto),
+          medicPhoto: stripHeavyImg(t.official.medicPhoto)
+        } : {},
+        players: (t.players || []).map(p => ({
+          ...p,
+          photo: stripHeavyImg(p.photo)
+        }))
+      }))
+    };
   }
 
   normalizeTeam(t, idx = 0) {
@@ -314,42 +378,21 @@ class TournamentStore {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {
-      // Tangani QuotaExceededError agar aplikasi TIDAK PERNAH crash/error saat foto tim/sponsor sudah banyak!
+      // Tangani QuotaExceededError dengan pembersihan & penyimpanan versi compact
       try {
-        // Simpan salinan ringan ke localStorage (foto base64 besar tetap aman di RAM & Supabase Cloud)
-        const slim = {
-          ...this.data,
-          sponsors: this.data.sponsors ? {
-            platinum: (this.data.sponsors.platinum || []).map(s => ({
-              ...s,
-              image: (s.image && s.image.startsWith("data:image") && s.image.length > 25000) ? "" : (s.image || "")
-            })),
-            gold: (this.data.sponsors.gold || []).map(s => ({
-              ...s,
-              image: (s.image && s.image.startsWith("data:image") && s.image.length > 25000) ? "" : (s.image || "")
-            })),
-            media: (this.data.sponsors.media || []).map(s => ({
-              ...s,
-              image: (s.image && s.image.startsWith("data:image") && s.image.length > 25000) ? "" : (s.image || "")
-            }))
-          } : undefined,
-          teams: (this.data.teams || []).map(t => ({
-            ...t,
-            logo: (t.logo && t.logo.startsWith("data:image") && t.logo.length > 15000) ? "" : (t.logo || ""),
-            official: t.official ? {
-              ...t.official,
-              coachPhoto: (t.official.coachPhoto && t.official.coachPhoto.startsWith("data:image") && t.official.coachPhoto.length > 15000) ? "" : (t.official.coachPhoto || ""),
-              managerPhoto: (t.official.managerPhoto && t.official.managerPhoto.startsWith("data:image") && t.official.managerPhoto.length > 15000) ? "" : (t.official.managerPhoto || "")
-            } : {},
-            players: (t.players || []).map(p => ({
-              ...p,
-              photo: (p.photo && p.photo.startsWith("data:image") && p.photo.length > 10000) ? "" : (p.photo || "")
-            }))
-          }))
-        };
+        this.cleanObsoleteStorageKeys();
+        const slim = this.createSlimStoragePayload(this.data);
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(slim));
       } catch (innerErr) {
-        console.warn("localStorage quota full, running cleanly in memory + Cloud:", innerErr);
+        // Jika browser sangat membatasi storage (misal Private Browsing), simpan minimal struktur
+        try {
+          const minimal = {
+            matches: this.data.matches || [],
+            settings: this.data.settings || {},
+            groups: this.data.groups || {}
+          };
+          localStorage.setItem(this.STORAGE_KEY + "_min", JSON.stringify(minimal));
+        } catch (_) { }
       }
     }
   }
@@ -2250,7 +2293,6 @@ var app = window.app = Object.assign(window.app || {}, {
       };
       syncedMatches.sort((a, b) => matchOrderWeight(a.id) - matchOrderWeight(b.id) || String(a.id).localeCompare(String(b.id)));
       this.store.data.matches = syncedMatches;
-      this.store.saveData();
     }
 
     // 3. Sinkronkan MOMENTS & SPONSORS dari Database Online Supabase
@@ -2268,12 +2310,11 @@ var app = window.app = Object.assign(window.app || {}, {
         }
       }
       try {
-        localStorage.setItem("acc_tournament_sponsors_backup", JSON.stringify(this.store.data.sponsors));
+        localStorage.removeItem("acc_tournament_sponsors_backup");
       } catch (_) { }
     }
 
     this.store.syncPlayerStatsFromMatches();
-    this.store.saveData();
     this.store.syncKnockoutFromStandings();
     try {
       this.syncDrawStateFromTournament("SMP", true);

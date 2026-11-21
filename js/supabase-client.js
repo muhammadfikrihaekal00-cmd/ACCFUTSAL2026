@@ -261,20 +261,6 @@
         // Check in-memory cache on this client instance
         if (this._cachedTeamsSig && this._cachedTeamsSig === remoteTeamsSig && Array.isArray(this._cachedTeamsData) && this._cachedTeamsData.length > 0) {
           teamsRawData = this._cachedTeamsData;
-        } else {
-          // Check localStorage cache
-          try {
-            const storedSig = localStorage.getItem("acc_cached_teams_sig");
-            const storedTeams = localStorage.getItem("acc_cached_teams_data");
-            if (storedSig && storedSig === remoteTeamsSig && storedTeams) {
-              const parsed = JSON.parse(storedTeams);
-              if (Array.isArray(parsed) && parsed.length === teamsMetaRes.data.length) {
-                teamsRawData = parsed;
-                this._cachedTeamsData = parsed;
-                this._cachedTeamsSig = remoteTeamsSig;
-              }
-            }
-          } catch (_) { }
         }
 
         // If cache is missing or stale, fetch full teams payload
@@ -286,23 +272,9 @@
             this._cachedTeamsSig = remoteTeamsSig;
             try {
               localStorage.setItem("acc_cached_teams_sig", remoteTeamsSig);
-              localStorage.setItem("acc_cached_teams_data", JSON.stringify(teamsRawData));
-            } catch (quotaErr) {
-              // If full teams with base64 exceeds localStorage quota, store slim version without heavy photos
-              try {
-                const slimTeams = teamsRawData.map(t => ({
-                  ...t,
-                  coach_photo: (t.coach_photo && t.coach_photo.length > 10000) ? "" : t.coach_photo,
-                  manager_photo: (t.manager_photo && t.manager_photo.length > 10000) ? "" : t.manager_photo,
-                  players: Array.isArray(t.players) ? t.players.map(p => ({
-                    ...p,
-                    photo: (p.photo && p.photo.length > 10000) ? "" : p.photo
-                  })) : []
-                }));
-                localStorage.setItem("acc_cached_teams_sig", remoteTeamsSig);
-                localStorage.setItem("acc_cached_teams_data", JSON.stringify(slimTeams));
-              } catch (_) { }
-            }
+              // Clean up redundant heavy teams data from localStorage to keep 100% free quota
+              localStorage.removeItem("acc_cached_teams_data");
+            } catch (_) { }
           }
         }
 
