@@ -4134,7 +4134,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // 1. Sponsor Utama (Tier 1 - Ukuran Besar, bergerak ke Kiri)
     let primaryList = [...platinumList];
-    // 2. Sponsor Kedua (Tier 2 - Ukuran Lebih Kecil, 2 baris bergerak dari Arah Sebaliknya / ke Kanan)
+    // 2. Sponsor Kedua (Tier 2 - Ukuran Lebih Kecil, bergerak dari Arah Sebaliknya / ke Kanan)
     let secondaryList = [...allSecondary];
 
     // Distribusi cerdas jika salah satu tingkat belum memiliki data
@@ -4145,21 +4145,25 @@ var app = window.app = Object.assign(window.app || {}, {
       secondaryList = [...primaryList];
     }
 
-    // Bagi Sponsor Kedua menjadi 2 baris terpisah
+    // Penataan baris Sponsor Kedua:
+    const sec1Wrapper = document.getElementById("sponsorsMarqueeSec1Wrapper");
+    const sec2Wrapper = document.getElementById("sponsorsMarqueeSec2Wrapper");
+
     let secRow1 = [];
     let secRow2 = [];
-    if (secondaryList.length === 1) {
+
+    if (secondaryList.length <= 4) {
+      // 1-4 sponsor: Tampilkan 1 baris bersih dan lapang yang bergerak ke Kanan
       secRow1 = [...secondaryList];
-      secRow2 = [...secondaryList];
-    } else if (secondaryList.length === 2) {
-      secRow1 = [secondaryList[0]];
-      secRow2 = [secondaryList[1]];
+      secRow2 = [];
+      if (sec2Wrapper) sec2Wrapper.style.display = "none";
     } else {
+      // > 4 sponsor: Bagi menjadi 2 baris terpisah
       secondaryList.forEach((s, idx) => {
         if (idx % 2 === 0) secRow1.push(s);
         else secRow2.push(s);
       });
-      if (secRow2.length === 0) secRow2 = [...secRow1];
+      if (sec2Wrapper) sec2Wrapper.style.display = "block";
     }
 
     const buildTrackHtml = (items, tierClass = 'tier-primary') => {
@@ -4200,13 +4204,20 @@ var app = window.app = Object.assign(window.app || {}, {
     };
 
     if (trackPrimary) {
+      trackPrimary.className = "sponsors-marquee-track track-scroll-left";
       trackPrimary.innerHTML = buildTrackHtml(primaryList, 'tier-primary');
     }
     if (trackSec1) {
+      trackSec1.className = "sponsors-marquee-track track-scroll-right track-sec-1";
       trackSec1.innerHTML = buildTrackHtml(secRow1, 'tier-secondary');
     }
     if (trackSec2) {
-      trackSec2.innerHTML = buildTrackHtml(secRow2, 'tier-secondary');
+      if (secRow2.length > 0) {
+        trackSec2.className = "sponsors-marquee-track track-scroll-right track-sec-2";
+        trackSec2.innerHTML = buildTrackHtml(secRow2, 'tier-secondary');
+      } else {
+        trackSec2.innerHTML = "";
+      }
     }
     if (legacyTrack && !trackPrimary) {
       legacyTrack.innerHTML = buildTrackHtml(allSponsors, 'tier-primary');
@@ -4855,8 +4866,8 @@ var app = window.app = Object.assign(window.app || {}, {
     // Otomatis sinkron 100% dengan urutan jadwal & dropdown resmi panitia ACC 2026
     const qfMatches = [
       getOrBuildKnockoutMatch(findSlotMatch("qf1", actualQFs, 0, `QF1_${activeCat}`), `QF1_${activeCat}`, `Perempat Final 1`, `Juara Grup A`, `Runner-up Grup B`, isSMP ? "08:00 - 08:45 WITA" : "08:00 - 08:35 WITA"),
-      getOrBuildKnockoutMatch(findSlotMatch("qf2", actualQFs, 1, `QF2_${activeCat}`), `QF2_${activeCat}`, `Perempat Final 2`, `Juara Grup B`, `Runner-up Grup A`, isSMP ? "09:00 - 09:45 WITA" : "08:50 - 09:25 WITA"),
-      getOrBuildKnockoutMatch(findSlotMatch("qf3", actualQFs, 2, `QF3_${activeCat}`), `QF3_${activeCat}`, `Perempat Final 3`, `Juara Grup C`, `Runner-up Grup D`, isSMP ? "10:00 - 10:45 WITA" : "09:40 - 10:15 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf2", actualQFs, 1, `QF2_${activeCat}`), `QF2_${activeCat}`, `Perempat Final 2`, `Juara Grup C`, `Runner-up Grup D`, isSMP ? "09:00 - 09:45 WITA" : "08:50 - 09:25 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf3", actualQFs, 2, `QF3_${activeCat}`), `QF3_${activeCat}`, `Perempat Final 3`, `Juara Grup B`, `Runner-up Grup A`, isSMP ? "10:00 - 10:45 WITA" : "09:40 - 10:15 WITA"),
       getOrBuildKnockoutMatch(findSlotMatch("qf4", actualQFs, 3, `QF4_${activeCat}`), `QF4_${activeCat}`, `Perempat Final 4`, `Juara Grup D`, `Runner-up Grup C`, isSMP ? "11:00 - 11:45 WITA" : "10:30 - 11:05 WITA"),
     ];
 

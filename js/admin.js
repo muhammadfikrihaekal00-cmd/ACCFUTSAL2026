@@ -1039,8 +1039,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
           </div>
           <div style="display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 160px; overflow-y: auto; padding-right: 4px;">
             ${players.length === 0 ? `<div style="font-size:0.75rem; color:var(--text-muted);">Belum ada skuad pemain terdaftar di tim ini.</div>` : players.map(p => {
-              const isChecked = onCourt.includes(p.name);
-              return `
+        const isChecked = onCourt.includes(p.name);
+        return `
                 <label style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 6px 8px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; border-left: 3px solid ${isChecked ? '#10b981' : '#64748b'};">
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <input type="checkbox" name="st5_${side}" value="${p.name}" ${isChecked ? 'checked' : ''} onchange="admin.onStarting5CheckChange('${side}')" style="cursor: pointer;">
@@ -1050,7 +1050,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
                   <span style="font-size: 0.7rem; color: var(--text-muted);">${p.pos || 'Pemain'}</span>
                 </label>
               `;
-            }).join("")}
+      }).join("")}
           </div>
         </div>
       `;
