@@ -4248,6 +4248,16 @@ var app = window.app = Object.assign(window.app || {}, {
     });
   },
 
+  getTeam(id) {
+    if (!id) return null;
+    if (this.store && typeof this.store.getTeam === "function") {
+      return this.store.getTeam(id);
+    }
+    const teams = (this.store && this.store.data && this.store.data.teams) || [];
+    const strId = String(id).trim().toLowerCase();
+    return teams.find(t => t.id === id || String(t.id).trim().toLowerCase() === strId || String(t.name || '').trim().toLowerCase() === strId) || null;
+  },
+
   populateTeamFilter() {
     const teamSelect = document.getElementById("filterTeam");
     if (!teamSelect) return;
@@ -4257,24 +4267,43 @@ var app = window.app = Object.assign(window.app || {}, {
     if (cat && cat !== "all") {
       teams = teams.filter(t => (t.category || "SMP") === cat);
     }
-    teams = [...teams].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+    // Gabungkan tim dari master tim & tim yang telah terdaftar di jadwal laga
+    const matchTeamsMap = new Map();
+    teams.forEach(t => {
+      if (t && t.id) matchTeamsMap.set(t.id, t);
+    });
+
+    const matches = (this.store && this.store.data && this.store.data.matches) || [];
+    matches.forEach(m => {
+      if (cat && cat !== "all" && (m.category || "SMP") !== cat) return;
+      const isKnockout = this.store && typeof this.store.isKnockoutMatch === "function" ? this.store.isKnockoutMatch(m) : false;
+      if (m.homeId && !matchTeamsMap.has(m.homeId) && m.homeName && !isKnockout) {
+        matchTeamsMap.set(m.homeId, { id: m.homeId, name: m.homeName, category: m.category || cat, group: m.group });
+      }
+      if (m.awayId && !matchTeamsMap.has(m.awayId) && m.awayName && !isKnockout) {
+        matchTeamsMap.set(m.awayId, { id: m.awayId, name: m.awayName, category: m.category || cat, group: m.group });
+      }
+    });
+
+    const combinedTeams = Array.from(matchTeamsMap.values()).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
     const prevVal = this.filterTeam || "all";
-    const cacheKey = `${cat}_${teams.map(t => t.id).join(",")}`;
+    const cacheKey = `${cat}_${combinedTeams.map(t => t.id).join(",")}`;
     if (this._lastTeamFilterKey === cacheKey && teamSelect.options.length > 1) {
       teamSelect.value = prevVal;
       return;
     }
     this._lastTeamFilterKey = cacheKey;
 
-    let html = `<option value="all">⚽ Semua Klub / Tim (${teams.length})</option>`;
-    teams.forEach(t => {
-      const gBadge = t.group ? ` [Grup ${t.group}]` : "";
+    let html = `<option value="all">⚽ Semua Klub / Tim (${combinedTeams.length})</option>`;
+    combinedTeams.forEach(t => {
+      const gBadge = t.group && t.group !== 'null' && t.group !== '-' ? ` [Grup ${t.group}]` : "";
       html += `<option value="${t.id}">${t.name}${gBadge}</option>`;
     });
 
     teamSelect.innerHTML = html;
-    if (teams.some(t => t.id === prevVal)) {
+    if (combinedTeams.some(t => t.id === prevVal)) {
       teamSelect.value = prevVal;
     } else {
       teamSelect.value = "all";
@@ -4350,6 +4379,7 @@ var app = window.app = Object.assign(window.app || {}, {
       const teamObj = this.getTeam(selectedTeamId);
       const teamName = teamObj ? (teamObj.name || "").toLowerCase().trim() : "";
       const teamShort = teamObj && teamObj.shortName ? teamObj.shortName.toLowerCase().trim() : "";
+      const selLower = String(selectedTeamId).toLowerCase().trim();
 
       matches = matches.filter(m => {
         if (m.homeId === selectedTeamId || m.awayId === selectedTeamId) return true;
@@ -4359,6 +4389,10 @@ var app = window.app = Object.assign(window.app || {}, {
           if (hName === teamName || aName === teamName) return true;
           if (teamShort && (hName === teamShort || aName === teamShort)) return true;
         }
+        const hDirect = (m.homeName || m.homePlaceholder || "").toLowerCase().trim();
+        const aDirect = (m.awayName || m.awayPlaceholder || "").toLowerCase().trim();
+        if (hDirect && hDirect === selLower) return true;
+        if (aDirect && aDirect === selLower) return true;
         return false;
       });
     }

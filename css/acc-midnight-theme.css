@@ -2089,6 +2089,64 @@ textarea:focus {
   outline: none !important;
 }
 
+/* MATCHES HEADER & FILTER DROPDOWNS */
+.matches-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 18px !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.filter-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+}
+
+.filter-select {
+  flex: 1 1 140px !important;
+  min-width: 130px !important;
+  background-color: rgba(15, 23, 42, 0.88) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.filter-select:hover {
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  background-color: rgba(15, 23, 42, 0.98) !important;
+}
+
+.filter-select:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22) !important;
+}
+
+.match-status-filter-pills {
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  padding: 4px 2px 12px 2px !important;
+  margin-bottom: 18px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+}
+
+.match-status-filter-pills::-webkit-scrollbar {
+  display: none !important;
+}
+
 .status-pill {
   background: rgba(15, 23, 42, 0.68) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -2115,6 +2173,20 @@ textarea:focus {
   color: #ffffff !important;
   border-color: rgba(252, 165, 165, 0.6) !important;
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.45) !important;
+}
+
+.status-pill.pill-upcoming.active {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #ffffff !important;
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  box-shadow: 0 0 18px rgba(2, 132, 199, 0.45) !important;
+}
+
+.status-pill.pill-finished.active {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  color: #ffffff !important;
+  border-color: rgba(52, 211, 153, 0.6) !important;
+  box-shadow: 0 0 18px rgba(5, 150, 105, 0.45) !important;
 }
 
 /* Match Cards, Standings Cards, Team Cards, Bracket Cards, Draw Stage, Leaderboard Cards, Juknis */
