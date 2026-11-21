@@ -255,6 +255,7 @@ class TournamentStore {
       data.config.tournamentName = 'Al-Fayyadh Champions Cup 2026';
     }
     if (data.config) {
+      data.config.dates = "22 - 29 November 2026";
       if (!data.config.contactCommittee || data.config.contactCommittee.includes("Harun") || data.config.contactCommittee.includes("0812-9876-5432")) {
         data.config.contactCommittee = "0859-3322-8817 (Ust. Ahmadi)";
       }
@@ -1376,7 +1377,7 @@ var app = window.app = Object.assign(window.app || {}, {
     let text = `🏆 *REKAP HASIL PERTANDINGAN RESMI*\n`;
     text += `*${tName}*\n`;
     text += `📍 ${venue}\n`;
-    text += `📅 ${config.dates || "22 - 26 November 2026"}\n`;
+    text += `📅 ${config.dates || "22 - 29 November 2026"}\n`;
     text += `───────────────────\n\n`;
 
     let currentGroupOrStage = "";
@@ -2818,7 +2819,8 @@ var app = window.app = Object.assign(window.app || {}, {
     }
     document.getElementById("heroSub").textContent = cleanSub;
     document.getElementById("heroVenue").textContent = config.venue || DEFAULT_DATA.config.venue;
-    document.getElementById("heroDates").textContent = config.dates || DEFAULT_DATA.config.dates;
+    const heroDatesEl = document.getElementById("heroDates");
+    if (heroDatesEl) heroDatesEl.textContent = config.dates || "22 - 29 November 2026";
 
     let cleanTicker = config.runningAnnouncement || DEFAULT_DATA.config.runningAnnouncement || "";
     if (cleanTicker.includes("Selamat Datang")) {
