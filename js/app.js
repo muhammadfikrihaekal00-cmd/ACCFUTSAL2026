@@ -8039,17 +8039,6 @@ var app = window.app = Object.assign(window.app || {}, {
       });
     });
 
-    (match.substitutions || []).forEach(sub => {
-      eventsList.push({
-        type: 'sub',
-        team: sub.team,
-        playerIn: sub.playerIn,
-        playerOut: sub.playerOut,
-        minStr: cleanMin(sub.minute),
-        minNum: parseInt((sub.minute || '0').replace(/\D/g, ''), 10) || 0
-      });
-    });
-
     eventsList.sort((a, b) => a.minNum - b.minNum);
 
     const hFouls = parseInt(match.homeFouls, 10) || 0;
@@ -8071,11 +8060,7 @@ var app = window.app = Object.assign(window.app || {}, {
     };
 
     const renderLineupCol = (team, side, lineupObj) => {
-      const onCourt = lineupObj?.onCourt || [];
-      const bench = lineupObj?.bench || [];
-      const players = team.players || [];
-
-      const findP = (name) => players.find(p => p.name === name) || { no: '-', name: name, pos: 'Pemain' };
+      const players = (team.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
 
       // Ofisial tim
       const officials = [];
@@ -8097,44 +8082,21 @@ var app = window.app = Object.assign(window.app || {}, {
             </div>
           </div>
 
-          <!-- 5 PEMAIN DI LAPANGAN (STARTING 5) -->
+          <!-- SEMUA PEMAIN TERDAFTAR -->
           <div style="margin-bottom: 14px;">
-            <div style="font-size: 0.76rem; font-weight: 800; color: #10b981; margin-bottom: 6px; display:flex; align-items:center; justify-content:space-between;">
-              <span>🟢 STARTING 5</span>
-             
+            <div style="font-size: 0.76rem; font-weight: 800; color: #10b981; margin-bottom: 8px; display:flex; align-items:center; justify-content:space-between;">
+              <span>🏃 SKUAD PEMAIN TERDAFTAR</span>
+              <span style="font-size: 0.68rem; opacity: 0.85;">${players.length} Pemain</span>
             </div>
-            ${onCourt.length === 0 ? `
-              <div style="font-size:0.75rem; color:var(--text-muted); padding:6px;">Belum dikonfirmasi panitia (standar: 5 pemain awal).</div>
-            ` : onCourt.map(name => {
-        const p = findP(name);
-        return `
-                <div class="md-player-row on-court">
-                  <span class="md-player-num">#${p.no || '-'}</span>
-                  <span class="md-player-name">${p.name} ${getPlayerExtraInfo(team.id, p.name)}</span>
-                  <span class="md-player-pos">${p.pos || 'Pemain'}</span>
-                </div>
-              `;
-      }).join("")}
-          </div>
-
-          <!-- PEMAIN CADANGAN -->
-          <div style="margin-bottom: 14px;">
-            <div style="font-size: 0.76rem; font-weight: 800; color: #94a3b8; margin-bottom: 6px; display:flex; align-items:center; justify-content:space-between;">
-              <span>⚪ PEMAIN CADANGAN (BENCH)</span>
-              <span style="font-size: 0.68rem; opacity: 0.85;">${bench.length} Pemain</span>
-            </div>
-            ${bench.length === 0 ? `
-              <div style="font-size:0.75rem; color:var(--text-muted); padding:6px;">Tidak ada pemain cadangan terdaftar.</div>
-            ` : bench.map(name => {
-        const p = findP(name);
-        return `
-                <div class="md-player-row bench">
-                  <span class="md-player-num">#${p.no || '-'}</span>
-                  <span class="md-player-name">${p.name} ${getPlayerExtraInfo(team.id, p.name)}</span>
-                  <span class="md-player-pos">${p.pos || 'Cadangan'}</span>
-                </div>
-              `;
-      }).join("")}
+            ${players.length === 0 ? `
+              <div style="font-size:0.75rem; color:var(--text-muted); padding:6px;">Belum ada pemain terdaftar.</div>
+            ` : players.map(p => `
+              <div class="md-player-row on-court" style="margin-bottom: 4px;">
+                <span class="md-player-num">#${p.no || '-'}</span>
+                <span class="md-player-name">${p.name} ${getPlayerExtraInfo(team.id, p.name)}</span>
+                <span class="md-player-pos">${p.pos || 'Pemain'}</span>
+              </div>
+            `).join("")}
           </div>
 
           <!-- STAF & OFISIAL TIM -->
@@ -8258,12 +8220,12 @@ var app = window.app = Object.assign(window.app || {}, {
 
       <!-- KRONOLOGI KEJADIAN LAGA (TIMELINE) -->
       <div class="md-section-title">
-        <span>⏱️</span> Kronologi Kejadian Pertandingan (Goals, Cards &amp; Substitutions)
+        <span>⏱️</span> Kronologi Kejadian Pertandingan (Gol &amp; Kartu Pelanggaran)
       </div>
       <div class="md-timeline-card">
         ${eventsList.length === 0 ? `
           <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 12px;">
-            Belum ada gol, kartu, atau pergantian pemain yang dicatat pada pertandingan ini.
+            Belum ada gol atau kartu pelanggaran yang dicatat pada pertandingan ini.
           </div>
         ` : eventsList.map(e => {
       let iconHtml = '⚽';
@@ -8279,9 +8241,6 @@ var app = window.app = Object.assign(window.app || {}, {
       } else if (e.type === 'red_card') {
         iconHtml = '<span class="card-icon-r"></span>';
         descHtml = `Kartu Merah: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;
-      } else if (e.type === 'sub') {
-        iconHtml = '🔄';
-        descHtml = `Pergantian: <span style="color:#10b981; font-weight:700;">${e.playerIn} 🟢 (Masuk)</span> menggantikan <span style="color:#ef4444; font-weight:700;">${e.playerOut} 🔴 (Keluar)</span> - ${teamName}`;
       }
 
       return `
@@ -8294,9 +8253,9 @@ var app = window.app = Object.assign(window.app || {}, {
     }).join("")}
       </div>
 
-      <!-- SUSUNAN PEMAIN & OFISIAL (DUAL COLUMN) -->
+      <!-- DAFTAR SKUAD & OFISIAL (DUAL COLUMN) -->
       <div class="md-section-title">
-        <span>📋</span> Susunan Pemain (Starting 5 &amp; Cadangan) &amp; Staf Ofisial Tim
+        <span>📋</span> Daftar Skuad Lengkap &amp; Staf Ofisial Tim
       </div>
       <div class="md-lineup-dual-grid">
         ${renderLineupCol(home, 'home', hLineup)}

@@ -953,10 +953,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   // ==========================================
-  // QUICK SCORE 6-TABS CONTROLLER & SYSTEM
+  // QUICK SCORE TABS CONTROLLER & SYSTEM
   // ==========================================
   switchQuickScoreTab(tabName) {
-    const tabs = ['score', 'lineup', 'goal', 'card', 'sub', 'foul'];
+    const tabs = ['score', 'goal', 'card', 'foul'];
     tabs.forEach(t => {
       const btn = document.getElementById(`qsTabBtn_${t}`);
       const panel = document.getElementById(`qsPanel_${t}`);
@@ -968,14 +968,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const match = app.store.data.matches.find(m => m.id === matchId);
     if (!match) return;
 
-    if (tabName === 'lineup') {
-      this.renderStarting5UI(match);
-    } else if (tabName === 'goal') {
+    if (tabName === 'goal') {
       this.populateGoalAssistSelectors(match);
     } else if (tabName === 'card') {
       this.populateCardSelectors(match);
-    } else if (tabName === 'sub') {
-      this.populateSubstitutionSelectors(match);
     } else if (tabName === 'foul') {
       this.updateFoulDisplays(match);
     }
@@ -1156,31 +1152,16 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
 
-    const side = (teamId === match.homeId) ? 'home' : 'away';
-    const onCourt = match.lineup?.[side]?.onCourt || [];
     const team = app.store.getTeam(teamId);
+    const players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
 
-    if (onCourt.length === 0) {
-      // Fallback jika starting 5 belum dikunci
-      const list = (team?.players || []).slice(0, 5);
-      scorerSelect.innerHTML = `<option value="">-- Pilih 5 Pemain Lapangan --</option>` + list.map(p => `
-        <option value="${p.name}">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>
-      `).join("");
-      assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + list.map(p => `
-        <option value="${p.name}">#${p.no || '-'} ${p.name}</option>
-      `).join("");
-      return;
-    }
+    scorerSelect.innerHTML = `<option value="">-- Pilih Pencetak Gol (Semua Pemain) --</option>` + players.map(p => `
+      <option value="${p.name}">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>
+    `).join("");
 
-    scorerSelect.innerHTML = `<option value="">-- Pilih Pencetak Gol (5 di Lapangan) --</option>` + onCourt.map(name => {
-      const p = team?.players.find(x => x.name === name);
-      return `<option value="${name}">#${p?.no || '-'} ${name} (${p?.pos || 'Pemain'})</option>`;
-    }).join("");
-
-    assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + onCourt.map(name => {
-      const p = team?.players.find(x => x.name === name);
-      return `<option value="${name}">#${p?.no || '-'} ${name}</option>`;
-    }).join("");
+    assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + players.map(p => `
+      <option value="${p.name}">#${p.no || '-'} ${p.name}</option>
+    `).join("");
   },
 
   addGoalWithAssist() {
@@ -1280,34 +1261,20 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
 
-    const side = (teamId === match.homeId) ? 'home' : 'away';
-    const onCourt = match.lineup?.[side]?.onCourt || [];
-    const bench = match.lineup?.[side]?.bench || [];
     const team = app.store.getTeam(teamId);
-
     let html = `<option value="">-- Pilih Penerima Kartu --</option>`;
 
-    // 1. 5 Pemain di Lapangan
-    if (onCourt.length > 0) {
-      html += `<optgroup label="🟢 5 Pemain di Lapangan (On-Court)">`;
-      onCourt.forEach(name => {
-        const p = team?.players.find(x => x.name === name);
-        html += `<option value="${name}|Pemain Lapangan">#${p?.no || '-'} ${name} (Lapangan)</option>`;
+    // 1. Skuad Pemain Tim
+    const players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+    if (players.length > 0) {
+      html += `<optgroup label="🏃 Skuad Pemain Tim">`;
+      players.forEach(p => {
+        html += `<option value="${p.name}|Pemain">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>`;
       });
       html += `</optgroup>`;
     }
 
-    // 2. Pemain Cadangan
-    if (bench.length > 0) {
-      html += `<optgroup label="⚪ Pemain Cadangan (Bench)">`;
-      bench.forEach(name => {
-        const p = team?.players.find(x => x.name === name);
-        html += `<option value="${name}|Pemain Cadangan">#${p?.no || '-'} ${name} (Cadangan)</option>`;
-      });
-      html += `</optgroup>`;
-    }
-
-    // 3. Staf / Ofisial Tim (Coach, Asisten, Manager, Medis)
+    // 2. Staf / Ofisial Tim (Coach, Asisten, Manager, Medis)
     const officials = [];
     if (team?.coach) officials.push({ name: team.coach, role: "Pelatih" });
     if (team?.manager) officials.push({ name: team.manager, role: "Asisten Pelatih / Manajer" });
@@ -1648,13 +1615,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       </div>
     `).join("");
 
-    const subs = (match.substitutions || []).map((sub, idx) => `
-      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(59,130,246,0.08); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid #3b82f6;">
-        <span>🔄 <strong>${this.cleanMinuteDisplay(sub.minute)}</strong>: <span style="color:#10b981; font-weight:700;">${sub.playerIn} 🟢</span> ganti <span style="color:#ef4444; font-weight:700;">${sub.playerOut} 🔴</span> - ${app.store.getTeam(sub.team)?.shortName || sub.team}</span>
-        <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeSub(${idx})" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;" title="Batalkan pergantian ini">Batalkan</button>
-      </div>
-    `).join("");
-
     const foulSummary = (match.homeFouls > 0 || match.awayFouls > 0) ? `
       <div style="background:rgba(234,179,8,0.08); padding:5px 8px; border-radius:4px; font-size:0.72rem; color:#fbbf24; display:flex; justify-content:space-between; align-items:center;">
         <span>⚠️ Akumulasi Pelanggaran: ${app.store.getTeam(match.homeId)?.shortName || 'Home'} (${match.homeFouls}) - (${match.awayFouls}) ${app.store.getTeam(match.awayId)?.shortName || 'Away'}</span>
@@ -1662,10 +1622,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       </div>
     ` : '';
 
-    const allEvents = scorers + cards + subs + foulSummary;
+    const allEvents = scorers + cards + foulSummary;
     listEl.innerHTML = allEvents || `<p style="font-size:0.72rem; color:var(--text-subtle); margin:0;">Belum ada kejadian tercatat di laga ini.</p>`;
 
-    const totalCount = (match.scorers?.length || 0) + (match.cards?.length || 0) + (match.substitutions?.length || 0);
+    const totalCount = (match.scorers?.length || 0) + (match.cards?.length || 0);
     if (countBadge) countBadge.textContent = `${totalCount} Kejadian`;
   },
 
