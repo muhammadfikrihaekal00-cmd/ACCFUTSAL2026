@@ -2,6 +2,7 @@
 <html lang="id" class="snap-scroll-active">
 
 <head>
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#060a17">
@@ -10,10 +11,10 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="manifest.json?v=8.58">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png?v=8.58">
-  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png?v=8.58">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=8.58">
+  <link rel="manifest" href="/manifest.json?v=8.58">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png?v=8.58">
+  <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon.png?v=8.58">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=8.58">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://i.ytimg.com">
@@ -21,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <!-- High-Priority LCP Discovery Preload for Emblem ACC 2026 (WebP) -->
-  <link rel="preload" as="image" href="assets/acc_logo.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Google Fonts Preload & Optimized Loading -->
   <link rel="preload" as="style"
@@ -231,8 +232,8 @@
   </script>
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css?v=8.68">
-  <link rel="stylesheet" href="css/acc-midnight-theme.css?v=8.72">
+  <link rel="stylesheet" href="/css/styles.css?v=8.69">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=8.73">
 </head>
 
 <body class="snap-scroll-active">
@@ -252,7 +253,7 @@
     <div class="container header-inner">
       <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap)admin.handleLogoSecretTap();"
         style="cursor: pointer;">
-        <img src="assets/acc_logo.png" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo"
+        <img src="/assets/acc_logo.png" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo"
           width="48" height="68" decoding="async">
         <div class="brand-text">
           <h1 id="headerTitle">ACC 2026</h1>
@@ -377,8 +378,8 @@
         <div class="hero-identity-stack">
           <div class="hero-emblem-wrap">
             <picture style="display: contents;">
-              <source srcset="assets/acc_logo.webp" type="image/webp">
-              <img src="assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="220" height="312"
+              <source srcset="/assets/acc_logo.webp" type="image/webp">
+              <img src="/assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="220" height="312"
                 fetchpriority="high" decoding="async">
             </picture>
           </div>
@@ -486,8 +487,8 @@
         <div class="mvp-spotlight-card">
           <div class="mvp-photo-wrapper">
             <picture style="display: contents;">
-              <source srcset="assets/acc_logo.webp" type="image/webp">
-              <img src="assets/acc_logo.png" alt="Foto MVP Pemain" class="mvp-photo-img" id="mvpPhoto" width="160"
+              <source srcset="/assets/acc_logo.webp" type="image/webp">
+              <img src="/assets/acc_logo.png" alt="Foto MVP Pemain" class="mvp-photo-img" id="mvpPhoto" width="160"
                 height="200" loading="lazy" decoding="async">
             </picture>
             <div class="mvp-badge-overlay">
@@ -1140,7 +1141,7 @@
             </div>
           </div>
           <div class="juknis-action-buttons">
-            <a href="assets/juknis_acc_2026.pdf" download="Juknis_Al_Fayyadh_Champions_Cup_2026.pdf" target="_blank"
+            <a href="/assets/juknis_acc_2026.pdf" download="Juknis_Al_Fayyadh_Champions_Cup_2026.pdf" target="_blank"
               rel="noopener" class="btn btn-primary btn-sm juknis-download-btn">
               <span>⬇️ Unduh PDF Resmi</span>
             </a>
@@ -2375,8 +2376,8 @@
             <div class="form-group" style="flex: 1;">
               <label class="form-label">Logo / Lambang Tim Sekolah</label>
               <div style="display: flex; align-items: center; gap: 10px;">
-                <img id="teamLogoThumb" class="team-logo-preview-box" src="assets/acc_logo.png"
-                  onerror="this.src='assets/acc_logo.png'">
+                <img id="teamLogoThumb" class="team-logo-preview-box" src="/assets/acc_logo.png"
+                  onerror="this.src='/assets/acc_logo.png'">
                 <div>
                   <button type="button" class="btn btn-outline btn-sm" style="cursor: pointer; padding: 4px 10px;"
                     onclick="document.getElementById('teamLogoFileInput').click();">
@@ -3206,11 +3207,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=20261121_v23"></script>
-  <script defer src="js/supabase-client.js?v=20261121_v23"></script>
-  <script defer src="js/data.js?v=20261121_v23"></script>
-  <script defer src="js/admin.js?v=20261121_v23"></script>
-  <script defer src="js/app.js?v=20261121_v23"></script>
+  <script defer src="/js/security.js?v=20261121_v24"></script>
+  <script defer src="/js/supabase-client.js?v=20261121_v24"></script>
+  <script defer src="/js/data.js?v=20261121_v24"></script>
+  <script defer src="/js/admin.js?v=20261121_v24"></script>
+  <script defer src="/js/app.js?v=20261121_v24"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

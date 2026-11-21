@@ -15,6 +15,18 @@
       "destination": "/manifest.json"
     },
     {
+      "source": "/(.*)/css/(.*)",
+      "destination": "/css/$2"
+    },
+    {
+      "source": "/(.*)/js/(.*)",
+      "destination": "/js/$2"
+    },
+    {
+      "source": "/(.*)/assets/(.*)",
+      "destination": "/assets/$2"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }
