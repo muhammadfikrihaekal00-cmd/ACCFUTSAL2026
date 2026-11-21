@@ -6213,9 +6213,9 @@ body.mobile-menu-active .mobile-menu-content {
 }
 
 .md-player-num {
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   color: #94a3b8 !important;
-  width: 24px !important;
+  width: 22px !important;
 }
 
 .md-player-name {
@@ -6254,6 +6254,7 @@ body.mobile-menu-active .mobile-menu-content {
   transform: translateY(12px) scale(0.99) !important;
   transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
+
 .scroll-reveal.is-revealed .match-card,
 .scroll-reveal.is-revealed .school-card,
 .scroll-reveal.is-revealed .sponsor-card-primary,
