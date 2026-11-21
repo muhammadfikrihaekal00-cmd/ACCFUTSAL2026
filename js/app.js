@@ -1280,6 +1280,18 @@ var app = window.app = Object.assign(window.app || {}, {
     try { this.renderLiveStreamHero(); } catch (e) { console.warn("LiveStream init:", e); }
     try { this.bindEvents(); } catch (e) { console.warn("Events init:", e); }
     try { this.updateAdminVisibility(); } catch (e) { }
+
+    // Tentukan kategori dan rute tab AKTIF terlebih dahulu sebelum render view pertama kali
+    // Menjamin saat reload / refresh, TIDAK AKAN PERNAH terjadi flash atau loncatan layar beranda
+    if (window._pendingCat) {
+      try { this.setCategory(window._pendingCat, false); } catch (e) { }
+    }
+    if (window._pendingTab) {
+      try { this.currentTab = window._pendingTab; } catch (e) { }
+    } else {
+      try { this.parseCurrentRoute(false); } catch (e) { }
+    }
+
     try { this.renderCurrentView(); } catch (e) { console.warn("View init:", e); }
     try { this.initFloatingCategorySwitcher(); } catch (e) { console.warn("FloatingCat init:", e); }
 
@@ -8398,14 +8410,6 @@ app._realSetCategory = app.setCategory.bind(app);
 const _bootAppSafely = () => {
   try {
     app.init();
-    if (window._pendingCat) {
-      try { app.setCategory(window._pendingCat, false); } catch (e) { }
-    }
-    if (window._pendingTab) {
-      try { app.switchTab(window._pendingTab, false); } catch (e) { }
-    } else {
-      try { app.parseCurrentRoute(false); } catch (e) { }
-    }
   } catch (err) {
     console.error("Critical app.init error:", err);
   }

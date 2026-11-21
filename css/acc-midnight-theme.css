@@ -6240,3 +6240,24 @@ body.mobile-menu-active .mobile-menu-content {
   font-size: 0.75rem !important;
   margin: 3px 3px !important;
 }
+
+/* ============================================================================
+   15. ULTRA-SMOOTH REFRESH & ZERO JITTER TRANSITIONS
+   Mencegah animasi bergetar (jitter), loncatan elemen, dan kedipan pada refresh
+   ============================================================================ */
+.tab-pane.active {
+  animation: none !important;
+}
+
+/* Reduksi loncatan scroll-reveal agar tidak mengganggu pandangan saat refresh */
+.scroll-reveal {
+  transform: translateY(12px) scale(0.99) !important;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.scroll-reveal.is-revealed .match-card,
+.scroll-reveal.is-revealed .school-card,
+.scroll-reveal.is-revealed .sponsor-card-primary,
+.scroll-reveal.is-revealed .sponsor-card-secondary,
+.scroll-reveal.is-revealed .stat-pill {
+  animation: none !important;
+}
