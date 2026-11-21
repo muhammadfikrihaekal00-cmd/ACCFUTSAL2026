@@ -630,8 +630,8 @@ class TournamentStore {
 
     if (stage === 'qf') {
       if (id.includes('QF1') || round.includes('perempat final 1') || round.includes('qf 1') || round.includes('qf1') || (hPlace.includes('grup a') && aPlace.includes('grup b'))) return 'qf1';
-      if (id.includes('QF2') || round.includes('perempat final 2') || round.includes('qf 2') || round.includes('qf2') || (hPlace.includes('grup c') && aPlace.includes('grup d'))) return 'qf2';
-      if (id.includes('QF3') || round.includes('perempat final 3') || round.includes('qf 3') || round.includes('qf3') || (hPlace.includes('grup b') && aPlace.includes('grup a'))) return 'qf3';
+      if (id.includes('QF2') || round.includes('perempat final 2') || round.includes('qf 2') || round.includes('qf2') || (hPlace.includes('grup b') && aPlace.includes('grup a'))) return 'qf2';
+      if (id.includes('QF3') || round.includes('perempat final 3') || round.includes('qf 3') || round.includes('qf3') || (hPlace.includes('grup c') && aPlace.includes('grup d'))) return 'qf3';
       if (id.includes('QF4') || round.includes('perempat final 4') || round.includes('qf 4') || round.includes('qf4') || (hPlace.includes('grup d') && aPlace.includes('grup c'))) return 'qf4';
       return null;
     }
@@ -809,8 +809,8 @@ class TournamentStore {
     const qf4_smp = findKnockoutSlotMatch("SMP", "qf4", qfMatches_SMP, 3, "QF4_SMP");
 
     syncQFMatch(qf1_smp, "SMP", "A", true, "B", false, stA_SMP, stB_SMP, "qf1", "Perempat Final 1");
-    syncQFMatch(qf2_smp, "SMP", "C", true, "D", false, stC_SMP, stD_SMP, "qf2", "Perempat Final 2");
-    syncQFMatch(qf3_smp, "SMP", "B", true, "A", false, stB_SMP, stA_SMP, "qf3", "Perempat Final 3");
+    syncQFMatch(qf2_smp, "SMP", "B", true, "A", false, stB_SMP, stA_SMP, "qf2", "Perempat Final 2");
+    syncQFMatch(qf3_smp, "SMP", "C", true, "D", false, stC_SMP, stD_SMP, "qf3", "Perempat Final 3");
     syncQFMatch(qf4_smp, "SMP", "D", true, "C", false, stD_SMP, stC_SMP, "qf4", "Perempat Final 4");
 
     // 2. QF SD (Berdasarkan klasifikasi & urutan spesifik turnamen ACC 2026)
@@ -821,8 +821,8 @@ class TournamentStore {
     const qf4_sd = findKnockoutSlotMatch("SD", "qf4", qfMatches_SD, 3, "QF4_SD");
 
     syncQFMatch(qf1_sd, "SD", "A", true, "B", false, stA_SD, stB_SD, "qf1", "Perempat Final 1");
-    syncQFMatch(qf2_sd, "SD", "C", true, "D", false, stC_SD, stD_SD, "qf2", "Perempat Final 2");
-    syncQFMatch(qf3_sd, "SD", "B", true, "A", false, stB_SD, stA_SD, "qf3", "Perempat Final 3");
+    syncQFMatch(qf2_sd, "SD", "B", true, "A", false, stB_SD, stA_SD, "qf2", "Perempat Final 2");
+    syncQFMatch(qf3_sd, "SD", "C", true, "D", false, stC_SD, stD_SD, "qf3", "Perempat Final 3");
     syncQFMatch(qf4_sd, "SD", "D", true, "C", false, stD_SD, stC_SD, "qf4", "Perempat Final 4");
 
     // Helper to get winner & loser from finished match (with Penalty Shootout support)
