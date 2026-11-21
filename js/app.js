@@ -4253,8 +4253,8 @@ var app = window.app = Object.assign(window.app || {}, {
           </h3>
           <p style="font-size: 0.88rem; max-width: 480px; margin: 0 auto 16px auto; line-height: 1.5; color: #94a3b8;">
             ${hasActiveFilters
-              ? "Tidak ditemukan pertandingan yang sesuai dengan filter Matchday, Klub, atau Babak yang dipilih."
-              : `Jadwal pertandingan turnamen kategori ${this.currentCategory === 'all' ? 'semua' : this.currentCategory} belum ditambahkan oleh panitia pelaksana.`}
+          ? "Tidak ditemukan pertandingan yang sesuai dengan filter Matchday, Klub, atau Babak yang dipilih."
+          : `Jadwal pertandingan turnamen kategori ${this.currentCategory === 'all' ? 'semua' : this.currentCategory} belum ditambahkan oleh panitia pelaksana.`}
           </p>
           ${hasActiveFilters ? `
             <button type="button" class="btn btn-outline btn-sm" onclick="app.resetMatchFilters()" style="font-weight: 700; color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); padding: 8px 18px; margin-top: 6px;">
@@ -4864,7 +4864,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="bracket-header-cell col-qf">
             <div class="bracket-header-pill">BABAK 8 BESAR</div>
             <div class="bracket-header-title">PEREMPAT FINAL</div>
-            <div class="bracket-header-sub">📅 18 Nov 2026 • 4 Pertandingan</div>
+            <div class="bracket-header-sub">📅 27 Nov 2026 • 4 Pertandingan</div>
           </div>
 
           <div class="bracket-header-spacer"></div>
@@ -4872,7 +4872,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="bracket-header-cell col-sf">
             <div class="bracket-header-pill">BABAK 4 BESAR</div>
             <div class="bracket-header-title">SEMIFINAL</div>
-            <div class="bracket-header-sub">📅 19 Nov 2026 • 2 Pertandingan</div>
+            <div class="bracket-header-sub">📅 28 Nov 2026 • 3 Pertandingan</div>
           </div>
 
           <div class="bracket-header-spacer"></div>
