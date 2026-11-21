@@ -2910,9 +2910,10 @@ var app = window.app = Object.assign(window.app || {}, {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add("is-revealed");
-          observer.unobserve(entry.target);
           if (entry.target.classList.contains("home-slide-section")) {
             this.updateActiveSlideNav(entry.target.id);
+          } else {
+            observer.unobserve(entry.target);
           }
         }
       });
@@ -3781,8 +3782,9 @@ var app = window.app = Object.assign(window.app || {}, {
         targetPane.style.display = "block";
       }
 
-      document.documentElement.classList.remove("snap-scroll-active");
-      document.body.classList.remove("snap-scroll-active");
+      const isHomeTab = tabId === "home";
+      document.documentElement.classList.toggle("snap-scroll-active", isHomeTab);
+      document.body.classList.toggle("snap-scroll-active", isHomeTab);
 
       this.renderCurrentView();
       this.updateFloatingCategoryVisibility();
