@@ -650,7 +650,7 @@ main.container {
   margin-top: 8px !important;
   color: #94a3b8 !important;
   font-size: clamp(0.85rem, 1.4vw, 0.98rem) !important;
-  font-weight: 500 !important;
+  font-weight: 800 !important;
 }
 
 .hero-meta span {
