@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" class="snap-scroll-active">
 
 <head>
@@ -62,6 +62,44 @@
   </script>
 
   <!-- Early Safe Stubs to Guarantee Instant Mobile & Laptop Clickability without Error -->
+  <!-- Early Route Detector to Prevent Flash of Home Screen on Detail Page Reload -->
+  <script>
+    (function () {
+      try {
+        var path = window.location.pathname || "";
+        if (window.location.hash && window.location.hash.startsWith("#/")) {
+          path = window.location.hash.slice(1);
+        }
+        var isDetail = /\/daftar-tim\/detail-tim|\/jadwal-skor\/detail-laga/i.test(path);
+        if (isDetail) {
+          document.documentElement.classList.remove("snap-scroll-active");
+          if (document.body) document.body.classList.remove("snap-scroll-active");
+          document.addEventListener("DOMContentLoaded", function () {
+            var home = document.getElementById("pane-home");
+            if (home) {
+              home.classList.remove("active");
+              home.style.display = "none";
+            }
+            var teamPane = document.getElementById("pane-team-detail");
+            var playerPane = document.getElementById("pane-player-detail");
+            var matchPane = document.getElementById("pane-match-detail");
+            if (/\/detail-pemain/i.test(path) && playerPane) {
+              playerPane.classList.add("active");
+              playerPane.style.display = "block";
+            } else if (/\/detail-tim/i.test(path) && teamPane) {
+              teamPane.classList.add("active");
+              teamPane.style.display = "block";
+            } else if (/\/detail-laga/i.test(path) && matchPane) {
+              matchPane.classList.add("active");
+              matchPane.style.display = "block";
+            }
+            var floatSwitch = document.getElementById("floatingCategorySwitcher");
+            if (floatSwitch) floatSwitch.style.display = "none";
+          });
+        }
+      } catch (_) { }
+    })();
+  </script>
   <script>
     window.app = window.app || {
       switchTab: function (tabId) {
@@ -3168,11 +3206,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=20261121_v22"></script>
-  <script defer src="js/supabase-client.js?v=20261121_v22"></script>
-  <script defer src="js/data.js?v=20261121_v22"></script>
-  <script defer src="js/admin.js?v=20261121_v22"></script>
-  <script defer src="js/app.js?v=20261121_v22"></script>
+  <script defer src="js/security.js?v=20261121_v23"></script>
+  <script defer src="js/supabase-client.js?v=20261121_v23"></script>
+  <script defer src="js/data.js?v=20261121_v23"></script>
+  <script defer src="js/admin.js?v=20261121_v23"></script>
+  <script defer src="js/app.js?v=20261121_v23"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

@@ -108,8 +108,8 @@ class TournamentStore {
         else knockoutKey = "sf1";
       } else if (rawStage.startsWith("qf") || /qf/i.test(id) || /perempat|quarter|8\s*besar/i.test(roundName) || /juara\s*grup/i.test(hPlace)) {
         if (/qf1|\b1\b/i.test(id) || /perempat\s*final\s*1/i.test(roundName) || (/grup\s*a/i.test(hPlace) && /grup\s*b/i.test(aPlace))) knockoutKey = "qf1";
-        else if (/qf2|\b2\b/i.test(id) || /perempat\s*final\s*2/i.test(roundName) || (/grup\s*c/i.test(hPlace) && /grup\s*d/i.test(aPlace))) knockoutKey = "qf2";
-        else if (/qf3|\b3\b/i.test(id) || /perempat\s*final\s*3/i.test(roundName) || (/grup\s*b/i.test(hPlace) && /grup\s*a/i.test(aPlace))) knockoutKey = "qf3";
+        else if (/qf2|\b2\b/i.test(id) || /perempat\s*final\s*2/i.test(roundName) || (/grup\s*b/i.test(hPlace) && /grup\s*a/i.test(aPlace))) knockoutKey = "qf2";
+        else if (/qf3|\b3\b/i.test(id) || /perempat\s*final\s*3/i.test(roundName) || (/grup\s*c/i.test(hPlace) && /grup\s*d/i.test(aPlace))) knockoutKey = "qf3";
         else if (/qf4|\b4\b/i.test(id) || /perempat\s*final\s*4/i.test(roundName) || (/grup\s*d/i.test(hPlace) && /grup\s*c/i.test(aPlace))) knockoutKey = "qf4";
         else knockoutKey = "qf1";
       }
@@ -682,10 +682,10 @@ class TournamentStore {
       return 'Babak Gugur';
     }
 
-    if (m.group && m.group !== 'null' && m.group !== '-') {
-      return `Grup ${m.group}`;
+    if (m.group && String(m.group).trim() !== '' && String(m.group).toLowerCase() !== 'null' && String(m.group).toLowerCase() !== 'undefined' && String(m.group).trim() !== '-') {
+      return `Grup ${String(m.group).trim().toUpperCase()}`;
     }
-    return 'Fase Grup';
+    return (m.stage && m.stage !== 'group') ? 'Babak Gugur' : 'Fase Grup';
   }
 
   // Helper Pengurutan Waktu Pertandingan (Tanggal & Jam Laga)
@@ -1158,7 +1158,15 @@ var app = window.app = Object.assign(window.app || {}, {
     if (this.store && typeof this.store.getMatchStageName === 'function') {
       return this.store.getMatchStageName(m);
     }
-    return m ? (m.roundName || (m.stage === "group" ? `Grup ${m.group || '-'}` : "Babak Gugur")) : "";
+    if (!m) return "";
+    if (m.roundName && !m.roundName.includes("null") && !m.roundName.toLowerCase().startsWith("grup")) {
+      return m.roundName.replace(/\s*\((SMP|SD)\)/i, '');
+    }
+    const grp = String(m.group || '').trim();
+    if (m.stage === "group" && grp && grp.toLowerCase() !== "null" && grp !== "-" && grp.toLowerCase() !== "undefined") {
+      return `Grup ${grp.toUpperCase()}`;
+    }
+    return (m.stage && m.stage !== "group") ? "Babak Gugur" : "Fase Grup";
   },
 
   ensureStore() {
@@ -2276,6 +2284,13 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Render current active view immediately (< 30ms CPU time)
     this.renderCurrentView();
+    if (this.currentTab === "team-detail" && this._pendingDetailTeamId) {
+      this.openTeamDetailPage(this._pendingDetailTeamId, false);
+    } else if (this.currentTab === "player-detail" && this._pendingDetailTeamId && this._pendingDetailPlayerId) {
+      this.openPlayerDetailPage(this._pendingDetailTeamId, this._pendingDetailPlayerId, false);
+    } else if (this.currentTab === "match-detail" && this.activeDetailMatchId) {
+      this.renderMatchDetailPage(this.activeDetailMatchId);
+    }
     this.updateHeroLiveBadge();
     this.updateFloatingLiveNotice();
     this.renderHeader();
@@ -3314,6 +3329,14 @@ var app = window.app = Object.assign(window.app || {}, {
       return;
     }
 
+    // Pola 2b: Detail Pertandingan (/jadwal-skor/detail-laga/:matchId)
+    const matchDetailMatch = path.match(/\/jadwal-skor\/detail-laga\/([^/]+)/i);
+    if (matchDetailMatch) {
+      const matchId = decodeURIComponent(matchDetailMatch[1]);
+      this.showMatchDetail(matchId);
+      return;
+    }
+
     // Pola 3: Rute Standar Turnamen
     const tabMap = {
       "/": "home",
@@ -3345,17 +3368,56 @@ var app = window.app = Object.assign(window.app || {}, {
   openTeamDetailPage(teamId, pushHistory = true, customPath = null) {
     if (this._isMobileMenuOpen) this.closeMobileMenu();
 
+    this._pendingDetailTeamId = teamId;
+    this.currentTab = "team-detail";
+
+    // Pastikan scroll normal dan sembunyikan floating switcher saat di detail tim
+    document.documentElement.classList.remove("snap-scroll-active");
+    document.body.classList.remove("snap-scroll-active");
+    this.updateFloatingCategoryVisibility();
+
+    // Matikan indikator navbar aktif agar fokus ke detail page
+    document.querySelectorAll(".tab-btn, .mobile-nav-item").forEach(b => b.classList.remove("active"));
+
+    // Tampilkan pane detail tim & sembunyikan semua pane lain secara instan
+    document.querySelectorAll(".tab-pane").forEach(pane => {
+      pane.classList.remove("active");
+      pane.style.display = "none";
+    });
+    const targetPane = document.getElementById("pane-team-detail");
+    if (targetPane) {
+      targetPane.classList.add("active");
+      targetPane.style.display = "block";
+    }
+
     if (this.store && typeof this.store.syncPlayerStatsFromMatches === "function") {
       try { this.store.syncPlayerStatsFromMatches(); } catch (_) { }
     }
 
     const team = this.store.getTeam(teamId);
     if (!team) {
-      this.switchTab("teams", false);
+      // Pertahankan rute detail-tim, jangan switchTab('teams') karena data sedang dimuat dari Cloud Supabase
+      const container = document.getElementById("teamDetailPageContainer");
+      if (container) {
+        container.innerHTML = `
+          <div class="fullpage-nav-bar">
+            <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/tim', 'teams')">
+              <span>←</span> Kembali ke Daftar Tim
+            </button>
+            <div style="font-size: 0.76rem; color: #94a3b8;">
+              Turnamen Futsal ACC 2026 / Profil Tim
+            </div>
+          </div>
+          <div style="text-align: center; padding: 60px 16px; color: var(--text-muted);">
+            <div class="spinner-sm" style="margin: 0 auto 16px auto; width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent-gold); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+            <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Memuat Profil Tim...</div>
+            <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 6px;">Menghubungkan ke data online Cloud Supabase</div>
+          </div>
+        `;
+      }
       return;
     }
 
-    this.currentTab = "team-detail";
     const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}`;
     if (pushHistory) {
       try {
@@ -3564,20 +3626,34 @@ var app = window.app = Object.assign(window.app || {}, {
       `;
     }
 
-    document.querySelectorAll(".tab-pane").forEach(pane => {
-      pane.classList.remove("active");
-      pane.style.display = "none";
-    });
-    const targetPane = document.getElementById("pane-team-detail");
-    if (targetPane) {
-      targetPane.classList.add("active");
-      targetPane.style.display = "block";
-    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   },
 
   openPlayerDetailPage(teamId, playerIdOrName, pushHistory = true, customPath = null) {
     if (this._isMobileMenuOpen) this.closeMobileMenu();
+
+    this._pendingDetailTeamId = teamId;
+    this._pendingDetailPlayerId = playerIdOrName;
+    this.currentTab = "player-detail";
+
+    // Pastikan scroll normal dan sembunyikan floating switcher saat di detail pemain
+    document.documentElement.classList.remove("snap-scroll-active");
+    document.body.classList.remove("snap-scroll-active");
+    this.updateFloatingCategoryVisibility();
+
+    // Matikan indikator navbar aktif agar fokus ke detail page
+    document.querySelectorAll(".tab-btn, .mobile-nav-item").forEach(b => b.classList.remove("active"));
+
+    // Tampilkan pane detail pemain & sembunyikan semua pane lain secara instan
+    document.querySelectorAll(".tab-pane").forEach(pane => {
+      pane.classList.remove("active");
+      pane.style.display = "none";
+    });
+    const targetPane = document.getElementById("pane-player-detail");
+    if (targetPane) {
+      targetPane.classList.add("active");
+      targetPane.style.display = "block";
+    }
 
     if (this.store && typeof this.store.syncPlayerStatsFromMatches === "function") {
       try { this.store.syncPlayerStatsFromMatches(); } catch (_) { }
@@ -3585,7 +3661,25 @@ var app = window.app = Object.assign(window.app || {}, {
 
     const team = this.store.getTeam(teamId);
     if (!team) {
-      this.switchTab("teams", false);
+      // Pertahankan rute detail-pemain, jangan switchTab('teams') karena data sedang dimuat dari Cloud Supabase
+      const container = document.getElementById("playerDetailPageContainer");
+      if (container) {
+        container.innerHTML = `
+          <div class="fullpage-nav-bar">
+            <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/tim', 'teams')">
+              <span>←</span> Kembali ke Daftar Tim
+            </button>
+            <div style="font-size: 0.76rem; color: #94a3b8;">
+              Turnamen Futsal ACC 2026 / Profil Pemain
+            </div>
+          </div>
+          <div style="text-align: center; padding: 60px 16px; color: var(--text-muted);">
+            <div class="spinner-sm" style="margin: 0 auto 16px auto; width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent-gold); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+            <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">Memuat Profil Pemain...</div>
+            <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 6px;">Menghubungkan ke data online Cloud Supabase</div>
+          </div>
+        `;
+      }
       return;
     }
 
@@ -3765,15 +3859,6 @@ var app = window.app = Object.assign(window.app || {}, {
       `;
     }
 
-    document.querySelectorAll(".tab-pane").forEach(pane => {
-      pane.classList.remove("active");
-      pane.style.display = "none";
-    });
-    const targetPane = document.getElementById("pane-player-detail");
-    if (targetPane) {
-      targetPane.classList.add("active");
-      targetPane.style.display = "block";
-    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   },
 
@@ -3880,6 +3965,16 @@ var app = window.app = Object.assign(window.app || {}, {
           break;
         case "juknis":
           this.renderJuknis();
+          break;
+        case "team-detail":
+          if (this._pendingDetailTeamId) {
+            this.openTeamDetailPage(this._pendingDetailTeamId, false);
+          }
+          break;
+        case "player-detail":
+          if (this._pendingDetailTeamId && this._pendingDetailPlayerId) {
+            this.openPlayerDetailPage(this._pendingDetailTeamId, this._pendingDetailPlayerId, false);
+          }
           break;
         case "match-detail":
           if (this.activeDetailMatchId) {
@@ -7831,11 +7926,11 @@ var app = window.app = Object.assign(window.app || {}, {
 
   // DEDICATED FULL-PAGE MATCH DETAIL CENTER
   showMatchDetail(matchId) {
-    const match = this.store.data.matches.find(m => m.id === matchId);
-    if (!match) return;
-
     this.activeDetailMatchId = matchId;
     this.currentTab = "match-detail";
+
+    document.documentElement.classList.remove("snap-scroll-active");
+    document.body.classList.remove("snap-scroll-active");
 
     // Switch tab DOM with display guarantee
     document.querySelectorAll(".tab-pane").forEach(pane => {
