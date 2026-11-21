@@ -1354,7 +1354,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (changed) {
       this.store.saveData();
       if (window.SupabaseService && typeof window.SupabaseService.syncTeams === "function") {
-        window.SupabaseService.syncTeams(this.store.data.teams).catch(() => {});
+        window.SupabaseService.syncTeams(this.store.data.teams).catch(() => { });
       }
     }
   },
@@ -8299,25 +8299,6 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
       </div>
 
-      <!-- AKUMULASI PELANGGARAN TIM (FOULS BANNER) -->
-      <div class="md-foul-banner">
-        <div class="md-foul-side">
-          <span style="font-weight: 800; font-size: 0.85rem; color: #ffffff;">${home.shortName || home.name}:</span>
-          <span class="md-foul-count ${hFouls >= 5 ? 'danger' : ''}">${hFouls}</span>
-          ${hFouls >= 5 ? `<span style="font-size: 0.7rem; color: #ef4444; font-weight: 800;">🚨 LIMIT 10m!</span>` : `<span style="font-size: 0.7rem; color: var(--text-muted);">${5 - hFouls} foul tersisa</span>`}
-        </div>
-
-        <div style="font-weight: 800; font-size: 0.82rem; color: #fbbf24; text-align: center;">
-          ⚠️ TOTAL PELANGGARAN: ${hFouls} - ${aFouls}
-        </div>
-
-        <div class="md-foul-side" style="justify-content: flex-end;">
-          ${aFouls >= 5 ? `<span style="font-size: 0.7rem; color: #ef4444; font-weight: 800;">🚨 LIMIT 10m!</span>` : `<span style="font-size: 0.7rem; color: var(--text-muted);">${5 - aFouls} foul tersisa</span>`}
-          <span class="md-foul-count ${aFouls >= 5 ? 'danger' : ''}">${aFouls}</span>
-          <span style="font-weight: 800; font-size: 0.85rem; color: #ffffff;">:${away.shortName || away.name}</span>
-        </div>
-      </div>
-
       <!-- KRONOLOGI KEJADIAN LAGA (TIMELINE) -->
       <div class="md-section-title">
         <span>⏱️</span> Kronologi Kejadian Pertandingan (Gol &amp; Kartu Pelanggaran)
@@ -8352,6 +8333,26 @@ var app = window.app = Object.assign(window.app || {}, {
           `;
     }).join("")}
       </div>
+      
+      <!-- AKUMULASI PELANGGARAN TIM (FOULS BANNER) -->
+      <div class="md-foul-banner">
+        <div class="md-foul-side">
+          <span style="font-weight: 800; font-size: 0.85rem; color: #ffffff;">${home.shortName || home.name}:</span>
+          <span class="md-foul-count ${hFouls >= 5 ? 'danger' : ''}">${hFouls}</span>
+          ${hFouls >= 5 ? `<span style="font-size: 0.7rem; color: #ef4444; font-weight: 800;">🚨 LIMIT 10m!</span>` : `<span style="font-size: 0.7rem; color: var(--text-muted);">${5 - hFouls} foul tersisa</span>`}
+        </div>
+
+        <div style="font-weight: 800; font-size: 0.82rem; color: #fbbf24; text-align: center;">
+          ⚠️ TOTAL PELANGGARAN: ${hFouls} - ${aFouls}
+        </div>
+
+        <div class="md-foul-side" style="justify-content: flex-end;">
+          ${aFouls >= 5 ? `<span style="font-size: 0.7rem; color: #ef4444; font-weight: 800;">🚨 LIMIT 10m!</span>` : `<span style="font-size: 0.7rem; color: var(--text-muted);">${5 - aFouls} foul tersisa</span>`}
+          <span class="md-foul-count ${aFouls >= 5 ? 'danger' : ''}">${aFouls}</span>
+          <span style="font-weight: 800; font-size: 0.85rem; color: #ffffff;">:${away.shortName || away.name}</span>
+        </div>
+      </div>
+
 
       <!-- DAFTAR SKUAD & OFISIAL (DUAL COLUMN) -->
       <div class="md-section-title">
