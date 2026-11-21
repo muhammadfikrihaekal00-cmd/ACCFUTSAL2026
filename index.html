@@ -1467,8 +1467,7 @@
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
-                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol (5 di
-                    Lapangan):</label>
+                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol:</label>
                   <select id="goalScorerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
                     <option value="">Pilih Pencetak Gol</option>
                   </select>
@@ -1485,11 +1484,11 @@
                 <div style="display: flex; align-items: center; gap: 4px;">
                   <span style="font-size: 0.75rem; color: var(--text-muted);">Menit:</span>
                   <input type="text" id="goalMinuteInput" class="form-input"
-                    style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;"
-                    placeholder="12'">
+                    style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem; color: #fbbf24;"
+                    placeholder="1'" oninput="this.dataset.manualEdit='true'">
                   <button type="button" class="btn btn-outline btn-sm"
                     onclick="admin.useLiveMinuteFor('goalMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;"
-                    title="Gunakan Menit Live">⏱️</button>
+                    title="Gunakan Menit Live Berjalan">⏱️ Live</button>
                 </div>
                 <button type="button" class="btn btn-primary btn-sm" onclick="admin.addGoalWithAssist()"
                   style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 0.82rem; justify-content: center;">
@@ -1526,11 +1525,11 @@
                 <div style="display: flex; align-items: center; gap: 4px;">
                   <span style="font-size: 0.75rem; color: var(--text-muted);">Menit:</span>
                   <input type="text" id="cardMinuteInput" class="form-input"
-                    style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem;"
-                    placeholder="12'">
+                    style="width: 54px; text-align: center; font-weight: 800; padding: 6px 4px; font-size: 0.85rem; color: #f87171;"
+                    placeholder="1'" oninput="this.dataset.manualEdit='true'">
                   <button type="button" class="btn btn-outline btn-sm"
                     onclick="admin.useLiveMinuteFor('cardMinuteInput')" style="font-size: 0.7rem; padding: 6px 8px;"
-                    title="Gunakan Menit Live">⏱️</button>
+                    title="Gunakan Menit Live Berjalan">⏱️ Live</button>
                 </div>
                 <button type="button" class="btn btn-outline btn-sm" onclick="admin.addCardEventWithRole('yellow')"
                   style="flex: 1; padding: 8px 8px; font-weight: 800; font-size: 0.8rem; color: #fbbf24; border-color: rgba(251,191,36,0.5); justify-content: center;">
@@ -1546,7 +1545,12 @@
 
           <!-- TAB 4: PENCATATAN & PENJUMLAHAN FOULS -->
           <div id="qsPanel_foul" class="qs-tab-panel" style="display: none;">
-
+            <div
+              style="text-align: center; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span style="font-size: 0.75rem; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); padding: 3px 10px; border-radius: 999px;">
+                ⏱️ Menit Laga Berjalan: <strong id="foulLiveMinuteDisplay" style="color: #ffffff;">1'</strong> (Otomatis Live)
+              </span>
+            </div>
             <div
               style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-surface-elevated); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
               <div>
@@ -3132,11 +3136,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261121_v25"></script>
-  <script defer src="/js/supabase-client.js?v=20261121_v25"></script>
-  <script defer src="/js/data.js?v=20261121_v25"></script>
-  <script defer src="/js/admin.js?v=20261121_v25"></script>
-  <script defer src="/js/app.js?v=20261121_v25"></script>
+  <script defer src="/js/security.js?v=20261121_v26"></script>
+  <script defer src="/js/supabase-client.js?v=20261121_v26"></script>
+  <script defer src="/js/data.js?v=20261121_v26"></script>
+  <script defer src="/js/admin.js?v=20261121_v26"></script>
+  <script defer src="/js/app.js?v=20261121_v26"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

@@ -522,12 +522,31 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       initialMinute = String(Math.max(1, cur));
       match.liveMinute = `${initialMinute}'`;
     } else {
-      initialMinute = "1";
-      match.liveMinute = "1'";
+      let cur = parseInt((match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
+      initialMinute = String(Math.max(1, cur));
     }
 
     const matchMinInput = document.getElementById("matchMinuteInput");
-    matchMinInput.value = `${initialMinute}'`;
+    if (matchMinInput) matchMinInput.value = `${initialMinute}'`;
+
+    const goalMinInput = document.getElementById("goalMinuteInput");
+    if (goalMinInput) {
+      goalMinInput.dataset.manualEdit = "false";
+      goalMinInput.value = `${initialMinute}'`;
+      goalMinInput.placeholder = `${initialMinute}'`;
+    }
+
+    const cardMinInput = document.getElementById("cardMinuteInput");
+    if (cardMinInput) {
+      cardMinInput.dataset.manualEdit = "false";
+      cardMinInput.value = `${initialMinute}'`;
+      cardMinInput.placeholder = `${initialMinute}'`;
+    }
+
+    const foulMinDisp = document.getElementById("foulLiveMinuteDisplay");
+    if (foulMinDisp) {
+      foulMinDisp.textContent = `${initialMinute}'`;
+    }
 
     const eventMinInput = document.getElementById("eventMinuteInput");
     if (eventMinInput) {
@@ -881,11 +900,38 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   syncEventMinute(val) {
-    const clean = (val || "").toString().replace(/[^0-9]/g, "");
+    const clean = (val || "").toString().replace(/[^0-9]/g, "") || "1";
+    const formatted = `${clean}'`;
+
+    // 1. Goal Minute Input (Otomatis template live minute)
+    const goalInput = document.getElementById("goalMinuteInput");
+    if (goalInput) {
+      goalInput.placeholder = formatted;
+      if (document.activeElement !== goalInput && goalInput.dataset.manualEdit !== "true") {
+        goalInput.value = formatted;
+      }
+    }
+
+    // 2. Card Minute Input (Otomatis template live minute)
+    const cardInput = document.getElementById("cardMinuteInput");
+    if (cardInput) {
+      cardInput.placeholder = formatted;
+      if (document.activeElement !== cardInput && cardInput.dataset.manualEdit !== "true") {
+        cardInput.value = formatted;
+      }
+    }
+
+    // 3. Foul Live Minute Display (Badge live minute di tab foul)
+    const foulMinDisp = document.getElementById("foulLiveMinuteDisplay");
+    if (foulMinDisp) {
+      foulMinDisp.textContent = formatted;
+    }
+
+    // 4. Legacy eventMinuteInput
     const eventInput = document.getElementById("eventMinuteInput");
     const syncNotice = document.getElementById("eventSyncNotice");
     if (eventInput) {
-      eventInput.placeholder = clean ? `Menit (${clean}')` : "Menit (12')";
+      eventInput.placeholder = `Menit (${formatted})`;
       // Hanya timpa otomatis jika pengguna belum mengetik menit manual untuk kejadian tersebut
       if (!eventInput.dataset.manualEdit || eventInput.dataset.manualEdit === "false") {
         eventInput.value = clean;
@@ -893,7 +939,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     if (syncNotice) {
       if (clean) {
-        syncNotice.textContent = `Sinkron: ${clean}'`;
+        syncNotice.textContent = `Sinkron: ${formatted}`;
         syncNotice.style.color = "var(--primary)";
       } else {
         syncNotice.textContent = "Sinkron ke Menit Laga";
@@ -968,21 +1014,40 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const match = app.store.data.matches.find(m => m.id === matchId);
     if (!match) return;
 
+    // Pastikan menit live terkini selalu terisi ke tab kejadian laga
+    const curMin = (document.getElementById("matchMinuteInput")?.value || match.liveMinute || "1'").trim();
+    const cleanMin = curMin.replace(/[^0-9]/g, "") || "1";
+    const formatted = `${cleanMin}'`;
+
     if (tabName === 'goal') {
+      const gInput = document.getElementById("goalMinuteInput");
+      if (gInput && (!gInput.value || gInput.dataset.manualEdit !== "true")) {
+        gInput.value = formatted;
+        gInput.placeholder = formatted;
+      }
       this.populateGoalAssistSelectors(match);
     } else if (tabName === 'card') {
+      const cInput = document.getElementById("cardMinuteInput");
+      if (cInput && (!cInput.value || cInput.dataset.manualEdit !== "true")) {
+        cInput.value = formatted;
+        cInput.placeholder = formatted;
+      }
       this.populateCardSelectors(match);
     } else if (tabName === 'foul') {
+      const foulMinDisp = document.getElementById("foulLiveMinuteDisplay");
+      if (foulMinDisp) foulMinDisp.textContent = formatted;
       this.updateFoulDisplays(match);
     }
   },
 
   useLiveMinuteFor(inputId) {
-    const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
+    const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "") || "1";
     const target = document.getElementById(inputId);
     if (target) {
-      target.value = matchMin ? `${matchMin}'` : "1'";
-      app.showToast(`⏱️ Menit disetel ke ${target.value}`);
+      target.dataset.manualEdit = "false";
+      target.value = `${matchMin}'`;
+      target.placeholder = `${matchMin}'`;
+      app.showToast(`⏱️ Menit disinkronkan ke live: ${target.value}`);
     }
   },
 
@@ -1225,6 +1290,15 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     this.renderAdminEventsList(match);
     app.showToast(`⚽ Gol dicatat: ${scorer}${assist ? ` (Assist: ${assist})` : ''} - Menit ${minute}`);
+
+    const goalInput = document.getElementById("goalMinuteInput");
+    if (goalInput) {
+      goalInput.dataset.manualEdit = "false";
+      const liveMin = (document.getElementById("matchMinuteInput")?.value || match.liveMinute || "1'").trim();
+      goalInput.value = liveMin;
+      goalInput.placeholder = liveMin;
+    }
+
     this.switchQuickScoreTab('score');
     if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
   },
@@ -1342,6 +1416,15 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     this.renderAdminEventsList(match);
     app.showToast(`Kartu ${type === 'yellow' ? 'Kuning 🟨' : 'Merah 🟥'} dicatat: ${recipient} (${role || 'Pemain'}) - Menit ${minute}`);
+
+    const cardInput = document.getElementById("cardMinuteInput");
+    if (cardInput) {
+      cardInput.dataset.manualEdit = "false";
+      const liveMin = (document.getElementById("matchMinuteInput")?.value || match.liveMinute || "1'").trim();
+      cardInput.value = liveMin;
+      cardInput.placeholder = liveMin;
+    }
+
     this.switchQuickScoreTab('score');
     if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
   },
@@ -1485,6 +1568,17 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     this.updateFoulDisplays(match);
+    const liveMin = (document.getElementById("matchMinuteInput")?.value || match.liveMinute || "1'").trim();
+    const team = side === 'home' ? app.store.getTeam(match.homeId) : app.store.getTeam(match.awayId);
+    const teamName = team ? (team.shortName || team.name) : (side === 'home' ? 'Home' : 'Away');
+    const totalFoul = side === 'home' ? match.homeFouls : match.awayFouls;
+
+    if (delta > 0) {
+      app.showToast(`⚠️ Foul dicatat: ${teamName} (Menit ${liveMin}) - Total: ${totalFoul}`);
+    } else {
+      app.showToast(`Foul ${teamName} dikurangi (Total: ${totalFoul})`);
+    }
+
     if (typeof app.refreshActiveMatchDetail === 'function') app.refreshActiveMatchDetail();
   },
 
@@ -1497,6 +1591,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const aLabel = document.getElementById("foulAwayTeamLabel");
     if (hLabel) hLabel.textContent = home ? (home.shortName || home.name) : "Home";
     if (aLabel) aLabel.textContent = away ? (away.shortName || away.name) : "Away";
+
+    const curMin = (document.getElementById("matchMinuteInput")?.value || match.liveMinute || "1'").trim();
+    const foulMinDisp = document.getElementById("foulLiveMinuteDisplay");
+    if (foulMinDisp) foulMinDisp.textContent = curMin;
 
     const hFouls = parseInt(match.homeFouls, 10) || 0;
     const aFouls = parseInt(match.awayFouls, 10) || 0;
