@@ -254,6 +254,11 @@ class TournamentStore {
     if (data.config && (!data.config.tournamentName || data.config.tournamentName.includes('ACC "Al-Fayyadh') || data.config.tournamentName === 'ACC 2026')) {
       data.config.tournamentName = 'Al-Fayyadh Champions Cup 2026';
     }
+    if (data.config) {
+      if (!data.config.contactCommittee || data.config.contactCommittee.includes("Harun") || data.config.contactCommittee.includes("0812-9876-5432")) {
+        data.config.contactCommittee = "0859-3322-8817 (Ust. Ahmadi)";
+      }
+    }
     if (!Array.isArray(data.teams)) data.teams = [];
     if (!Array.isArray(data.matches)) data.matches = [];
 
@@ -5771,8 +5776,20 @@ var app = window.app = Object.assign(window.app || {}, {
       this.initScrollReveal();
     }
 
-    if (contactEl && this.store && this.store.data && this.store.data.config && this.store.data.config.contactCommittee) {
-      contactEl.textContent = this.store.data.config.contactCommittee;
+    const activeContact = (this.store && this.store.data && this.store.data.config && this.store.data.config.contactCommittee && !this.store.data.config.contactCommittee.includes("Harun"))
+      ? this.store.data.config.contactCommittee
+      : "0859-3322-8817 (Ust. Ahmadi)";
+    if (this.store && this.store.data && this.store.data.config) {
+      this.store.data.config.contactCommittee = activeContact;
+    }
+    if (contactEl) {
+      contactEl.textContent = activeContact;
+    }
+    const waHelpdeskBtn = document.querySelector(".juknis-helpdesk-actions a");
+    if (waHelpdeskBtn) {
+      const rawDigits = (this.cleanWhatsAppNumber ? this.cleanWhatsAppNumber(activeContact) : "6285933228817") || "6285933228817";
+      const cleanWaNum = rawDigits.startsWith("0") ? "62" + rawDigits.substring(1) : (rawDigits.startsWith("62") ? rawDigits : "6285933228817");
+      waHelpdeskBtn.href = `https://wa.me/${cleanWaNum}?text=${encodeURIComponent("Halo Panitia ACC 2026, saya ingin bertanya seputar regulasi dan pertandingan")}`;
     }
   },
 
