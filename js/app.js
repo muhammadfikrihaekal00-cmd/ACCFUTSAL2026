@@ -376,24 +376,19 @@ class TournamentStore {
 
   saveData() {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.data));
+      const slim = this.createSlimStoragePayload(this.data);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(slim));
     } catch (e) {
-      // Tangani QuotaExceededError dengan pembersihan & penyimpanan versi compact
+      // Tangani QuotaExceededError dengan pembersihan & penyimpanan versi ultra-minimal
       try {
         this.cleanObsoleteStorageKeys();
-        const slim = this.createSlimStoragePayload(this.data);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(slim));
-      } catch (innerErr) {
-        // Jika browser sangat membatasi storage (misal Private Browsing), simpan minimal struktur
-        try {
-          const minimal = {
-            matches: this.data.matches || [],
-            settings: this.data.settings || {},
-            groups: this.data.groups || {}
-          };
-          localStorage.setItem(this.STORAGE_KEY + "_min", JSON.stringify(minimal));
-        } catch (_) { }
-      }
+        const minimal = {
+          matches: this.data.matches || [],
+          settings: this.data.settings || {},
+          groups: this.data.groups || {}
+        };
+        localStorage.setItem(this.STORAGE_KEY + "_min", JSON.stringify(minimal));
+      } catch (innerErr) { }
     }
   }
 
@@ -406,66 +401,91 @@ class TournamentStore {
   syncPlayerStatsFromMatches() {
     if (!this.data || !this.data.teams || !this.data.matches) return;
 
+    let hasChanged = false;
+
+    // Fast O(M * (S + C)) indexing to eliminate heavy nested loops
+    const statsMap = new Map();
+    this.data.matches.forEach(m => {
+      if (m.scorers && Array.isArray(m.scorers)) {
+        m.scorers.forEach(s => {
+          const tId = s.team || "";
+          const sName = (s.player || '').toLowerCase().trim();
+          if (sName) {
+            const key = `${tId}:${sName}`;
+            let entry = statsMap.get(key);
+            if (!entry) { entry = { goals: 0, assists: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
+            entry.goals += 1;
+          }
+          if (s.assist) {
+            const aName = (s.assist || '').toLowerCase().trim();
+            if (aName) {
+              const key = `${tId}:${aName}`;
+              let entry = statsMap.get(key);
+              if (!entry) { entry = { goals: 0, assists: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
+              entry.assists += 1;
+            }
+          }
+        });
+      }
+
+      if (m.cards && Array.isArray(m.cards)) {
+        m.cards.forEach(c => {
+          if (c._meta) return;
+          const tId = c.team || "";
+          const cName = (c.player || '').toLowerCase().trim();
+          if (cName) {
+            const key = `${tId}:${cName}`;
+            let entry = statsMap.get(key);
+            if (!entry) { entry = { goals: 0, assists: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
+            if (c.type === 'yellow') entry.yc += 1;
+            if (c.type === 'red') entry.rc += 1;
+          }
+        });
+      }
+    });
+
     this.data.teams.forEach(t => {
       if (!t.players || !Array.isArray(t.players)) return;
 
       t.players.forEach(p => {
+        const cleanPName = (p.name || '').toLowerCase().trim();
         let matchGoals = 0;
         let matchAssists = 0;
         let matchYc = 0;
         let matchRc = 0;
-        const cleanPName = (p.name || '').toLowerCase().trim();
 
-        this.data.matches.forEach(m => {
-          if (m.scorers && Array.isArray(m.scorers)) {
-            m.scorers.forEach(s => {
-              const isTeam = !s.team || s.team === t.id || s.team === t.name || s.team === t.shortName;
-              const scorerName = (s.player || '').toLowerCase().trim();
-              const isPlayer = scorerName === cleanPName ||
-                scorerName === `${cleanPName} (#${p.no})` ||
-                (p.no && scorerName.includes(`#${p.no}`)) ||
-                scorerName.includes(cleanPName) ||
-                cleanPName.includes(scorerName);
-              if (isTeam && isPlayer) {
-                matchGoals += 1;
+        // O(1) direct lookup first
+        const directKey = `${t.id}:${cleanPName}`;
+        const entry = statsMap.get(directKey);
+        if (entry) {
+          matchGoals = entry.goals;
+          matchAssists = entry.assists;
+          matchYc = entry.yc;
+          matchRc = entry.rc;
+        } else {
+          // Fallback scan only if direct match not found
+          for (const [k, v] of statsMap.entries()) {
+            if (k.startsWith(t.id + ":") || k.startsWith(":")) {
+              const scorerName = k.split(":")[1] || "";
+              if (scorerName === cleanPName || (p.no && scorerName.includes(`#${p.no}`)) || (cleanPName && (scorerName.includes(cleanPName) || cleanPName.includes(scorerName)))) {
+                matchGoals += v.goals;
+                matchAssists += v.assists;
+                matchYc += v.yc;
+                matchRc += v.rc;
               }
-
-              if (s.assist) {
-                const assistName = (s.assist || '').toLowerCase().trim();
-                const isAssist = assistName === cleanPName ||
-                  assistName === `${cleanPName} (#${p.no})` ||
-                  (p.no && assistName.includes(`#${p.no}`)) ||
-                  assistName.includes(cleanPName) ||
-                  cleanPName.includes(assistName);
-                if (isTeam && isAssist) {
-                  matchAssists += 1;
-                }
-              }
-            });
+            }
           }
+        }
 
-          if (m.cards && Array.isArray(m.cards)) {
-            m.cards.forEach(c => {
-              if (c._meta) return;
-              const isTeam = !c.team || c.team === t.id || c.team === t.name || c.team === t.shortName;
-              const cardPlayer = (c.player || '').toLowerCase().trim();
-              const isPlayer = cardPlayer === cleanPName ||
-                cardPlayer === `${cleanPName} (#${p.no})` ||
-                (p.no && cardPlayer.includes(`#${p.no}`)) ||
-                cardPlayer.includes(cleanPName) ||
-                cleanPName.includes(cardPlayer);
-              if (isTeam && isPlayer) {
-                if (c.type === 'yellow') matchYc += 1;
-                if (c.type === 'red') matchRc += 1;
-              }
-            });
-          }
-        });
-
-        p.goals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
-        p.assists = Math.max(parseInt(p.assists, 10) || 0, matchAssists);
-        p.yc = matchYc;
-        p.rc = matchRc;
+        const newGoals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
+        const newAssists = Math.max(parseInt(p.assists, 10) || 0, matchAssists);
+        if (p.goals !== newGoals || p.assists !== newAssists || p.yc !== matchYc || p.rc !== matchRc) {
+          p.goals = newGoals;
+          p.assists = newAssists;
+          p.yc = matchYc;
+          p.rc = matchRc;
+          hasChanged = true;
+        }
       });
     });
 
@@ -474,14 +494,21 @@ class TournamentStore {
       if ((m.status === 'live' || m.status === 'finished') && m.scorers && Array.isArray(m.scorers) && m.scorers.length > 0) {
         const hGoals = m.scorers.filter(s => s.team === m.homeId).length;
         const aGoals = m.scorers.filter(s => s.team === m.awayId).length;
-        m.homeScore = Math.max(parseInt(m.homeScore, 10) || 0, hGoals);
-        m.awayScore = Math.max(parseInt(m.awayScore, 10) || 0, aGoals);
-        m.homeScoreLive = m.homeScore;
-        m.awayScoreLive = m.awayScore;
+        const newHome = Math.max(parseInt(m.homeScore, 10) || 0, hGoals);
+        const newAway = Math.max(parseInt(m.awayScore, 10) || 0, aGoals);
+        if (m.homeScore !== newHome || m.awayScore !== newAway) {
+          m.homeScore = newHome;
+          m.awayScore = newAway;
+          m.homeScoreLive = newHome;
+          m.awayScoreLive = newAway;
+          hasChanged = true;
+        }
       }
     });
 
-    this.saveData();
+    if (hasChanged) {
+      this.saveData();
+    }
   }
 
   getTeam(id) {
@@ -1240,8 +1267,10 @@ var app = window.app = Object.assign(window.app || {}, {
   init() {
     this.ensureStore();
     if (this.store && this.store.data && this.store.data.config) {
-      this.store.data.config.dates = "22 - 29 November 2026";
-      this.store.saveData();
+      if (this.store.data.config.dates !== "22 - 29 November 2026") {
+        this.store.data.config.dates = "22 - 29 November 2026";
+        this.store.saveData();
+      }
     }
     try { this.purgeAllTeamWhatsApp(); } catch (e) { console.warn("Purge WA init:", e); }
     try { this.initSplashScreen(); } catch (e) { console.warn("Splash init:", e); }
@@ -1250,36 +1279,47 @@ var app = window.app = Object.assign(window.app || {}, {
     try { this.renderHeader(); } catch (e) { console.warn("Header init:", e); }
     try { this.renderLiveStreamHero(); } catch (e) { console.warn("LiveStream init:", e); }
     try { this.bindEvents(); } catch (e) { console.warn("Events init:", e); }
-    try {
-      this.connectDrawToTournament("SMP", false);
-      this.connectDrawToTournament("SD", false);
-    } catch (e) { }
     try { this.updateAdminVisibility(); } catch (e) { }
     try { this.renderCurrentView(); } catch (e) { console.warn("View init:", e); }
     try { this.initFloatingCategorySwitcher(); } catch (e) { console.warn("FloatingCat init:", e); }
-    try { this.initPwa(); } catch (e) { console.warn("PWA init:", e); }
-    try { this.initSupabaseSync(); } catch (e) { console.warn("Supabase init:", e); }
-    // Cek jika ada draft pengisian tim / folder yang sempat terhenti (tampilkan banner pengingat non-blocking)
-    setTimeout(() => {
-      try {
-        if (window.admin && typeof window.admin.restorePendingDraftsOnBoot === 'function') {
-          window.admin.restorePendingDraftsOnBoot();
-        }
-      } catch (_) { }
-    }, 800);
-    try { this.initGlobalLiveMatchTimer(); } catch (e) { console.warn("LiveTimer init:", e); }
-    try { this.initNetworkStatusListeners(); } catch (e) { console.warn("Network init:", e); }
-    try { this.initScrollReveal(); } catch (e) { console.warn("ScrollReveal init:", e); }
-    try { this.initHomeSlideNavigation(); } catch (e) { console.warn("SlideNav init:", e); }
-    try { this.updateFloatingLiveNotice(); } catch (e) { console.warn("FloatingLive init:", e); }
 
-    // DOM-level guarantee
+    // DOM-level guarantee (Critical)
     try {
       const tickerEl = document.getElementById("tickerText");
       if (tickerEl && tickerEl.textContent && (tickerEl.textContent.includes("ð") || tickerEl.textContent.includes("†") || !tickerEl.textContent.trim().startsWith("🏆"))) {
         tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
       }
     } catch (e) { }
+
+    // Defer heavy non-critical background subsystems to idle time to maximize FCP & cut TBT to near zero
+    const deferBackgroundInit = (fn) => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(fn, { timeout: 2500 });
+      } else {
+        setTimeout(fn, 120);
+      }
+    };
+
+    deferBackgroundInit(() => {
+      try {
+        this.connectDrawToTournament("SMP", false);
+        this.connectDrawToTournament("SD", false);
+      } catch (e) { }
+      try { this.initPwa(); } catch (e) { console.warn("PWA init:", e); }
+      try { this.initGlobalLiveMatchTimer(); } catch (e) { console.warn("LiveTimer init:", e); }
+      try { this.initNetworkStatusListeners(); } catch (e) { console.warn("Network init:", e); }
+      try { this.initScrollReveal(); } catch (e) { console.warn("ScrollReveal init:", e); }
+      try { this.initHomeSlideNavigation(); } catch (e) { console.warn("SlideNav init:", e); }
+      try { this.updateFloatingLiveNotice(); } catch (e) { console.warn("FloatingLive init:", e); }
+      try { this.initSupabaseSync(); } catch (e) { console.warn("Supabase init:", e); }
+
+      // Cek jika ada draft pengisian tim / folder yang sempat terhenti (non-blocking)
+      try {
+        if (window.admin && typeof window.admin.restorePendingDraftsOnBoot === 'function') {
+          window.admin.restorePendingDraftsOnBoot();
+        }
+      } catch (_) { }
+    });
   },
 
   purgeAllTeamWhatsApp() {
@@ -1895,12 +1935,14 @@ var app = window.app = Object.assign(window.app || {}, {
     const floatWrap = document.getElementById("floatingCategorySwitcher");
     const mainBtn = document.getElementById("floatingCatMainBtn");
     const dropdown = document.getElementById("floatingCatDropdown");
+    const altBtn = document.getElementById("floatingCatAltBtn");
     if (!floatWrap) return;
 
     const isOpen = forceState !== null ? Boolean(forceState) : !floatWrap.classList.contains("menu-open");
     floatWrap.classList.toggle("menu-open", isOpen);
     if (mainBtn) mainBtn.setAttribute("aria-expanded", String(isOpen));
     if (dropdown) dropdown.setAttribute("aria-hidden", String(!isOpen));
+    if (altBtn) altBtn.setAttribute("tabindex", isOpen ? "0" : "-1");
   },
 
   selectAlternateCategory() {
@@ -1939,16 +1981,23 @@ var app = window.app = Object.assign(window.app || {}, {
       }
     });
 
-    // Auto-dismiss saat pengguna melakukan scroll signifikan
-    let lastScrollPos = window.scrollY || window.pageYOffset || 0;
+    // Auto-dismiss saat pengguna melakukan scroll signifikan (throttled via rAF)
+    let lastScrollPos = 0;
+    let scrollTicking = false;
     window.addEventListener("scroll", () => {
-      const currentScroll = window.scrollY || window.pageYOffset || 0;
-      if (Math.abs(currentScroll - lastScrollPos) > 40) {
-        lastScrollPos = currentScroll;
-        const wrap = document.getElementById("floatingCategorySwitcher");
-        if (wrap && wrap.classList.contains("menu-open")) {
-          this.toggleFloatingCategoryMenu(false);
-        }
+      if (!scrollTicking) {
+        window.requestAnimationFrame(() => {
+          const currentScroll = window.scrollY || window.pageYOffset || 0;
+          if (Math.abs(currentScroll - lastScrollPos) > 40) {
+            lastScrollPos = currentScroll;
+            const wrap = document.getElementById("floatingCategorySwitcher");
+            if (wrap && wrap.classList.contains("menu-open")) {
+              this.toggleFloatingCategoryMenu(false);
+            }
+          }
+          scrollTicking = false;
+        });
+        scrollTicking = true;
       }
     }, { passive: true });
   },
@@ -4367,7 +4416,7 @@ var app = window.app = Object.assign(window.app || {}, {
         baseList = baseList.concat(items);
       }
 
-      const generateGroup = () => {
+      const generateGroup = (isCloned = false) => {
         return baseList.map(s => {
           const logoHtml = s.image ?
             `<img src="${s.image}" alt="${s.name}" class="sponsor-marquee-logo ${tierClass}" loading="lazy">` :
@@ -4378,7 +4427,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
           return `
             <div class="sponsor-marquee-item ${tierClass}" title="${s.name}${s.role ? ' - ' + s.role : ''}">
-              ${isPanitia ? `
+              ${(isPanitia && !isCloned) ? `
                 <div class="sponsor-marquee-admin-actions">
                   <button type="button" class="btn-sponsor-act edit" onclick="admin.editSponsor('${s.tierKey}', '${s.id || s.name}')" title="Edit Sponsor">✏️</button>
                   <button type="button" class="btn-sponsor-act del" onclick="admin.deleteSponsor('${s.tierKey}', '${s.id || s.name}')" title="Hapus Sponsor">🗑️</button>
@@ -4390,10 +4439,11 @@ var app = window.app = Object.assign(window.app || {}, {
         }).join("");
       };
 
-      const groupHtml = generateGroup();
+      const groupHtml = generateGroup(false);
+      const groupHtmlCloned = generateGroup(true);
       return `
         <div class="sponsors-marquee-group">${groupHtml}</div>
-        <div class="sponsors-marquee-group" aria-hidden="true">${groupHtml}</div>
+        <div class="sponsors-marquee-group" aria-hidden="true" inert>${groupHtmlCloned}</div>
       `;
     };
 
@@ -4423,9 +4473,6 @@ var app = window.app = Object.assign(window.app || {}, {
   fitOfficialSponsorTitle() {
     const titleEl = document.querySelector(".sponsors-official-title");
     if (!titleEl) return;
-
-    // Reset ukuran font kustom agar pengukuran dasar CSS berjalan
-    titleEl.style.fontSize = "";
 
     window.requestAnimationFrame(() => {
       const container = titleEl.closest(".sponsors-official-header") || titleEl.parentElement;

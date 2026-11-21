@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "ACC Futsal 2026",
+  "version": "1.0.0",
+  "description": "Portal Resmi Al-Fayyadh Champions Cup 2026 - Turnamen Futsal SD & SMP se-Indonesia",
+  "organization": {
+    "name": "Ma'had Tahfizhul Qur'an Al Fayyadh",
+    "type": "Educational Institution"
+  },
+  "event": {
+    "name": "Al-Fayyadh Champions Cup 2026",
+    "startDate": "2026-11-22",
+    "endDate": "2026-11-29",
+    "categories": ["SMP", "SD"],
+    "location": "Al-Fayyadh Arena"
+  },
+  "endpoints": {
+    "home": "/",
+    "matches": "/#/jadwal-skor",
+    "standings": "/#/klasemen",
+    "bracket": "/#/bagan",
+    "drawing": "/#/drawing",
+    "teams": "/#/daftar-tim",
+    "stats": "/#/statistik",
+    "juknis": "/#/juknis"
+  }
+}

@@ -11,6 +11,14 @@
       "destination": "/sitemap.xml"
     },
     {
+      "source": "/llms.txt",
+      "destination": "/llms.txt"
+    },
+    {
+      "source": "/ai-catalog.json",
+      "destination": "/ai-catalog.json"
+    },
+    {
       "source": "/manifest.json",
       "destination": "/manifest.json"
     },

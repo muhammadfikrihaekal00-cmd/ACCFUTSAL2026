@@ -379,7 +379,8 @@
           <div class="hero-emblem-wrap">
             <picture style="display: contents;">
               <source srcset="/assets/acc_logo.webp" type="image/webp">
-              <img src="/assets/acc_logo.png" alt="Emblem ACC 2026" class="hero-emblem-badge" width="220" height="312"
+              <source srcset="/assets/acc_logo.png" type="image/png">
+              <img src="/assets/acc_logo.webp" alt="Emblem ACC 2026" class="hero-emblem-badge" width="220" height="312"
                 fetchpriority="high" decoding="async">
             </picture>
           </div>
@@ -1221,7 +1222,7 @@
       <div>
       </div>
       <button type="button" id="floatingCatAltBtn" class="floating-cat-circle-btn floating-cat-alt-btn"
-        onclick="app.selectAlternateCategory()" aria-label="Pilih Kategori">
+        onclick="app.selectAlternateCategory()" aria-label="Pilih Kategori" tabindex="-1">
         <span class="floating-cat-badge-label" id="floatingCatAltText">SD</span>
 
       </button>
@@ -3137,10 +3138,10 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="/js/security.js?v=20261121_v27"></script>
-  <script defer src="/js/supabase-client.js?v=20261121_v27"></script>
-  <script defer src="/js/data.js?v=20261121_v27"></script>
-  <script defer src="/js/admin.js?v=20261121_v27"></script>
-  <script defer src="/js/app.js?v=20261121_v27"></script>
+  <script defer src="/js/supabase-client.js?v=20261121_v28"></script>
+  <script defer src="/js/data.js?v=20261121_v28"></script>
+  <script defer src="/js/admin.js?v=20261121_v28"></script>
+  <script defer src="/js/app.js?v=20261121_v28"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

@@ -1,0 +1,35 @@
+# ACC Futsal 2026 - Al-Fayyadh Champions Cup
+
+> Portal Resmi Turnamen Futsal Tingkat SD/MI & SMP/MTs Sederajat se-Indonesia yang diselenggarakan oleh Ma'had Tahfizhul Qur'an Al Fayyadh.
+
+## Informasi Turnamen
+- **Nama Acara**: ACC Al-Fayyadh Champions Cup 2026
+- **Penyelenggara**: Ma'had Tahfizhul Qur'an Al Fayyadh
+- **Tanggal Pelaksanaan**: 22 - 29 November 2026
+- **Lokasi / Venue**: Lapangan Futsal Al-Fayyadh Arena
+- **Kategori Peserta**:
+  - SMP / MTs (U-15)
+  - SD / MI (U-12)
+- **Format Kompetisi**:
+  - Babak Grup (Penyisihan Grup A, B, C, D)
+  - Babak Gugur / Knockout (Perempatfinal / QF, Semifinal / SF, Perebutan Juara 3, Grand Final)
+  - Adu Penalti untuk Babak Gugur jika skor imbang hingga waktu penuh selesai (3 penendang utama, dilanjutkan sudden death).
+
+## Fitur Aplikasi Portal
+- **Skor Langsung & Pemantauan Menit Pertandingan**: Pembaruan realtime via WebSocket Supabase.
+- **Klasemen Grup**: Poin, Main, Menang, Seri, Kalah, Memasukkan Gol, Kemasukan, Selisih Gol, dan Fair Play Points.
+- **Bagan Gugur (Tournament Bracket)**: Visualisasi pohon turnamen interaktif dari Perempatfinal hingga Final.
+- **Statistik & Top Scorer**: Pencetak gol terbanyak dan pencetak assist.
+- **Disiplin & Fair Play**: Rekapitulasi kartu kuning dan kartu merah serta status akumulasi hukuman pemain.
+- **Buku Panduan & Juknis**: Aturan resmi pertandingan, regulasi pergantian pemain, dan tata tertib turnamen.
+- **Live Stream Youtube**: Integrasi siaran langsung pertandingan.
+
+## Tautan Navigasi Portal
+- Beranda: `/`
+- Jadwal & Skor Pertandingan: `/#/jadwal-skor`
+- Klasemen Grup: `/#/klasemen`
+- Bagan Fase Gugur: `/#/bagan`
+- Undian Grup (Drawing): `/#/drawing`
+- Daftar Tim & Skuad: `/#/daftar-tim`
+- Statistik & Top Skor: `/#/statistik`
+- Juknis & Regulasi: `/#/juknis`
