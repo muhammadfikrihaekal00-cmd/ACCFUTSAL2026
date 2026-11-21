@@ -255,7 +255,10 @@ class TournamentStore {
       data.config.tournamentName = 'Al-Fayyadh Champions Cup 2026';
     }
     if (data.config) {
-      data.config.dates = "22 - 29 November 2026";
+      let d = String(data.config.dates || "");
+      if (!d || d.includes("28") || d.includes("26") || d !== "22 - 29 November 2026") {
+        data.config.dates = "22 - 29 November 2026";
+      }
       if (!data.config.contactCommittee || data.config.contactCommittee.includes("Harun") || data.config.contactCommittee.includes("0812-9876-5432")) {
         data.config.contactCommittee = "0859-3322-8817 (Ust. Ahmadi)";
       }
@@ -1185,6 +1188,10 @@ var app = window.app = Object.assign(window.app || {}, {
 
   init() {
     this.ensureStore();
+    if (this.store && this.store.data && this.store.data.config) {
+      this.store.data.config.dates = "22 - 29 November 2026";
+      this.store.saveData();
+    }
     try { this.purgeAllTeamWhatsApp(); } catch (e) { console.warn("Purge WA init:", e); }
     try { this.initSplashScreen(); } catch (e) { console.warn("Splash init:", e); }
     try { this.initThemeAndViewMode(); } catch (e) { console.warn("Theme init:", e); }
@@ -2063,7 +2070,11 @@ var app = window.app = Object.assign(window.app || {}, {
         cfg.subTitle = data.config.sub_title !== undefined ? data.config.sub_title : data.config.subTitle;
       }
       if (data.config.venue !== undefined) cfg.venue = data.config.venue;
-      if (data.config.dates !== undefined) cfg.dates = data.config.dates;
+      if (data.config.dates !== undefined) {
+        let d = String(data.config.dates || "");
+        if (!d || d.includes("28") || d.includes("26")) d = "22 - 29 November 2026";
+        cfg.dates = d;
+      }
       if (data.config.rules_text !== undefined || data.config.rulesText !== undefined) {
         const incomingRules = (data.config.rules_text !== undefined ? data.config.rules_text : data.config.rulesText) || "";
         const officialRules = (typeof DEFAULT_DATA !== "undefined" && DEFAULT_DATA.config && DEFAULT_DATA.config.rulesText)
@@ -2613,6 +2624,11 @@ var app = window.app = Object.assign(window.app || {}, {
       if (payload.hero_banner_image) {
         this.store.data.config.heroBannerImage = payload.hero_banner_image;
       }
+      if (payload.dates !== undefined) {
+        let d = String(payload.dates || "");
+        if (!d || d.includes("28") || d.includes("26")) d = "22 - 29 November 2026";
+        this.store.data.config.dates = d;
+      }
       this.store.saveData();
       this.renderHeader();
       this.renderLiveStreamHero();
@@ -2820,7 +2836,11 @@ var app = window.app = Object.assign(window.app || {}, {
     document.getElementById("heroSub").textContent = cleanSub;
     document.getElementById("heroVenue").textContent = config.venue || DEFAULT_DATA.config.venue;
     const heroDatesEl = document.getElementById("heroDates");
-    if (heroDatesEl) heroDatesEl.textContent = config.dates || "22 - 29 November 2026";
+    if (heroDatesEl) {
+      let d = String(config.dates || "22 - 29 November 2026");
+      if (!d || d.includes("28") || d.includes("26")) d = "22 - 29 November 2026";
+      heroDatesEl.textContent = d;
+    }
 
     let cleanTicker = config.runningAnnouncement || DEFAULT_DATA.config.runningAnnouncement || "";
     if (cleanTicker.includes("Selamat Datang")) {
