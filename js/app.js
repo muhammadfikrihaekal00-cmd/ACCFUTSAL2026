@@ -561,7 +561,7 @@ class TournamentStore {
     const hPlace = String(m.homePlaceholder || '').toLowerCase();
     const aPlace = String(m.awayPlaceholder || '').toLowerCase();
     if (/(juara\s*grup|runner-up\s*grup|pemenang\s*qf|kalah\s*semi|pemenang\s*semi)/i.test(hPlace) ||
-        /(juara\s*grup|runner-up\s*grup|pemenang\s*qf|kalah\s*semi|pemenang\s*semi)/i.test(aPlace)) return true;
+      /(juara\s*grup|runner-up\s*grup|pemenang\s*qf|kalah\s*semi|pemenang\s*semi)/i.test(aPlace)) return true;
     if (m.stage !== 'group' && (!m.group || m.group === 'null' || m.group === '-')) return true;
     return false;
   }
@@ -4855,8 +4855,8 @@ var app = window.app = Object.assign(window.app || {}, {
     // Otomatis sinkron 100% dengan urutan jadwal & dropdown resmi panitia ACC 2026
     const qfMatches = [
       getOrBuildKnockoutMatch(findSlotMatch("qf1", actualQFs, 0, `QF1_${activeCat}`), `QF1_${activeCat}`, `Perempat Final 1`, `Juara Grup A`, `Runner-up Grup B`, isSMP ? "08:00 - 08:45 WITA" : "08:00 - 08:35 WITA"),
-      getOrBuildKnockoutMatch(findSlotMatch("qf2", actualQFs, 1, `QF2_${activeCat}`), `QF2_${activeCat}`, `Perempat Final 2`, `Juara Grup C`, `Runner-up Grup D`, isSMP ? "09:00 - 09:45 WITA" : "08:50 - 09:25 WITA"),
-      getOrBuildKnockoutMatch(findSlotMatch("qf3", actualQFs, 2, `QF3_${activeCat}`), `QF3_${activeCat}`, `Perempat Final 3`, `Juara Grup B`, `Runner-up Grup A`, isSMP ? "10:00 - 10:45 WITA" : "09:40 - 10:15 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf2", actualQFs, 1, `QF2_${activeCat}`), `QF2_${activeCat}`, `Perempat Final 2`, `Juara Grup B`, `Runner-up Grup A`, isSMP ? "09:00 - 09:45 WITA" : "08:50 - 09:25 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf3", actualQFs, 2, `QF3_${activeCat}`), `QF3_${activeCat}`, `Perempat Final 3`, `Juara Grup C`, `Runner-up Grup D`, isSMP ? "10:00 - 10:45 WITA" : "09:40 - 10:15 WITA"),
       getOrBuildKnockoutMatch(findSlotMatch("qf4", actualQFs, 3, `QF4_${activeCat}`), `QF4_${activeCat}`, `Perempat Final 4`, `Juara Grup D`, `Runner-up Grup C`, isSMP ? "11:00 - 11:45 WITA" : "10:30 - 11:05 WITA"),
     ];
 
