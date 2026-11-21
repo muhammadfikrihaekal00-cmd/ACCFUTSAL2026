@@ -682,45 +682,38 @@ main.container {
 }
 
 /* ============================================================================
-   POWERPOINT FULL-PAGE SLIDE PRESENTATION ARCHITECTURE (BERANDA)
+   NATURAL FLUID SCROLL ARCHITECTURE (BERANDA & SEMUA TAB)
    ============================================================================ */
+html,
+body,
 html.snap-scroll-active,
 body.snap-scroll-active {
-  scroll-snap-type: y mandatory !important;
-  scroll-padding-top: 76px !important;
+  scroll-snap-type: none !important;
   scroll-behavior: smooth !important;
   overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
-@media (min-width: 981px) {
-
-  html.snap-scroll-active,
-  body.snap-scroll-active {
-    scroll-padding-top: 88px !important;
-  }
-}
-
-/* Base Fullpage Slide Section */
+/* Base Presentation Section (Smooth & Natural Flow) */
 .home-slide-section {
-  min-height: calc(100svh - 76px) !important;
-  min-height: calc(100dvh - 76px) !important;
+  min-height: auto !important;
   width: 100% !important;
   max-width: 1200px !important;
   margin: 0 auto !important;
-  padding: clamp(20px, 3.5vh, 44px) 16px !important;
+  padding: 24px 16px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
   align-items: center !important;
-  scroll-snap-align: start !important;
-  scroll-snap-stop: always !important;
+  scroll-snap-align: none !important;
+  scroll-snap-stop: normal !important;
   box-sizing: border-box !important;
   position: relative !important;
 }
 
 @media (min-width: 981px) {
   .home-slide-section {
-    min-height: calc(100vh - 88px) !important;
+    min-height: auto !important;
     padding: 32px 24px !important;
   }
 }
@@ -1642,7 +1635,7 @@ html.snap-scroll-active .home-slide-nav {
   text-align: center !important;
   padding: 0 !important;
   box-sizing: border-box !important;
-  text-shadow: 0 4px 28px rgba(0, 0, 0, 0.8) !important;
+  text-shadow: none !important;
   display: block !important;
 }
 
@@ -1652,7 +1645,7 @@ html.snap-scroll-active .home-slide-nav {
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   display: inline-block !important;
-  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.4)) !important;
+  filter: none !important;
 }
 
 .sponsors-official-caption {
@@ -3534,19 +3527,16 @@ tr.zone-qualify {
    ============================================================================ */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(44px) scale(0.975);
-  filter: blur(4px);
+  transform: translateY(18px);
   transition:
-    opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1.05s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 1.05s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  will-change: opacity, transform, filter;
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: opacity, transform;
 }
 
 .scroll-reveal.is-revealed {
   opacity: 1 !important;
-  transform: translateY(0) scale(1) !important;
-  filter: blur(0) !important;
+  transform: translateY(0) !important;
 }
 
 /* ============================================================================
@@ -4639,19 +4629,16 @@ body.mobile-menu-active .mobile-menu-content {
    ============================================================================ */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(44px) scale(0.975);
-  filter: blur(4px);
+  transform: translateY(18px);
   transition:
-    opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1.05s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 1.05s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  will-change: opacity, transform, filter;
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: opacity, transform;
 }
 
 .scroll-reveal.is-revealed {
   opacity: 1 !important;
-  transform: translateY(0) scale(1) !important;
-  filter: blur(0) !important;
+  transform: translateY(0) !important;
 }
 
 /* Staggered Box Reveal for child elements */
@@ -5785,8 +5772,15 @@ body.mobile-menu-active .mobile-menu-content {
 }
 
 @keyframes fadeInQuickScore {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================================================
@@ -6001,8 +5995,15 @@ body.mobile-menu-active .mobile-menu-content {
 }
 
 @keyframes pulseFoul {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
 }
 
 /* TIMELINE & EVENTS */

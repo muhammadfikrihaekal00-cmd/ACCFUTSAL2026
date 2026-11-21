@@ -2735,23 +2735,17 @@ var app = window.app = Object.assign(window.app || {}, {
 
     this._scrollObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
-        const isSlide = entry.target.classList.contains("home-slide-section");
         if (entry.isIntersecting) {
           entry.target.classList.add("is-revealed");
-          if (!isSlide) {
-            observer.unobserve(entry.target);
-          } else {
-            // Update active dot in slide navigator
+          observer.unobserve(entry.target);
+          if (entry.target.classList.contains("home-slide-section")) {
             this.updateActiveSlideNav(entry.target.id);
           }
-        } else if (isSlide) {
-          // Re-arm slide animation when completely leaving view for PowerPoint slide replay
-          entry.target.classList.remove("is-revealed");
         }
       });
     }, {
-      threshold: 0.2,
-      rootMargin: "0px 0px -40px 0px"
+      threshold: 0.1,
+      rootMargin: "0px 0px -20px 0px"
     });
 
     // Observe all scroll-reveal containers and cards for dynamic staggered entrance
@@ -3614,14 +3608,8 @@ var app = window.app = Object.assign(window.app || {}, {
         targetPane.style.display = "block";
       }
 
-      // PowerPoint Section-by-Section Snap Scroll mode khusus tab Beranda
-      const isHome = tabId === "home";
-      document.documentElement.classList.toggle("snap-scroll-active", isHome);
-      document.body.classList.toggle("snap-scroll-active", isHome);
-      if (!isHome) {
-        document.body.style.overflow = "";
-        document.documentElement.style.overflow = "";
-      }
+      document.documentElement.classList.remove("snap-scroll-active");
+      document.body.classList.remove("snap-scroll-active");
 
       this.renderCurrentView();
       this.updateFloatingCategoryVisibility();
