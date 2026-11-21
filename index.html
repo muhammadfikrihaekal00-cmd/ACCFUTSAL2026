@@ -623,7 +623,8 @@
           </button>
         </div>
         <div class="filter-group">
-          <select id="filterDay" class="filter-select" aria-label="Pilih Matchday Pertandingan" onchange="app.filterDay = this.value; app.renderMatches();">
+          <select id="filterDay" class="filter-select" aria-label="Pilih Matchday Pertandingan"
+            onchange="app.filterDay = this.value; app.renderMatches();">
             <option value="all">📅 Semua Matchday (1 - 8)</option>
             <option value="1">Matchday 1</option>
             <option value="2">Matchday 2</option>
@@ -634,10 +635,12 @@
             <option value="7">Matchday 7</option>
             <option value="8">Matchday 8</option>
           </select>
-          <select id="filterTeam" class="filter-select" aria-label="Pilih Klub / Tim" onchange="app.filterTeam = this.value; app.renderMatches();">
+          <select id="filterTeam" class="filter-select" aria-label="Pilih Klub / Tim"
+            onchange="app.filterTeam = this.value; app.renderMatches();">
             <option value="all">⚽ Semua Klub / Tim</option>
           </select>
-          <select id="filterGroup" class="filter-select" aria-label="Pilih Grup atau Babak" onchange="app.filterGroup = this.value; app.renderMatches();">
+          <select id="filterGroup" class="filter-select" aria-label="Pilih Grup atau Babak"
+            onchange="app.filterGroup = this.value; app.renderMatches();">
             <option value="all">🏆 Semua Laga (Semua Babak &amp; Grup)</option>
             <option value="group_stage">⚽ Semua Fase Grup (A - D)</option>
             <option value="knockout">🏆 Babak Gugur (8 Besar - Final)</option>
