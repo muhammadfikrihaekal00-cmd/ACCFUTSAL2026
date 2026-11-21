@@ -2,6 +2,9 @@
 function _safeStorageGet(storage, key) {
   try { return storage.getItem(key); } catch (_) { return null; }
 }
+function _safeStorageSet(storage, key, value) {
+  try { storage.setItem(key, value); } catch (_) { }
+}
 window.admin = window.admin || {
   isAuthenticated: (_safeStorageGet(sessionStorage, "pondok_futsal_admin_auth") === "true" || _safeStorageGet(localStorage, "pondok_futsal_admin_auth") === "true"),
   activeMatchId: null,
@@ -74,9 +77,44 @@ class TournamentStore {
 
     const homeId = m.homeId !== undefined ? m.homeId : (m.home_id !== undefined && m.home_id !== null ? m.home_id : "");
     const awayId = m.awayId !== undefined ? m.awayId : (m.away_id !== undefined && m.away_id !== null ? m.away_id : "");
-    const stage = (m.stage === "group" || m.stage === "knockout") ? m.stage : (/(QF|SF|3RD|FINAL)/i.test(id) ? "knockout" : "group");
-    const group = m.group !== undefined ? m.group : (m.group_letter || "");
+    const rawStage = String(m.stage || "").toLowerCase().trim();
     const roundName = m.roundName !== undefined ? m.roundName : (m.round_name || "");
+    const rawGroup = m.group !== undefined ? m.group : (m.group_letter || "");
+
+    let knockoutKey = m.knockoutKey || null;
+    const hPlace = String(m.homePlaceholder !== undefined ? m.homePlaceholder : (m.home_placeholder || "")).toLowerCase().trim();
+    const aPlace = String(m.awayPlaceholder !== undefined ? m.awayPlaceholder : (m.away_placeholder || "")).toLowerCase().trim();
+
+    const isKnockout = (
+      rawStage === "knockout" ||
+      /(qf|sf|3rd|final)/i.test(rawStage) ||
+      Boolean(knockoutKey && knockoutKey !== "group") ||
+      /(QF|SF|3RD|FINAL|BRONZE)/i.test(id) ||
+      /(perempat|quarter|semi|final|juara\s*3|peringkat\s*3|8\s*besar)/i.test(String(roundName || "")) ||
+      /(juara\s*grup|runner-up\s*grup|pemenang\s*qf|kalah\s*semi|pemenang\s*semi)/i.test(hPlace) ||
+      /(juara\s*grup|runner-up\s*grup|pemenang\s*qf|kalah\s*semi|pemenang\s*semi)/i.test(aPlace) ||
+      (rawStage !== "group" && (!rawGroup || rawGroup === "null" || rawGroup === "-"))
+    );
+
+    const stage = isKnockout ? "knockout" : "group";
+    const group = isKnockout ? null : (rawGroup && rawGroup !== "null" && rawGroup !== "-" ? rawGroup : null);
+
+    if (isKnockout && !knockoutKey) {
+      if (rawStage === "3rd" || /(3rd|bronze)/i.test(id) || /juara\s*3|peringkat\s*3/i.test(roundName) || /kalah\s*semi/i.test(hPlace)) knockoutKey = "3rd";
+      else if (rawStage === "final" || (/final/i.test(id) && !/qf|sf/i.test(id)) || /grand\s*final/i.test(roundName) || /pemenang\s*semi/i.test(hPlace)) knockoutKey = "final";
+      else if (rawStage.startsWith("sf") || /sf/i.test(id) || /semi/i.test(roundName) || /pemenang\s*qf/i.test(hPlace)) {
+        if (/sf1|\b1\b/i.test(id) || /semifinal\s*1/i.test(roundName) || /qf\s*1/i.test(hPlace)) knockoutKey = "sf1";
+        else if (/sf2|\b2\b/i.test(id) || /semifinal\s*2/i.test(roundName) || /qf\s*3/i.test(hPlace)) knockoutKey = "sf2";
+        else knockoutKey = "sf1";
+      } else if (rawStage.startsWith("qf") || /qf/i.test(id) || /perempat|quarter|8\s*besar/i.test(roundName) || /juara\s*grup/i.test(hPlace)) {
+        if (/qf1|\b1\b/i.test(id) || /perempat\s*final\s*1/i.test(roundName) || (/grup\s*a/i.test(hPlace) && /grup\s*b/i.test(aPlace))) knockoutKey = "qf1";
+        else if (/qf2|\b2\b/i.test(id) || /perempat\s*final\s*2/i.test(roundName) || (/grup\s*c/i.test(hPlace) && /grup\s*d/i.test(aPlace))) knockoutKey = "qf2";
+        else if (/qf3|\b3\b/i.test(id) || /perempat\s*final\s*3/i.test(roundName) || (/grup\s*b/i.test(hPlace) && /grup\s*a/i.test(aPlace))) knockoutKey = "qf3";
+        else if (/qf4|\b4\b/i.test(id) || /perempat\s*final\s*4/i.test(roundName) || (/grup\s*d/i.test(hPlace) && /grup\s*c/i.test(aPlace))) knockoutKey = "qf4";
+        else knockoutKey = "qf1";
+      }
+    }
+
     const status = m.status || "upcoming";
 
     // Infer category secara dinamis dari properti match, ID/nama babak, atau kategori tim
@@ -133,6 +171,7 @@ class TournamentStore {
 
     const metaCard = cleanCards.find(c => c && c._meta);
     if (metaCard) {
+      if (metaCard.knockoutKey && !knockoutKey) knockoutKey = metaCard.knockoutKey;
       if (metaCard.lineup && !lineup) lineup = metaCard.lineup;
       if (Array.isArray(metaCard.substitutions) && substitutions.length === 0) substitutions = metaCard.substitutions;
       if (typeof metaCard.homeFouls === "number") homeFouls = metaCard.homeFouls;
@@ -145,6 +184,7 @@ class TournamentStore {
       category,
       group: group || null,
       stage,
+      knockoutKey,
       roundName,
       day: day || 1,
       matchday: (m.matchday !== undefined && m.matchday !== null) ? parseInt(m.matchday, 10) : (day || 1),
@@ -508,22 +548,41 @@ class TournamentStore {
     });
   }
 
-  // Klasifikasi Jenis Laga Fase Gugur (QF, SF, 3RD, FINAL)
+  // Cek apakah pertandingan adalah Babak Gugur
+  isKnockoutMatch(m) {
+    if (!m) return false;
+    const stage = String(m.stage || '').toLowerCase().trim();
+    if (stage === 'knockout' || stage === 'qf' || stage === 'sf' || stage === '3rd' || stage === 'final') return true;
+    if (m.knockoutKey && m.knockoutKey !== 'group') return true;
+    const id = String(m.id || '').toUpperCase().trim();
+    if (/(QF|SF|3RD|FINAL|BRONZE)/i.test(id)) return true;
+    const round = String(m.roundName || '').toLowerCase().trim();
+    if (/(perempat|quarter|semi|final|juara\s*3|peringkat\s*3|8\s*besar)/i.test(round)) return true;
+    const hPlace = String(m.homePlaceholder || '').toLowerCase();
+    const aPlace = String(m.awayPlaceholder || '').toLowerCase();
+    if (/(juara\s*grup|runner-up\s*grup|pemenang\s*qf|kalah\s*semi|pemenang\s*semi)/i.test(hPlace) ||
+        /(juara\s*grup|runner-up\s*grup|pemenang\s*qf|kalah\s*semi|pemenang\s*semi)/i.test(aPlace)) return true;
+    if (m.stage !== 'group' && (!m.group || m.group === 'null' || m.group === '-')) return true;
+    return false;
+  }
+
+  // Klasifikasi Jenis Laga Fase Gugur (qf, sf, 3rd, final)
   classifyKnockoutStage(m) {
     if (!m) return null;
     const stage = String(m.stage || '').toLowerCase().trim();
     const round = String(m.roundName || '').toLowerCase().trim();
     const id = String(m.id || '').toUpperCase().trim();
+    const key = String(m.knockoutKey || '').toLowerCase().trim();
 
     // 1. Perebutan Juara 3 (Cek lebih awal karena teks round sering mengandung kata 'final')
-    if (stage === '3rd' || stage === 'bronze' || stage === 'third' ||
+    if (stage === '3rd' || stage === 'bronze' || stage === 'third' || key === '3rd' ||
       round.includes('juara 3') || round.includes('peringkat 3') || round.includes('3rd') ||
       id.includes('3RD') || id.includes('BRONZE')) {
       return '3rd';
     }
 
     // 2. Grand Final (Puncak)
-    if (stage === 'final' || stage === 'grand_final' ||
+    if (stage === 'final' || stage === 'grand_final' || key === 'final' ||
       round.includes('grand final') || round.includes('puncak') ||
       (round.includes('final') && !round.includes('perempat') && !round.includes('semi')) ||
       (id.includes('FINAL') && !id.includes('QF') && !id.includes('SF'))) {
@@ -531,20 +590,86 @@ class TournamentStore {
     }
 
     // 3. Semifinal (4 Besar)
-    if (stage === 'sf' || stage === 'semifinal' || stage === 'semi' ||
+    if (stage === 'sf' || stage === 'semifinal' || stage === 'semi' || key.startsWith('sf') ||
       round.includes('semifinal') || round.includes('semi-final') || round.includes('semi final') ||
       id.includes('SF')) {
       return 'sf';
     }
 
     // 4. Perempat Final / Quarterfinal (8 Besar)
-    if (stage === 'qf' || stage === 'quarterfinal' || stage === 'quarter' || stage === '8besar' ||
+    if (stage === 'qf' || stage === 'quarterfinal' || stage === 'quarter' || stage === '8besar' || key.startsWith('qf') ||
       round.includes('perempat') || round.includes('quarter') || round.includes('8 besar') ||
       id.includes('QF')) {
       return 'qf';
     }
 
     return null;
+  }
+
+  // Klasifikasi Kunci Spesifik Slot Fase Gugur (qf1, qf2, qf3, qf4, sf1, sf2, 3rd, final)
+  classifyKnockoutKey(m) {
+    if (!m) return null;
+    const k = String(m.knockoutKey || '').toLowerCase().trim();
+    if (['qf1', 'qf2', 'qf3', 'qf4', 'sf1', 'sf2', '3rd', 'final'].includes(k)) return k;
+
+    const stage = this.classifyKnockoutStage(m);
+    if (!stage) return null;
+    if (stage === '3rd') return '3rd';
+    if (stage === 'final') return 'final';
+
+    const id = String(m.id || '').toUpperCase().trim();
+    const round = String(m.roundName || '').toLowerCase().trim();
+    const hPlace = String(m.homePlaceholder || '').toLowerCase().trim();
+    const aPlace = String(m.awayPlaceholder || '').toLowerCase().trim();
+
+    if (stage === 'sf') {
+      if (id.includes('SF1') || round.includes('semifinal 1') || round.includes('sf 1') || round.includes('sf1') || hPlace.includes('qf 1') || hPlace.includes('qf1')) return 'sf1';
+      if (id.includes('SF2') || round.includes('semifinal 2') || round.includes('sf 2') || round.includes('sf2') || hPlace.includes('qf 3') || hPlace.includes('qf3')) return 'sf2';
+      return 'sf1';
+    }
+
+    if (stage === 'qf') {
+      if (id.includes('QF1') || round.includes('perempat final 1') || round.includes('qf 1') || round.includes('qf1') || (hPlace.includes('grup a') && aPlace.includes('grup b'))) return 'qf1';
+      if (id.includes('QF2') || round.includes('perempat final 2') || round.includes('qf 2') || round.includes('qf2') || (hPlace.includes('grup c') && aPlace.includes('grup d'))) return 'qf2';
+      if (id.includes('QF3') || round.includes('perempat final 3') || round.includes('qf 3') || round.includes('qf3') || (hPlace.includes('grup b') && aPlace.includes('grup a'))) return 'qf3';
+      if (id.includes('QF4') || round.includes('perempat final 4') || round.includes('qf 4') || round.includes('qf4') || (hPlace.includes('grup d') && aPlace.includes('grup c'))) return 'qf4';
+      return null;
+    }
+
+    return null;
+  }
+
+  // Nama Resmi Babak Pertandingan (Bebas dari 'Grup null'!)
+  getMatchStageName(m) {
+    if (!m) return "";
+    const isKnockout = this.isKnockoutMatch(m);
+    if (isKnockout) {
+      const key = this.classifyKnockoutKey(m);
+      if (key === 'qf1') return 'Perempat Final 1';
+      if (key === 'qf2') return 'Perempat Final 2';
+      if (key === 'qf3') return 'Perempat Final 3';
+      if (key === 'qf4') return 'Perempat Final 4';
+      if (key === 'sf1') return 'Semifinal 1';
+      if (key === 'sf2') return 'Semifinal 2';
+      if (key === '3rd') return 'Perebutan Juara 3';
+      if (key === 'final') return 'Grand Final';
+
+      const stage = this.classifyKnockoutStage(m);
+      if (stage === 'qf') return 'Perempat Final';
+      if (stage === 'sf') return 'Semifinal';
+      if (stage === '3rd') return 'Perebutan Juara 3';
+      if (stage === 'final') return 'Grand Final';
+
+      if (m.roundName && !m.roundName.includes('null') && !m.roundName.toLowerCase().startsWith('grup')) {
+        return m.roundName.replace(/\s*\((SMP|SD)\)/i, '');
+      }
+      return 'Babak Gugur';
+    }
+
+    if (m.group && m.group !== 'null' && m.group !== '-') {
+      return `Grup ${m.group}`;
+    }
+    return 'Fase Grup';
   }
 
   // Helper Pengurutan Waktu Pertandingan (Tanggal & Jam Laga)
@@ -588,9 +713,13 @@ class TournamentStore {
     const stC_SD = this.calculateGroupStandings("C", "SD");
     const stD_SD = this.calculateGroupStandings("D", "SD");
 
-    const syncQFMatch = (m, cat, homeGroup, isHomeWinner, awayGroup, isAwayWinner, homeStandings, awayStandings) => {
-      if (!m || m.stage === "group") return;
+    const syncQFMatch = (m, cat, homeGroup, isHomeWinner, awayGroup, isAwayWinner, homeStandings, awayStandings, knockoutKey, roundPrefix) => {
+      if (!m) return;
+      m.stage = "knockout";
       m.category = cat;
+      m.group = null;
+      if (knockoutKey) m.knockoutKey = knockoutKey;
+      m.roundName = `${roundPrefix} (${cat})`;
 
       const homeDone = isGroupCompleted(homeGroup, cat);
       const awayDone = isGroupCompleted(awayGroup, cat);
@@ -598,8 +727,8 @@ class TournamentStore {
       const homeIdx = isHomeWinner ? 0 : 1;
       const awayIdx = isAwayWinner ? 0 : 1;
 
-      m.homePlaceholder = `${isHomeWinner ? 'Juara' : 'Runner-up'} Grup ${homeGroup}`;
-      m.awayPlaceholder = `${isAwayWinner ? 'Juara' : 'Runner-up'} Grup ${awayGroup}`;
+      m.homePlaceholder = `Juara Grup ${homeGroup}`;
+      m.awayPlaceholder = `Runner-up Grup ${awayGroup}`;
 
       // Respect manual team assignment if panitia explicitly set it
       if (m.isManualTeam) {
@@ -647,29 +776,54 @@ class TournamentStore {
       });
     };
 
-    // 1. QF SMP (Berdasarkan klasifikasi & urutan jam di Jadwal & Skor)
+    // Helper untuk mencari laga yang cocok untuk slot tertentu (qf1, qf2, qf3, qf4, sf1, sf2, 3rd, final)
+    const findKnockoutSlotMatch = (cat, key, fallbackList, fallbackIndex, fallbackId) => {
+      const allCat = (this.data.matches || []).filter(m => {
+        const mCat = m.category || (m.id && m.id.endsWith("_" + cat) ? cat : "SMP");
+        return mCat === cat;
+      });
+
+      // 1. Cari yang explicit knockoutKey sama persis
+      let found = allCat.find(m => m.knockoutKey === key);
+      if (found) return found;
+
+      // 2. Cari yang terklasifikasi ke key ini
+      found = allCat.find(m => this.classifyKnockoutKey(m) === key);
+      if (found) return found;
+
+      // 3. Fallback ke urutan jam laga (fallbackList pada index fallbackIndex)
+      if (fallbackList && fallbackList[fallbackIndex]) {
+        return fallbackList[fallbackIndex];
+      }
+
+      // 4. Fallback ke ID resmi default (QF1_SMP, dll)
+      return allCat.find(m => m.id === fallbackId || m.id === fallbackId.replace("_" + cat, ""));
+    };
+
+    // 1. QF SMP (Berdasarkan klasifikasi & urutan spesifik turnamen ACC 2026)
+    // Urutan: QF1 (1A vs 2B), QF2 (1C vs 2D), QF3 (1B vs 2A), QF4 (1D vs 2C)
     const qfMatches_SMP = getSortedKnockoutMatches("SMP", "qf");
-    const qf1_smp = qfMatches_SMP[0] || this.data.matches.find(m => m.id === "QF1_SMP" || (m.category === "SMP" && m.id === "QF1"));
-    const qf2_smp = qfMatches_SMP[1] || this.data.matches.find(m => m.id === "QF2_SMP" || (m.category === "SMP" && m.id === "QF2"));
-    const qf3_smp = qfMatches_SMP[2] || this.data.matches.find(m => m.id === "QF3_SMP" || (m.category === "SMP" && m.id === "QF3"));
-    const qf4_smp = qfMatches_SMP[3] || this.data.matches.find(m => m.id === "QF4_SMP" || (m.category === "SMP" && m.id === "QF4"));
+    const qf1_smp = findKnockoutSlotMatch("SMP", "qf1", qfMatches_SMP, 0, "QF1_SMP");
+    const qf2_smp = findKnockoutSlotMatch("SMP", "qf2", qfMatches_SMP, 1, "QF2_SMP");
+    const qf3_smp = findKnockoutSlotMatch("SMP", "qf3", qfMatches_SMP, 2, "QF3_SMP");
+    const qf4_smp = findKnockoutSlotMatch("SMP", "qf4", qfMatches_SMP, 3, "QF4_SMP");
 
-    syncQFMatch(qf1_smp, "SMP", "A", true, "B", false, stA_SMP, stB_SMP);
-    syncQFMatch(qf2_smp, "SMP", "C", true, "D", false, stC_SMP, stD_SMP);
-    syncQFMatch(qf3_smp, "SMP", "B", true, "A", false, stB_SMP, stA_SMP);
-    syncQFMatch(qf4_smp, "SMP", "D", true, "C", false, stD_SMP, stC_SMP);
+    syncQFMatch(qf1_smp, "SMP", "A", true, "B", false, stA_SMP, stB_SMP, "qf1", "Perempat Final 1");
+    syncQFMatch(qf2_smp, "SMP", "C", true, "D", false, stC_SMP, stD_SMP, "qf2", "Perempat Final 2");
+    syncQFMatch(qf3_smp, "SMP", "B", true, "A", false, stB_SMP, stA_SMP, "qf3", "Perempat Final 3");
+    syncQFMatch(qf4_smp, "SMP", "D", true, "C", false, stD_SMP, stC_SMP, "qf4", "Perempat Final 4");
 
-    // 2. QF SD (Berdasarkan klasifikasi & urutan jam di Jadwal & Skor)
+    // 2. QF SD (Berdasarkan klasifikasi & urutan spesifik turnamen ACC 2026)
     const qfMatches_SD = getSortedKnockoutMatches("SD", "qf");
-    const qf1_sd = qfMatches_SD[0] || this.data.matches.find(m => m.id === "QF1_SD" || (m.category === "SD" && m.id === "QF1"));
-    const qf2_sd = qfMatches_SD[1] || this.data.matches.find(m => m.id === "QF2_SD" || (m.category === "SD" && m.id === "QF2"));
-    const qf3_sd = qfMatches_SD[2] || this.data.matches.find(m => m.id === "QF3_SD" || (m.category === "SD" && m.id === "QF3"));
-    const qf4_sd = qfMatches_SD[3] || this.data.matches.find(m => m.id === "QF4_SD" || (m.category === "SD" && m.id === "QF4"));
+    const qf1_sd = findKnockoutSlotMatch("SD", "qf1", qfMatches_SD, 0, "QF1_SD");
+    const qf2_sd = findKnockoutSlotMatch("SD", "qf2", qfMatches_SD, 1, "QF2_SD");
+    const qf3_sd = findKnockoutSlotMatch("SD", "qf3", qfMatches_SD, 2, "QF3_SD");
+    const qf4_sd = findKnockoutSlotMatch("SD", "qf4", qfMatches_SD, 3, "QF4_SD");
 
-    syncQFMatch(qf1_sd, "SD", "A", true, "B", false, stA_SD, stB_SD);
-    syncQFMatch(qf2_sd, "SD", "C", true, "D", false, stC_SD, stD_SD);
-    syncQFMatch(qf3_sd, "SD", "B", true, "A", false, stB_SD, stA_SD);
-    syncQFMatch(qf4_sd, "SD", "D", true, "C", false, stD_SD, stC_SD);
+    syncQFMatch(qf1_sd, "SD", "A", true, "B", false, stA_SD, stB_SD, "qf1", "Perempat Final 1");
+    syncQFMatch(qf2_sd, "SD", "C", true, "D", false, stC_SD, stD_SD, "qf2", "Perempat Final 2");
+    syncQFMatch(qf3_sd, "SD", "B", true, "A", false, stB_SD, stA_SD, "qf3", "Perempat Final 3");
+    syncQFMatch(qf4_sd, "SD", "D", true, "C", false, stD_SD, stC_SD, "qf4", "Perempat Final 4");
 
     // Helper to get winner & loser from finished match (with Penalty Shootout support)
     const getWinnerId = (m) => {
@@ -701,8 +855,13 @@ class TournamentStore {
       return null;
     };
 
-    const syncDownstream = (m, mHomeSource, isHomeWinner, mAwaySource, isAwayWinner, hPlaceholder, aPlaceholder) => {
-      if (!m || m.stage === "group") return;
+    const syncDownstream = (m, mHomeSource, isHomeWinner, mAwaySource, isAwayWinner, hPlaceholder, aPlaceholder, knockoutKey, roundPrefix, cat) => {
+      if (!m) return;
+      m.stage = "knockout";
+      m.group = null;
+      if (cat) m.category = cat;
+      if (knockoutKey) m.knockoutKey = knockoutKey;
+      m.roundName = `${roundPrefix} (${m.category || 'SMP'})`;
       m.homePlaceholder = hPlaceholder;
       m.awayPlaceholder = aPlaceholder;
 
@@ -732,37 +891,39 @@ class TournamentStore {
       }
     };
 
-    // 3. SF, Final, 3RD SMP (Berdasarkan klasifikasi & urutan jam di Jadwal & Skor)
+    // 3. SF, Final, 3RD SMP
+    // SF1: W(QF1) vs W(QF2), SF2: W(QF3) vs W(QF4)
+    // Final: W(SF1) vs W(SF2), 3rd: L(SF1) vs L(SF2)
     const sfMatches_SMP = getSortedKnockoutMatches("SMP", "sf");
-    const sf1_smp = sfMatches_SMP[0] || this.data.matches.find(m => m.id === "SF1_SMP" || (m.category === "SMP" && m.id === "SF1"));
-    const sf2_smp = sfMatches_SMP[1] || this.data.matches.find(m => m.id === "SF2_SMP" || (m.category === "SMP" && m.id === "SF2"));
+    const sf1_smp = findKnockoutSlotMatch("SMP", "sf1", sfMatches_SMP, 0, "SF1_SMP");
+    const sf2_smp = findKnockoutSlotMatch("SMP", "sf2", sfMatches_SMP, 1, "SF2_SMP");
 
     const finalMatches_SMP = getSortedKnockoutMatches("SMP", "final");
-    const final_smp = finalMatches_SMP[0] || this.data.matches.find(m => m.id === "FINAL_SMP" || (m.category === "SMP" && m.id === "FINAL"));
+    const final_smp = findKnockoutSlotMatch("SMP", "final", finalMatches_SMP, 0, "FINAL_SMP");
 
     const thirdMatches_SMP = getSortedKnockoutMatches("SMP", "3rd");
-    const third_smp = thirdMatches_SMP[0] || this.data.matches.find(m => m.id === "3RD_SMP" || (m.category === "SMP" && m.id === "3RD"));
+    const third_smp = findKnockoutSlotMatch("SMP", "3rd", thirdMatches_SMP, 0, "3RD_SMP");
 
-    syncDownstream(sf1_smp, qf1_smp, true, qf2_smp, true, "Pemenang QF 1", "Pemenang QF 2");
-    syncDownstream(sf2_smp, qf3_smp, true, qf4_smp, true, "Pemenang QF 3", "Pemenang QF 4");
-    syncDownstream(final_smp, sf1_smp, true, sf2_smp, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2");
-    syncDownstream(third_smp, sf1_smp, false, sf2_smp, false, "Kalah Semifinal 1", "Kalah Semifinal 2");
+    syncDownstream(sf1_smp, qf1_smp, true, qf2_smp, true, "Pemenang QF 1", "Pemenang QF 2", "sf1", "Semifinal 1", "SMP");
+    syncDownstream(sf2_smp, qf3_smp, true, qf4_smp, true, "Pemenang QF 3", "Pemenang QF 4", "sf2", "Semifinal 2", "SMP");
+    syncDownstream(final_smp, sf1_smp, true, sf2_smp, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2", "final", "Grand Final", "SMP");
+    syncDownstream(third_smp, sf1_smp, false, sf2_smp, false, "Kalah Semifinal 1", "Kalah Semifinal 2", "3rd", "Perebutan Juara 3", "SMP");
 
-    // 4. SF, Final, 3RD SD (Berdasarkan klasifikasi & urutan jam di Jadwal & Skor)
+    // 4. SF, Final, 3RD SD
     const sfMatches_SD = getSortedKnockoutMatches("SD", "sf");
-    const sf1_sd = sfMatches_SD[0] || this.data.matches.find(m => m.id === "SF1_SD" || (m.category === "SD" && m.id === "SF1"));
-    const sf2_sd = sfMatches_SD[1] || this.data.matches.find(m => m.id === "SF2_SD" || (m.category === "SD" && m.id === "SF2"));
+    const sf1_sd = findKnockoutSlotMatch("SD", "sf1", sfMatches_SD, 0, "SF1_SD");
+    const sf2_sd = findKnockoutSlotMatch("SD", "sf2", sfMatches_SD, 1, "SF2_SD");
 
     const finalMatches_SD = getSortedKnockoutMatches("SD", "final");
-    const final_sd = finalMatches_SD[0] || this.data.matches.find(m => m.id === "FINAL_SD" || (m.category === "SD" && m.id === "FINAL"));
+    const final_sd = findKnockoutSlotMatch("SD", "final", finalMatches_SD, 0, "FINAL_SD");
 
     const thirdMatches_SD = getSortedKnockoutMatches("SD", "3rd");
-    const third_sd = thirdMatches_SD[0] || this.data.matches.find(m => m.id === "3RD_SD" || (m.category === "SD" && m.id === "3RD"));
+    const third_sd = findKnockoutSlotMatch("SD", "3rd", thirdMatches_SD, 0, "3RD_SD");
 
-    syncDownstream(sf1_sd, qf1_sd, true, qf2_sd, true, "Pemenang QF 1", "Pemenang QF 2");
-    syncDownstream(sf2_sd, qf3_sd, true, qf4_sd, true, "Pemenang QF 3", "Pemenang QF 4");
-    syncDownstream(final_sd, sf1_sd, true, sf2_sd, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2");
-    syncDownstream(third_sd, sf1_sd, false, sf2_sd, false, "Kalah Semifinal 1", "Kalah Semifinal 2");
+    syncDownstream(sf1_sd, qf1_sd, true, qf2_sd, true, "Pemenang QF 1", "Pemenang QF 2", "sf1", "Semifinal 1", "SD");
+    syncDownstream(sf2_sd, qf3_sd, true, qf4_sd, true, "Pemenang QF 3", "Pemenang QF 4", "sf2", "Semifinal 2", "SD");
+    syncDownstream(final_sd, sf1_sd, true, sf2_sd, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2", "final", "Grand Final", "SD");
+    syncDownstream(third_sd, sf1_sd, false, sf2_sd, false, "Kalah Semifinal 1", "Kalah Semifinal 2", "3rd", "Perebutan Juara 3", "SD");
   }
 
   // Calculate Disciplinary status (Yellow/Red Cards across all matches)
@@ -977,6 +1138,13 @@ var app = window.app = Object.assign(window.app || {}, {
     return Boolean(window.admin && window.admin.isAuthenticated === true);
   },
 
+  getMatchStageName(m) {
+    if (this.store && typeof this.store.getMatchStageName === 'function') {
+      return this.store.getMatchStageName(m);
+    }
+    return m ? (m.roundName || (m.stage === "group" ? `Grup ${m.group || '-'}` : "Babak Gugur")) : "";
+  },
+
   ensureStore() {
     if (!this.store) {
       try {
@@ -1177,7 +1345,7 @@ var app = window.app = Object.assign(window.app || {}, {
     targetMatches.forEach((m) => {
       const hTeam = this.store.getTeam(m.homeId) || { name: m.homePlaceholder || "Home", shortName: "HOME" };
       const aTeam = this.store.getTeam(m.awayId) || { name: m.awayPlaceholder || "Away", shortName: "AWAY" };
-      const stageName = m.stage === "knockout" ? (m.roundName || "Babak Gugur") : `Grup ${m.group} (${m.category || 'SMP'})`;
+      const stageName = `${this.store.getMatchStageName(m)} (${m.category || 'SMP'})`;
 
       if (stageName !== currentGroupOrStage) {
         currentGroupOrStage = stageName;
@@ -1431,7 +1599,7 @@ var app = window.app = Object.assign(window.app || {}, {
       const hScore = lm.homeScoreLive ?? (lm.homeScore ?? 0);
       const aScore = lm.awayScoreLive ?? (lm.awayScore ?? 0);
       const catBadge = (lm.category || "SMP") === "SD" ? "SD" : "SMP";
-      const stageName = lm.stage === "knockout" ? (lm.roundName || "Babak Gugur") : `Grup ${lm.group || ''}`;
+      const stageName = this.store.getMatchStageName(lm);
 
       liveScoreBoxHtml = `
         <div class="hero-live-score-card" onclick="app.showMatchDetail('${lm.id}')" role="button" tabindex="0" title="Klik untuk lihat detail pertandingan &amp; statistik laga">
@@ -1467,7 +1635,7 @@ var app = window.app = Object.assign(window.app || {}, {
       const hTeam = this.store.getTeam(nextMatch.homeId) || { name: nextMatch.homePlaceholder || "Home" };
       const aTeam = this.store.getTeam(nextMatch.awayId) || { name: nextMatch.awayPlaceholder || "Away" };
       const catBadge = (nextMatch.category || "SMP") === "SD" ? "SD" : "SMP";
-      const stageName = nextMatch.stage === "knockout" ? (nextMatch.roundName || "Babak Gugur") : `Grup ${nextMatch.group || ''}`;
+      const stageName = this.store.getMatchStageName(nextMatch);
 
       upcomingMatchBoxHtml = `
         <div class="hero-upcoming-match-card" onclick="app.switchTab('matches')" role="button" tabindex="0" title="Klik untuk lihat jadwal lengkap turnamen">
@@ -4186,11 +4354,11 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Filter by Group / Stage
     if (this.filterGroup === "group_stage") {
-      matches = matches.filter(m => m.stage === "group" || (!m.stage && !/(QF|SF|3RD|FINAL)/i.test(m.id || "")));
+      matches = matches.filter(m => !this.store.isKnockoutMatch(m));
     } else if (this.filterGroup === "knockout") {
-      matches = matches.filter(m => m.stage === "knockout" || /(QF|SF|3RD|FINAL)/i.test(m.id || ""));
+      matches = matches.filter(m => this.store.isKnockoutMatch(m));
     } else if (this.filterGroup !== "all") {
-      matches = matches.filter(m => m.group === this.filterGroup);
+      matches = matches.filter(m => !this.store.isKnockoutMatch(m) && m.group === this.filterGroup);
     }
 
     // Update Status Pill Badges Count
@@ -4386,7 +4554,7 @@ var app = window.app = Object.assign(window.app || {}, {
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${catBadge}
               <span class="fixture-pitch-pill">${m.pitch || 'Lapangan Utama'}</span>
-              <span class="fixture-group-pill">${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : `Grup ${m.group}`}</span>
+              <span class="fixture-group-pill">${this.getMatchStageName(m)}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="fixture-time-hint">${m.date}</span>
@@ -4486,7 +4654,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <!-- FOOTER AKSI -->
           <div class="fixture-footer-bar">
             <span class="fixture-field-note" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
-              ${m.stage === 'knockout' ? (m.roundName || 'Babak Gugur') : (m.group ? `Grup ${m.group}` : '')}
+              ${this.getMatchStageName(m)}
             </span>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <button class="btn btn-outline btn-sm" onclick="app.showMatchDetail('${m.id}')" style="font-size: 0.72rem; padding: 4px 10px;">
@@ -4630,11 +4798,28 @@ var app = window.app = Object.assign(window.app || {}, {
     const actual3RDs = getKnockoutMatchesForCat("3rd");
     const actualFinals = getKnockoutMatchesForCat("final");
 
+    const findSlotMatch = (key, fallbackList, fallbackIdx, fallbackId) => {
+      const allCat = (this.store.data.matches || []).filter(m => {
+        const mCat = m.category || (m.id && m.id.endsWith("_" + activeCat) ? activeCat : "SMP");
+        return mCat === activeCat;
+      });
+      let match = allCat.find(m => m.knockoutKey === key);
+      if (match) return match;
+      match = allCat.find(m => this.store.classifyKnockoutKey(m) === key);
+      if (match) return match;
+      if (fallbackList && fallbackList[fallbackIdx]) return fallbackList[fallbackIdx];
+      return allCat.find(m => m.id === fallbackId || m.id === fallbackId.replace("_" + activeCat, ""));
+    };
+
     const getOrBuildKnockoutMatch = (actualMatch, fallbackId, roundName, hPlaceholder, aPlaceholder, defaultTime) => {
       if (actualMatch) {
         if (!actualMatch.homePlaceholder) actualMatch.homePlaceholder = hPlaceholder;
         if (!actualMatch.awayPlaceholder) actualMatch.awayPlaceholder = aPlaceholder;
-        if (!actualMatch.roundName) actualMatch.roundName = roundName;
+        if (!actualMatch.roundName || actualMatch.roundName.includes("null") || actualMatch.roundName.toLowerCase().startsWith("grup") || actualMatch.roundName === "Babak Gugur") {
+          actualMatch.roundName = `${roundName} (${activeCat})`;
+        }
+        actualMatch.stage = "knockout";
+        actualMatch.group = null;
         return actualMatch;
       }
 
@@ -4648,7 +4833,7 @@ var app = window.app = Object.assign(window.app || {}, {
           category: activeCat,
           stage: "knockout",
           group: null,
-          roundName: roundName,
+          roundName: `${roundName} (${activeCat})`,
           homeId: "",
           awayId: "",
           homePlaceholder: hPlaceholder,
@@ -4667,21 +4852,21 @@ var app = window.app = Object.assign(window.app || {}, {
     };
 
     // Struktur bagan 8 besar resmi per kategori (UEFA / FIFA Tournament Tree)
-    // Otomatis sinkron 100% dengan urutan jam & klasifikasi babak dari Jadwal & Skor
+    // Otomatis sinkron 100% dengan urutan jadwal & dropdown resmi panitia ACC 2026
     const qfMatches = [
-      getOrBuildKnockoutMatch(actualQFs[0], `QF1_${activeCat}`, `Perempat Final 1`, `Juara Grup A`, `Runner-up Grup B`, isSMP ? "08:00 - 08:45 WITA" : "08:00 - 08:35 WITA"),
-      getOrBuildKnockoutMatch(actualQFs[1], `QF2_${activeCat}`, `Perempat Final 2`, `Juara Grup C`, `Runner-up Grup D`, isSMP ? "09:00 - 09:45 WITA" : "08:50 - 09:25 WITA"),
-      getOrBuildKnockoutMatch(actualQFs[2], `QF3_${activeCat}`, `Perempat Final 3`, `Juara Grup B`, `Runner-up Grup A`, isSMP ? "10:00 - 10:45 WITA" : "09:40 - 10:15 WITA"),
-      getOrBuildKnockoutMatch(actualQFs[3], `QF4_${activeCat}`, `Perempat Final 4`, `Juara Grup D`, `Runner-up Grup C`, isSMP ? "11:00 - 11:45 WITA" : "10:30 - 11:05 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf1", actualQFs, 0, `QF1_${activeCat}`), `QF1_${activeCat}`, `Perempat Final 1`, `Juara Grup A`, `Runner-up Grup B`, isSMP ? "08:00 - 08:45 WITA" : "08:00 - 08:35 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf2", actualQFs, 1, `QF2_${activeCat}`), `QF2_${activeCat}`, `Perempat Final 2`, `Juara Grup C`, `Runner-up Grup D`, isSMP ? "09:00 - 09:45 WITA" : "08:50 - 09:25 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf3", actualQFs, 2, `QF3_${activeCat}`), `QF3_${activeCat}`, `Perempat Final 3`, `Juara Grup B`, `Runner-up Grup A`, isSMP ? "10:00 - 10:45 WITA" : "09:40 - 10:15 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("qf4", actualQFs, 3, `QF4_${activeCat}`), `QF4_${activeCat}`, `Perempat Final 4`, `Juara Grup D`, `Runner-up Grup C`, isSMP ? "11:00 - 11:45 WITA" : "10:30 - 11:05 WITA"),
     ];
 
     const sfMatches = [
-      getOrBuildKnockoutMatch(actualSFs[0], `SF1_${activeCat}`, `Semifinal 1`, `Pemenang QF 1`, `Pemenang QF 2`, isSMP ? "14:00 - 14:50 WITA" : "13:30 - 14:10 WITA"),
-      getOrBuildKnockoutMatch(actualSFs[1], `SF2_${activeCat}`, `Semifinal 2`, `Pemenang QF 3`, `Pemenang QF 4`, isSMP ? "15:00 - 15:50 WITA" : "14:20 - 15:00 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("sf1", actualSFs, 0, `SF1_${activeCat}`), `SF1_${activeCat}`, `Semifinal 1`, `Pemenang QF 1`, `Pemenang QF 2`, isSMP ? "14:00 - 14:50 WITA" : "13:30 - 14:10 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("sf2", actualSFs, 1, `SF2_${activeCat}`), `SF2_${activeCat}`, `Semifinal 2`, `Pemenang QF 3`, `Pemenang QF 4`, isSMP ? "15:00 - 15:50 WITA" : "14:20 - 15:00 WITA"),
     ];
 
-    const thirdMatch = getOrBuildKnockoutMatch(actual3RDs[0], `3RD_${activeCat}`, `Perebutan Juara 3`, `Kalah Semifinal 1`, `Kalah Semifinal 2`, isSMP ? "16:00 - 16:50 WITA" : "15:15 - 15:55 WITA");
-    const finalMatch = getOrBuildKnockoutMatch(actualFinals[0], `FINAL_${activeCat}`, `Grand Final`, `Pemenang Semifinal 1`, `Pemenang Semifinal 2`, isSMP ? "17:00 - 18:00 WITA" : "16:15 - 17:15 WITA");
+    const thirdMatch = getOrBuildKnockoutMatch(findSlotMatch("3rd", actual3RDs, 0, `3RD_${activeCat}`), `3RD_${activeCat}`, `Perebutan Juara 3`, `Kalah Semifinal 1`, `Kalah Semifinal 2`, isSMP ? "16:00 - 16:50 WITA" : "15:15 - 15:55 WITA");
+    const finalMatch = getOrBuildKnockoutMatch(findSlotMatch("final", actualFinals, 0, `FINAL_${activeCat}`), `FINAL_${activeCat}`, `Grand Final`, `Pemenang Semifinal 1`, `Pemenang Semifinal 2`, isSMP ? "17:00 - 18:00 WITA" : "16:15 - 17:15 WITA");
 
     let champTeam = null;
     let runnerUpTeam = null;
@@ -4788,7 +4973,7 @@ var app = window.app = Object.assign(window.app || {}, {
       return `
         <div class="${cardClasses}" onclick="app.showMatchDetail('${m.id}')" title="Klik untuk lihat detail pertandingan ini">
           <div class="bracket-card-header">
-            <span class="bracket-round-label">${m.roundName || 'Babak Gugur'}</span>
+            <span class="bracket-round-label">${this.getMatchStageName(m)} (${activeCat})</span>
             <div style="display: flex; align-items: center; gap: 6px;">
               ${this.isAdmin() ? `
                 <button class="btn btn-admin btn-sm" onclick="event.stopPropagation(); admin.openMatchEditor('${m.id}')" title="Atur Jadwal Babak Ini" style="font-size: 0.68rem; padding: 2px 7px; background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; border-radius: 4px;">
@@ -7788,7 +7973,7 @@ var app = window.app = Object.assign(window.app || {}, {
       <div class="md-stadium-card">
         <div class="md-stadium-badge-row">
           <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-            <span class="md-stage-pill">${match.category || 'SMP'} • ${match.stage === 'knockout' ? (match.roundName || 'Babak Gugur') : `Grup ${match.group || '-'}`}</span>
+            <span class="md-stage-pill">${match.category || 'SMP'} • ${this.store.getMatchStageName(match)}</span>
             <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">${match.id}</span>
           </div>
           <div class="md-score-status-badge ${statusClass}">

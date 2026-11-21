@@ -1668,10 +1668,14 @@
                   Pertandingan</label>
                 <select id="editMatchStageSelect" class="form-select" onchange="admin.onMatchStageChange()">
                   <option value="group">⚽ Pertandingan Biasa (Fase Grup)</option>
-                  <option value="qf">🏆 Perempat Final (8 Besar)</option>
-                  <option value="sf">🔥 Semifinal</option>
-                  <option value="3rd">🥉 Perebutan Juara 3</option>
-                  <option value="final">👑 Grand Final</option>
+                  <option value="qf1">🏆 Perempat Final 1: Juara Grup A vs Runner-up Grup B</option>
+                  <option value="qf2">🏆 Perempat Final 2: Juara Grup C vs Runner-up Grup D</option>
+                  <option value="qf3">🏆 Perempat Final 3: Juara Grup B vs Runner-up Grup A</option>
+                  <option value="qf4">🏆 Perempat Final 4: Juara Grup D vs Runner-up Grup C</option>
+                  <option value="sf1">🔥 Semifinal 1: Pemenang QF 1 vs Pemenang QF 2</option>
+                  <option value="sf2">🔥 Semifinal 2: Pemenang QF 3 vs Pemenang QF 4</option>
+                  <option value="3rd">🥉 Perebutan Juara 3: Kalah Semifinal 1 vs Kalah Semifinal 2</option>
+                  <option value="final">👑 Grand Final: Pemenang Semifinal 1 vs Pemenang Semifinal 2</option>
                 </select>
               </div>
               <div class="form-group" id="editMatchGroupWrap" style="flex: 1;">
@@ -3164,11 +3168,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="js/security.js?v=20261121_v10"></script>
-  <script defer src="js/supabase-client.js?v=20261121_v10"></script>
-  <script defer src="js/data.js?v=20261121_v10"></script>
-  <script defer src="js/admin.js?v=20261121_v10"></script>
-  <script defer src="js/app.js?v=20261121_v10"></script>
+  <script defer src="js/security.js?v=20261121_v12"></script>
+  <script defer src="js/supabase-client.js?v=20261121_v12"></script>
+  <script defer src="js/data.js?v=20261121_v12"></script>
+  <script defer src="js/admin.js?v=20261121_v12"></script>
+  <script defer src="js/app.js?v=20261121_v12"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

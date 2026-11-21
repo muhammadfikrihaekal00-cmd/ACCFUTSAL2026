@@ -2147,20 +2147,25 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     // Tentukan pilihan stage dari data laga
     let stageVal = "group";
-    const classified = app.store && typeof app.store.classifyKnockoutStage === 'function' ? app.store.classifyKnockoutStage(match) : null;
-    if (classified) {
-      stageVal = classified;
+    if (match.knockoutKey) {
+      stageVal = match.knockoutKey;
+    } else if (app.store && typeof app.store.classifyKnockoutKey === 'function') {
+      stageVal = app.store.classifyKnockoutKey(match) || (app.store.classifyKnockoutStage(match) || "group");
+    } else if (app.store && typeof app.store.classifyKnockoutStage === 'function') {
+      stageVal = app.store.classifyKnockoutStage(match) || (match.stage && match.stage !== "group" ? match.stage : "group");
     } else if (match.stage && match.stage !== "group") {
       stageVal = match.stage;
     } else {
       stageVal = "group";
     }
+    if (stageVal === "qf") stageVal = "qf1";
+    if (stageVal === "sf") stageVal = "sf1";
 
     if (stageSelect) stageSelect.value = stageVal;
     if (groupSelect) groupSelect.value = match.group || "A";
     if (groupWrap) groupWrap.style.display = stageVal === "group" ? "block" : "none";
 
-    const stageDisplay = stageVal === "group" ? `Grup ${match.group || 'A'}` : (match.roundName || "Babak Gugur");
+    const stageDisplay = stageVal === "group" ? `Grup ${match.group || 'A'}` : (match.roundName || (app.store && typeof app.store.getMatchStageName === 'function' ? app.store.getMatchStageName(match) : "Babak Gugur"));
     if (titleEl) {
       titleEl.textContent = `⚙️ Atur Pertandingan: ${stageDisplay} (${cat})`;
     }
@@ -2224,6 +2229,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     if (selectedStage === "group") {
       match.stage = "group";
+      match.knockoutKey = null;
       match.group = groupSelect ? groupSelect.value : (match.group || "A");
       match.roundName = `Grup ${match.group} (${cat})`;
       match.homePlaceholder = "";
@@ -2232,24 +2238,50 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       match.awayId = awayId || null;
       match.isManualTeam = Boolean(homeId || awayId);
     } else {
-      match.stage = selectedStage;
+      match.stage = "knockout";
       match.group = null;
-      if (selectedStage === "qf") {
-        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Perempat Final (${cat})`;
-        if (!match.homePlaceholder) match.homePlaceholder = "Juara Grup";
-        if (!match.awayPlaceholder) match.awayPlaceholder = "Runner-up Grup";
-      } else if (selectedStage === "sf") {
-        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Semifinal (${cat})`;
-        if (!match.homePlaceholder) match.homePlaceholder = "Pemenang QF";
-        if (!match.awayPlaceholder) match.awayPlaceholder = "Pemenang QF";
+      match.knockoutKey = selectedStage;
+
+      if (selectedStage === "qf1" || selectedStage === "qf") {
+        match.knockoutKey = "qf1";
+        match.roundName = `Perempat Final 1 (${cat})`;
+        match.homePlaceholder = "Juara Grup A";
+        match.awayPlaceholder = "Runner-up Grup B";
+      } else if (selectedStage === "qf2") {
+        match.knockoutKey = "qf2";
+        match.roundName = `Perempat Final 2 (${cat})`;
+        match.homePlaceholder = "Juara Grup C";
+        match.awayPlaceholder = "Runner-up Grup D";
+      } else if (selectedStage === "qf3") {
+        match.knockoutKey = "qf3";
+        match.roundName = `Perempat Final 3 (${cat})`;
+        match.homePlaceholder = "Juara Grup B";
+        match.awayPlaceholder = "Runner-up Grup A";
+      } else if (selectedStage === "qf4") {
+        match.knockoutKey = "qf4";
+        match.roundName = `Perempat Final 4 (${cat})`;
+        match.homePlaceholder = "Juara Grup D";
+        match.awayPlaceholder = "Runner-up Grup C";
+      } else if (selectedStage === "sf1" || selectedStage === "sf") {
+        match.knockoutKey = "sf1";
+        match.roundName = `Semifinal 1 (${cat})`;
+        match.homePlaceholder = "Pemenang QF 1";
+        match.awayPlaceholder = "Pemenang QF 2";
+      } else if (selectedStage === "sf2") {
+        match.knockoutKey = "sf2";
+        match.roundName = `Semifinal 2 (${cat})`;
+        match.homePlaceholder = "Pemenang QF 3";
+        match.awayPlaceholder = "Pemenang QF 4";
       } else if (selectedStage === "3rd") {
-        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Perebutan Juara 3 (${cat})`;
-        if (!match.homePlaceholder) match.homePlaceholder = "Kalah Semifinal 1";
-        if (!match.awayPlaceholder) match.awayPlaceholder = "Kalah Semifinal 2";
+        match.knockoutKey = "3rd";
+        match.roundName = `Perebutan Juara 3 (${cat})`;
+        match.homePlaceholder = "Kalah Semifinal 1";
+        match.awayPlaceholder = "Kalah Semifinal 2";
       } else if (selectedStage === "final") {
-        if (!match.roundName || match.roundName.includes("Grup")) match.roundName = `Grand Final (${cat})`;
-        if (!match.homePlaceholder) match.homePlaceholder = "Pemenang Semifinal 1";
-        if (!match.awayPlaceholder) match.awayPlaceholder = "Pemenang Semifinal 2";
+        match.knockoutKey = "final";
+        match.roundName = `Grand Final (${cat})`;
+        match.homePlaceholder = "Pemenang Semifinal 1";
+        match.awayPlaceholder = "Pemenang Semifinal 2";
       }
 
       if (homeId || awayId) {
@@ -2296,7 +2328,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       await window.SupabaseService.syncMatch(match, this.adminPinHash);
     }
 
-    const stageDesc = match.stage === "group" ? `Grup ${match.group}` : (match.roundName || 'Babak Gugur');
+    const stageDesc = (app.store && typeof app.store.getMatchStageName === 'function')
+      ? app.store.getMatchStageName(match)
+      : (match.stage === "group" ? `Grup ${match.group}` : (match.roundName || 'Babak Gugur'));
     app.showToast(`✅ Pertandingan (${stageDesc} • ${match.date} • ${match.time}) berhasil disimpan!`);
     app.renderCurrentView();
     if (app && typeof app.renderBracket === 'function') app.renderBracket();

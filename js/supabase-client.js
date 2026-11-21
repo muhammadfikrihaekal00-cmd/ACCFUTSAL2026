@@ -368,9 +368,10 @@
 
         // Siapkan kartu dan sematkan metadata laga (lineup 5 pemain, pergantian, & foul) secara aman tanpa merusak skema database
         const cleanCards = (Array.isArray(match.cards) ? [...match.cards] : []).filter(c => c && !c._meta);
-        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined) {
+        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined || match.knockoutKey) {
           cleanCards.push({
             _meta: true,
+            knockoutKey: match.knockoutKey || null,
             lineup: match.lineup || null,
             substitutions: Array.isArray(match.substitutions) ? match.substitutions : [],
             homeFouls: parseInt(match.homeFouls, 10) || 0,
