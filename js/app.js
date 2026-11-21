@@ -3001,6 +3001,14 @@ var app = window.app = Object.assign(window.app || {}, {
     try {
       this.parseCurrentRoute(false);
     } catch (_) { }
+
+    window.addEventListener("resize", () => {
+      this.fitOfficialSponsorTitle();
+    });
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => this.fitOfficialSponsorTitle(), 150);
+    });
+    setTimeout(() => this.fitOfficialSponsorTitle(), 300);
   },
 
   // =========================================================
@@ -4047,6 +4055,30 @@ var app = window.app = Object.assign(window.app || {}, {
     if (legacyTrack && !trackPrimary) {
       legacyTrack.innerHTML = buildTrackHtml(allSponsors, 'tier-primary');
     }
+    this.fitOfficialSponsorTitle();
+  },
+
+  // Otomatis sesuaikan ukuran teks "Official Sponsor" agar 100% pas dengan layar tanpa terpotong
+  fitOfficialSponsorTitle() {
+    const titleEl = document.querySelector(".sponsors-official-title");
+    if (!titleEl) return;
+
+    // Reset ukuran font kustom agar pengukuran dasar CSS berjalan
+    titleEl.style.fontSize = "";
+
+    window.requestAnimationFrame(() => {
+      const container = titleEl.closest(".sponsors-official-header") || titleEl.parentElement;
+      const availWidth = Math.min(window.innerWidth - 16, (container ? container.clientWidth : window.innerWidth) - 8);
+      if (availWidth <= 0) return;
+
+      const scrollW = titleEl.scrollWidth;
+      if (scrollW > availWidth) {
+        const currentSize = parseFloat(window.getComputedStyle(titleEl).fontSize) || 36;
+        const scale = (availWidth / scrollW) * 0.97;
+        const newSize = Math.max(16, Math.floor(currentSize * scale * 10) / 10);
+        titleEl.style.fontSize = `${newSize}px`;
+      }
+    });
   },
 
   populateTeamFilter() {
