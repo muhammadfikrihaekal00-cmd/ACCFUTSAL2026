@@ -2250,13 +2250,13 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       } else if (selectedStage === "qf2") {
         match.knockoutKey = "qf2";
         match.roundName = `Perempat Final 2 (${cat})`;
-        match.homePlaceholder = "Juara Grup C";
-        match.awayPlaceholder = "Runner-up Grup D";
+        match.homePlaceholder = "Juara Grup B";
+        match.awayPlaceholder = "Runner-up Grup A";
       } else if (selectedStage === "qf3") {
         match.knockoutKey = "qf3";
         match.roundName = `Perempat Final 3 (${cat})`;
-        match.homePlaceholder = "Juara Grup B";
-        match.awayPlaceholder = "Runner-up Grup A";
+        match.homePlaceholder = "Juara Grup C";
+        match.awayPlaceholder = "Runner-up Grup D";
       } else if (selectedStage === "qf4") {
         match.knockoutKey = "qf4";
         match.roundName = `Perempat Final 4 (${cat})`;
