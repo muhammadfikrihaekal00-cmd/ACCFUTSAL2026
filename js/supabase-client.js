@@ -635,7 +635,7 @@
           official_coach: team.official ? (team.official.coach || '') : '',
           official_manager: team.official ? (team.official.manager || '') : '',
           official_medic: team.official ? (team.official.medic || '') : '',
-          official_phone: team.official ? (team.official.phone || '') : '',
+          official_phone: '',
           official_jersey_home: team.official ? (team.official.jerseyHome || '') : '',
           official_jersey_away: team.official ? (team.official.jerseyAway || '') : '',
           coach_photo: coachPhoto,
@@ -731,8 +731,7 @@
             if (!coach && rem && rem.official_coach) coach = rem.official_coach;
             let manager = t.official ? t.official.manager : '';
             if (!manager && rem && rem.official_manager) manager = rem.official_manager;
-            let phone = t.official ? t.official.phone : '';
-            if (!phone && rem && rem.official_phone) phone = rem.official_phone;
+            let phone = '';
             let jerseyHome = t.official ? t.official.jerseyHome : '';
             if (!jerseyHome && rem && rem.official_jersey_home) jerseyHome = rem.official_jersey_home;
             let jerseyAway = t.official ? t.official.jerseyAway : '';
@@ -760,7 +759,7 @@
               official_coach: coach,
               official_manager: manager,
               official_medic: (t.official ? t.official.medic : '') || (rem ? rem.official_medic : ''),
-              official_phone: phone,
+              official_phone: '',
               official_jersey_home: jerseyHome,
               official_jersey_away: jerseyAway,
               coach_photo: coachPhoto,

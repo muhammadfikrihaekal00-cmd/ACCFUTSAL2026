@@ -3059,7 +3059,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       if (coachInput) coachInput.value = off.coach || team.official_coach || team.coach || "";
       if (managerInput) managerInput.value = off.manager || team.official_manager || team.manager || "";
       if (medicInput) medicInput.value = off.medic || team.official_medic || team.medic || "";
-      if (phoneInput) phoneInput.value = off.phone || team.official_phone || team.phone || "";
+      if (phoneInput) phoneInput.value = "";
       if (jHomeInput) jHomeInput.value = off.jerseyHome || team.official_jersey_home || team.jerseyHome || "";
       if (jAwayInput) jAwayInput.value = off.jerseyAway || team.official_jersey_away || team.jerseyAway || "";
 
@@ -3421,7 +3421,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const coach = (document.getElementById("editTeamCoach")?.value || "").trim();
     const manager = (document.getElementById("editTeamManager")?.value || "").trim();
     const medic = (document.getElementById("editTeamMedic")?.value || "").trim();
-    const phone = (document.getElementById("editTeamPhone")?.value || "").trim();
+    const phone = "";
     const jerseyHome = (document.getElementById("editTeamJerseyHome")?.value || "").trim();
     const jerseyAway = (document.getElementById("editTeamJerseyAway")?.value || "").trim();
 
@@ -5731,8 +5731,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
               </div>
               <div style="flex:1;">
                 <div style="font-size:0.68rem; color:#64748b;">Pelatih (Coach):</div>
-                <input type="text" class="batch-player-input" value="${tData.coach || ''}" placeholder="Nama Pelatih" onchange="admin.batchParsedTeams[${idx}].coach = this.value" style="width:100%; margin-bottom:2px;">
-                <input type="text" class="batch-player-input" value="${tData.phone || ''}" placeholder="No WA (08xxx)" onchange="admin.batchParsedTeams[${idx}].phone = this.value" style="width:100%; color:#059669; font-weight:700;">
+                <input type="text" class="batch-player-input" value="${tData.coach || ''}" placeholder="Nama Pelatih" onchange="admin.batchParsedTeams[${idx}].coach = this.value" style="width:100%;">
               </div>
             </div>
 
@@ -6000,7 +5999,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         if (existing) {
           if (!existing.official) existing.official = {};
           if (tData.coach) existing.official.coach = tData.coach;
-          if (tData.phone) existing.official.phone = tData.phone;
+          existing.official.phone = "";
           if (tData.manager) existing.official.manager = tData.manager;
           if (tData.coachPhoto) existing.official.coachPhoto = tData.coachPhoto;
           if (tData.managerPhoto) existing.official.managerPhoto = tData.managerPhoto;
@@ -6030,7 +6029,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
             manager: tData.manager || "",
             managerPhoto: tData.managerPhoto || "",
             medic: "",
-            phone: tData.phone || "",
+            phone: "",
             jerseyHome: tData.jerseyHome || "Hijau - Putih",
             jerseyAway: tData.jerseyAway || "Hitam - Emas"
           },

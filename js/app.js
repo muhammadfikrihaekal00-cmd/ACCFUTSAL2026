@@ -38,7 +38,7 @@ class TournamentStore {
       coach: offSrc.coach || t.official_coach || t.coach || "",
       manager: offSrc.manager || t.official_manager || t.manager || "",
       medic: offSrc.medic || t.official_medic || t.medic || "",
-      phone: offSrc.phone || t.official_phone || t.phone || "",
+      phone: "",
       jerseyHome: offSrc.jerseyHome || t.official_jersey_home || t.jerseyHome || "",
       jerseyAway: offSrc.jerseyAway || t.official_jersey_away || t.jerseyAway || "",
       coachPhoto: offSrc.coachPhoto || t.coach_photo || t.coachPhoto || "",
@@ -261,6 +261,13 @@ class TournamentStore {
     }
     if (!Array.isArray(data.teams)) data.teams = [];
     if (!Array.isArray(data.matches)) data.matches = [];
+
+    // Hapus data WhatsApp official untuk seluruh tim secara permanen
+    data.teams.forEach(t => {
+      if (t.official) t.official.phone = "";
+      t.official_phone = "";
+      t.phone = "";
+    });
 
     // Bersihkan cache jadwal dummy lama (M01, T04, dll) satu kali saja saat migrasi
     if (!_safeStorageGet(localStorage, "acc_matches_cleaned_v854")) {
@@ -1177,6 +1184,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
   init() {
     this.ensureStore();
+    try { this.purgeAllTeamWhatsApp(); } catch (e) { console.warn("Purge WA init:", e); }
     try { this.initSplashScreen(); } catch (e) { console.warn("Splash init:", e); }
     try { this.initThemeAndViewMode(); } catch (e) { console.warn("Theme init:", e); }
     try { this.updateCategoryUI(); } catch (e) { console.warn("Category init:", e); }
@@ -1213,6 +1221,31 @@ var app = window.app = Object.assign(window.app || {}, {
         tickerEl.textContent = "🏆 " + tickerEl.textContent.replace(/^.*Selamat Datang/i, "Selamat Datang").trim();
       }
     } catch (e) { }
+  },
+
+  purgeAllTeamWhatsApp() {
+    if (!this.store || !this.store.data || !Array.isArray(this.store.data.teams)) return;
+    let changed = false;
+    this.store.data.teams.forEach(t => {
+      if (t.official && t.official.phone) {
+        t.official.phone = "";
+        changed = true;
+      }
+      if (t.official_phone) {
+        t.official_phone = "";
+        changed = true;
+      }
+      if (t.phone) {
+        t.phone = "";
+        changed = true;
+      }
+    });
+    if (changed) {
+      this.store.saveData();
+      if (window.SupabaseService && typeof window.SupabaseService.syncTeams === "function") {
+        window.SupabaseService.syncTeams(this.store.data.teams).catch(() => {});
+      }
+    }
   },
 
   cleanWhatsAppNumber(phone) {
@@ -2478,7 +2511,7 @@ var app = window.app = Object.assign(window.app || {}, {
             coach: payload.official_coach !== undefined ? payload.official_coach : ((payload.official && payload.official.coach) || curOff.coach || ''),
             manager: payload.official_manager !== undefined ? payload.official_manager : ((payload.official && payload.official.manager) || curOff.manager || ''),
             medic: payload.official_medic !== undefined ? payload.official_medic : ((payload.official && payload.official.medic) || curOff.medic || ''),
-            phone: payload.official_phone !== undefined ? payload.official_phone : ((payload.official && payload.official.phone) || curOff.phone || ''),
+            phone: '',
             jerseyHome: payload.official_jersey_home !== undefined ? payload.official_jersey_home : ((payload.official && payload.official.jerseyHome) || curOff.jerseyHome || ''),
             jerseyAway: payload.official_jersey_away !== undefined ? payload.official_jersey_away : ((payload.official && payload.official.jerseyAway) || curOff.jerseyAway || ''),
             coachPhoto: isValidPhoto(rCoachPhoto) ? rCoachPhoto : (curOff.coachPhoto || ''),
@@ -3474,7 +3507,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
         <div class="fullpage-section-card">
           <div class="fullpage-section-title">
-            <span>👕</span> Informasi Jersey & Kontak Manajemen
+            <span>👕</span> Informasi Jersey Tim
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: 0.82rem;">
             <div style="padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
@@ -3484,10 +3517,6 @@ var app = window.app = Object.assign(window.app || {}, {
             <div style="padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
               <span style="color: #94a3b8; font-size: 0.72rem; display: block;">Jersey Cadangan (Away):</span>
               <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.jerseyAway || 'Kostum Cadangan') : (off.jerseyAway || 'Kostum Cadangan')}</strong>
-            </div>
-            <div style="padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
-              <span style="color: #94a3b8; font-size: 0.72rem; display: block;">WhatsApp Official:</span>
-              ${off.phone ? `<a href="${waLink}" target="_blank" style="color: #25d366; font-weight: 700; text-decoration: none;">💬 ${typeof Security !== 'undefined' ? Security.sanitize(off.phone) : off.phone}</a>` : '<span style="color: #64748b;">-</span>'}
             </div>
           </div>
         </div>
@@ -5643,9 +5672,11 @@ var app = window.app = Object.assign(window.app || {}, {
               ${r.actionNote ? `<div style="font-size: 0.68rem; color: #94a3b8; margin-top: 2px;">${r.actionNote}</div>` : ''}
             </td>
             <td style="text-align: center; vertical-align: middle;">
-              <a href="${waUrl}" target="_blank" onclick="event.stopPropagation();" class="stats-row-action" title="Kirim Pesan Resmi ke Official Tim">
-                📲 WA
-              </a>
+              ${r.managerPhone ? `
+                <a href="${waUrl}" target="_blank" onclick="event.stopPropagation();" class="stats-row-action" title="Kirim Pesan Resmi ke Official Tim">
+                  📲 WA
+                </a>
+              ` : `<span style="color: #64748b; font-size: 0.75rem;">-</span>`}
             </td>
           </tr>
         `;
@@ -5719,9 +5750,11 @@ var app = window.app = Object.assign(window.app || {}, {
               ${r.actionNote ? `<div style="font-size: 0.68rem; color: #94a3b8; margin-top: 2px;">${r.actionNote}</div>` : ''}
             </td>
             <td style="text-align: center; vertical-align: middle;">
-              <a href="${waUrl}" target="_blank" onclick="event.stopPropagation();" class="stats-row-action" title="Kirim Pesan Resmi ke Official Tim">
-                📲 WA
-              </a>
+              ${r.managerPhone ? `
+                <a href="${waUrl}" target="_blank" onclick="event.stopPropagation();" class="stats-row-action" title="Kirim Pesan Resmi ke Official Tim">
+                  📲 WA
+                </a>
+              ` : `<span style="color: #64748b; font-size: 0.75rem;">-</span>`}
             </td>
           </tr>
         `;
@@ -7655,10 +7688,9 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
 
         <div class="team-meta-info-grid">
-          <div><span class="team-meta-lbl">Medis:</span><strong class="team-meta-val">${team.official.medic}</strong></div>
-          <div><span class="team-meta-lbl">No. WhatsApp:</span><a href="${waLink}" target="_blank" style="color: #25d366; text-decoration: none; font-weight:700;">💬 ${team.official.phone}</a></div>
-          <div><span class="team-meta-lbl">Jersey Utama:</span><span class="team-meta-val">${team.official.jerseyHome}</span></div>
-          <div><span class="team-meta-lbl">Jersey Cadangan:</span><span class="team-meta-val">${team.official.jerseyAway}</span></div>
+          <div><span class="team-meta-lbl">Medis:</span><strong class="team-meta-val">${team.official.medic || '-'}</strong></div>
+          <div><span class="team-meta-lbl">Jersey Utama:</span><span class="team-meta-val">${team.official.jerseyHome || '-'}</span></div>
+          <div><span class="team-meta-lbl">Jersey Cadangan:</span><span class="team-meta-val">${team.official.jerseyAway || '-'}</span></div>
         </div>
       </div>
 
