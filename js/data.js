@@ -13,7 +13,7 @@ const DEFAULT_DATA = {
     dates: "22 - 29 November 2026",
     adminPinHash: "327c1d9f696423bcbe8e2e2ea0dc0e84dc7762055f2ee8d4320e1ced37549348",
     runningAnnouncement: "",
-    contactCommittee: "0812-9876-5432 (Kak Harun - Sie. Pertandingan)",
+    contactCommittee: "0859-3322-8817 (Ust. Ahmadi)",
     heroBannerImage: "assets/hero_banner.jpg",
     youtubeLiveUrl: "",
     youtubeLiveTitle: "",
