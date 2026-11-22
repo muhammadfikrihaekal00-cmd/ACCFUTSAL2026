@@ -2170,10 +2170,15 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
   getValidMatches() {
     const raw = (app.store && app.store.data && app.store.data.matches) || [];
-    if (app.store && typeof app.store.isInvalidMatchId === 'function') {
-      return raw.filter(m => m && m.id && !app.store.isInvalidMatchId(m.id));
-    }
-    return raw.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config') && !/^T\d+$/i.test(String(m.id)) && m.id !== 'M_SMP_23');
+    const checkInvalid = (id) => {
+      if (!id) return true;
+      if (app.store && typeof app.store.isInvalidMatchId === 'function') {
+        return app.store.isInvalidMatchId(id);
+      }
+      const clean = String(id).trim();
+      return clean === 'M_SMP_23' || /^T\d+$/i.test(clean) || /^team_/i.test(clean) || clean.includes('registry') || clean.includes('config');
+    };
+    return raw.filter(m => m && m.id && !checkInvalid(m.id));
   },
 
   // ==========================================
@@ -2417,10 +2422,17 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const mId = idInput.value;
 
     // Jika target adalah registry atau ID tidak valid, singkirkan tanpa konfirmasi palsu
-    if (app.store && typeof app.store.isInvalidMatchId === 'function' && app.store.isInvalidMatchId(mId)) {
-      if (app.store.data && Array.isArray(app.store.data.matches)) {
+    const isInvalid = (app.store && typeof app.store.isInvalidMatchId === 'function')
+      ? app.store.isInvalidMatchId(mId)
+      : (mId === 'M_SMP_23' || /^T\d+$/i.test(mId) || /^team_/i.test(mId) || mId.includes('registry') || mId.includes('config'));
+
+    if (isInvalid) {
+      if (app.store && app.store.data && Array.isArray(app.store.data.matches)) {
         app.store.data.matches = app.store.data.matches.filter(m => m.id !== mId);
         app.store.saveData();
+      }
+      if (window.SupabaseService && typeof window.SupabaseService.deleteMatch === 'function') {
+        window.SupabaseService.deleteMatch(mId).catch(() => {});
       }
       const modal = document.getElementById("matchEditorModal");
       if (modal) modal.classList.remove("active");

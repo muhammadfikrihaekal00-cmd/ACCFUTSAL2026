@@ -14,7 +14,7 @@ window.admin = window.admin || {
 
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v10";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v11";
     this.cleanObsoleteStorageKeys();
     try {
       this.data = this.loadData();
@@ -138,7 +138,7 @@ class TournamentStore {
     if (!id) return true;
     const cleanId = String(id).trim();
     if (cleanId === 'M_SMP_23') return true; // Phantom duplicate
-    if (/^T\d+$/i.test(cleanId)) return true; // Team IDs (e.g. T01..T32) are never match IDs!
+    if (/^T\d+$/i.test(cleanId) || /^team_/i.test(cleanId)) return true; // Team IDs (e.g. T01..T32) or team registries are never match IDs!
     if (cleanId.includes('registry') || cleanId.includes('config') || cleanId === 'team_meta_registry' || cleanId === 'team_logos_registry') return true;
     return false;
   }
@@ -151,7 +151,10 @@ class TournamentStore {
       if (!m || !m.id || this.isInvalidMatchId(m.id)) continue;
       if (m.homeId && m.awayId) {
         const cat = (m.category || "SMP").toUpperCase();
-        const pairKey = [m.homeId, m.awayId].sort().join("_") + "_" + cat + "_" + (m.date || "");
+        const isGroup = (m.stage === "group" || !m.stage);
+        const pairKey = isGroup
+          ? `GRP_${cat}_` + [m.homeId, m.awayId].sort().join("_")
+          : [m.homeId, m.awayId].sort().join("_") + "_" + cat + "_" + (m.stage || "") + "_" + (m.date || "");
         if (seenMatchups.has(pairKey)) {
           const existing = seenMatchups.get(pairKey);
           // Prioritaskan match yang memiliki format ID standar turnamen resmi
@@ -1090,9 +1093,10 @@ class TournamentStore {
   // Calculate Disciplinary status (Yellow/Red Cards across all matches)
   getDisciplinaryRecords(category = null) {
     const playerStats = {};
-    let teams = this.data.teams;
-    if (category && category !== "all") {
-      teams = teams.filter(t => (t.category || "SMP") === category);
+    const targetCat = (category && category !== "all") ? category.toUpperCase() : null;
+    let teams = this.data.teams || [];
+    if (targetCat) {
+      teams = teams.filter(t => (t.category || "SMP").toUpperCase() === targetCat);
     }
 
     teams.forEach(t => {
@@ -1119,7 +1123,13 @@ class TournamentStore {
       });
     });
 
-    this.data.matches.forEach(m => {
+    const catMatches = (this.data.matches || []).filter(m => {
+      if (!m || this.isInvalidMatchId(m.id)) return false;
+      if (!targetCat) return true;
+      return (m.category || "SMP").toUpperCase() === targetCat;
+    });
+
+    catMatches.forEach(m => {
       if (m.cards && m.cards.length > 0) {
         m.cards.forEach(c => {
           let target = playerStats[`${c.team}-${c.player}`];
@@ -1136,17 +1146,20 @@ class TournamentStore {
               target = playerStats[foundKey];
             } else if (c.player) {
               const tObj = (this.data.teams || []).find(t => t.id === c.team || t.name === c.team);
-              target = playerStats[`${c.team}-${c.player}`] = {
-                teamId: c.team || "",
-                teamName: tObj ? tObj.name : (c.team || ""),
-                category: tObj ? (tObj.category || "SMP") : (m.category || "SMP"),
-                badgeColor: tObj ? tObj.badgeColor : "#0284c7",
-                playerNo: "",
-                playerName: c.player,
-                yellowCount: 0,
-                redCount: 0,
-                cardsHistory: []
-              };
+              const pCat = tObj ? (tObj.category || "SMP") : (m.category || "SMP");
+              if (!targetCat || pCat.toUpperCase() === targetCat) {
+                target = playerStats[`${c.team}-${c.player}`] = {
+                  teamId: c.team || "",
+                  teamName: tObj ? tObj.name : (c.team || ""),
+                  category: pCat,
+                  badgeColor: tObj ? tObj.badgeColor : "#0284c7",
+                  playerNo: "",
+                  playerName: c.player,
+                  yellowCount: 0,
+                  redCount: 0,
+                  cardsHistory: []
+                };
+              }
             }
           }
 
@@ -1167,7 +1180,7 @@ class TournamentStore {
     });
 
     return Object.values(playerStats)
-      .filter(p => p.yellowCount > 0 || p.redCount > 0)
+      .filter(p => (p.yellowCount > 0 || p.redCount > 0) && (!targetCat || (p.category || "SMP").toUpperCase() === targetCat))
       .map(p => {
         let status = "Aman";
         let statusType = "safe";
@@ -1195,9 +1208,10 @@ class TournamentStore {
   // Calculate Golden Boot / Top Scorers
   getTopScorersList(category = null) {
     const scorers = {};
-    let teams = this.data.teams;
-    if (category && category !== "all") {
-      teams = teams.filter(t => (t.category || "SMP") === category);
+    const targetCat = (category && category !== "all") ? category.toUpperCase() : null;
+    let teams = this.data.teams || [];
+    if (targetCat) {
+      teams = teams.filter(t => (t.category || "SMP").toUpperCase() === targetCat);
     }
 
     teams.forEach(t => {
@@ -1219,7 +1233,13 @@ class TournamentStore {
       });
     });
 
-    this.data.matches.forEach(m => {
+    const catMatches = (this.data.matches || []).filter(m => {
+      if (!m || this.isInvalidMatchId(m.id)) return false;
+      if (!targetCat) return true;
+      return (m.category || "SMP").toUpperCase() === targetCat;
+    });
+
+    catMatches.forEach(m => {
       const matchScorers = (Array.isArray(m.scorers) && m.scorers.length > 0) ? m.scorers : (Array.isArray(m.goals) ? m.goals : []);
       if (matchScorers.length > 0) {
         matchScorers.forEach(s => {
@@ -1240,17 +1260,20 @@ class TournamentStore {
               scorers[foundKey].goals += 1;
             } else {
               const tObj = (this.data.teams || []).find(t => t.id === s.team || t.name === s.team);
-              scorers[key] = {
-                teamId: s.team || "",
-                teamName: tObj ? tObj.name : (s.team || ""),
-                category: tObj ? (tObj.category || "SMP") : (m.category || "SMP"),
-                badgeColor: tObj ? tObj.badgeColor : "#0284c7",
-                playerNo: s.no || "",
-                playerName: s.player,
-                pos: "Pemain",
-                photo: "",
-                goals: 1
-              };
+              const pCat = tObj ? (tObj.category || "SMP") : (m.category || "SMP");
+              if (!targetCat || pCat.toUpperCase() === targetCat) {
+                scorers[key] = {
+                  teamId: s.team || "",
+                  teamName: tObj ? tObj.name : (s.team || ""),
+                  category: pCat,
+                  badgeColor: tObj ? tObj.badgeColor : "#0284c7",
+                  playerNo: s.no || "",
+                  playerName: s.player,
+                  pos: "Pemain",
+                  photo: "",
+                  goals: 1
+                };
+              }
             }
           }
         });
@@ -1258,16 +1281,17 @@ class TournamentStore {
     });
 
     return Object.values(scorers)
-      .filter(s => s.goals > 0)
+      .filter(s => s.goals > 0 && (!targetCat || (s.category || "SMP").toUpperCase() === targetCat))
       .sort((a, b) => b.goals - a.goals);
   }
 
   // Calculate Top Assists
   getTopAssistsList(category = null) {
     const assisters = {};
-    let teams = this.data.teams;
-    if (category && category !== "all") {
-      teams = teams.filter(t => (t.category || "SMP") === category);
+    const targetCat = (category && category !== "all") ? category.toUpperCase() : null;
+    let teams = this.data.teams || [];
+    if (targetCat) {
+      teams = teams.filter(t => (t.category || "SMP").toUpperCase() === targetCat);
     }
 
     teams.forEach(t => {
@@ -1290,7 +1314,13 @@ class TournamentStore {
       });
     });
 
-    (this.data.matches || []).forEach(m => {
+    const catMatches = (this.data.matches || []).filter(m => {
+      if (!m || this.isInvalidMatchId(m.id)) return false;
+      if (!targetCat) return true;
+      return (m.category || "SMP").toUpperCase() === targetCat;
+    });
+
+    catMatches.forEach(m => {
       if (m.scorers && Array.isArray(m.scorers)) {
         m.scorers.forEach(s => {
           if (s.assist) {
@@ -1308,18 +1338,21 @@ class TournamentStore {
                 assisters[foundKey].assists += 1;
               } else {
                 const tObj = (this.data.teams || []).find(t => t.id === s.team || t.name === s.team);
-                assisters[key] = {
-                  teamId: s.team || "",
-                  teamName: tObj ? tObj.name : (s.team || ""),
-                  category: tObj ? (tObj.category || "SMP") : (m.category || "SMP"),
-                  badgeColor: tObj ? tObj.badgeColor : "#0284c7",
-                  playerNo: "",
-                  playerName: s.assist,
-                  pos: "Pemain",
-                  photo: "",
-                  assists: 1,
-                  goals: 0
-                };
+                const pCat = tObj ? (tObj.category || "SMP") : (m.category || "SMP");
+                if (!targetCat || pCat.toUpperCase() === targetCat) {
+                  assisters[key] = {
+                    teamId: s.team || "",
+                    teamName: tObj ? tObj.name : (s.team || ""),
+                    category: pCat,
+                    badgeColor: tObj ? tObj.badgeColor : "#0284c7",
+                    playerNo: "",
+                    playerName: s.assist,
+                    pos: "Pemain",
+                    photo: "",
+                    assists: 1,
+                    goals: 0
+                  };
+                }
               }
             }
           }
@@ -1328,7 +1361,7 @@ class TournamentStore {
     });
 
     return Object.values(assisters)
-      .filter(a => a.assists > 0)
+      .filter(a => a.assists > 0 && (!targetCat || (a.category || "SMP").toUpperCase() === targetCat))
       .sort((a, b) => b.assists - a.assists || b.goals - a.goals);
   }
 }
@@ -1398,6 +1431,12 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   init() {
+    try {
+      const early = document.getElementById("earlyRouteStyle");
+      if (early) early.remove();
+      const earlyFloat = document.getElementById("earlyFloatStyle");
+      if (earlyFloat) earlyFloat.remove();
+    } catch (_) { }
     this.ensureStore();
     if (this.store && this.store.data && Array.isArray(this.store.data.matches)) {
       const origCount = this.store.data.matches.length;
@@ -4454,6 +4493,11 @@ var app = window.app = Object.assign(window.app || {}, {
 
   switchTab(tabId, pushHistory = true, customPath = null) {
     try {
+      const early = document.getElementById("earlyRouteStyle");
+      if (early) early.remove();
+      const earlyFloat = document.getElementById("earlyFloatStyle");
+      if (earlyFloat) earlyFloat.remove();
+
       // Force close mobile menu overlay immediately
       const overlay = document.getElementById("mobileMenuOverlay");
       if (overlay) {
@@ -8525,6 +8569,13 @@ var app = window.app = Object.assign(window.app || {}, {
 
   // DEDICATED FULL-PAGE MATCH DETAIL CENTER
   showMatchDetail(matchId) {
+    try {
+      const early = document.getElementById("earlyRouteStyle");
+      if (early) early.remove();
+      const earlyFloat = document.getElementById("earlyFloatStyle");
+      if (earlyFloat) earlyFloat.remove();
+    } catch (_) { }
+
     this.activeDetailMatchId = matchId;
     this.currentTab = "match-detail";
 

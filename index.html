@@ -47,10 +47,12 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "9.10";
+        var CURRENT_VER = "9.20";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           try {
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v10");
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v10_min");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v9");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v9_min");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v8");
@@ -105,6 +107,7 @@
           document.head.appendChild(s);
           if (isDetailPlayer || isDetailTeam || isDetailMatch) {
             var sFloat = document.createElement("style");
+            sFloat.id = "earlyFloatStyle";
             sFloat.textContent = "#floatingCategorySwitcher { display: none !important; }";
             document.head.appendChild(sFloat);
           }
@@ -156,6 +159,11 @@
       switchTab: function (tabId) {
         window._pendingTab = tabId;
         try {
+          var early = document.getElementById("earlyRouteStyle");
+          if (early) early.remove();
+          var earlyFloat = document.getElementById("earlyFloatStyle");
+          if (earlyFloat) earlyFloat.remove();
+
           var overlay = document.getElementById("mobileMenuOverlay");
           if (overlay) {
             overlay.classList.remove("open");
@@ -272,12 +280,30 @@
         }
       },
       openMatchEditor: function (matchId) {
-        var m = document.getElementById("matchEditorModal");
-        if (m) m.classList.add("active");
+        if (window.admin && typeof window.admin.openMatchEditor === 'function' && window.admin.openMatchEditor !== this.openMatchEditor) {
+          window.admin.openMatchEditor(matchId);
+        } else {
+          var m = document.getElementById("matchEditorModal");
+          if (m) m.classList.add("active");
+          setTimeout(function () {
+            if (window.admin && typeof window.admin.openMatchEditor === 'function') {
+              window.admin.openMatchEditor(matchId);
+            }
+          }, 200);
+        }
       },
       openQuickScore: function (matchId) {
-        var m = document.getElementById("quickScoreModal");
-        if (m) m.classList.add("active");
+        if (window.admin && typeof window.admin.openQuickScore === 'function' && window.admin.openQuickScore !== this.openQuickScore) {
+          window.admin.openQuickScore(matchId);
+        } else {
+          var m = document.getElementById("quickScoreModal");
+          if (m) m.classList.add("active");
+          setTimeout(function () {
+            if (window.admin && typeof window.admin.openQuickScore === 'function') {
+              window.admin.openQuickScore(matchId);
+            }
+          }, 200);
+        }
       },
       doLogin: function (pin) {
         if (window.admin && typeof window.admin.doLogin === 'function' && window.admin.doLogin !== this.doLogin) {
@@ -3226,11 +3252,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v43"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v43"></script>
-  <script defer src="/js/data.js?v=20261123_v43"></script>
-  <script defer src="/js/admin.js?v=20261123_v43"></script>
-  <script defer src="/js/app.js?v=20261123_v43"></script>
+  <script defer src="/js/security.js?v=20261123_v44"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v44"></script>
+  <script defer src="/js/data.js?v=20261123_v44"></script>
+  <script defer src="/js/admin.js?v=20261123_v44"></script>
+  <script defer src="/js/app.js?v=20261123_v44"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
