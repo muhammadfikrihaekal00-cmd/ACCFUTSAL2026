@@ -4150,11 +4150,11 @@ var app = window.app = Object.assign(window.app || {}, {
         const isMyTeam = !s.team || s.team === team.id || s.team === team.name || s.team === team.shortName;
         const isOg = Boolean(s.isOwnGoal || s.ownGoal || sPlayer.includes('bunuh diri') || sPlayer.includes('own goal') || sPlayer.includes('(gbd)') || sPlayer.includes('[og]'));
 
-        const isPlayer = sPlayer === cleanPName || 
-                         sPlayer === `${cleanPName} (#${pNo})` || 
-                         (pNo && sPlayer.includes(`#${pNo}`)) ||
-                         (sPlayer.length > 3 && cleanPName.includes(sPlayer)) ||
-                         (cleanPName.length > 3 && sPlayer.includes(cleanPName));
+        const isPlayer = sPlayer === cleanPName ||
+          sPlayer === `${cleanPName} (#${pNo})` ||
+          (pNo && sPlayer.includes(`#${pNo}`)) ||
+          (sPlayer.length > 3 && cleanPName.includes(sPlayer)) ||
+          (cleanPName.length > 3 && sPlayer.includes(cleanPName));
 
         let minStr = s.minute ? String(s.minute).trim() : "";
         if (minStr && !minStr.endsWith("'")) minStr += "'";
@@ -4183,11 +4183,11 @@ var app = window.app = Object.assign(window.app || {}, {
         // Periksa jika pemain memberikan assist
         if (s.assist) {
           const aPlayer = (s.assist || "").toLowerCase().trim();
-          const isAssistPlayer = aPlayer === cleanPName || 
-                                 aPlayer === `${cleanPName} (#${pNo})` || 
-                                 (pNo && aPlayer.includes(`#${pNo}`)) ||
-                                 (aPlayer.length > 3 && cleanPName.includes(aPlayer)) ||
-                                 (cleanPName.length > 3 && aPlayer.includes(cleanPName));
+          const isAssistPlayer = aPlayer === cleanPName ||
+            aPlayer === `${cleanPName} (#${pNo})` ||
+            (pNo && aPlayer.includes(`#${pNo}`)) ||
+            (aPlayer.length > 3 && cleanPName.includes(aPlayer)) ||
+            (cleanPName.length > 3 && aPlayer.includes(cleanPName));
           if (isMyTeam && isAssistPlayer) {
             totalAssists++;
             playerInMatch = true;
@@ -4206,11 +4206,11 @@ var app = window.app = Object.assign(window.app || {}, {
         if (!c || c._meta || !c.player || c.player === 'undefined' || c.player === 'null') return;
         const cPlayer = (c.player || "").toLowerCase().trim();
         const isMyTeam = !c.team || c.team === team.id || c.team === team.name || c.team === team.shortName;
-        const isPlayer = cPlayer === cleanPName || 
-                         cPlayer === `${cleanPName} (#${pNo})` || 
-                         (pNo && cPlayer.includes(`#${pNo}`)) ||
-                         (cPlayer.length > 3 && cleanPName.includes(cPlayer)) ||
-                         (cleanPName.length > 3 && cPlayer.includes(cleanPName));
+        const isPlayer = cPlayer === cleanPName ||
+          cPlayer === `${cleanPName} (#${pNo})` ||
+          (pNo && cPlayer.includes(`#${pNo}`)) ||
+          (cPlayer.length > 3 && cleanPName.includes(cPlayer)) ||
+          (cleanPName.length > 3 && cPlayer.includes(cleanPName));
 
         let minStr = c.minute ? String(c.minute).trim() : "";
         if (minStr && !minStr.endsWith("'")) minStr += "'";
@@ -4333,10 +4333,10 @@ var app = window.app = Object.assign(window.app || {}, {
                   </div>
                 </div>
                 <div>
-                  ${ev.type === 'goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #10b981;">+1 Gol</span>' : 
-                    (ev.type === 'assist' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #38bdf8;">+1 Assist</span>' : 
-                    (ev.type === 'yellow' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f59e0b;">Kartu Kuning</span>' : 
-                    (ev.type === 'own_goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f87171;">Own Goal</span>' : '<span style="font-size: 0.74rem; font-weight: 700; color: #ef4444;">Kartu Merah</span>')))}
+                  ${ev.type === 'goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #10b981;">+1 Gol</span>' :
+          (ev.type === 'assist' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #38bdf8;">+1 Assist</span>' :
+            (ev.type === 'yellow' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f59e0b;">Kartu Kuning</span>' :
+              (ev.type === 'own_goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f87171;">Own Goal</span>' : '<span style="font-size: 0.74rem; font-weight: 700; color: #ef4444;">Kartu Merah</span>')))}
                 </div>
               </div>
             `).join('') : `
@@ -5280,15 +5280,15 @@ var app = window.app = Object.assign(window.app || {}, {
             ${(homeScorers.length > 0 || homeCards.length > 0) ? `
               <div class="fixture-team-events">
                 ${homeScorers.map(s => {
-                  const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
-                  return `
+        const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
+        return `
                   <span class="fixture-event-chip scorer ${isOg ? 'own-goal-chip' : ''}">
                     <span>${isOg ? '⚡' : '⚽'}</span>
                     <span>${s.player}</span>
                     <span class="chip-min">${s.minute}</span>
                   </span>
                   `;
-                }).join("")}
+      }).join("")}
                 ${homeCards.map(c => `
                   <span class="fixture-event-chip">
                     <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
@@ -5321,15 +5321,15 @@ var app = window.app = Object.assign(window.app || {}, {
             ${(awayScorers.length > 0 || awayCards.length > 0) ? `
               <div class="fixture-team-events">
                 ${awayScorers.map(s => {
-                  const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
-                  return `
+        const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
+        return `
                   <span class="fixture-event-chip scorer ${isOg ? 'own-goal-chip' : ''}">
                     <span>${isOg ? '⚡' : '⚽'}</span>
                     <span>${s.player}</span>
                     <span class="chip-min">${s.minute}</span>
                   </span>
                   `;
-                }).join("")}
+      }).join("")}
                 ${awayCards.map(c => `
                   <span class="fixture-event-chip">
                     <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
@@ -8712,7 +8712,6 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
 
         <div class="md-meta-strip">
-          <span class="md-meta-item">📍 ${match.pitch || 'Lapangan 1 (GOR)'}</span>
           <span class="md-meta-item">📅 ${match.date || 'Hari Pertandingan'}</span>
           <span class="md-meta-item">⏰ ${match.time ? `${match.time} ` : '-'}</span>
         </div>
@@ -8720,7 +8719,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
       <!-- KRONOLOGI KEJADIAN LAGA (TIMELINE) -->
       <div class="md-section-title">
-        <span>⏱️</span> Kronologi Kejadian Pertandingan (Gol &amp; Kartu Pelanggaran)
+        <span>⏱️</span> Live Match
       </div>
       <div class="md-timeline-card">
         ${eventsList.length === 0 ? `
