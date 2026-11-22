@@ -337,8 +337,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261123_v49">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v49">
+  <link rel="stylesheet" href="/css/styles.css?v=20261123_v50">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v50">
 </head>
 
 <body class="snap-scroll-active">
@@ -558,13 +558,11 @@
           <div class="moments-controls-wrap">
             <div class="moments-admin-btn-group">
               <button id="btnAddMomentBtn" class="btn btn-primary btn-sm btn-panitia-moment"
-                onclick="admin.openMomentEditorModal()"
-                style="display: none;">
+                onclick="admin.openMomentEditorModal()" style="display: none;">
                 ➕ Tambah Momen
               </button>
               <button id="btnManageMomentsBtn" class="btn btn-outline btn-sm btn-panitia-moment"
-                onclick="admin.openMomentEditorModal()"
-                style="display: none;">
+                onclick="admin.openMomentEditorModal()" style="display: none;">
                 ⚙️ Kelola Momen
               </button>
             </div>
@@ -2679,8 +2677,10 @@
           style="position: relative; border-radius: 14px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 10px 28px rgba(0,0,0,0.6); background: #0b1329;">
           <img id="momentModalImg" src="" alt="Moment ACC 2026"
             style="width: 100%; max-height: 420px; object-fit: cover; display: block;">
-          <div id="momentModalBadgeNew" class="moment-badge-new" style="position: absolute; top: 12px; right: 12px;">NEW</div>
-          <div id="momentModalBadgeTag" class="moment-badge-tag" style="position: absolute; top: 12px; left: 12px;">🔥 HIGHLIGHT</div>
+          <div id="momentModalBadgeNew" class="moment-badge-new" style="position: absolute; top: 12px; right: 12px;">NEW
+          </div>
+          <div id="momentModalBadgeTag" class="moment-badge-tag" style="position: absolute; top: 12px; left: 12px;">🔥
+            HIGHLIGHT</div>
         </div>
         <div
           style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
@@ -3278,7 +3278,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 0.74rem; color: var(--text-muted);">☁️ Perubahan tersimpan otomatis ke Cloud
           Supabase</span>
-        <button type="button" class="btn btn-outline btn-modal-close" onclick="admin.closeManageMvpModal()">Tutup</button>
+        <button type="button" class="btn btn-outline btn-modal-close"
+          onclick="admin.closeManageMvpModal()">Tutup</button>
       </div>
     </div>
   </div>
@@ -3291,7 +3292,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         <h3 class="modal-title" id="modalEditMvpTitle" style="color: var(--accent-gold);">
           ⭐ Edit Pemain MVP
         </h3>
-        <button type="button" class="modal-close btn-modal-close" onclick="admin.closeEditMvpItemModal()">&times;</button>
+        <button type="button" class="modal-close btn-modal-close"
+          onclick="admin.closeEditMvpItemModal()">&times;</button>
       </div>
       <form id="formEditMvpItem" onsubmit="admin.saveMvpItem(event)"
         style="display: flex; flex-direction: column; overflow: hidden; margin: 0;">
@@ -3414,7 +3416,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         </div>
         <div class="modal-footer"
           style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border-color);">
-          <button type="button" class="btn btn-outline btn-modal-close" onclick="admin.closeEditMvpItemModal()">Batal</button>
+          <button type="button" class="btn btn-outline btn-modal-close"
+            onclick="admin.closeEditMvpItemModal()">Batal</button>
           <button type="submit" class="btn btn-primary"
             style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
             💾 Simpan MVP
@@ -3429,11 +3432,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v49"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v49"></script>
-  <script defer src="/js/data.js?v=20261123_v49"></script>
-  <script defer src="/js/admin.js?v=20261123_v49"></script>
-  <script defer src="/js/app.js?v=20261123_v49"></script>
+  <script defer src="/js/security.js?v=20261123_v50"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v50"></script>
+  <script defer src="/js/data.js?v=20261123_v50"></script>
+  <script defer src="/js/admin.js?v=20261123_v50"></script>
+  <script defer src="/js/app.js?v=20261123_v50"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

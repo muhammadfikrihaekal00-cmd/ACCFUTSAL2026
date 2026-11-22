@@ -2028,133 +2028,19 @@ var app = window.app = Object.assign(window.app || {}, {
     const videoId = this.getYoutubeVideoId(rawYtUrl);
     const title = (cfg.youtubeLiveTitle || "Siaran Langsung Lapangan Utama - GOR Futsal Ma'had Al-Fayyadh Maros").replace(/^[🔴\s]+/, "");
 
-    // 1. Cari apakah ada pertandingan yang sedang LIVE saat ini
-    const matches = (this.store && this.store.data && this.store.data.matches) || [];
-    const activeCat = this.currentCategory || "SMP";
-    const liveMatches = matches.filter(m => m.status === "live");
-
-    // Urutkan semua laga upcoming secara kronologis presisi (berdasarkan hari & jam kick-off)
-    const sortedUpcomingAll = matches
-      .filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled"))
-      .sort((a, b) => this.getChronologicalMatchOrder(a) - this.getChronologicalMatchOrder(b));
-
-    // Cari laga selanjutnya sesuai kategori aktif, fallback ke laga berikutnya dari kategori lain jika kategori aktif sudah selesai
-    const upcomingInCat = sortedUpcomingAll.filter(m => (m.category || "SMP") === activeCat);
-    const nextMatch = upcomingInCat[0] || sortedUpcomingAll[0] || (liveMatches.length === 0 ? matches[0] : null);
-
-    // 2. BOX TERPISAH: Skor Pertandingan yang Sedang Berlangsung (Hanya tampil jika ada laga LIVE)
-    // Cukup tampilkan nama tim dan skornya, apabila diklik menuju ke detail laganya
-    let liveScoreBoxHtml = "";
-    if (liveMatches.length > 0) {
-      const lm = liveMatches[0];
-      const hTeam = this.store.getTeam(lm.homeId) || { name: lm.homePlaceholder || "Home", shortName: "HOME" };
-      const aTeam = this.store.getTeam(lm.awayId) || { name: lm.awayPlaceholder || "Away", shortName: "AWAY" };
-      const hScore = lm.homeScoreLive ?? (lm.homeScore ?? 0);
-      const aScore = lm.awayScoreLive ?? (lm.awayScore ?? 0);
-      const catBadge = (lm.category || "SMP") === "SD" ? "SD" : "SMP";
-      const stageName = this.store.getMatchStageName(lm);
-
-      liveScoreBoxHtml = `
-        <div class="hero-live-score-card" onclick="app.showMatchDetail('${lm.id}')" role="button" tabindex="0" title="Klik untuk lihat detail pertandingan &amp; statistik laga">
-          <div class="hero-live-score-badge">
-            <span class="pulse-dot"></span>
-            <span>LIVE${lm.liveMinute ? ` • Menit ${lm.liveMinute}` : ''}</span>
-            <span class="hero-live-cat-pill">${catBadge} [${stageName}]</span>
-          </div>
-          <div class="hero-live-score-matchup">
-            <div class="hero-live-team home">
-              <span class="hero-live-team-name">${hTeam.name}</span>
-            </div>
-            <div class="hero-live-score-box">
-              <span class="hero-live-digit">${hScore}</span>
-              <span class="hero-live-colon">-</span>
-              <span class="hero-live-digit">${aScore}</span>
-            </div>
-            <div class="hero-live-team away">
-              <span class="hero-live-team-name">${aTeam.name}</span>
-            </div>
-          </div>
-          <div class="hero-live-score-footer">
-            <span class="hero-live-tap-hint">Tap untuk Detail Laga &amp; Statistik ➔</span>
-          </div>
-        </div>
-      `;
-    }
-
-    // 3. BOX TERPISAH: Informasi Pertandingan Selanjutnya (Taro di bawahnya beda box)
-    let upcomingMatchBoxHtml = "";
-    if (nextMatch) {
-      const hTeam = this.store.getTeam(nextMatch.homeId) || { name: nextMatch.homePlaceholder || "Home" };
-      const aTeam = this.store.getTeam(nextMatch.awayId) || { name: nextMatch.awayPlaceholder || "Away" };
-      const catBadge = (nextMatch.category || "SMP") === "SD" ? "SD" : "SMP";
-      const stageName = this.store.getMatchStageName(nextMatch);
-
-      upcomingMatchBoxHtml = `
-        <div class="hero-upcoming-match-card" onclick="app.switchTab('matches')" role="button" tabindex="0" title="Klik untuk lihat jadwal lengkap turnamen">
-          <div class="hero-upcoming-badge">
-            <span class="upcoming-indicator-icon">📅</span>
-            <span>NEXT MATCH</span>
-            <span class="hero-upcoming-cat-pill">${catBadge} [${stageName}]</span>
-          </div>
-          <div class="hero-upcoming-matchup">
-            <div class="hero-upcoming-team home">
-              <span class="hero-upcoming-team-name">${hTeam.name}</span>
-            </div>
-            <div class="hero-upcoming-vs-box">
-              <span class="hero-upcoming-vs">VS</span>
-              <span class="hero-upcoming-time">${nextMatch.time}</span>
-            </div>
-            <div class="hero-upcoming-team away">
-              <span class="hero-upcoming-team-name">${aTeam.name}</span>
-            </div>
-          </div>
-          <div class="hero-upcoming-footer">
-            <span class="hero-upcoming-meta">📅 ${nextMatch.date || 'Jadwal Resmi'}</span>
-            <span class="hero-upcoming-cta">Lihat Jadwal Lengkap ➔</span>
-          </div>
-        </div>
-      `;
-    }
-
     // Cek apakah video player iframe sudah sedang aktif berputar
     const existingPlayer = document.getElementById("mainYoutubeIframe");
     const isAlreadyPlaying = Boolean(existingPlayer);
 
-    // Jika video sedang aktif ditonton, update title dan box luar tanpa me-reset iframe video yang sedang diputar
+    // Jika video sedang aktif ditonton, update title tanpa me-reset iframe video yang sedang diputar
     if (isAlreadyPlaying) {
       const titleEl = container.querySelector(".live-stream-title");
       if (titleEl) titleEl.textContent = title;
-
-      // Update Box Live Score
-      let curLiveBox = container.querySelector(".hero-live-score-card");
-      if (liveScoreBoxHtml) {
-        if (curLiveBox) {
-          curLiveBox.outerHTML = liveScoreBoxHtml;
-        } else {
-          const liveCard = container.querySelector(".live-stream-card");
-          if (liveCard) liveCard.insertAdjacentHTML("afterend", liveScoreBoxHtml);
-        }
-      } else if (curLiveBox) {
-        curLiveBox.remove();
-      }
-
-      // Update Box Pertandingan Selanjutnya
-      let curUpBox = container.querySelector(".hero-upcoming-match-card");
-      if (upcomingMatchBoxHtml) {
-        if (curUpBox) {
-          curUpBox.outerHTML = upcomingMatchBoxHtml;
-        } else {
-          container.insertAdjacentHTML("beforeend", upcomingMatchBoxHtml);
-        }
-      } else if (curUpBox) {
-        curUpBox.remove();
-      }
       return;
     }
 
-    // Default: Lite YouTube Facade Bersih (Bebas dari ticker laga di dalam box video) + Box Terpisah di Bawahnya
+    // Banner Siaran Langsung YouTube Bersih (Fokus Live Stream Siaran Resmi Lapangan)
     container.innerHTML = `
-      <!-- BOX 1: SIARAN LANGSUNG YOUTUBE (FOKUS NONTON LIVE STREAM, PANDANGAN 100% BEBAS & BERSIH) -->
       <div class="live-stream-card">
         <div class="live-stream-header">
           <div class="live-stream-header-left">
@@ -2195,12 +2081,6 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
         </div>
       </div>
-
-      <!-- BOX 2: INFORMASI SKOR YANG SEDANG BERLANGSUNG (HANYA MUNCUL JIKA ADA LAGA LIVE) -->
-      ${liveScoreBoxHtml}
-
-      <!-- BOX 3: INFORMASI PERTANDINGAN SELANJUTNYA (BOX TERPISAH DI BAWAH) -->
-      ${upcomingMatchBoxHtml}
     `;
   },
 
