@@ -8451,7 +8451,7 @@ var app = window.app = Object.assign(window.app || {}, {
         <div class="md-meta-strip">
           <span class="md-meta-item">📍 ${match.pitch || 'Lapangan 1 (GOR)'}</span>
           <span class="md-meta-item">📅 ${match.date || 'Hari Pertandingan'}</span>
-          <span class="md-meta-item">⏰ ${match.time ? `${match.time} WITA` : '-'}</span>
+          <span class="md-meta-item">⏰ ${match.time ? `${match.time} ` : '-'}</span>
         </div>
       </div>
 
