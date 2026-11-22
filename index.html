@@ -299,8 +299,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261122_v36">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261122_v36">
+  <link rel="stylesheet" href="/css/styles.css?v=20261122_v37">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261122_v37">
 </head>
 
 <body class="snap-scroll-active">
@@ -1515,21 +1515,31 @@
             </div>
           </div>
 
-          <!-- TAB: CATAT GOL & ASSIST (SEMUA PEMAIN TERDAFTAR) -->
+          <!-- TAB: CATAT GOL & ASSIST (SEMUA PEMAIN TERDAFTAR + OPSI GOL BUNUH DIRI) -->
           <div id="qsPanel_goal" class="qs-tab-panel" style="display: none;">
 
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Tim Pencetak Gol:</label>
+                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Tim Penerima Skor (Poin Masuk ke Tim Ini):</label>
                 <select id="goalTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
                   onchange="admin.onGoalTeamChange()">
                   <option value="">-- Pilih Tim --</option>
                 </select>
               </div>
+
+              <!-- Opsi Cepat Gol Bunuh Diri (Own Goal) -->
+              <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 5px 10px;">
+                <label style="font-size: 0.76rem; font-weight: 700; color: #f87171; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none;">
+                  <input type="checkbox" id="goalIsOwnGoal" onchange="admin.toggleOwnGoalMode(this.checked)" style="cursor: pointer; width: 16px; height: 16px; accent-color: #ef4444;">
+                  <span>⚡ Gol Bunuh Diri (Own Goal)</span>
+                </label>
+                <span style="font-size: 0.68rem; color: #94a3b8;">Skor untuk tim terpilih di atas</span>
+              </div>
+
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
                   <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol:</label>
-                  <select id="goalScorerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
+                  <select id="goalScorerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;" onchange="admin.onGoalScorerChange()">
                     <option value="">Pilih Pencetak Gol</option>
                   </select>
                 </div>
@@ -3199,11 +3209,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261122_v36"></script>
-  <script defer src="/js/supabase-client.js?v=20261122_v36"></script>
-  <script defer src="/js/data.js?v=20261122_v36"></script>
-  <script defer src="/js/admin.js?v=20261122_v36"></script>
-  <script defer src="/js/app.js?v=20261122_v36"></script>
+  <script defer src="/js/security.js?v=20261122_v37"></script>
+  <script defer src="/js/supabase-client.js?v=20261122_v37"></script>
+  <script defer src="/js/data.js?v=20261122_v37"></script>
+  <script defer src="/js/admin.js?v=20261122_v37"></script>
+  <script defer src="/js/app.js?v=20261122_v37"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

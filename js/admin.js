@@ -1323,6 +1323,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const teamSelect = document.getElementById("goalTeamSelect");
     const scorerSelect = document.getElementById("goalScorerSelect");
     const assistSelect = document.getElementById("goalAssistSelect");
+    const ogCheck = document.getElementById("goalIsOwnGoal");
     if (!teamSelect || !scorerSelect || !assistSelect) return;
 
     const matchId = this.activeMatchId || this.activeQuickMatchId;
@@ -1333,19 +1334,105 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (!teamId) {
       scorerSelect.innerHTML = `<option value="">Pilih Pencetak Gol</option>`;
       assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>`;
+      if (ogCheck) ogCheck.checked = false;
+      assistSelect.disabled = false;
       return;
     }
 
     const team = app.store.getTeam(teamId);
-    const players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+    const oppTeamId = teamId === match.homeId ? match.awayId : match.homeId;
+    const oppTeam = app.store.getTeam(oppTeamId);
 
-    scorerSelect.innerHTML = `<option value="">-- Pilih Pencetak Gol (Semua Pemain) --</option>` + players.map(p => `
-      <option value="${p.name}">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>
-    `).join("");
+    const isOg = Boolean(ogCheck && ogCheck.checked);
+    if (isOg) {
+      this.toggleOwnGoalMode(true);
+      return;
+    }
+
+    assistSelect.disabled = false;
+    const players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+    const oppPlayers = (oppTeam?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+
+    scorerSelect.innerHTML = `
+      <option value="">-- Pilih Pencetak Gol (Semua Pemain) --</option>
+      <optgroup label="⚡ OPSI GOL BUNUH DIRI (OWN GOAL)">
+        <option value="Gol Bunuh Diri (GBD)">⚡ Gol Bunuh Diri / Own Goal (Umum)</option>
+        ${oppTeam ? oppPlayers.map(p => `
+          <option value="${p.name} (GBD)">⚡ #${p.no || '-'} ${p.name} (Gol Bunuh Diri ${oppTeam.shortName || oppTeam.name})</option>
+        `).join("") : ''}
+      </optgroup>
+      <optgroup label="⚽ Pemain ${team?.name || 'Tim'}">
+        ${players.map(p => `
+          <option value="${p.name}">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>
+        `).join("")}
+      </optgroup>
+    `;
 
     assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + players.map(p => `
       <option value="${p.name}">#${p.no || '-'} ${p.name}</option>
     `).join("");
+  },
+
+  toggleOwnGoalMode(isOg) {
+    const teamSelect = document.getElementById("goalTeamSelect");
+    const scorerSelect = document.getElementById("goalScorerSelect");
+    const assistSelect = document.getElementById("goalAssistSelect");
+    const ogCheck = document.getElementById("goalIsOwnGoal");
+    if (!teamSelect || !scorerSelect || !assistSelect) return;
+
+    if (ogCheck) ogCheck.checked = Boolean(isOg);
+
+    const matchId = this.activeMatchId || this.activeQuickMatchId;
+    const match = app.store.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const teamId = teamSelect.value;
+    if (!teamId) {
+      this.onGoalTeamChange();
+      return;
+    }
+
+    const oppTeamId = teamId === match.homeId ? match.awayId : match.homeId;
+    const oppTeam = app.store.getTeam(oppTeamId);
+
+    if (isOg) {
+      assistSelect.innerHTML = `<option value="">(Tidak Ada Assist - Gol Bunuh Diri)</option>`;
+      assistSelect.disabled = true;
+
+      const oppPlayers = (oppTeam?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+
+      scorerSelect.innerHTML = `
+        <option value="Gol Bunuh Diri (GBD)">⚡ Gol Bunuh Diri / Own Goal (Umum)</option>
+        ${oppTeam ? `
+          <optgroup label="⚡ Pemain ${oppTeam.name} (Pelaku Bunuh Diri)">
+            ${oppPlayers.map(p => `
+              <option value="${p.name} (GBD)">⚡ #${p.no || '-'} ${p.name} (${oppTeam.shortName || oppTeam.name})</option>
+            `).join("")}
+          </optgroup>
+        ` : ''}
+      `;
+    } else {
+      assistSelect.disabled = false;
+      this.onGoalTeamChange();
+    }
+  },
+
+  onGoalScorerChange() {
+    const scorerSelect = document.getElementById("goalScorerSelect");
+    const assistSelect = document.getElementById("goalAssistSelect");
+    const ogCheck = document.getElementById("goalIsOwnGoal");
+    if (!scorerSelect) return;
+    const val = scorerSelect.value || "";
+    const isOg = val.includes("(GBD)") || val.toLowerCase().includes("bunuh diri") || val.toLowerCase().includes("own goal");
+    if (ogCheck) ogCheck.checked = isOg;
+    if (assistSelect) {
+      if (isOg) {
+        assistSelect.value = "";
+        assistSelect.disabled = true;
+      } else {
+        assistSelect.disabled = false;
+      }
+    }
   },
 
   addGoalWithAssist() {
@@ -1371,7 +1458,14 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       minute = (cleanMin || "1") + "'";
     }
 
-    if (scorer === assist && assist) {
+    const isOwnGoal = Boolean(
+      document.getElementById("goalIsOwnGoal")?.checked ||
+      scorer.includes("(GBD)") ||
+      scorer.toLowerCase().includes("bunuh diri") ||
+      scorer.toLowerCase().includes("own goal")
+    );
+
+    if (!isOwnGoal && scorer === assist && assist) {
       alert("Pencetak gol dan pemberi assist tidak boleh pemain yang sama!");
       return;
     }
@@ -1380,18 +1474,21 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     match.scorers.push({
       team: teamId,
       player: scorer,
-      assist: assist || "",
-      minute: minute
+      assist: isOwnGoal ? "" : (assist || ""),
+      minute: minute,
+      isOwnGoal: isOwnGoal
     });
 
-    // Perbarui statistik pemain
-    const team = app.store.getTeam(teamId);
-    const pScorer = team?.players.find(x => x.name === scorer);
-    if (pScorer) pScorer.goals = (pScorer.goals || 0) + 1;
+    // Perbarui statistik pemain (HANYA jika bukan gol bunuh diri)
+    if (!isOwnGoal) {
+      const team = app.store.getTeam(teamId);
+      const pScorer = team?.players.find(x => x.name === scorer);
+      if (pScorer) pScorer.goals = (pScorer.goals || 0) + 1;
 
-    if (assist) {
-      const pAssist = team?.players.find(x => x.name === assist);
-      if (pAssist) pAssist.assists = (pAssist.assists || 0) + 1;
+      if (assist) {
+        const pAssist = team?.players.find(x => x.name === assist);
+        if (pAssist) pAssist.assists = (pAssist.assists || 0) + 1;
+      }
     }
 
     // Auto increment skor laga
@@ -1408,7 +1505,17 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     this.renderAdminEventsList(match);
-    app.showToast(`⚽ Gol dicatat: ${scorer}${assist ? ` (Assist: ${assist})` : ''} - Menit ${minute}`);
+    const teamObj = app.store.getTeam(teamId);
+    if (isOwnGoal) {
+      app.showToast(`⚡ Gol Bunuh Diri (Own Goal) dicatat! Poin untuk ${teamObj?.shortName || teamObj?.name || 'Tim'} - Menit ${minute}`);
+    } else {
+      app.showToast(`⚽ Gol dicatat: ${scorer}${assist ? ` (Assist: ${assist})` : ''} - Menit ${minute}`);
+    }
+
+    const ogCheck = document.getElementById("goalIsOwnGoal");
+    if (ogCheck) ogCheck.checked = false;
+    const assistSelect = document.getElementById("goalAssistSelect");
+    if (assistSelect) assistSelect.disabled = false;
 
     const goalInput = document.getElementById("goalMinuteInput");
     if (goalInput) {
@@ -1822,12 +1929,17 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     this.ensureMatchLineup(match);
 
-    const scorers = (match.scorers || []).map((s, idx) => `
-      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid #f59e0b;">
-        <span>⚽ <strong>${s.player}</strong> (${this.cleanMinuteDisplay(s.minute)})${s.assist ? ` <em style="color:#94a3b8;">[Assist: ${s.assist}]</em>` : ''} - <span style="color:#fbbf24;">${app.store.getTeam(s.team)?.shortName || s.team}</span></span>
+    const scorers = (match.scorers || []).map((s, idx) => {
+      const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
+      const icon = isOg ? '⚡' : '⚽';
+      const ogBadge = isOg ? ' <span style="background:rgba(239,68,68,0.25); color:#fca5a5; font-weight:800; font-size:0.65rem; padding:1px 5px; border-radius:3px; border:1px solid rgba(239,68,68,0.4);">OWN GOAL</span>' : '';
+      return `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid ${isOg ? '#ef4444' : '#f59e0b'};">
+        <span>${icon} <strong>${s.player}</strong> (${this.cleanMinuteDisplay(s.minute)})${ogBadge}${s.assist ? ` <em style="color:#94a3b8;">[Assist: ${s.assist}]</em>` : ''} - <span style="color:#fbbf24;">${app.store.getTeam(s.team)?.shortName || s.team}</span></span>
         <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeScorer(${idx})" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;">Hapus</button>
       </div>
-    `).join("");
+      `;
+    }).join("");
 
     const cards = (match.cards || []).filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red')).map((c, idx) => `
       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid ${c.type === 'yellow' ? '#fbbf24' : '#ef4444'};">
@@ -1893,9 +2005,12 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const removed = match.scorers[index];
     match.scorers.splice(index, 1);
 
-    const team = app.store.getTeam(removed.team);
-    const p = team?.players.find(x => x.name === removed.player);
-    if (p && p.goals > 0) p.goals -= 1;
+    const isOg = Boolean(removed.isOwnGoal || removed.ownGoal || String(removed.player || '').toLowerCase().includes('bunuh diri') || String(removed.player || '').toLowerCase().includes('(gbd)'));
+    if (!isOg) {
+      const team = app.store.getTeam(removed.team);
+      const p = team?.players.find(x => x.name === removed.player);
+      if (p && p.goals > 0) p.goals -= 1;
+    }
 
     // Recalculate score display from remaining scorers
     const hCount = match.scorers.filter(s => s.team === match.homeId).length;

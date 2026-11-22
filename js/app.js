@@ -427,7 +427,8 @@ class TournamentStore {
         m.scorers.forEach(s => {
           const tId = s.team || "";
           const sName = (s.player || '').toLowerCase().trim();
-          if (sName) {
+          const isOg = Boolean(s.isOwnGoal || s.ownGoal || sName.includes('bunuh diri') || sName.includes('own goal') || sName.includes('(gbd)') || sName.includes('[og]'));
+          if (sName && !isOg) {
             const key = `${tId}:${sName}`;
             let entry = statsMap.get(key);
             if (!entry) { entry = { goals: 0, assists: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
@@ -1149,6 +1150,8 @@ class TournamentStore {
     this.data.matches.forEach(m => {
       if (m.scorers && m.scorers.length > 0) {
         m.scorers.forEach(s => {
+          const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('own goal') || String(s.player || '').toLowerCase().includes('(gbd)') || String(s.player || '').toLowerCase().includes('[og]'));
+          if (isOg) return;
           const key = `${s.team}-${s.player}`;
           if (scorers[key]) {
             scorers[key].goals += 1;
@@ -5071,13 +5074,16 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- GOL & KARTU TIM HOME (BERADA PERSIS DI BAWAH NAMA TIM HOME) -->
             ${(homeScorers.length > 0 || homeCards.length > 0) ? `
               <div class="fixture-team-events">
-                ${homeScorers.map(s => `
-                  <span class="fixture-event-chip scorer">
-                    <span>⚽</span>
+                ${homeScorers.map(s => {
+                  const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
+                  return `
+                  <span class="fixture-event-chip scorer ${isOg ? 'own-goal-chip' : ''}">
+                    <span>${isOg ? '⚡' : '⚽'}</span>
                     <span>${s.player}</span>
                     <span class="chip-min">${s.minute}</span>
                   </span>
-                `).join("")}
+                  `;
+                }).join("")}
                 ${homeCards.map(c => `
                   <span class="fixture-event-chip">
                     <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
@@ -5109,13 +5115,16 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- GOL & KARTU TIM AWAY (BERADA PERSIS DI BAWAH NAMA TIM AWAY) -->
             ${(awayScorers.length > 0 || awayCards.length > 0) ? `
               <div class="fixture-team-events">
-                ${awayScorers.map(s => `
-                  <span class="fixture-event-chip scorer">
-                    <span>⚽</span>
+                ${awayScorers.map(s => {
+                  const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
+                  return `
+                  <span class="fixture-event-chip scorer ${isOg ? 'own-goal-chip' : ''}">
+                    <span>${isOg ? '⚡' : '⚽'}</span>
                     <span>${s.player}</span>
                     <span class="chip-min">${s.minute}</span>
                   </span>
-                `).join("")}
+                  `;
+                }).join("")}
                 ${awayCards.map(c => `
                   <span class="fixture-event-chip">
                     <span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span>
@@ -8311,11 +8320,13 @@ var app = window.app = Object.assign(window.app || {}, {
     const eventsList = [];
     (match.scorers || []).forEach(s => {
       if (!s || !s.player || s.player === 'undefined') return;
+      const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('(gbd)'));
       eventsList.push({
-        type: 'goal',
+        type: isOg ? 'own_goal' : 'goal',
+        isOwnGoal: isOg,
         team: s.team,
         player: s.player,
-        assist: s.assist || '',
+        assist: isOg ? '' : (s.assist || ''),
         minStr: cleanMin(s.minute),
         minNum: parseInt((s.minute || '0').replace(/\D/g, ''), 10) || 0
       });
@@ -8519,6 +8530,9 @@ var app = window.app = Object.assign(window.app || {}, {
       if (e.type === 'goal') {
         iconHtml = '⚽';
         descHtml = `Gol oleh <strong>${e.player}</strong> (${teamName})${e.assist ? ` • <span style="color:#94a3b8;">Assist: <strong>${e.assist}</strong></span>` : ''}`;
+      } else if (e.type === 'own_goal') {
+        iconHtml = '⚡';
+        descHtml = `Gol Bunuh Diri (Own Goal) oleh <strong>${e.player}</strong> • Poin untuk <strong>${teamName}</strong>`;
       } else if (e.type === 'yellow_card') {
         iconHtml = '<span class="card-icon-y"></span>';
         descHtml = `Kartu Kuning: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;

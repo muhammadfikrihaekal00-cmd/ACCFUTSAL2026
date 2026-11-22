@@ -5139,6 +5139,16 @@ body.dark-theme .fixture-team-row:hover {
   font-weight: 700;
 }
 
+.fixture-event-chip.scorer.own-goal-chip {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.fixture-event-chip.scorer.own-goal-chip .chip-min {
+  color: #ef4444;
+}
+
 .fixture-event-chip .chip-min {
   color: var(--primary);
   font-family: var(--font-mono);
