@@ -230,19 +230,24 @@
     }
 
     // Fetch complete tournament dataset from Supabase if online & configured
-    async fetchAllData() {
+    async fetchAllData(options = {}) {
       if (!this.client || !this.isConfigured) {
         if (window.supabase) this.init();
       }
       if (!this.client || !this.isConfigured) return null;
 
       try {
-        // 1. Fetch complete tournament dataset in parallel
+        const includePlayers = Boolean(options && options.includePlayers);
+        const teamCols = includePlayers
+          ? 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at'
+          : 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, updated_at';
+
+        // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob & full player base64)
         const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
-          this.client.from('tournament_config').select('*'),
-          this.client.from('teams').select('id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at'),
+          this.client.from('tournament_config').select('*').neq('id', 'team_logos_registry'),
+          this.client.from('teams').select(teamCols),
           this.client.from('matches').select('*'),
-          this.client.from('moments').select('*').order('sort_order', { ascending: true }),
+          this.client.from('moments').select('id, title, category, media_type, media_url, thumbnail_url, caption, sort_order, created_at, player, team, badge, tag, image').order('sort_order', { ascending: true }).limit(20),
           this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
         ]);
 
@@ -256,14 +261,18 @@
         let teamLogos = {};
         let teamMeta = {};
         let mvpList = [];
+        let momentsRegistryList = null;
+
+        // Coba baca teamLogos dari cache localStorage dulu agar instan & hemat bandwidth
+        try {
+          const cachedLogos = localStorage.getItem('acc_team_logos_cache');
+          if (cachedLogos) {
+            teamLogos = JSON.parse(cachedLogos) || {};
+          }
+        } catch (_) { }
+
         if (configListRes && configListRes.data && Array.isArray(configListRes.data)) {
           mainConfig = configListRes.data.find(c => c.id === 'config_main') || configListRes.data[0] || null;
-          const logosRow = configListRes.data.find(c => c.id === 'team_logos_registry');
-          if (logosRow && logosRow.rules_text) {
-            try {
-              teamLogos = JSON.parse(logosRow.rules_text) || {};
-            } catch (_) { }
-          }
           const metaRow = configListRes.data.find(c => c.id === 'team_meta_registry');
           if (metaRow && metaRow.rules_text) {
             try {
@@ -282,6 +291,20 @@
               momentsRegistryList = JSON.parse(momentsRegistryRow.rules_text) || null;
             } catch (_) { }
           }
+        }
+
+        // Lazy fetch logos registry di background jika belum ada di cache
+        if (Object.keys(teamLogos).length === 0) {
+          setTimeout(async () => {
+            try {
+              if (this.client) {
+                const { data: logosRow } = await this.client.from('tournament_config').select('rules_text').eq('id', 'team_logos_registry').maybeSingle();
+                if (logosRow && logosRow.rules_text) {
+                  localStorage.setItem('acc_team_logos_cache', logosRow.rules_text);
+                }
+              }
+            } catch (_) { }
+          }, 3500);
         }
 
         // Normalisasi daftar momen turnamen

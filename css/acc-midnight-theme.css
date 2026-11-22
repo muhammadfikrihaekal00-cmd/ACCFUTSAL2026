@@ -525,6 +525,7 @@ main.container {
   align-items: center !important;
   gap: 18px !important;
   max-width: 840px !important;
+  contain: layout;
 }
 
 .hero-emblem-wrap {
@@ -533,6 +534,11 @@ main.container {
   align-items: center;
   justify-content: center;
   padding: 16px;
+}
+
+.hero-emblem-badge {
+  aspect-ratio: 142 / 201 !important;
+  content-visibility: auto;
 }
 
 .hero-emblem-wrap::before {
@@ -544,6 +550,7 @@ main.container {
   filter: blur(30px);
   z-index: 0;
   animation: accGoldPulse 5s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 @keyframes accGoldPulse {
@@ -4145,7 +4152,7 @@ body.mobile-menu-active .mobile-menu-content {
   border: none !important;
   outline: none !important;
   position: relative !important;
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background 0.3s ease, border-color 0.3s ease !important;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
   touch-action: manipulation !important;
@@ -4176,7 +4183,7 @@ body.mobile-menu-active .mobile-menu-content {
   line-height: 1 !important;
   margin-bottom: 2px !important;
   color: #f59e0b !important;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .floating-cat-switcher.menu-open .floating-cat-arrow {
@@ -4192,7 +4199,6 @@ body.mobile-menu-active .mobile-menu-content {
   letter-spacing: 0.8px !important;
   color: #fbbf24 !important;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
-  transition: color 0.3s ease !important;
 }
 
 /* Subtitle U-15 / U-12 */
@@ -4229,6 +4235,9 @@ body.mobile-menu-active .mobile-menu-content {
   border: 1.5px solid rgba(245, 158, 11, 0.4) !important;
   animation: floatingPulse 2.8s infinite ease-out !important;
   pointer-events: none !important;
+  will-change: transform, opacity !important;
+  contain: paint !important;
+}
 }
 
 .floating-cat-switcher.is-sd .floating-cat-pulse-ring {
@@ -4627,6 +4636,7 @@ body.mobile-menu-active .mobile-menu-content {
   .hero-emblem-badge {
     width: clamp(120px, 30vw, 142px) !important;
     height: auto !important;
+    aspect-ratio: 142 / 201 !important;
     max-height: 195px !important;
   }
 

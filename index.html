@@ -10,8 +10,13 @@
     content="Portal Resmi Pemantauan Pertandingan, Skor Langsung, Klasemen, Bagan Gugur, dan Disiplin Kartu ACC Al-Fayyadh Champions Cup 2026 - Ma'had Tahfizhul Qur'an Al Fayyadh.">
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
+  <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
+  <link rel="preload" as="style" href="/css/styles.css?v=20261123_v52">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261123_v52">
+  <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
+
   <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="/manifest.json?v=8.58">
+  <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png?v=8.58">
   <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon.png?v=8.58">
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=8.58">
@@ -24,18 +29,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- High-Priority LCP Discovery Preload for Emblem ACC 2026 (WebP) -->
-  <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
-
-  <!-- Google Fonts Preload & Optimized Loading -->
+  <!-- Google Fonts Optimized Loading -->
   <link rel="preload" as="style"
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Outfit:wght@600;700;800;900&display=swap">
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Outfit:wght@600;700;800;900&display=swap"
     media="print" onload="this.media='all'">
   <noscript>
     <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Outfit:wght@600;700;800;900&display=swap">
   </noscript>
 
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -240,6 +242,7 @@
     window.admin = window.admin || {
       isAuthenticated: (function () { try { return sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true"; } catch (e) { return false; } })(),
       openLoginModal: function () {
+        if (window.loadAdminModule) window.loadAdminModule();
         var m = document.getElementById("adminLoginModal");
         if (m) m.classList.add("active");
         var inp = document.getElementById("adminPinInput");
@@ -249,10 +252,12 @@
         }
       },
       openAdminDashboard: function () {
+        if (window.loadAdminModule) window.loadAdminModule();
         var m = document.getElementById("adminDashboardModal");
         if (m) m.classList.add("active");
       },
       openBatchUploadModal: function () {
+        if (window.loadAdminModule) window.loadAdminModule();
         var m = document.getElementById("modalBatchUploadTeams");
         if (m) m.classList.add("active");
         if (window.admin && typeof window.admin.resetBatchUploadUI === 'function') {
@@ -264,6 +269,7 @@
         if (m) m.classList.remove("active");
       },
       openTeamEditorModal: function (teamId) {
+        if (window.loadAdminModule) window.loadAdminModule();
         if (window.admin && typeof window.admin.openTeamEditorModal === 'function' && window.admin.openTeamEditorModal !== this.openTeamEditorModal) {
           window.admin.openTeamEditorModal(teamId);
         } else {
@@ -337,8 +343,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261123_v51">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v51">
+  <link rel="stylesheet" href="/css/styles.css?v=20261123_v52">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v52">
 </head>
 
 <body class="snap-scroll-active">
@@ -3432,11 +3438,40 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v51"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v51"></script>
-  <script defer src="/js/data.js?v=20261123_v51"></script>
-  <script defer src="/js/admin.js?v=20261123_v51"></script>
-  <script defer src="/js/app.js?v=20261123_v51"></script>
+  <script defer src="/js/security.js?v=20261123_v52"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v52"></script>
+  <script defer src="/js/data.js?v=20261123_v52"></script>
+  <script defer src="/js/app.js?v=20261123_v52"></script>
+
+  <!-- Panitia Admin Module: Lazy-loaded on demand / after first paint so spectators & mobile visitors have 100% lightweight performance -->
+  <script>
+    (function () {
+      function loadAdminModule() {
+        if (window._adminModuleLoaded || document.getElementById('adminScript')) return;
+        window._adminModuleLoaded = true;
+        var s = document.createElement('script');
+        s.id = 'adminScript';
+        s.src = '/js/admin.js?v=20261123_v52';
+        s.defer = true;
+        document.body.appendChild(s);
+      }
+      window.loadAdminModule = loadAdminModule;
+      var isPanitia = false;
+      try {
+        isPanitia = (sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true");
+      } catch (e) { }
+
+      if (isPanitia) {
+        loadAdminModule();
+      } else {
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(function () { setTimeout(loadAdminModule, 3500); });
+        } else {
+          setTimeout(loadAdminModule, 4000);
+        }
+      }
+    })();
+  </script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

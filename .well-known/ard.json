@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "specVersion": "1.0",
   "host": {
     "displayName": "Ma'had Tahfizhul Qur'an Al Fayyadh",
@@ -11,7 +10,7 @@
     {
       "identifier": "urn:air:accfutsal2026:tournament:jadwal",
       "displayName": "Jadwal & Skor Pertandingan",
-      "type": "api",
+      "type": "text/html",
       "url": "https://accfutsal2026.vercel.app/jadwal",
       "description": "Informasi jadwal pertandingan, live score, dan hasil skor resmi turnamen ACC 2026.",
       "representativeQueries": [
@@ -23,7 +22,7 @@
     {
       "identifier": "urn:air:accfutsal2026:tournament:klasemen",
       "displayName": "Klasemen Grup Turnamen",
-      "type": "api",
+      "type": "text/html",
       "url": "https://accfutsal2026.vercel.app/klasemen",
       "description": "Klasemen perolehan poin dan peringkat tim pada babak penyisihan grup SD & SMP.",
       "representativeQueries": [
@@ -35,7 +34,7 @@
     {
       "identifier": "urn:air:accfutsal2026:tournament:bagan",
       "displayName": "Bagan Fase Gugur",
-      "type": "api",
+      "type": "text/html",
       "url": "https://accfutsal2026.vercel.app/bagan",
       "description": "Bagan skema babak gugur perempat final, semifinal, perebutan juara 3, dan grand final.",
       "representativeQueries": [
@@ -47,7 +46,7 @@
     {
       "identifier": "urn:air:accfutsal2026:tournament:tim",
       "displayName": "Profil Tim & Pemain",
-      "type": "api",
+      "type": "text/html",
       "url": "https://accfutsal2026.vercel.app/tim",
       "description": "Daftar 32 tim resmi (16 SD & 16 SMP), skuad pemain, nomor punggung, dan ofisial.",
       "representativeQueries": [
@@ -59,7 +58,7 @@
     {
       "identifier": "urn:air:accfutsal2026:tournament:statistik",
       "displayName": "Statistik Top Skor & Disiplin",
-      "type": "api",
+      "type": "text/html",
       "url": "https://accfutsal2026.vercel.app/statistik",
       "description": "Peringkat pencetak gol terbanyak (top goalscorer) serta rekapitulasi kartu kuning dan kartu merah.",
       "representativeQueries": [
@@ -71,7 +70,7 @@
     {
       "identifier": "urn:air:accfutsal2026:tournament:juknis",
       "displayName": "Petunjuk Teknis & Regulasi",
-      "type": "api",
+      "type": "text/html",
       "url": "https://accfutsal2026.vercel.app/juknis",
       "description": "Peraturan resmi pertandingan, format turnamen, dan sanksi teknis turnamen Futsal ACC 2026.",
       "representativeQueries": [

@@ -2302,9 +2302,9 @@ var app = window.app = Object.assign(window.app || {}, {
         syncFromRemote();
       };
       if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(runSync, { timeout: 3000 });
+        window.requestIdleCallback(runSync, { timeout: 3500 });
       } else {
-        setTimeout(runSync, 1200);
+        setTimeout(runSync, 2500);
       }
     };
 
@@ -2458,6 +2458,8 @@ var app = window.app = Object.assign(window.app || {}, {
                 photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || "")
               };
             });
+          } else if (!norm.players && localTeam && Array.isArray(localTeam.players)) {
+            norm.players = localTeam.players;
           }
         }
         return norm;
