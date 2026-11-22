@@ -1781,7 +1781,15 @@ var app = window.app = Object.assign(window.app || {}, {
   formatMatchLiveMinute(m) {
     if (!m) return "0:00";
     if (m.isTimerPaused) {
-      if (m.liveClockDisplay) return m.liveClockDisplay;
+      if (m.liveClockDisplay) {
+        const dStr = String(m.liveClockDisplay).trim();
+        if (dStr.includes(":")) {
+          const parts = dStr.split(":");
+          const pMin = parseInt(parts[0].replace(/\D/g, ""), 10) || 0;
+          const pSec = parseInt(parts[1].replace(/\D/g, ""), 10) || 0;
+          return `${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
+        }
+      }
       if (typeof m.liveElapsedSec === "number") {
         const pMin = Math.min(50, Math.floor(m.liveElapsedSec / 60));
         const pSec = m.liveElapsedSec % 60;
@@ -1792,7 +1800,10 @@ var app = window.app = Object.assign(window.app || {}, {
     }
     const rawStr = String(m.liveMinute || "").trim();
     if (rawStr.includes(":")) {
-      return rawStr.replace(/[^0-9:]/g, "");
+      const parts = rawStr.split(":");
+      const pMin = parseInt(parts[0].replace(/\D/g, ""), 10) || 0;
+      const pSec = parseInt(parts[1].replace(/\D/g, ""), 10) || 0;
+      return `${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
     }
     let elapsedSec = 0;
     if (m.liveStartedAt) {
@@ -1853,7 +1864,6 @@ var app = window.app = Object.assign(window.app || {}, {
     this._liveClockTicker = setInterval(() => {
       const clockEl = document.getElementById("mdLiveClockDigits");
       const wrapperEl = document.getElementById("mdLiveMinuteTop");
-      const labelEl = document.getElementById("mdLiveStatusLabel");
       if (clockEl && this.activeDetailMatchId) {
         const activeM = (this.store?.data?.matches || []).find(m => m.id === this.activeDetailMatchId && m.status === 'live');
         if (activeM) {
@@ -1861,12 +1871,10 @@ var app = window.app = Object.assign(window.app || {}, {
           if (wrapperEl) {
             if (activeM.isTimerPaused) {
               wrapperEl.classList.add("is-paused");
-              wrapperEl.setAttribute("title", "Pertandingan Sedang Dijeda (Pause)");
-              if (labelEl) labelEl.textContent = "JEDA";
+              wrapperEl.setAttribute("title", "Waktu Pertandingan Dijeda (m:dd)");
             } else {
               wrapperEl.classList.remove("is-paused");
-              wrapperEl.setAttribute("title", "Live Minute Laga (m:dd)");
-              if (labelEl) labelEl.textContent = "LIVE";
+              wrapperEl.setAttribute("title", "Live Minute Pertandingan (m:dd)");
             }
           }
         }
@@ -8831,9 +8839,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <!-- CENTER SCORE -->
           <div class="md-score-center">
             ${isLive ? `
-              <div class="md-live-minute-top ${match.isTimerPaused ? 'is-paused' : ''}" id="mdLiveMinuteTop" title="${match.isTimerPaused ? 'Pertandingan Sedang Dijeda (Pause)' : 'Live Minute Laga (m:dd)'}">
-                <span class="pulse-dot"></span>
-                <span class="md-live-status-label" id="mdLiveStatusLabel">${match.isTimerPaused ? 'JEDA' : 'LIVE'}</span>
+              <div class="md-live-minute-top ${match.isTimerPaused ? 'is-paused' : ''}" id="mdLiveMinuteTop" title="${match.isTimerPaused ? 'Waktu Pertandingan Dijeda (m:dd)' : 'Live Minute Pertandingan (m:dd)'}">
                 <span class="md-live-clock-digits" id="mdLiveClockDigits">${this.formatMatchLiveMinute(match)}</span>
               </div>
             ` : ''}
