@@ -6228,43 +6228,236 @@ body.mobile-menu-active .mobile-menu-content {
   margin-bottom: 12px !important;
 }
 
+/* DUAL-SIDED MATCH TIMELINE (KIRI: TIM A, KANAN: TIM B) */
 .md-timeline-card {
-  background: var(--bg-surface-elevated) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 16px !important;
-  padding: 16px !important;
-  margin-bottom: 20px !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 18px 16px !important;
+  margin-bottom: 24px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
 }
 
-.md-timeline-item {
-  display: flex !important;
+.md-timeline-header-teams {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
   align-items: center !important;
-  padding: 8px 10px !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  font-size: 0.84rem !important;
+  padding-bottom: 14px !important;
+  margin-bottom: 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   gap: 10px !important;
 }
 
-.md-timeline-item:last-child {
-  border-bottom: none !important;
-}
-
-.md-timeline-min {
+.md-timeline-team-name {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 0.88rem !important;
   font-weight: 800 !important;
-  color: #f59e0b !important;
-  min-width: 38px !important;
-  font-size: 0.8rem !important;
+  color: #ffffff !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
-.md-timeline-icon {
-  font-size: 1rem !important;
-  min-width: 20px !important;
+.md-timeline-team-name.home {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.md-timeline-team-name.away {
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+
+.md-timeline-team-name .team-dot {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  flex-shrink: 0 !important;
+}
+
+.md-timeline-center-label {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.5px !important;
   text-align: center !important;
+  padding: 3px 10px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 9999px !important;
+  white-space: nowrap !important;
 }
 
-.md-timeline-desc {
-  flex: 1 !important;
-  color: var(--text-main) !important;
+/* Timeline Rows */
+.md-timeline-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  position: relative !important;
+}
+
+/* Center vertical timeline stem line */
+.md-timeline-list::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 6px !important;
+  bottom: 6px !important;
+  left: 50% !important;
+  width: 2px !important;
+  transform: translateX(-50%) !important;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.5) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(56, 189, 248, 0.5) 100%) !important;
+  z-index: 1 !important;
+}
+
+.md-timeline-row {
+  display: grid !important;
+  grid-template-columns: 1fr 54px 1fr !important;
+  align-items: center !important;
+  position: relative !important;
+  z-index: 2 !important;
+  gap: 8px !important;
+}
+
+.md-timeline-side {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.md-timeline-side.home {
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+
+.md-timeline-side.away {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.md-timeline-center {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+.md-timeline-min-badge {
+  background: #0f172a !important;
+  border: 1.5px solid #f59e0b !important;
+  color: #fbbf24 !important;
+  font-size: 0.74rem !important;
+  font-weight: 900 !important;
+  padding: 2px 7px !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4) !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+/* Event Bubbles */
+.md-event-bubble {
+  background: rgba(30, 41, 59, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  display: inline-flex !important;
+  flex-direction: column !important;
+  max-width: 100% !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+  transition: transform 0.2s ease, border-color 0.2s ease !important;
+}
+
+.md-event-bubble:hover {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+.md-event-bubble.home {
+  align-items: flex-end !important;
+  border-right: 3px solid #10b981 !important;
+}
+
+.md-event-bubble.away {
+  align-items: flex-start !important;
+  border-left: 3px solid #3b82f6 !important;
+}
+
+.md-event-main {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-size: 0.86rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+}
+
+.md-event-bubble.home .md-event-main {
+  flex-direction: row !important;
+}
+
+.md-event-bubble.away .md-event-main {
+  flex-direction: row !important;
+}
+
+.md-event-player {
+  line-height: 1.2 !important;
+  word-break: break-word !important;
+}
+
+.md-event-icon {
+  font-size: 1.05rem !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.md-event-sub {
+  font-size: 0.72rem !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+  line-height: 1.2 !important;
+}
+
+.md-event-sub.og-tag {
+  color: #f87171 !important;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 480px) {
+  .md-timeline-card {
+    padding: 14px 10px !important;
+  }
+
+  .md-timeline-row {
+    grid-template-columns: 1fr 42px 1fr !important;
+    gap: 4px !important;
+  }
+
+  .md-timeline-min-badge {
+    font-size: 0.68rem !important;
+    padding: 2px 5px !important;
+  }
+
+  .md-event-bubble {
+    padding: 6px 8px !important;
+  }
+
+  .md-event-main {
+    font-size: 0.76rem !important;
+    gap: 4px !important;
+  }
+
+  .md-event-sub {
+    font-size: 0.66rem !important;
+  }
+
+  .md-timeline-team-name {
+    font-size: 0.76rem !important;
+  }
 }
 
 /* LINEUP DUAL COLUMN */

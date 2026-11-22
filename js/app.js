@@ -8978,42 +8978,86 @@ var app = window.app = Object.assign(window.app || {}, {
         </div>
       </div>
 
-      <!-- KRONOLOGI KEJADIAN LAGA (TIMELINE) -->
+      <!-- KRONOLOGI KEJADIAN LAGA (TIMELINE DUA SISI: KIRI TIM A, KANAN TIM B) -->
       <div class="md-section-title">
-        <span>⏱️</span> Live Match
+        <span>⏱️</span> Kronologi Kejadian Laga
       </div>
       <div class="md-timeline-card">
+        <!-- Header Nama Tim di Kiri & Kanan -->
+        <div class="md-timeline-header-teams">
+          <div class="md-timeline-team-name home">
+            <span class="team-dot" style="background: ${home.badgeColor || '#10b981'};"></span>
+            <span title="${home.name}">${home.name}</span>
+          </div>
+          <div class="md-timeline-center-label">⏱️ Waktu</div>
+          <div class="md-timeline-team-name away">
+            <span title="${away.name}">${away.name}</span>
+            <span class="team-dot" style="background: ${away.badgeColor || '#3b82f6'};"></span>
+          </div>
+        </div>
+
         ${eventsList.length === 0 ? `
-          <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 12px;">
+          <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px 12px;">
             Belum ada gol atau kartu pelanggaran yang dicatat pada pertandingan ini.
           </div>
-        ` : eventsList.map(e => {
-      let iconHtml = '⚽';
-      let descHtml = '';
-      const teamName = app.store.getTeam(e.team)?.shortName || e.team;
+        ` : `
+          <div class="md-timeline-list">
+            ${eventsList.map(e => {
+              const isHome = (e.team === match.homeId || (home.id && e.team === home.id) || e.team === home.name || e.team === home.shortName);
+              let iconHtml = '⚽';
+              let subText = '';
 
-      if (e.type === 'goal') {
-        iconHtml = '⚽';
-        descHtml = `Gol oleh <strong>${e.player}</strong> (${teamName})${e.assist ? ` • <span style="color:#94a3b8;">Assist: <strong>${e.assist}</strong></span>` : ''}`;
-      } else if (e.type === 'own_goal') {
-        iconHtml = '⚡';
-        descHtml = `Gol Bunuh Diri (Own Goal) oleh <strong>${e.player}</strong> • Poin untuk <strong>${teamName}</strong>`;
-      } else if (e.type === 'yellow_card') {
-        iconHtml = '<span class="card-icon-y"></span>';
-        descHtml = `Kartu Kuning: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;
-      } else if (e.type === 'red_card') {
-        iconHtml = '<span class="card-icon-r"></span>';
-        descHtml = `Kartu Merah: <strong>${e.player}</strong> (${e.role || 'Pemain'}) - ${teamName}`;
-      }
+              if (e.type === 'goal') {
+                iconHtml = '⚽';
+                if (e.assist) subText = `<span class="md-event-sub">Assist: <strong>${e.assist}</strong></span>`;
+              } else if (e.type === 'own_goal') {
+                iconHtml = '⚡';
+                subText = `<span class="md-event-sub og-tag">Gol Bunuh Diri (OG)</span>`;
+              } else if (e.type === 'yellow_card') {
+                iconHtml = '<span class="card-icon-y" title="Kartu Kuning"></span>';
+                if (e.role && e.role !== 'Pemain') subText = `<span class="md-event-sub">(${e.role})</span>`;
+              } else if (e.type === 'red_card') {
+                iconHtml = '<span class="card-icon-r" title="Kartu Merah"></span>';
+                if (e.role && e.role !== 'Pemain') subText = `<span class="md-event-sub">(${e.role})</span>`;
+              }
 
-      return `
-            <div class="md-timeline-item">
-              <span class="md-timeline-min">${e.minStr}</span>
-              <span class="md-timeline-icon">${iconHtml}</span>
-              <span class="md-timeline-desc">${descHtml}</span>
-            </div>
-          `;
-    }).join("")}
+              return `
+                <div class="md-timeline-row ${isHome ? 'home-event' : 'away-event'}">
+                  <!-- Sisi Kiri (Tim A / Home) -->
+                  <div class="md-timeline-side home">
+                    ${isHome ? `
+                      <div class="md-event-bubble home">
+                        <div class="md-event-main">
+                          <span class="md-event-player">${e.player}</span>
+                          <span class="md-event-icon">${iconHtml}</span>
+                        </div>
+                        ${subText}
+                      </div>
+                    ` : ''}
+                  </div>
+
+                  <!-- Center: Menit Kejadian -->
+                  <div class="md-timeline-center">
+                    <span class="md-timeline-min-badge">${e.minStr || "•"}</span>
+                  </div>
+
+                  <!-- Sisi Kanan (Tim B / Away) -->
+                  <div class="md-timeline-side away">
+                    ${!isHome ? `
+                      <div class="md-event-bubble away">
+                        <div class="md-event-main">
+                          <span class="md-event-icon">${iconHtml}</span>
+                          <span class="md-event-player">${e.player}</span>
+                        </div>
+                        ${subText}
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        `}
       </div>
       
       <!-- AKUMULASI PELANGGARAN TIM (FOULS BANNER) -->
