@@ -688,6 +688,22 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     if (match) {
       match.status = status;
+      const hDisplay = document.getElementById("homeScoreDisplay");
+      const aDisplay = document.getElementById("awayScoreDisplay");
+      if (hDisplay && aDisplay) {
+        let hScore = parseInt(hDisplay.textContent, 10) || 0;
+        let aScore = parseInt(aDisplay.textContent, 10) || 0;
+        if (match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0) {
+          const hCount = match.scorers.filter(s => s.team === match.homeId).length;
+          const aCount = match.scorers.filter(s => s.team === match.awayId).length;
+          hScore = Math.max(hScore, hCount);
+          aScore = Math.max(aScore, aCount);
+        }
+        match.homeScore = hScore;
+        match.awayScore = aScore;
+        match.homeScoreLive = hScore;
+        match.awayScoreLive = aScore;
+      }
     }
 
     if (status === "live") {
@@ -750,7 +766,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     });
   },
 
-  finishMatchDirectly() {
+  async finishMatchDirectly() {
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
     if (!match) return;
 
@@ -781,8 +797,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     if (confirm(`Akhiri & Selesaikan Pertandingan Ini?\n\nSkor Akhir: ${hName} ${hScore} - ${aScore} ${aName}\n\nStatus akan langsung disimpan sebagai SELESAI (Finished) dan klasemen akan langsung terupdate.`)) {
-      this.setStatus("finished");
-      this.saveQuickScore("finished");
+      await this.saveQuickScore("finished");
     }
   },
 
@@ -1085,11 +1100,21 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   // Increment / Decrement score helpers
   adjustScore(side, delta) {
     const el = document.getElementById(`${side}ScoreDisplay`);
+    if (!el) return;
     let current = parseInt(el.textContent, 10) || 0;
     current = Math.max(0, current + delta);
     el.textContent = current;
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
-    if (match) this.checkPenaltySectionVisibility(match);
+    if (match) {
+      if (side === "home") {
+        match.homeScore = current;
+        match.homeScoreLive = current;
+      } else {
+        match.awayScore = current;
+        match.awayScoreLive = current;
+      }
+      this.checkPenaltySectionVisibility(match);
+    }
   },
 
   // ==========================================
@@ -1904,7 +1929,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     app.showToast(`Kartu ${removed.type === 'yellow' ? 'Kuning' : 'Merah'} ${removed.player} dihapus`);
   },
 
-  saveQuickScore(overrideStatus = null) {
+  async saveQuickScore(overrideStatus = null) {
     if (!this.isAuthenticated) {
       app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
       return;
@@ -1972,12 +1997,19 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       match.awayScoreLive = aScore;
     } else if (status === "finished") {
       delete match.liveStartedAt;
+      match.isTimerPaused = false;
+      delete match.liveElapsedSec;
+      delete match.liveClockDisplay;
+      match.liveMinute = "";
       match.homeScore = hScore;
       match.awayScore = aScore;
       match.homeScoreLive = hScore;
       match.awayScoreLive = aScore;
     } else {
       delete match.liveStartedAt;
+      match.isTimerPaused = false;
+      delete match.liveElapsedSec;
+      delete match.liveClockDisplay;
       match.homeScore = null;
       match.awayScore = null;
       match.homeScoreLive = null;
@@ -1992,15 +2024,15 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     // Silently synchronize to Supabase
     if (window.SupabaseService) {
-      window.SupabaseService.syncMatch(match, this.adminPinHash);
+      await window.SupabaseService.syncMatch(match, this.adminPinHash);
       if (isKnockout || match.stage === "group") {
         const downstreamIds = ['SF1_SMP', 'SF2_SMP', 'FINAL_SMP', '3RD_SMP', 'SF1_SD', 'SF2_SD', 'FINAL_SD', '3RD_SD', 'QF1_SMP', 'QF2_SMP', 'QF3_SMP', 'QF4_SMP', 'QF1_SD', 'QF2_SD', 'QF3_SD', 'QF4_SD'];
-        downstreamIds.forEach(id => {
+        for (const id of downstreamIds) {
           const dm = app.store.data.matches.find(m => m.id === id);
           if (dm && (dm.homeId || dm.awayId)) {
-            window.SupabaseService.syncMatch(dm, this.adminPinHash);
+            await window.SupabaseService.syncMatch(dm, this.adminPinHash);
           }
-        });
+        }
       }
     }
 

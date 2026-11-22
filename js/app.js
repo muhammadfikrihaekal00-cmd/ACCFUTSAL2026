@@ -1756,14 +1756,6 @@ var app = window.app = Object.assign(window.app || {}, {
             }
           }
         }
-
-        // Sinkronkan menit terbaru ke Supabase Cloud (Hanya oleh panitia resmi agar tidak bentrok)
-        if (isOfficial && window.SupabaseService && window.SupabaseService.syncMatch) {
-          const pin = (window.admin && window.admin.adminPinHash) || "";
-          liveMatches.forEach(m => {
-            window.SupabaseService.syncMatch(m, pin);
-          });
-        }
       }
     }, 1000);
   },
@@ -2230,13 +2222,13 @@ var app = window.app = Object.assign(window.app || {}, {
       window.addEventListener("load", startInitialSync, { once: true });
     }
 
-    // Auto-refresh ringan saat pengguna kembali ke aplikasi (dibatasi min 20 detik agar tidak spam jaringan)
+    // Auto-refresh cepat saat pengguna kembali ke aplikasi / unlock HP
     // PROTEKSI: Jangan pernah sync/re-render saat pengguna sedang aktif mengisi form atau memilih file/folder!
     let lastFocusSyncTs = Date.now();
     const safeFocusSync = () => {
       if (this.isUserEditing()) return;
       const now = Date.now();
-      if (now - lastFocusSyncTs < 20000) return;
+      if (now - lastFocusSyncTs < 3000) return;
       lastFocusSyncTs = now;
       syncFromRemote();
     };
@@ -2248,7 +2240,7 @@ var app = window.app = Object.assign(window.app || {}, {
     });
 
     // Realtime Background Safety Polling (WebSocket menangani update instan ~50ms, polling hanya cadangan ringan):
-    // Jika ada match LIVE: 12 detik. Normal: 30 detik. Tidak membebani CPU/jaringan!
+    // Jika ada match LIVE: 6 detik. Normal: 15 detik. Tidak membebani CPU/jaringan!
     let lastPollTimestamp = Date.now();
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
@@ -2256,14 +2248,14 @@ var app = window.app = Object.assign(window.app || {}, {
 
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
       const hasLiveMatch = matches.some(m => m.status === "live");
-      const requiredIntervalMs = hasLiveMatch ? 12000 : 30000;
+      const requiredIntervalMs = hasLiveMatch ? 6000 : 15000;
 
       const now = Date.now();
       if ((now - lastPollTimestamp) >= requiredIntervalMs) {
         lastPollTimestamp = now;
         syncFromRemote();
       }
-    }, 5000);
+    }, 3000);
   },
 
   isUserEditing() {
