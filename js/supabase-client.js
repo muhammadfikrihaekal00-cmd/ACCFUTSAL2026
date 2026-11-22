@@ -276,6 +276,32 @@
               mvpList = JSON.parse(mvpRow.rules_text) || [];
             } catch (_) { }
           }
+          const momentsRegistryRow = configListRes.data.find(c => c.id === 'moments_registry');
+          if (momentsRegistryRow && momentsRegistryRow.rules_text) {
+            try {
+              momentsRegistryList = JSON.parse(momentsRegistryRow.rules_text) || null;
+            } catch (_) { }
+          }
+        }
+
+        // Normalisasi daftar momen turnamen
+        let finalMoments = null;
+        if (Array.isArray(momentsRegistryList) && momentsRegistryList.length > 0) {
+          finalMoments = momentsRegistryList;
+        } else if (momentsRes && Array.isArray(momentsRes.data)) {
+          finalMoments = momentsRes.data.map(m => ({
+            id: m.id,
+            title: m.title || '',
+            player: m.player || '',
+            team: m.team || '',
+            category: m.category || 'SMP',
+            badge: m.badge || '🔥 HIGHLIGHT',
+            tag: m.tag || 'NEW',
+            image: m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg',
+            mediaUrl: m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg',
+            caption: m.caption || '',
+            sortOrder: m.sort_order || 0
+          }));
         }
 
         // Lampirkan metadata (category, instansi, logo) ke setiap baris tim
@@ -296,7 +322,7 @@
           mvps: mvpList,
           teams: teamsList,
           matches: matchesRes.data || null,
-          moments: momentsRes.data || null,
+          moments: finalMoments,
           sponsors: sponsorsRes.data || null
         };
       } catch (err) {
@@ -878,22 +904,58 @@
 
     // Push Moment Data
     async syncMoment(moment) {
-      if (!this.client || !this.isConfigured) return false;
+      if (!this.client || !this.isConfigured || !moment || !moment.id) return false;
       try {
-        const { error } = await this.client.from('moments').upsert({
+        const imgUrl = moment.image || moment.media_url || moment.mediaUrl || '';
+        const payload = {
           id: moment.id,
-          title: moment.title,
-          player: moment.player,
-          team: moment.team,
-          category: moment.category,
-          badge: moment.badge,
-          media_url: moment.mediaUrl,
-          caption: moment.caption,
-          sort_order: moment.sortOrder || 0,
-          created_at: new Date().toISOString()
-        });
+          title: moment.title || '',
+          player: moment.player || '',
+          team: moment.team || '',
+          category: moment.category || 'SMP',
+          badge: moment.badge || '🔥 HIGHLIGHT',
+          media_url: imgUrl,
+          caption: moment.caption || '',
+          sort_order: moment.sortOrder || moment.sort_order || 0,
+          created_at: moment.created_at || new Date().toISOString()
+        };
+        const { error } = await this.client.from('moments').upsert(payload);
+        if (error) console.warn('[Supabase] syncMoment table notice:', error);
         return !error;
       } catch (e) {
+        console.warn('[Supabase] syncMoment exception:', e);
+        return false;
+      }
+    }
+
+    // Delete Moment from Supabase Cloud
+    async deleteMoment(momentId) {
+      if (!this.client || !this.isConfigured || !momentId) return false;
+      try {
+        const { error } = await this.client.from('moments').delete().eq('id', momentId);
+        if (error) console.warn('[Supabase] deleteMoment table notice:', error);
+        return !error;
+      } catch (e) {
+        console.warn('[Supabase] deleteMoment exception:', e);
+        return false;
+      }
+    }
+
+    // Push Moments Registry Backup to tournament_config (Guarantees multi-device persistence)
+    async syncMomentsList(momentsList) {
+      if (!this.client || !this.isConfigured) return false;
+      try {
+        const cleanList = Array.isArray(momentsList) ? momentsList : [];
+        const payload = {
+          id: 'moments_registry',
+          rules_text: JSON.stringify(cleanList),
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await this.client.from('tournament_config').upsert(payload);
+        if (error) console.warn('[Supabase] syncMomentsList error:', error);
+        return !error;
+      } catch (err) {
+        console.warn('[Supabase] syncMomentsList exception:', err);
         return false;
       }
     }

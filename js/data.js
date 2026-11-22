@@ -1,4 +1,4 @@
-﻿// data.js - Schema Kosong Turnamen ACC 2026 (ZERO data tetap/hardcoded!)
+// data.js - Schema Kosong Turnamen ACC 2026 (ZERO data tetap/hardcoded!)
 // Seluruh data Tim, Skuad Pemain, Jadwal Pertandingan, Klasemen, Momen, Berita, & Sponsor
 // bersumber 100% dari Database Online (Supabase) agar tidak pernah bertabrakan dengan hasil input panitia.
 

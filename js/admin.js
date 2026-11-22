@@ -4642,13 +4642,26 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       this.openLoginModal();
       return;
     }
+    const momentPreviewModal = document.getElementById("momentModal");
+    if (momentPreviewModal) momentPreviewModal.classList.remove("active");
+
     this.resetMomentForm();
     this.renderMomentsList();
-    document.getElementById("momentEditorModal").classList.add("active");
+    const modal = document.getElementById("momentEditorModal");
+    if (modal) {
+      modal.classList.add("active");
+      const box = modal.querySelector(".modal-body") || modal;
+      if (box.scrollTo) box.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  },
+
+  closeMomentEditorModal() {
+    const modal = document.getElementById("momentEditorModal");
+    if (modal) modal.classList.remove("active");
   },
 
   handleMomentImageUpload(event) {
-    const file = event.target.files[0];
+    const file = event.target.files && event.target.files[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -4658,15 +4671,32 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const dataUrl = e.target.result;
-      document.getElementById("editMomentImage").value = dataUrl;
-      const previewImg = document.getElementById("momentPhotoPreviewImg");
-      const previewRow = document.getElementById("momentPhotoPreviewRow");
-      if (previewImg && previewRow) {
-        previewImg.src = dataUrl;
-        previewRow.style.display = "flex";
-      }
-      app.showToast("Foto momen siap disimpan!");
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxW = 800;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxW) {
+          h = Math.round((h * maxW) / w);
+          w = maxW;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+        document.getElementById("editMomentImage").value = dataUrl;
+        const previewImg = document.getElementById("momentPhotoPreviewImg");
+        const previewRow = document.getElementById("momentPhotoPreviewRow");
+        if (previewImg && previewRow) {
+          previewImg.src = dataUrl;
+          previewRow.style.display = "flex";
+        }
+        app.showToast("Foto momen siap disimpan!");
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   },
@@ -4699,24 +4729,24 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     document.getElementById("btnCancelEditMoment").style.display = "none";
   },
 
-  saveMoment(e) {
-    e.preventDefault();
+  async saveMoment(e) {
+    if (e && e.preventDefault) e.preventDefault();
     if (!this.isAuthenticated) {
       this.openLoginModal();
       return;
     }
 
-    const id = document.getElementById("editMomentId").value.trim();
-    const title = document.getElementById("momentTitleInput").value.trim();
-    const player = document.getElementById("momentPlayerInput").value.trim();
-    const team = document.getElementById("momentTeamInput").value.trim();
-    const badge = document.getElementById("momentBadgeSelect").value;
-    const tag = document.getElementById("momentTagSelect").value;
-    const caption = document.getElementById("momentCaptionInput").value.trim();
-    const image = document.getElementById("editMomentImage").value || "assets/moment_celebration.jpg";
+    const id = (document.getElementById("editMomentId")?.value || "").trim();
+    const title = (document.getElementById("momentTitleInput")?.value || "").trim();
+    const player = (document.getElementById("momentPlayerInput")?.value || "").trim();
+    const team = (document.getElementById("momentTeamInput")?.value || "").trim();
+    const badge = document.getElementById("momentBadgeSelect")?.value || "🔥 MATCHDAY HIGHLIGHT";
+    const tag = document.getElementById("momentTagSelect")?.value || "NEW";
+    const caption = (document.getElementById("momentCaptionInput")?.value || "").trim();
+    const image = document.getElementById("editMomentImage")?.value || "assets/moment_celebration.jpg";
 
     if (!title || !player || !team || !caption) {
-      app.showToast("Harap isi semua kolom wajib!");
+      alert("⚠️ Harap isi semua kolom wajib (Judul, Pemain, Tim, dan Deskripsi)!");
       return;
     }
 
@@ -4724,47 +4754,53 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       app.store.data.moments = [];
     }
 
+    const momentObj = {
+      id: id || `M${Date.now().toString().slice(-4)}`,
+      title,
+      player,
+      team,
+      category: "SMP",
+      badge,
+      tag,
+      caption,
+      image: image || "assets/hero_banner.jpg",
+      mediaUrl: image || "assets/hero_banner.jpg",
+      media_url: image || "assets/hero_banner.jpg",
+      sort_order: 0,
+      created_at: new Date().toISOString()
+    };
+
     if (id) {
       // Edit
-      const idx = app.store.data.moments.findIndex(m => m.id === id);
+      const idx = app.store.data.moments.findIndex(m => String(m.id) === String(id));
       if (idx !== -1) {
         app.store.data.moments[idx] = {
           ...app.store.data.moments[idx],
-          title,
-          player,
-          team,
-          badge,
-          tag,
-          caption,
-          image: image || app.store.data.moments[idx].image
+          ...momentObj
         };
+      } else {
+        app.store.data.moments.unshift(momentObj);
       }
     } else {
       // Create new
-      const newId = `M${Date.now().toString().slice(-4)}`;
-      app.store.data.moments.unshift({
-        id: newId,
-        title,
-        player,
-        team,
-        badge,
-        tag,
-        caption,
-        image
-      });
+      app.store.data.moments.unshift(momentObj);
     }
 
+    if (!app.store.data.homeData) app.store.data.homeData = {};
+    app.store.data.homeData.moments = app.store.data.moments;
+
     app.store.saveData();
+
+    // Push ke Supabase Cloud (Single row + Full list registry)
     if (window.SupabaseService) {
-      const savedMoment = id
-        ? app.store.data.moments.find(m => m.id === id)
-        : app.store.data.moments[0];
-      if (savedMoment) window.SupabaseService.syncMoment(savedMoment);
+      await window.SupabaseService.syncMoment(momentObj);
+      await window.SupabaseService.syncMomentsList(app.store.data.moments);
     }
+
     app.renderMoments();
     this.renderMomentsList();
     this.resetMomentForm();
-    app.showToast(`Momen "${title}" berhasil disimpan!`);
+    app.showToast(`✅ Momen "${title}" berhasil disimpan ke Beranda & Cloud!`);
   },
 
   editMoment(id) {
@@ -4774,24 +4810,30 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     const moments = app.store.data.moments || [];
-    const item = moments.find(m => m.id === id);
+    const item = moments.find(m => String(m.id) === String(id));
     if (!item) return;
+
+    // Tutup viewer modal jika sedang terbuka di Beranda
+    const momentModal = document.getElementById("momentModal");
+    if (momentModal) momentModal.classList.remove("active");
 
     this.openMomentEditorModal();
 
     document.getElementById("editMomentId").value = item.id;
-    document.getElementById("momentTitleInput").value = item.title;
-    document.getElementById("momentPlayerInput").value = item.player;
-    document.getElementById("momentTeamInput").value = item.team;
+    document.getElementById("momentTitleInput").value = item.title || "";
+    document.getElementById("momentPlayerInput").value = item.player || "";
+    document.getElementById("momentTeamInput").value = item.team || "";
     document.getElementById("momentBadgeSelect").value = item.badge || "🔥 MATCHDAY HIGHLIGHT";
     document.getElementById("momentTagSelect").value = item.tag || "NEW";
     document.getElementById("momentCaptionInput").value = item.caption || "";
-    document.getElementById("editMomentImage").value = item.image || "";
+
+    const photoUrl = item.image || item.media_url || item.mediaUrl || "";
+    document.getElementById("editMomentImage").value = photoUrl;
 
     const previewRow = document.getElementById("momentPhotoPreviewRow");
     const previewImg = document.getElementById("momentPhotoPreviewImg");
-    if (item.image) {
-      previewImg.src = item.image;
+    if (photoUrl) {
+      previewImg.src = photoUrl;
       previewRow.style.display = "flex";
     } else {
       previewRow.style.display = "none";
@@ -4799,22 +4841,46 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     document.getElementById("momentFormTitle").textContent = `✏️ Edit Momen: ${item.title}`;
     document.getElementById("btnCancelEditMoment").style.display = "inline-flex";
+
+    // Scroll form ke atas
+    const modalBox = document.querySelector("#momentEditorModal .modal-body");
+    if (modalBox) modalBox.scrollTo({ top: 0, behavior: "smooth" });
   },
 
-  deleteMoment(id) {
+  async deleteMoment(id) {
     if (!this.isAuthenticated) {
       this.openLoginModal();
       return;
     }
 
-    if (confirm("Hapus sorotan momen pertandingan ini?")) {
-      if (app.store.data.moments) {
-        app.store.data.moments = app.store.data.moments.filter(m => m.id !== id);
-        app.store.saveData();
-        app.renderMoments();
-        this.renderMomentsList();
-        app.showToast("Momen berhasil dihapus.");
+    const moments = app.store.data.moments || [];
+    const item = moments.find(m => String(m.id) === String(id));
+    const title = item ? item.title : id;
+
+    if (!confirm(`⚠️ Hapus sorotan momen "${title}" secara permanen dari Beranda & Cloud turnamen?`)) {
+      return;
+    }
+
+    // Tutup viewer modal jika sedang terbuka di Beranda
+    const momentModal = document.getElementById("momentModal");
+    if (momentModal) momentModal.classList.remove("active");
+
+    if (app.store.data.moments) {
+      app.store.data.moments = app.store.data.moments.filter(m => String(m.id) !== String(id));
+      if (app.store.data.homeData) {
+        app.store.data.homeData.moments = app.store.data.moments;
       }
+      app.store.saveData();
+
+      // Hapus dari Supabase Cloud & sync registry
+      if (window.SupabaseService) {
+        await window.SupabaseService.deleteMoment(id);
+        await window.SupabaseService.syncMomentsList(app.store.data.moments);
+      }
+
+      app.renderMoments();
+      this.renderMomentsList();
+      app.showToast(`🗑️ Momen "${title}" berhasil dihapus dari Beranda & Cloud!`);
     }
   },
 

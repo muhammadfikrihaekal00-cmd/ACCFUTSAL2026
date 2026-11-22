@@ -3146,6 +3146,23 @@ var app = window.app = Object.assign(window.app || {}, {
         } catch (_) { }
         return;
       }
+      if (payload.id === 'moments_registry' && payload.rules_text) {
+        try {
+          const list = JSON.parse(payload.rules_text);
+          if (Array.isArray(list)) {
+            this.store.data.moments = list;
+            if (this.store.data.homeData) this.store.data.homeData.moments = list;
+            this.store.saveData();
+            if (this.currentTab === "home") {
+              this.renderMoments();
+            }
+            if (window.admin && typeof window.admin.renderMomentsList === 'function') {
+              window.admin.renderMomentsList();
+            }
+          }
+        } catch (_) { }
+        return;
+      }
       if (!this.store.data.config) this.store.data.config = {};
       if (payload.youtube_live_url !== undefined) {
         this.store.data.config.youtubeLiveUrl = payload.youtube_live_url;
@@ -3317,6 +3334,8 @@ var app = window.app = Object.assign(window.app || {}, {
 
     const btnAddMoment = document.getElementById("btnAddMomentBtn");
     if (btnAddMoment) btnAddMoment.style.display = isPanitia ? "inline-flex" : "none";
+    const btnManageMoments = document.getElementById("btnManageMomentsBtn");
+    if (btnManageMoments) btnManageMoments.style.display = isPanitia ? "inline-flex" : "none";
 
     // Fitur Draw Grup dapat diakses oleh SEMUA USER & Panitia
     document.querySelectorAll('.tab-btn[data-tab="draw"]').forEach(btn => {
@@ -3333,6 +3352,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     if (this.currentTab === "home") {
       this.renderMvpSection();
+      this.renderMoments();
     }
     if (this.currentTab === "draw" && typeof this.renderDrawView === "function") {
       this.renderDrawView();
@@ -4887,10 +4907,21 @@ var app = window.app = Object.assign(window.app || {}, {
       return;
     }
 
+    const isAdmin = this.isAdmin();
     container.innerHTML = moments.map(m => `
-      <div class="moment-card" style="background-image: url('${m.image || 'assets/hero_banner.jpg'}');" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat momen">
+      <div class="moment-card" style="background-image: url('${m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg'}');" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat momen">
         <div class="moment-badge-new">${m.tag || 'NEW'}</div>
         <div class="moment-badge-tag">${m.badge || '🔥 HIGHLIGHT'}</div>
+        ${isAdmin ? `
+          <div class="moment-admin-quick-actions" style="position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 10;">
+            <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); admin.editMoment('${m.id}')" style="background: rgba(15, 23, 42, 0.9); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.6); padding: 3px 8px; font-size: 0.72rem; border-radius: 6px; backdrop-filter: blur(4px); font-weight: 700;" title="Edit Momen Ini">
+              ✏️ Edit
+            </button>
+            <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); admin.deleteMoment('${m.id}')" style="background: rgba(15, 23, 42, 0.9); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.6); padding: 3px 8px; font-size: 0.72rem; border-radius: 6px; backdrop-filter: blur(4px); font-weight: 700;" title="Hapus Momen Ini">
+              🗑️
+            </button>
+          </div>
+        ` : ''}
         <div class="moment-gradient-overlay">
           <div class="moment-player-row">
             <span>⚽</span> <span>${m.player || ''}</span>
@@ -4925,13 +4956,16 @@ var app = window.app = Object.assign(window.app || {}, {
     const team = document.getElementById("momentModalTeam");
     const caption = document.getElementById("momentModalCaption");
 
-    if (imgEl) imgEl.src = moment.image || 'assets/moment_celebration.jpg';
+    if (imgEl) imgEl.src = moment.image || moment.media_url || moment.mediaUrl || 'assets/moment_celebration.jpg';
     if (badgeNew) badgeNew.textContent = moment.tag || 'NEW';
     if (badgeTag) badgeTag.textContent = moment.badge || '🔥 HIGHLIGHT';
     if (headline) headline.textContent = moment.title;
     if (player) player.textContent = moment.player;
     if (team) team.textContent = moment.team;
     if (caption) caption.textContent = moment.caption || "Sorotan aksi spektakuler turnamen futsal ACC 2026.";
+
+    const adminActions = document.getElementById("momentModalAdminActions");
+    if (adminActions) adminActions.style.display = this.isAdmin() ? "inline-flex" : "none";
 
     if (modal) modal.classList.add("active");
   },

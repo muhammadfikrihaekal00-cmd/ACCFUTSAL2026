@@ -552,8 +552,12 @@
           </div>
           <div class="moments-controls-wrap">
             <button id="btnAddMomentBtn" class="btn btn-primary btn-sm btn-panitia-moment"
-              onclick="admin.openMomentEditorModal()" style="display: none;">
-              ➕ Tambah Momen (Panitia)
+              onclick="admin.openMomentEditorModal()" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); font-weight: 700;">
+              ➕ Tambah Momen
+            </button>
+            <button id="btnManageMomentsBtn" class="btn btn-outline btn-sm btn-panitia-moment"
+              onclick="admin.openMomentEditorModal()" style="display: none; border-color: rgba(2, 132, 199, 0.5); color: #38bdf8; font-weight: 700;">
+              ⚙️ Kelola Momen
             </button>
             <div class="moments-nav-arrows">
               <button class="moment-arrow-btn" id="btnMomentPrev" onclick="app.scrollMoments(-1)" title="Geser ke kiri"
@@ -2630,7 +2634,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline btn-modal-close" onclick="app.renderSponsors()">Tutup</button>
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('sponsorEditorModal').classList.remove('active'); app.renderSponsors();">Tutup</button>
       </div>
     </div>
   </div>
@@ -2668,12 +2672,24 @@
           <p id="momentModalCaption" style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6; margin: 0;"></p>
         </div>
       </div>
-      <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between;">
-        <button type="button" class="btn btn-outline btn-sm" onclick="app.shareMoment()"
-          style="color: #00d2ff; border-color: rgba(0,210,255,0.4); background: rgba(0,210,255,0.08);">
-          📤 Bagikan Momen
-        </button>
-        <button type="button" class="btn btn-primary btn-sm btn-modal-close">Tutup</button>
+      <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="app.shareMoment()"
+            style="color: #00d2ff; border-color: rgba(0,210,255,0.4); background: rgba(0,210,255,0.08);">
+            📤 Bagikan Momen
+          </button>
+          <div id="momentModalAdminActions" style="display: none; gap: 8px; align-items: center;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.editMoment(app.activeMoment ? app.activeMoment.id : '')"
+              style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.5); font-weight: 700; background: rgba(56, 189, 248, 0.1);">
+              ✏️ Edit Momen
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteMoment(app.activeMoment ? app.activeMoment.id : '')"
+              style="color: #f87171; border-color: rgba(239, 68, 68, 0.5); font-weight: 700; background: rgba(239, 68, 68, 0.1);">
+              🗑️ Hapus
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm btn-modal-close" onclick="document.getElementById('momentModal').classList.remove('active')">Tutup</button>
       </div>
     </div>
   </div>
@@ -2823,7 +2839,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline btn-modal-close" onclick="app.renderSponsors()">Tutup</button>
+        <button type="button" class="btn btn-outline" onclick="admin.closeMomentEditorModal()">Tutup</button>
       </div>
     </div>
   </div>
@@ -3373,11 +3389,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v46"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v46"></script>
-  <script defer src="/js/data.js?v=20261123_v46"></script>
-  <script defer src="/js/admin.js?v=20261123_v46"></script>
-  <script defer src="/js/app.js?v=20261123_v46"></script>
+  <script defer src="/js/security.js?v=20261123_v47"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v47"></script>
+  <script defer src="/js/data.js?v=20261123_v47"></script>
+  <script defer src="/js/admin.js?v=20261123_v47"></script>
+  <script defer src="/js/app.js?v=20261123_v47"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
