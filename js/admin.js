@@ -1350,8 +1350,21 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     assistSelect.disabled = false;
-    const players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+    let players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
     const oppPlayers = (oppTeam?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+
+    // Jika skuad belum terisi di memori lokal, tarik langsung secara realtime dari Supabase
+    if (players.length === 0 && window.SupabaseService && typeof window.SupabaseService.fetchTeamFull === 'function') {
+      window.SupabaseService.fetchTeamFull(teamId).then(remTeam => {
+        if (remTeam && Array.isArray(remTeam.players) && remTeam.players.length > 0) {
+          if (team) team.players = remTeam.players;
+          const stTeam = app.store.getTeam(teamId);
+          if (stTeam) stTeam.players = remTeam.players;
+          app.store.saveData();
+          admin.onGoalTeamChange();
+        }
+      });
+    }
 
     scorerSelect.innerHTML = `
       <option value="">-- Pilih Pencetak Gol (Semua Pemain) --</option>
@@ -1362,15 +1375,19 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         `).join("") : ''}
       </optgroup>
       <optgroup label="⚽ Pemain ${team?.name || 'Tim'}">
-        ${players.map(p => `
+        ${players.length > 0 ? players.map(p => `
           <option value="${p.name}">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>
+        `).join("") : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(n => `
+          <option value="Pemain #${n}">#${n} Pemain #${n}</option>
         `).join("")}
       </optgroup>
     `;
 
-    assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + players.map(p => `
+    assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + (players.length > 0 ? players.map(p => `
       <option value="${p.name}">#${p.no || '-'} ${p.name}</option>
-    `).join("");
+    `).join("") : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => `
+      <option value="Pemain #${n}">#${n} Pemain #${n}</option>
+    `).join(""));
   },
 
   toggleOwnGoalMode(isOg) {
@@ -1565,11 +1582,31 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     let html = `<option value="">-- Pilih Penerima Kartu --</option>`;
 
     // 1. Skuad Pemain Tim
-    const players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+    let players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+
+    // Jika skuad belum terisi di memori lokal, tarik langsung secara realtime dari Supabase
+    if (players.length === 0 && window.SupabaseService && typeof window.SupabaseService.fetchTeamFull === 'function') {
+      window.SupabaseService.fetchTeamFull(teamId).then(remTeam => {
+        if (remTeam && Array.isArray(remTeam.players) && remTeam.players.length > 0) {
+          if (team) team.players = remTeam.players;
+          const stTeam = app.store.getTeam(teamId);
+          if (stTeam) stTeam.players = remTeam.players;
+          app.store.saveData();
+          admin.onCardTeamChange();
+        }
+      });
+    }
+
     if (players.length > 0) {
       html += `<optgroup label="🏃 Skuad Pemain Tim">`;
       players.forEach(p => {
         html += `<option value="${p.name}|Pemain">#${p.no || '-'} ${p.name} (${p.pos || 'Pemain'})</option>`;
+      });
+      html += `</optgroup>`;
+    } else {
+      html += `<optgroup label="🏃 Skuad Pemain Tim">`;
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].forEach(n => {
+        html += `<option value="Pemain #${n}|Pemain">#${n} Pemain #${n}</option>`;
       });
       html += `</optgroup>`;
     }

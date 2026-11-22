@@ -237,12 +237,10 @@
       if (!this.client || !this.isConfigured) return null;
 
       try {
-        const includePlayers = Boolean(options && options.includePlayers);
-        const teamCols = includePlayers
-          ? 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at'
-          : 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, updated_at';
+        // Kolom skuad pemain wajib selalu dimuat agar panitia dapat mencatat gol, kartu, dan susunan pemain di detail laga
+        const teamCols = 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at';
 
-        // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob, registry backups & full player base64)
+        // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob, registry backups)
         const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
           this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry']),
           this.client.from('teams').select(teamCols),

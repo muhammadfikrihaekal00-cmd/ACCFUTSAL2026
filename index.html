@@ -49,10 +49,12 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "9.20";
+        var CURRENT_VER = "9.21";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           try {
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v11");
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v11_min");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v10");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v10_min");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v9");

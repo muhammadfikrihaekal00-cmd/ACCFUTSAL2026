@@ -2444,15 +2444,17 @@ var app = window.app = Object.assign(window.app || {}, {
               norm.official.managerPhoto = localTeam.official.managerPhoto;
             }
           }
-          if (Array.isArray(norm.players) && Array.isArray(localTeam.players)) {
-            norm.players = norm.players.map((rP, pIdx) => {
-              const lP = localTeam.players[pIdx] || localTeam.players.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
-              return {
-                ...rP,
-                photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || "")
-              };
-            });
-          } else if (!norm.players && localTeam && Array.isArray(localTeam.players)) {
+          if (Array.isArray(norm.players) && norm.players.length > 0) {
+            if (Array.isArray(localTeam.players) && localTeam.players.length > 0) {
+              norm.players = norm.players.map((rP, pIdx) => {
+                const lP = localTeam.players[pIdx] || localTeam.players.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
+                return {
+                  ...rP,
+                  photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || "")
+                };
+              });
+            }
+          } else if (localTeam && Array.isArray(localTeam.players) && localTeam.players.length > 0) {
             norm.players = localTeam.players;
           }
         }
