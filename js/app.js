@@ -423,8 +423,9 @@ class TournamentStore {
     // Fast O(M * (S + C)) indexing to eliminate heavy nested loops
     const statsMap = new Map();
     this.data.matches.forEach(m => {
-      if (m.scorers && Array.isArray(m.scorers)) {
-        m.scorers.forEach(s => {
+      const matchScorers = (Array.isArray(m.scorers) && m.scorers.length > 0) ? m.scorers : (Array.isArray(m.goals) ? m.goals : []);
+      if (matchScorers.length > 0) {
+        matchScorers.forEach(s => {
           const tId = s.team || "";
           const sName = (s.player || '').toLowerCase().trim();
           const isOg = Boolean(s.isOwnGoal || s.ownGoal || sName.includes('bunuh diri') || sName.includes('own goal') || sName.includes('(gbd)') || sName.includes('[og]'));
@@ -482,8 +483,11 @@ class TournamentStore {
           matchRc = entry.rc;
         } else {
           // Fallback scan only if direct match not found
+          const tPrefix = t.id + ":";
+          const tNamePrefix = (t.name || "").toLowerCase() + ":";
+          const tShortPrefix = (t.shortName || "").toLowerCase() + ":";
           for (const [k, v] of statsMap.entries()) {
-            if (k.startsWith(t.id + ":") || k.startsWith(":")) {
+            if (k.startsWith(tPrefix) || k.startsWith(":") || (t.name && k.startsWith(tNamePrefix)) || (t.shortName && k.startsWith(tShortPrefix))) {
               const scorerName = k.split(":")[1] || "";
               if (scorerName === cleanPName || (p.no && scorerName.includes(`#${p.no}`)) || (cleanPName && (scorerName.includes(cleanPName) || cleanPName.includes(scorerName)))) {
                 matchGoals += v.goals;
@@ -1148,13 +1152,23 @@ class TournamentStore {
     });
 
     this.data.matches.forEach(m => {
-      if (m.scorers && m.scorers.length > 0) {
-        m.scorers.forEach(s => {
+      const matchScorers = (Array.isArray(m.scorers) && m.scorers.length > 0) ? m.scorers : (Array.isArray(m.goals) ? m.goals : []);
+      if (matchScorers.length > 0) {
+        matchScorers.forEach(s => {
+          if (!s) return;
           const isOg = Boolean(s.isOwnGoal || s.ownGoal || String(s.player || '').toLowerCase().includes('bunuh diri') || String(s.player || '').toLowerCase().includes('own goal') || String(s.player || '').toLowerCase().includes('(gbd)') || String(s.player || '').toLowerCase().includes('[og]'));
           if (isOg) return;
           const key = `${s.team}-${s.player}`;
           if (scorers[key]) {
             scorers[key].goals += 1;
+          } else {
+            const cleanP = (s.player || '').toLowerCase().trim();
+            const foundKey = Object.keys(scorers).find(k => {
+              const sc = scorers[k];
+              const isT = !s.team || sc.teamId === s.team || sc.teamName === s.team;
+              return isT && (sc.playerName.toLowerCase().trim() === cleanP || (sc.playerNo && cleanP.includes(`#${sc.playerNo}`)) || (cleanP.length > 3 && sc.playerName.toLowerCase().trim().includes(cleanP)));
+            });
+            if (foundKey) scorers[foundKey].goals += 1;
           }
         });
       }
@@ -3739,27 +3753,64 @@ var app = window.app = Object.assign(window.app || {}, {
     const playersHtml = (team.players || []).map(p => {
       const pName = (p.name || "").trim();
       const pNameLower = pName.toLowerCase();
+      const pNo = p.no ? String(p.no).trim() : "";
       let goalsCount = 0;
+      let assistsCount = 0;
       let ycCount = 0;
       let rcCount = 0;
 
       (this.store.data.matches || []).forEach(m => {
-        (m.goals || []).forEach(g => {
-          const gPlayer = (g.player || "").toLowerCase().trim();
-          const isMyTeam = g.team === team.id || g.team === team.name;
-          if (isMyTeam && (gPlayer === pNameLower || gPlayer === `${pNameLower} (#${p.no})` || (p.no && gPlayer === `#${p.no}`))) {
+        const isHome = m.homeId === team.id;
+        const isAway = m.awayId === team.id;
+        if (!isHome && !isAway) return;
+
+        const matchScorers = (Array.isArray(m.scorers) && m.scorers.length > 0) ? m.scorers : (Array.isArray(m.goals) ? m.goals : []);
+        matchScorers.forEach(s => {
+          if (!s) return;
+          const sPlayer = (s.player || "").toLowerCase().trim();
+          const isMyTeam = !s.team || s.team === team.id || s.team === team.name || s.team === team.shortName;
+          const isOg = Boolean(s.isOwnGoal || s.ownGoal || sPlayer.includes('bunuh diri') || sPlayer.includes('own goal') || sPlayer.includes('(gbd)') || sPlayer.includes('[og]'));
+          const isPlayer = sPlayer === pNameLower ||
+            sPlayer === `${pNameLower} (#${pNo})` ||
+            (pNo && sPlayer.includes(`#${pNo}`)) ||
+            (sPlayer.length > 3 && pNameLower.includes(sPlayer)) ||
+            (pNameLower.length > 3 && sPlayer.includes(pNameLower));
+          if (isMyTeam && isPlayer && !isOg) {
             goalsCount++;
           }
+          if (s.assist) {
+            const aPlayer = (s.assist || "").toLowerCase().trim();
+            const isAssistPlayer = aPlayer === pNameLower ||
+              aPlayer === `${pNameLower} (#${pNo})` ||
+              (pNo && aPlayer.includes(`#${pNo}`)) ||
+              (aPlayer.length > 3 && pNameLower.includes(aPlayer)) ||
+              (pNameLower.length > 3 && aPlayer.includes(pNameLower));
+            if (isMyTeam && isAssistPlayer) {
+              assistsCount++;
+            }
+          }
         });
+
         (m.cards || []).forEach(c => {
+          if (!c || c._meta || !c.player || c.player === 'undefined' || c.player === 'null') return;
           const cPlayer = (c.player || "").toLowerCase().trim();
-          const isMyTeam = c.team === team.id || c.team === team.name;
-          if (isMyTeam && (cPlayer === pNameLower || cPlayer === `${pNameLower} (#${p.no})` || (p.no && cPlayer === `#${p.no}`))) {
+          const isMyTeam = !c.team || c.team === team.id || c.team === team.name || c.team === team.shortName;
+          const isPlayer = cPlayer === pNameLower ||
+            cPlayer === `${pNameLower} (#${pNo})` ||
+            (pNo && cPlayer.includes(`#${pNo}`)) ||
+            (cPlayer.length > 3 && pNameLower.includes(cPlayer)) ||
+            (pNameLower.length > 3 && cPlayer.includes(pNameLower));
+          if (isMyTeam && isPlayer) {
             if (c.type === "yellow") ycCount++;
             else if (c.type === "red") rcCount++;
           }
         });
       });
+
+      goalsCount = Math.max(goalsCount, parseInt(p.goals, 10) || 0);
+      assistsCount = Math.max(assistsCount, parseInt(p.assists, 10) || 0);
+      ycCount = Math.max(ycCount, parseInt(p.yc, 10) || 0);
+      rcCount = Math.max(rcCount, parseInt(p.rc, 10) || 0);
 
       const playerKey = p.id || p.no || p.name;
       const detailUrl = `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}/detail-pemain/${encodeURIComponent(playerKey)}`;
@@ -3773,6 +3824,7 @@ var app = window.app = Object.assign(window.app || {}, {
               <div class="player-card-tags">
                 <span class="player-tag pos">${typeof Security !== 'undefined' ? Security.sanitize(p.pos || 'Flank') : (p.pos || 'Flank')}</span>
                 ${goalsCount > 0 ? `<span class="player-tag goal">⚽ ${goalsCount} Gol</span>` : ''}
+                ${assistsCount > 0 ? `<span class="player-tag assist" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3);">🎯 ${assistsCount} Ast</span>` : ''}
                 ${ycCount > 0 ? `<span class="player-tag yc">🟨 ${ycCount}</span>` : ''}
                 ${rcCount > 0 ? `<span class="player-tag rc">🟥 ${rcCount}</span>` : ''}
               </div>
@@ -3985,9 +4037,11 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     const cleanPName = (player.name || "").toLowerCase().trim();
+    const pNo = player.no ? String(player.no).trim() : "";
 
     // Hitung seluruh statistik pemain secara aktual dari data.matches
     let totalGoals = 0;
+    let totalAssists = 0;
     let totalYc = 0;
     let totalRc = 0;
     let matchesCount = 0;
@@ -4001,36 +4055,90 @@ var app = window.app = Object.assign(window.app || {}, {
 
       const oppId = isHome ? m.awayId : m.homeId;
       const opp = this.store.getTeam(oppId);
-      const oppName = opp ? opp.name : ("Tim " + oppId);
+      const oppName = opp ? (opp.shortName || opp.name) : ("Tim " + oppId);
 
-      // Periksa gol
-      (m.goals || []).forEach(g => {
-        const gPlayer = (g.player || "").toLowerCase().trim();
-        const isMyTeam = g.team === team.id || g.team === team.name;
-        if (isMyTeam && (gPlayer === cleanPName || gPlayer === `${cleanPName} (#${player.no})` || (player.no && gPlayer === `#${player.no}`))) {
-          totalGoals++;
+      // Periksa gol & assist dari match.scorers (dan fallback match.goals)
+      const matchScorers = (Array.isArray(m.scorers) && m.scorers.length > 0) ? m.scorers : (Array.isArray(m.goals) ? m.goals : []);
+      matchScorers.forEach(s => {
+        if (!s) return;
+        const sPlayer = (s.player || "").toLowerCase().trim();
+        const isMyTeam = !s.team || s.team === team.id || s.team === team.name || s.team === team.shortName;
+        const isOg = Boolean(s.isOwnGoal || s.ownGoal || sPlayer.includes('bunuh diri') || sPlayer.includes('own goal') || sPlayer.includes('(gbd)') || sPlayer.includes('[og]'));
+
+        const isPlayer = sPlayer === cleanPName || 
+                         sPlayer === `${cleanPName} (#${pNo})` || 
+                         (pNo && sPlayer.includes(`#${pNo}`)) ||
+                         (sPlayer.length > 3 && cleanPName.includes(sPlayer)) ||
+                         (cleanPName.length > 3 && sPlayer.includes(cleanPName));
+
+        let minStr = s.minute ? String(s.minute).trim() : "";
+        if (minStr && !minStr.endsWith("'")) minStr += "'";
+        if (!minStr) minStr = "Laga";
+
+        if (isPlayer) {
           playerInMatch = true;
-          playerEventsLog.push({
-            type: "goal",
-            matchTitle: `vs ${oppName}`,
-            minute: g.minute ? `${g.minute}'` : "Laga",
-            note: "⚽ Mencetak Gol"
-          });
+          if (isOg) {
+            playerEventsLog.push({
+              type: "own_goal",
+              matchTitle: `vs ${oppName}`,
+              minute: minStr,
+              note: "⚡ Gol Bunuh Diri (Own Goal)"
+            });
+          } else if (isMyTeam) {
+            totalGoals++;
+            playerEventsLog.push({
+              type: "goal",
+              matchTitle: `vs ${oppName}`,
+              minute: minStr,
+              note: s.assist ? `⚽ Mencetak Gol (Assist: ${s.assist})` : "⚽ Mencetak Gol"
+            });
+          }
+        }
+
+        // Periksa jika pemain memberikan assist
+        if (s.assist) {
+          const aPlayer = (s.assist || "").toLowerCase().trim();
+          const isAssistPlayer = aPlayer === cleanPName || 
+                                 aPlayer === `${cleanPName} (#${pNo})` || 
+                                 (pNo && aPlayer.includes(`#${pNo}`)) ||
+                                 (aPlayer.length > 3 && cleanPName.includes(aPlayer)) ||
+                                 (cleanPName.length > 3 && aPlayer.includes(cleanPName));
+          if (isMyTeam && isAssistPlayer) {
+            totalAssists++;
+            playerInMatch = true;
+            playerEventsLog.push({
+              type: "assist",
+              matchTitle: `vs ${oppName}`,
+              minute: minStr,
+              note: `🎯 Memberikan Assist (Gol oleh ${s.player})`
+            });
+          }
         }
       });
 
       // Periksa kartu
       (m.cards || []).forEach(c => {
+        if (!c || c._meta || !c.player || c.player === 'undefined' || c.player === 'null') return;
         const cPlayer = (c.player || "").toLowerCase().trim();
-        const isMyTeam = c.team === team.id || c.team === team.name;
-        if (isMyTeam && (cPlayer === cleanPName || cPlayer === `${cleanPName} (#${player.no})` || (player.no && cPlayer === `#${player.no}`))) {
+        const isMyTeam = !c.team || c.team === team.id || c.team === team.name || c.team === team.shortName;
+        const isPlayer = cPlayer === cleanPName || 
+                         cPlayer === `${cleanPName} (#${pNo})` || 
+                         (pNo && cPlayer.includes(`#${pNo}`)) ||
+                         (cPlayer.length > 3 && cleanPName.includes(cPlayer)) ||
+                         (cleanPName.length > 3 && cPlayer.includes(cleanPName));
+
+        let minStr = c.minute ? String(c.minute).trim() : "";
+        if (minStr && !minStr.endsWith("'")) minStr += "'";
+        if (!minStr) minStr = "Laga";
+
+        if (isMyTeam && isPlayer) {
           playerInMatch = true;
           if (c.type === "yellow") {
             totalYc++;
             playerEventsLog.push({
               type: "yellow",
               matchTitle: `vs ${oppName}`,
-              minute: c.minute ? `${c.minute}'` : "Laga",
+              minute: minStr,
               note: "🟨 Kartu Kuning"
             });
           } else if (c.type === "red") {
@@ -4038,7 +4146,7 @@ var app = window.app = Object.assign(window.app || {}, {
             playerEventsLog.push({
               type: "red",
               matchTitle: `vs ${oppName}`,
-              minute: c.minute ? `${c.minute}'` : "Laga",
+              minute: minStr,
               note: "🟥 Kartu Merah Langsung"
             });
           }
@@ -4049,6 +4157,11 @@ var app = window.app = Object.assign(window.app || {}, {
         matchesCount++;
       }
     });
+
+    totalGoals = Math.max(totalGoals, parseInt(player.goals, 10) || 0);
+    totalAssists = Math.max(totalAssists, parseInt(player.assists, 10) || 0);
+    totalYc = Math.max(totalYc, parseInt(player.yc, 10) || 0);
+    totalRc = Math.max(totalRc, parseInt(player.rc, 10) || 0);
 
     let statusLabel = "SIAP BERTANDING (AMAN)";
     let statusBg = "background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);";
@@ -4102,6 +4215,10 @@ var app = window.app = Object.assign(window.app || {}, {
               <div class="fullpage-stat-lbl">Gol Dicetak</div>
             </div>
             <div class="fullpage-stat-card">
+              <div class="fullpage-stat-val" style="color: #38bdf8;">${totalAssists}</div>
+              <div class="fullpage-stat-lbl">Assist 🎯</div>
+            </div>
+            <div class="fullpage-stat-card">
               <div class="fullpage-stat-val gold">${totalYc}</div>
               <div class="fullpage-stat-lbl">Kartu Kuning 🟨</div>
             </div>
@@ -4131,7 +4248,10 @@ var app = window.app = Object.assign(window.app || {}, {
                   </div>
                 </div>
                 <div>
-                  ${ev.type === 'goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #10b981;">+1 Gol</span>' : (ev.type === 'yellow' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f59e0b;">Kartu Kuning</span>' : '<span style="font-size: 0.74rem; font-weight: 700; color: #ef4444;">Kartu Merah</span>')}
+                  ${ev.type === 'goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #10b981;">+1 Gol</span>' : 
+                    (ev.type === 'assist' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #38bdf8;">+1 Assist</span>' : 
+                    (ev.type === 'yellow' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f59e0b;">Kartu Kuning</span>' : 
+                    (ev.type === 'own_goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f87171;">Own Goal</span>' : '<span style="font-size: 0.74rem; font-weight: 700; color: #ef4444;">Kartu Merah</span>')))}
                 </div>
               </div>
             `).join('') : `
