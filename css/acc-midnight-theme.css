@@ -4238,7 +4238,6 @@ body.mobile-menu-active .mobile-menu-content {
   will-change: transform, opacity !important;
   contain: paint !important;
 }
-}
 
 .floating-cat-switcher.is-sd .floating-cat-pulse-ring {
   border-color: rgba(56, 189, 248, 0.4) !important;
