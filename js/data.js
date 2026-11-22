@@ -114,6 +114,7 @@ const DEFAULT_DATA = {
   },
   homeData: {
     mvp: null,
+    mvps: [],
     news: [],
     moments: [],
     sponsors: {

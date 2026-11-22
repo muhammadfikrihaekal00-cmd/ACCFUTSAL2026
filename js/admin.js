@@ -4818,6 +4818,378 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
   },
 
+  // ==========================================
+  // MANAJEMEN BINTANG LAPANGAN (MVP SPOTLIGHT CAROUSEL)
+  // ==========================================
+  openManageMvpModal() {
+    if (!this.isAuthenticated) {
+      this.pendingOpenMvpManager = true;
+      this.openLoginModal();
+      app.showToast("🔒 Silakan login Mode Panitia untuk mengelola MVP!");
+      return;
+    }
+    const dashModal = document.getElementById("adminDashboardModal");
+    if (dashModal) dashModal.classList.remove("active");
+
+    this.renderManageMvpList();
+    const modal = document.getElementById("modalManageMvp");
+    if (modal) modal.classList.add("active");
+  },
+
+  closeManageMvpModal() {
+    const modal = document.getElementById("modalManageMvp");
+    if (modal) modal.classList.remove("active");
+  },
+
+  renderManageMvpList() {
+    const container = document.getElementById("manageMvpListContainer");
+    if (!container) return;
+
+    const homeData = app.store.data.homeData || {};
+    let mvps = Array.isArray(homeData.mvps) ? homeData.mvps : [];
+    if (mvps.length === 0 && homeData.mvp && homeData.mvp.name) {
+      mvps = [homeData.mvp];
+      homeData.mvps = mvps;
+    }
+
+    if (mvps.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 24px 16px; border: 1px dashed rgba(245, 158, 11, 0.4); border-radius: var(--radius-md); background: rgba(245, 158, 11, 0.04);">
+          <div style="font-size: 1.8rem; margin-bottom: 6px;">⭐</div>
+          <p style="font-size: 0.88rem; color: #fff; font-weight: 700; margin-bottom: 4px;">Belum Ada Pemain MVP</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">Klik tombol "Tambah MVP Baru" di atas untuk menambahkan pemain terbaik pertama.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = mvps.map((m, idx) => {
+      const pName = m.name || "Bintang Lapangan";
+      const pNum = m.number ? `(#${m.number})` : "";
+      const pTeam = m.team || "-";
+      const pCat = m.category ? `[${m.category}] ` : "";
+      const pPos = m.pos || m.position ? `• ${m.pos || m.position}` : "";
+      const pBadge = m.badge || "MVP MATCHDAY";
+      const pPhoto = m.photo || "/assets/acc_logo.webp";
+      const pGoals = parseInt(m.goals, 10) || 0;
+      const pAssists = parseInt(m.assists, 10) || 0;
+      const mId = m.id || String(idx);
+
+      return `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-md); padding: 10px 14px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 12px; min-width: 220px; flex: 1;">
+            <div style="width: 48px; height: 58px; border-radius: 6px; border: 1.5px solid var(--accent-gold); overflow: hidden; background: #000; flex-shrink: 0;">
+              <img src="${pPhoto}" alt="${pName}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null;this.src='/assets/acc_logo.webp'">
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <span style="font-size: 0.68rem; font-weight: 800; background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); padding: 1px 6px; border-radius: 4px;">${pBadge}</span>
+                <span style="font-size: 0.72rem; color: #94a3b8;">#${idx + 1}</span>
+              </div>
+              <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${pName} ${pNum}</div>
+              <div style="font-size: 0.76rem; color: var(--text-muted);">${pCat}${pTeam} ${pPos} • ⚽ ${pGoals}G / 👟 ${pAssists}A</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openEditMvpItemModal('${mId}')" style="font-size: 0.74rem; padding: 4px 10px;">
+              ✏️ Edit
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteMvpItem('${mId}')" style="font-size: 0.74rem; padding: 4px 10px; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
+              🗑️ Hapus
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  },
+
+  openEditMvpItemModal(mvpId = null) {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+
+    // Populate team select
+    const teamSelect = document.getElementById("mvpSelectTeam");
+    if (teamSelect) {
+      const teams = (app.store.data && Array.isArray(app.store.data.teams)) ? app.store.data.teams : [];
+      teamSelect.innerHTML = `<option value="">-- Pilih Tim (Opsional) --</option>` +
+        teams.map(t => `<option value="${t.id}" data-cat="${t.category || 'SMP'}">${t.name} (${t.category || 'SMP'})</option>`).join("");
+    }
+
+    const playerSelect = document.getElementById("mvpSelectPlayer");
+    if (playerSelect) {
+      playerSelect.innerHTML = `<option value="">-- Pilih Tim Dahulu --</option>`;
+    }
+
+    const titleEl = document.getElementById("modalEditMvpTitle");
+    const idInput = document.getElementById("mvpEditItemId");
+    const nameInput = document.getElementById("mvpItemName");
+    const numInput = document.getElementById("mvpItemNumber");
+    const teamInput = document.getElementById("mvpItemTeam");
+    const catInput = document.getElementById("mvpItemCategory");
+    const posInput = document.getElementById("mvpItemPos");
+    const badgeInput = document.getElementById("mvpItemBadge");
+    const tagInput = document.getElementById("mvpItemTagline");
+    const goalsInput = document.getElementById("mvpItemGoals");
+    const assistsInput = document.getElementById("mvpItemAssists");
+    const motmInput = document.getElementById("mvpItemMotm");
+    const ratingInput = document.getElementById("mvpItemRating");
+    const quoteInput = document.getElementById("mvpItemQuote");
+    const photoUrlInput = document.getElementById("mvpItemPhotoUrl");
+    const photoPreview = document.getElementById("mvpItemPhotoPreview");
+
+    const homeData = app.store.data.homeData || {};
+    const mvps = Array.isArray(homeData.mvps) ? homeData.mvps : [];
+    let item = null;
+    if (mvpId !== null && mvpId !== undefined && mvpId !== "") {
+      item = mvps.find(m => String(m.id) === String(mvpId)) || mvps[parseInt(mvpId, 10)] || null;
+    }
+
+    if (item) {
+      if (titleEl) titleEl.textContent = `✏️ Edit Pemain MVP: ${item.name}`;
+      if (idInput) idInput.value = item.id || `mvp_${Date.now()}`;
+      if (nameInput) nameInput.value = item.name || "";
+      if (numInput) numInput.value = item.number || "";
+      if (teamInput) teamInput.value = item.team || "";
+      if (catInput) catInput.value = item.category || "SMP";
+      if (posInput) posInput.value = item.pos || item.position || "";
+      if (badgeInput) badgeInput.value = item.badge || "MVP MATCHDAY";
+      if (tagInput) tagInput.value = item.tagline || "PERFORMA GEMILANG & FAIR PLAY";
+      if (goalsInput) goalsInput.value = item.goals || 0;
+      if (assistsInput) assistsInput.value = item.assists || 0;
+      if (motmInput) motmInput.value = item.motm || `${item.motmCount || 1}x`;
+      if (ratingInput) ratingInput.value = item.rating || "9.5";
+      if (quoteInput) quoteInput.value = item.quote || "";
+      if (photoUrlInput) photoUrlInput.value = item.photo || "";
+      if (photoPreview) photoPreview.src = item.photo || "/assets/acc_logo.webp";
+    } else {
+      if (titleEl) titleEl.textContent = "➕ Tambah Pemain MVP Baru";
+      if (idInput) idInput.value = "";
+      if (nameInput) nameInput.value = "";
+      if (numInput) numInput.value = "";
+      if (teamInput) teamInput.value = "";
+      if (catInput) catInput.value = (app.currentCategory === "all" || !app.currentCategory) ? "SMP" : app.currentCategory;
+      if (posInput) posInput.value = "Pivot";
+      if (badgeInput) badgeInput.value = "MVP MATCHDAY";
+      if (tagInput) tagInput.value = "PERFORMA GEMILANG & FAIR PLAY";
+      if (goalsInput) goalsInput.value = 0;
+      if (assistsInput) assistsInput.value = 0;
+      if (motmInput) motmInput.value = "1x";
+      if (ratingInput) ratingInput.value = "9.5";
+      if (quoteInput) quoteInput.value = "";
+      if (photoUrlInput) photoUrlInput.value = "";
+      if (photoPreview) photoPreview.src = "/assets/acc_logo.webp";
+    }
+
+    const modal = document.getElementById("modalEditMvpItem");
+    if (modal) modal.classList.add("active");
+  },
+
+  closeEditMvpItemModal() {
+    const modal = document.getElementById("modalEditMvpItem");
+    if (modal) modal.classList.remove("active");
+  },
+
+  onMvpTeamSelectChange() {
+    const teamSelect = document.getElementById("mvpSelectTeam");
+    const playerSelect = document.getElementById("mvpSelectPlayer");
+    const teamInput = document.getElementById("mvpItemTeam");
+    const catInput = document.getElementById("mvpItemCategory");
+    if (!teamSelect || !playerSelect) return;
+
+    const tId = teamSelect.value;
+    if (!tId) {
+      playerSelect.innerHTML = `<option value="">-- Pilih Tim Dahulu --</option>`;
+      return;
+    }
+
+    const team = (app.store.data.teams || []).find(t => t.id === tId);
+    if (!team) return;
+
+    if (teamInput) teamInput.value = team.name;
+    if (catInput && team.category) catInput.value = team.category;
+
+    const players = Array.isArray(team.players) ? team.players : [];
+    if (players.length === 0) {
+      playerSelect.innerHTML = `<option value="">-- Belum Ada Skuad Pemain --</option>`;
+    } else {
+      playerSelect.innerHTML = `<option value="">-- Pilih Pemain --</option>` +
+        players.map((p, idx) => `
+          <option value="${idx}" data-name="${p.name}" data-num="${p.number || ''}" data-pos="${p.pos || p.position || ''}" data-goals="${p.goals || 0}" data-assists="${p.assists || 0}" data-photo="${p.photo || ''}">
+            #${p.number || '-'} ${p.name} (${p.pos || p.position || 'Pemain'})
+          </option>
+        `).join("");
+    }
+  },
+
+  onMvpPlayerSelectChange() {
+    const playerSelect = document.getElementById("mvpSelectPlayer");
+    if (!playerSelect || playerSelect.value === "") return;
+
+    const opt = playerSelect.selectedOptions[0];
+    if (!opt) return;
+
+    const name = opt.getAttribute("data-name");
+    const num = opt.getAttribute("data-num");
+    const pos = opt.getAttribute("data-pos");
+    const goals = opt.getAttribute("data-goals");
+    const assists = opt.getAttribute("data-assists");
+    const photo = opt.getAttribute("data-photo");
+
+    if (name && document.getElementById("mvpItemName")) document.getElementById("mvpItemName").value = name;
+    if (num && document.getElementById("mvpItemNumber")) document.getElementById("mvpItemNumber").value = num;
+    if (pos && document.getElementById("mvpItemPos")) document.getElementById("mvpItemPos").value = pos;
+    if (goals !== null && document.getElementById("mvpItemGoals")) document.getElementById("mvpItemGoals").value = goals;
+    if (assists !== null && document.getElementById("mvpItemAssists")) document.getElementById("mvpItemAssists").value = assists;
+    if (photo) {
+      if (document.getElementById("mvpItemPhotoUrl")) document.getElementById("mvpItemPhotoUrl").value = photo;
+      if (document.getElementById("mvpItemPhotoPreview")) document.getElementById("mvpItemPhotoPreview").src = photo;
+    }
+  },
+
+  handleMvpPhotoUpload(fileInput) {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxW = 540;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxW) {
+          h = Math.round((h * maxW) / w);
+          w = maxW;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.82);
+
+        const urlInput = document.getElementById("mvpItemPhotoUrl");
+        const preview = document.getElementById("mvpItemPhotoPreview");
+        if (urlInput) urlInput.value = compressedBase64;
+        if (preview) preview.src = compressedBase64;
+        app.showToast("📷 Foto pemain berhasil dimuat!");
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  },
+
+  async saveMvpItem(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+
+    const idInput = document.getElementById("mvpEditItemId");
+    const name = (document.getElementById("mvpItemName")?.value || "").trim();
+    const team = (document.getElementById("mvpItemTeam")?.value || "").trim();
+
+    if (!name || !team) {
+      alert("⚠️ Nama Pemain dan Klub / Sekolah wajib diisi!");
+      return;
+    }
+
+    const number = parseInt(document.getElementById("mvpItemNumber")?.value, 10) || null;
+    const category = document.getElementById("mvpItemCategory")?.value || "SMP";
+    const pos = (document.getElementById("mvpItemPos")?.value || "").trim();
+    const badge = (document.getElementById("mvpItemBadge")?.value || "MVP MATCHDAY").trim();
+    const tagline = (document.getElementById("mvpItemTagline")?.value || "PERFORMA GEMILANG & FAIR PLAY").trim();
+    const goals = parseInt(document.getElementById("mvpItemGoals")?.value, 10) || 0;
+    const assists = parseInt(document.getElementById("mvpItemAssists")?.value, 10) || 0;
+    const motm = (document.getElementById("mvpItemMotm")?.value || "1x").trim();
+    const rating = (document.getElementById("mvpItemRating")?.value || "9.5").trim();
+    const quote = (document.getElementById("mvpItemQuote")?.value || "").trim();
+    const photo = (document.getElementById("mvpItemPhotoUrl")?.value || "").trim() || "/assets/acc_logo.webp";
+
+    if (!app.store.data.homeData) app.store.data.homeData = {};
+    if (!Array.isArray(app.store.data.homeData.mvps)) {
+      app.store.data.homeData.mvps = app.store.data.homeData.mvp ? [app.store.data.homeData.mvp] : [];
+    }
+
+    const mvps = app.store.data.homeData.mvps;
+    const editId = idInput?.value || "";
+
+    const payload = {
+      id: editId || `mvp_${Date.now()}`,
+      name,
+      number,
+      team,
+      category,
+      pos,
+      position: pos,
+      badge,
+      tagline,
+      goals,
+      assists,
+      motm,
+      rating,
+      quote,
+      photo
+    };
+
+    if (editId) {
+      const idx = mvps.findIndex(m => String(m.id) === String(editId));
+      if (idx !== -1) {
+        mvps[idx] = payload;
+      } else {
+        mvps.push(payload);
+      }
+    } else {
+      mvps.push(payload);
+    }
+
+    app.store.data.homeData.mvp = mvps[0] || null;
+    app.store.saveData();
+
+    // Push ke Supabase Cloud
+    if (window.SupabaseService && typeof window.SupabaseService.syncMvpList === "function") {
+      await window.SupabaseService.syncMvpList(mvps);
+    }
+
+    this.closeEditMvpItemModal();
+    this.renderManageMvpList();
+    app.renderMvpSection();
+    app.showToast(`⭐ Bintang Lapangan ${name} berhasil disimpan ke Cloud!`);
+  },
+
+  async deleteMvpItem(mvpId) {
+    if (!this.isAuthenticated) {
+      this.openLoginModal();
+      return;
+    }
+
+    if (!confirm("⚠️ Hapus pemain MVP ini dari daftar sorotan?")) {
+      return;
+    }
+
+    if (!app.store.data.homeData || !Array.isArray(app.store.data.homeData.mvps)) return;
+
+    const mvps = app.store.data.homeData.mvps;
+    const idx = mvps.findIndex((m, i) => String(m.id) === String(mvpId) || String(i) === String(mvpId));
+    if (idx !== -1) {
+      mvps.splice(idx, 1);
+    }
+
+    app.store.data.homeData.mvp = mvps[0] || null;
+    app.store.saveData();
+
+    if (window.SupabaseService && typeof window.SupabaseService.syncMvpList === "function") {
+      await window.SupabaseService.syncMvpList(mvps);
+    }
+
+    this.renderManageMvpList();
+    app.renderMvpSection();
+    app.showToast("🗑️ Pemain MVP berhasil dihapus dari daftar!");
+  },
+
   renderMomentsList() {
     const container = document.getElementById("adminMomentsList");
     if (!container) return;

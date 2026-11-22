@@ -429,7 +429,10 @@ class TournamentStore {
       data.sponsors = JSON.parse(JSON.stringify(base.sponsors));
     }
     if (!data.homeData || typeof data.homeData !== "object") {
-      data.homeData = { mvp: null, news: [], moments: [], sponsors: { platinum: [], gold: [], media: [] } };
+      data.homeData = { mvp: null, mvps: [], news: [], moments: [], sponsors: { platinum: [], gold: [], media: [] } };
+    }
+    if (!Array.isArray(data.homeData.mvps)) {
+      data.homeData.mvps = (data.homeData.mvp && data.homeData.mvp.name) ? [data.homeData.mvp] : [];
     }
     if (!Array.isArray(data.homeData.news)) data.homeData.news = [];
     if (!Array.isArray(data.homeData.moments)) data.homeData.moments = [];
@@ -2732,6 +2735,13 @@ var app = window.app = Object.assign(window.app || {}, {
       } catch (_) { }
     }
 
+    // 3.1 Sinkronkan Bintang Lapangan (MVP Turnamen) dari Cloud Supabase
+    if (Array.isArray(data.mvps)) {
+      if (!this.store.data.homeData) this.store.data.homeData = {};
+      this.store.data.homeData.mvps = data.mvps;
+      this.store.data.homeData.mvp = data.mvps[0] || null;
+    }
+
     this.store.syncPlayerStatsFromMatches();
     this.store.syncKnockoutFromStandings();
     try {
@@ -3118,6 +3128,24 @@ var app = window.app = Object.assign(window.app || {}, {
         } catch (_) { }
         return;
       }
+      if (payload.id === 'mvp_spotlight_registry' && payload.rules_text) {
+        try {
+          const list = JSON.parse(payload.rules_text);
+          if (Array.isArray(list)) {
+            if (!this.store.data.homeData) this.store.data.homeData = {};
+            this.store.data.homeData.mvps = list;
+            this.store.data.homeData.mvp = list[0] || null;
+            this.store.saveData();
+            if (this.currentTab === "home") {
+              this.renderMvpSection();
+            }
+            if (window.admin && typeof window.admin.renderManageMvpList === 'function') {
+              window.admin.renderManageMvpList();
+            }
+          }
+        } catch (_) { }
+        return;
+      }
       if (!this.store.data.config) this.store.data.config = {};
       if (payload.youtube_live_url !== undefined) {
         this.store.data.config.youtubeLiveUrl = payload.youtube_live_url;
@@ -3303,6 +3331,9 @@ var app = window.app = Object.assign(window.app || {}, {
     const btnHeaderTambahLaga = document.getElementById("btnHeaderTambahLaga");
     if (btnHeaderTambahLaga) btnHeaderTambahLaga.style.display = isPanitia ? "inline-flex" : "none";
 
+    if (this.currentTab === "home") {
+      this.renderMvpSection();
+    }
     if (this.currentTab === "draw" && typeof this.renderDrawView === "function") {
       this.renderDrawView();
     }
@@ -4641,42 +4672,10 @@ var app = window.app = Object.assign(window.app || {}, {
   // 0. RENDER HOME (BERANDA UTAMA)
   renderHome() {
     this.renderLiveStreamHero();
-    const homeData = this.store.data.homeData || { mvp: null, news: [], moments: [] };
+    const homeData = this.store.data.homeData || { mvp: null, mvps: [], news: [], moments: [] };
 
-    // 1. Update MVP Card (tampilkan hanya jika panitia sudah mengisi data MVP)
-    const mvp = homeData.mvp;
-    const mvpSection = document.getElementById("mvpSpotlightSection");
-    if (mvp && mvp.name) {
-      if (mvpSection) mvpSection.style.display = "";
-      const mvpPhoto = document.getElementById("mvpPhoto");
-      if (mvpPhoto && mvp.photo) mvpPhoto.src = mvp.photo;
-
-      const mvpName = document.getElementById("mvpName");
-      if (mvpName) mvpName.textContent = mvp.number ? `${mvp.name} (#${mvp.number})` : mvp.name;
-
-      const mvpTeam = document.getElementById("mvpTeam");
-      if (mvpTeam) mvpTeam.textContent = mvp.team || "";
-
-      const mvpPos = document.getElementById("mvpPos");
-      if (mvpPos) mvpPos.textContent = mvp.position ? `Posisi: ${mvp.position}` : "";
-
-      const mvpGoals = document.getElementById("mvpGoals");
-      if (mvpGoals) mvpGoals.textContent = mvp.goals || 0;
-
-      const mvpAssists = document.getElementById("mvpAssists");
-      if (mvpAssists) mvpAssists.textContent = mvp.assists || 0;
-
-      const mvpMotm = document.getElementById("mvpMotm");
-      if (mvpMotm) mvpMotm.textContent = `${mvp.motmCount || 1}x`;
-
-      const mvpRating = document.getElementById("mvpRating");
-      if (mvpRating) mvpRating.textContent = this.calculatePlayerRating(mvp);
-
-      const mvpQuote = document.getElementById("mvpQuote");
-      if (mvpQuote) mvpQuote.textContent = mvp.quote ? `"${mvp.quote}"` : "";
-    } else if (mvpSection) {
-      mvpSection.style.display = "none";
-    }
+    // 1. Render Spotlight MVP Section (Dukungan Multi-MVP Carousel Geser)
+    this.renderMvpSection();
 
     // 2. Render News Grid (tampilkan hanya jika ada berita dari data)
     const newsSection = document.getElementById("homeNewsSection");
@@ -4706,6 +4705,170 @@ var app = window.app = Object.assign(window.app || {}, {
     this.renderSponsors();
     this.updateAdminVisibility();
     this.initScrollReveal();
+  },
+
+  // RENDER ACC 2026 MVP SPOTLIGHT (HORIZONTAL SWIPABLE CAROUSEL)
+  renderMvpSection() {
+    const mvpSection = document.getElementById("mvpSpotlightSection");
+    if (!mvpSection) return;
+
+    const isAdmin = this.isAdmin();
+    const adminActions = document.getElementById("mvpAdminActions");
+    const emptyNotice = document.getElementById("mvpEmptyAdminNotice");
+    const carouselWrapper = document.getElementById("mvpCarouselWrapper");
+    const track = document.getElementById("mvpCarouselTrack");
+    const dotsContainer = document.getElementById("mvpCarouselDots");
+
+    if (adminActions) adminActions.style.display = isAdmin ? "block" : "none";
+
+    const homeData = this.store.data.homeData || {};
+    let mvps = Array.isArray(homeData.mvps) ? homeData.mvps : [];
+    if (mvps.length === 0 && homeData.mvp && homeData.mvp.name) {
+      mvps = [homeData.mvp];
+    }
+
+    if (mvps.length === 0) {
+      if (isAdmin) {
+        mvpSection.style.display = "block";
+        if (emptyNotice) emptyNotice.style.display = "block";
+        if (carouselWrapper) carouselWrapper.style.display = "none";
+        if (dotsContainer) dotsContainer.style.display = "none";
+      } else {
+        mvpSection.style.display = "none";
+      }
+      return;
+    }
+
+    mvpSection.style.display = "block";
+    if (emptyNotice) emptyNotice.style.display = "none";
+    if (carouselWrapper) carouselWrapper.style.display = "block";
+
+    const btnPrev = document.getElementById("btnPrevMvp");
+    const btnNext = document.getElementById("btnNextMvp");
+    if (btnPrev) btnPrev.style.display = mvps.length > 1 ? "flex" : "none";
+    if (btnNext) btnNext.style.display = mvps.length > 1 ? "flex" : "none";
+
+    if (track) {
+      track.innerHTML = mvps.map((mvp, idx) => {
+        const pName = mvp.name || "Bintang Lapangan";
+        const pNum = mvp.number ? `(#${mvp.number})` : "";
+        const pTeam = mvp.team || "-";
+        const pCat = mvp.category ? `[${mvp.category}] ` : "";
+        const pPos = mvp.pos || mvp.position ? `Posisi: ${mvp.pos || mvp.position}` : "";
+        const pBadge = mvp.badge || "MVP MATCHDAY";
+        const pTagline = mvp.tagline || "PERFORMA GEMILANG &amp; FAIR PLAY";
+        const pPhoto = mvp.photo || "/assets/acc_logo.webp";
+        const pGoals = parseInt(mvp.goals, 10) || 0;
+        const pAssists = parseInt(mvp.assists, 10) || 0;
+        const pMotm = mvp.motm || `${mvp.motmCount || 1}x`;
+        const pRating = mvp.rating || this.calculatePlayerRating(mvp);
+        const pQuote = mvp.quote ? `"${mvp.quote}"` : "";
+
+        return `
+          <div class="mvp-carousel-slide" data-index="${idx}">
+            <div class="mvp-spotlight-card">
+              <div class="mvp-photo-wrapper">
+                <img src="${pPhoto}" alt="Foto ${pName}" class="mvp-photo-img" width="160" height="200" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/assets/acc_logo.webp'">
+                <div class="mvp-badge-overlay">
+                  <span>🏆</span> <span>${pBadge}</span>
+                </div>
+              </div>
+
+              <div class="mvp-details-col">
+                <div class="mvp-tagline">
+                  <span>🔥</span> <span>${pTagline}</span>
+                </div>
+                <div class="mvp-player-name">${pName} ${pNum}</div>
+                <div class="mvp-team-row">
+                  <span>${pTeam}</span>
+                  ${pPos ? `<span>•</span><span style="color: var(--secondary);">${pCat}${pPos}</span>` : ""}
+                </div>
+
+                <div class="mvp-stats-grid">
+                  <div class="mvp-stat-box">
+                    <div class="mvp-stat-val">${pGoals}</div>
+                    <div class="mvp-stat-lbl">GOL</div>
+                  </div>
+                  <div class="mvp-stat-box">
+                    <div class="mvp-stat-val">${pAssists}</div>
+                    <div class="mvp-stat-lbl">ASSIST</div>
+                  </div>
+                  <div class="mvp-stat-box">
+                    <div class="mvp-stat-val">${pMotm}</div>
+                    <div class="mvp-stat-lbl">Man of the Match</div>
+                  </div>
+                  <div class="mvp-stat-box">
+                    <div class="mvp-stat-val" style="color: var(--accent-gold);">${pRating}</div>
+                    <div class="mvp-stat-lbl">Rating Performa</div>
+                  </div>
+                </div>
+
+                ${pQuote ? `<div class="mvp-quote-box"><p>${pQuote}</p></div>` : ""}
+
+                <div style="display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; align-items: center;">
+                  <button class="btn btn-outline btn-sm" onclick="app.switchTab('stats')">
+                    ⚽ Lihat Statistik Turnamen Lengkap
+                  </button>
+                  ${isAdmin ? `
+                    <button class="btn btn-admin btn-sm" onclick="admin.openEditMvpItemModal('${mvp.id || idx}')" style="font-size: 0.75rem; padding: 4px 10px;">
+                      ✏️ Edit MVP
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="admin.deleteMvpItem('${mvp.id || idx}')" style="font-size: 0.75rem; padding: 4px 10px; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
+                      🗑️ Hapus
+                    </button>
+                  ` : ""}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      if (!track._scrollBound) {
+        track._scrollBound = true;
+        track.addEventListener("scroll", () => {
+          this.updateMvpCarouselDots();
+        }, { passive: true });
+      }
+    }
+
+    if (dotsContainer) {
+      if (mvps.length > 1) {
+        dotsContainer.style.display = "flex";
+        dotsContainer.innerHTML = mvps.map((_, i) => `
+          <div class="mvp-dot ${i === 0 ? 'active' : ''}" onclick="app.goToMvpSlide(${i})" title="Pemain ${i + 1}"></div>
+        `).join("");
+      } else {
+        dotsContainer.style.display = "none";
+      }
+    }
+  },
+
+  updateMvpCarouselDots() {
+    const track = document.getElementById("mvpCarouselTrack");
+    const dotsContainer = document.getElementById("mvpCarouselDots");
+    if (!track || !dotsContainer) return;
+    const dots = dotsContainer.querySelectorAll(".mvp-dot");
+    if (!dots || dots.length <= 1) return;
+    const slideWidth = track.clientWidth || 1;
+    const activeIdx = Math.min(dots.length - 1, Math.max(0, Math.round(track.scrollLeft / slideWidth)));
+    dots.forEach((d, idx) => {
+      d.classList.toggle("active", idx === activeIdx);
+    });
+  },
+
+  scrollMvpCarousel(dir) {
+    const track = document.getElementById("mvpCarouselTrack");
+    if (!track) return;
+    const slideWidth = track.clientWidth || 300;
+    track.scrollBy({ left: dir * slideWidth, behavior: "smooth" });
+  },
+
+  goToMvpSlide(index) {
+    const track = document.getElementById("mvpCarouselTrack");
+    if (!track) return;
+    const slideWidth = track.clientWidth || 300;
+    track.scrollTo({ left: index * slideWidth, behavior: "smooth" });
   },
 
   // RENDER ACC 2026 MOMENTS™ (FIFA WORLD CUP STYLE CAROUSEL)

@@ -255,6 +255,7 @@
         let mainConfig = null;
         let teamLogos = {};
         let teamMeta = {};
+        let mvpList = [];
         if (configListRes && configListRes.data && Array.isArray(configListRes.data)) {
           mainConfig = configListRes.data.find(c => c.id === 'config_main') || configListRes.data[0] || null;
           const logosRow = configListRes.data.find(c => c.id === 'team_logos_registry');
@@ -267,6 +268,12 @@
           if (metaRow && metaRow.rules_text) {
             try {
               teamMeta = JSON.parse(metaRow.rules_text) || {};
+            } catch (_) { }
+          }
+          const mvpRow = configListRes.data.find(c => c.id === 'mvp_spotlight_registry');
+          if (mvpRow && mvpRow.rules_text) {
+            try {
+              mvpList = JSON.parse(mvpRow.rules_text) || [];
             } catch (_) { }
           }
         }
@@ -286,6 +293,7 @@
           config: mainConfig,
           teamLogos: teamLogos,
           teamMeta: teamMeta,
+          mvps: mvpList,
           teams: teamsList,
           matches: matchesRes.data || null,
           moments: momentsRes.data || null,
@@ -445,6 +453,28 @@
         }
         return !error;
       } catch (e) {
+        return false;
+      }
+    }
+
+    // Push MVP Spotlight Registry (Multiple MVPs Carousel Sync)
+    async syncMvpList(mvpList) {
+      if (!this.client || !this.isConfigured) return false;
+      try {
+        const cleanList = Array.isArray(mvpList) ? mvpList : [];
+        const payload = {
+          id: 'mvp_spotlight_registry',
+          rules_text: JSON.stringify(cleanList),
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await this.client.from('tournament_config').upsert(payload);
+        if (error) {
+          console.warn('[Supabase] syncMvpList error:', error);
+          return false;
+        }
+        return true;
+      } catch (err) {
+        console.warn('[Supabase] syncMvpList exception:', err);
         return false;
       }
     }
