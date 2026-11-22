@@ -338,16 +338,19 @@
           ? (parseInt(String(match.liveMinute || "1").replace(/\D/g, ''), 10) || 1)
           : 0;
 
-        // Siapkan kartu dan sematkan metadata laga (lineup 5 pemain, pergantian, & foul) secara aman tanpa merusak skema database
+        // Siapkan kartu dan sematkan metadata laga (lineup 5 pemain, pergantian, foul, & pause timer) secara aman tanpa merusak skema database
         const cleanCards = (Array.isArray(match.cards) ? [...match.cards] : []).filter(c => c && !c._meta);
-        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined || match.knockoutKey) {
+        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined || match.knockoutKey || match.isTimerPaused !== undefined || match.liveElapsedSec !== undefined) {
           cleanCards.push({
             _meta: true,
             knockoutKey: match.knockoutKey || null,
             lineup: match.lineup || null,
             substitutions: Array.isArray(match.substitutions) ? match.substitutions : [],
             homeFouls: parseInt(match.homeFouls, 10) || 0,
-            awayFouls: parseInt(match.awayFouls, 10) || 0
+            awayFouls: parseInt(match.awayFouls, 10) || 0,
+            isTimerPaused: Boolean(match.isTimerPaused),
+            liveElapsedSec: typeof match.liveElapsedSec === "number" ? match.liveElapsedSec : null,
+            liveClockDisplay: match.liveClockDisplay || null
           });
         }
 

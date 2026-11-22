@@ -6047,6 +6047,37 @@ body.mobile-menu-active .mobile-menu-content {
   box-shadow: 0 0 10px #ef4444;
 }
 
+.md-live-minute-top .md-live-status-label {
+  font-size: 0.85em;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.md-live-minute-top.is-paused {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  color: #fbbf24 !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.28) !important;
+}
+
+.md-live-minute-top.is-paused .pulse-dot {
+  background: #fbbf24 !important;
+  box-shadow: 0 0 10px #fbbf24 !important;
+  animation: none !important;
+}
+
+.match-status-bar.bar-live.is-paused {
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.match-status-bar.bar-live.is-paused .pulse-dot {
+  background: #fbbf24 !important;
+  box-shadow: 0 0 10px #fbbf24 !important;
+  animation: none !important;
+}
+
 @media (min-width: 1024px) {
   .md-live-minute-top {
     font-size: 1.7rem !important;

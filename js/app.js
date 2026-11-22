@@ -233,6 +233,10 @@ class TournamentStore {
     let homeFouls = typeof m.homeFouls === "number" ? m.homeFouls : (m.home_fouls !== undefined ? parseInt(m.home_fouls, 10) || 0 : 0);
     let awayFouls = typeof m.awayFouls === "number" ? m.awayFouls : (m.away_fouls !== undefined ? parseInt(m.away_fouls, 10) || 0 : 0);
 
+    let isTimerPaused = m.isTimerPaused !== undefined ? Boolean(m.isTimerPaused) : false;
+    let liveElapsedSec = typeof m.liveElapsedSec === "number" ? m.liveElapsedSec : null;
+    let liveClockDisplay = m.liveClockDisplay || null;
+
     const metaCard = cleanCards.find(c => c && c._meta);
     if (metaCard) {
       if (metaCard.knockoutKey && !knockoutKey) knockoutKey = metaCard.knockoutKey;
@@ -240,6 +244,9 @@ class TournamentStore {
       if (Array.isArray(metaCard.substitutions) && substitutions.length === 0) substitutions = metaCard.substitutions;
       if (typeof metaCard.homeFouls === "number") homeFouls = metaCard.homeFouls;
       if (typeof metaCard.awayFouls === "number") awayFouls = metaCard.awayFouls;
+      if (metaCard.isTimerPaused !== undefined) isTimerPaused = Boolean(metaCard.isTimerPaused);
+      if (typeof metaCard.liveElapsedSec === "number") liveElapsedSec = metaCard.liveElapsedSec;
+      if (metaCard.liveClockDisplay) liveClockDisplay = metaCard.liveClockDisplay;
     }
     // Filter ketat agar metadata atau kartu tanpa nama pemain tidak pernah masuk ke cards
     cleanCards = cleanCards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
@@ -268,6 +275,9 @@ class TournamentStore {
       homeScoreLive: homeScore,
       awayScoreLive: awayScore,
       liveMinute: status === "live" ? (m.liveMinute || (m.minute_live ? `${parseInt(m.minute_live, 10) || 1}'` : "1'")) : "",
+      isTimerPaused,
+      liveElapsedSec,
+      liveClockDisplay,
       scorers: Array.isArray(m.scorers) ? m.scorers : [],
       cards: cleanCards,
       lineup: lineup || null,
@@ -285,7 +295,7 @@ class TournamentStore {
     if (m.penaltyWinner !== undefined || m.penalty_winner !== undefined) {
       normalized.penaltyWinner = m.penaltyWinner !== undefined ? m.penaltyWinner : m.penalty_winner;
     }
-    if (m.liveStartedAt) normalized.liveStartedAt = m.liveStartedAt;
+    if (m.liveStartedAt && !isTimerPaused) normalized.liveStartedAt = m.liveStartedAt;
     return normalized;
   }
 
@@ -1596,6 +1606,16 @@ var app = window.app = Object.assign(window.app || {}, {
   // =========================================================
   formatMatchLiveMinute(m) {
     if (!m) return "0:00";
+    if (m.isTimerPaused) {
+      if (m.liveClockDisplay) return m.liveClockDisplay;
+      if (typeof m.liveElapsedSec === "number") {
+        const pMin = Math.min(50, Math.floor(m.liveElapsedSec / 60));
+        const pSec = m.liveElapsedSec % 60;
+        return `${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
+      }
+      const rawMin = parseInt(String(m.liveMinute || "1").replace(/\D/g, ""), 10) || 1;
+      return `${rawMin - 1}:00`;
+    }
     const rawStr = String(m.liveMinute || "").trim();
     if (rawStr.includes(":")) {
       return rawStr.replace(/[^0-9:]/g, "");
@@ -1658,10 +1678,23 @@ var app = window.app = Object.assign(window.app || {}, {
     // 1-second live ticker untuk jam digital live minute pada Detail Laga & modal
     this._liveClockTicker = setInterval(() => {
       const clockEl = document.getElementById("mdLiveClockDigits");
+      const wrapperEl = document.getElementById("mdLiveMinuteTop");
+      const labelEl = document.getElementById("mdLiveStatusLabel");
       if (clockEl && this.activeDetailMatchId) {
         const activeM = (this.store?.data?.matches || []).find(m => m.id === this.activeDetailMatchId && m.status === 'live');
         if (activeM) {
           clockEl.textContent = this.formatMatchLiveMinute(activeM);
+          if (wrapperEl) {
+            if (activeM.isTimerPaused) {
+              wrapperEl.classList.add("is-paused");
+              wrapperEl.setAttribute("title", "Pertandingan Sedang Dijeda (Pause)");
+              if (labelEl) labelEl.textContent = "JEDA";
+            } else {
+              wrapperEl.classList.remove("is-paused");
+              wrapperEl.setAttribute("title", "Live Minute Laga (m:dd)");
+              if (labelEl) labelEl.textContent = "LIVE";
+            }
+          }
         }
       }
     }, 1000);
@@ -1681,6 +1714,9 @@ var app = window.app = Object.assign(window.app || {}, {
       const isOfficial = this.isAdmin();
 
       liveMatches.forEach(m => {
+        // JIKA TIMER DIJEDA OLEH PANITIA, JANGAN NAIKKAN MENIT SAMA SEKALI
+        if (m.isTimerPaused) return;
+
         let curMin = parseInt((m.liveMinute || "1'").toString().replace(/\D/g, ""), 10) || 1;
         if (!m.liveStartedAt) {
           m.liveStartedAt = now - ((curMin - 1) * 60000);
@@ -2375,20 +2411,33 @@ var app = window.app = Object.assign(window.app || {}, {
         }
 
         if (norm.status === "live") {
-          const isActiveInAdminModal = Boolean(this.isAdmin() && (window.admin.activeMatchId === norm.id || window.admin.activeQuickMatchId === norm.id));
+          const isActiveInAdminModal = Boolean(this.isAdmin() && window.admin && (window.admin.activeMatchId === norm.id || window.admin.activeQuickMatchId === norm.id));
           const remoteMinNum = Math.max(1, parseInt(remoteMatch.minute_live, 10) || parseInt(String(norm.liveMinute || "1").replace(/\D/g, ""), 10) || 1);
-          if (curMatch && isActiveInAdminModal) {
-            norm.liveMinute = curMatch.liveMinute || `${remoteMinNum}'`;
-            if (curMatch.liveStartedAt) norm.liveStartedAt = curMatch.liveStartedAt;
+
+          if (norm.isTimerPaused) {
+            delete norm.liveStartedAt;
+            if (curMatch) delete curMatch.liveStartedAt;
+            if (!norm.liveClockDisplay && typeof norm.liveElapsedSec === "number") {
+              const pMin = Math.min(50, Math.floor(norm.liveElapsedSec / 60));
+              const pSec = norm.liveElapsedSec % 60;
+              norm.liveClockDisplay = `${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
+            }
           } else {
-            norm.liveMinute = `${remoteMinNum}'`;
-            if (curMatch && curMatch.liveStartedAt) {
-              const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
-              norm.liveStartedAt = Math.abs(remoteMinNum - curElapsed) > 1
-                ? (Date.now() - ((remoteMinNum - 1) * 60000))
-                : curMatch.liveStartedAt;
+            if (curMatch && isActiveInAdminModal && !curMatch.isTimerPaused) {
+              norm.liveMinute = curMatch.liveMinute || `${remoteMinNum}'`;
+              if (curMatch.liveStartedAt) norm.liveStartedAt = curMatch.liveStartedAt;
             } else {
-              norm.liveStartedAt = Date.now() - ((remoteMinNum - 1) * 60000);
+              norm.liveMinute = `${remoteMinNum}'`;
+              if (curMatch && curMatch.liveStartedAt && !curMatch.isTimerPaused) {
+                const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
+                norm.liveStartedAt = Math.abs(remoteMinNum - curElapsed) > 1
+                  ? (Date.now() - ((remoteMinNum - 1) * 60000))
+                  : curMatch.liveStartedAt;
+              } else if (typeof norm.liveElapsedSec === "number" && norm.liveElapsedSec > 0) {
+                norm.liveStartedAt = Date.now() - (norm.liveElapsedSec * 1000);
+              } else {
+                norm.liveStartedAt = Date.now() - ((remoteMinNum - 1) * 60000);
+              }
             }
           }
         } else {
@@ -2553,6 +2602,9 @@ var app = window.app = Object.assign(window.app || {}, {
             if (Array.isArray(metaObj.substitutions)) mapped.substitutions = metaObj.substitutions;
             if (typeof metaObj.homeFouls === "number") mapped.homeFouls = metaObj.homeFouls;
             if (typeof metaObj.awayFouls === "number") mapped.awayFouls = metaObj.awayFouls;
+            if (metaObj.isTimerPaused !== undefined) mapped.isTimerPaused = Boolean(metaObj.isTimerPaused);
+            if (typeof metaObj.liveElapsedSec === "number") mapped.liveElapsedSec = metaObj.liveElapsedSec;
+            if (metaObj.liveClockDisplay) mapped.liveClockDisplay = metaObj.liveClockDisplay;
           }
           mapped.cards = payload.cards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
         }
@@ -2612,17 +2664,29 @@ var app = window.app = Object.assign(window.app || {}, {
         }
 
         if ((mapped.status || curMatch.status) === 'live') {
-          const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-          if (!mapped.liveStartedAt) {
-            if (curMatch.liveStartedAt) {
-              const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
-              if (Math.abs(minNum - curElapsed) > 1) {
-                mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+          if (mapped.isTimerPaused) {
+            delete mapped.liveStartedAt;
+            delete curMatch.liveStartedAt;
+            if (!mapped.liveClockDisplay && typeof mapped.liveElapsedSec === "number") {
+              const pMin = Math.min(50, Math.floor(mapped.liveElapsedSec / 60));
+              const pSec = mapped.liveElapsedSec % 60;
+              mapped.liveClockDisplay = `${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
+            }
+          } else {
+            const minNum = parseInt((mapped.liveMinute || curMatch.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
+            if (!mapped.liveStartedAt) {
+              if (curMatch.liveStartedAt && !curMatch.isTimerPaused) {
+                const curElapsed = Math.floor((Date.now() - curMatch.liveStartedAt) / 60000) + 1;
+                if (Math.abs(minNum - curElapsed) > 1) {
+                  mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
+                } else {
+                  mapped.liveStartedAt = curMatch.liveStartedAt;
+                }
+              } else if (typeof mapped.liveElapsedSec === "number" && mapped.liveElapsedSec > 0) {
+                mapped.liveStartedAt = Date.now() - (mapped.liveElapsedSec * 1000);
               } else {
-                mapped.liveStartedAt = curMatch.liveStartedAt;
+                mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
               }
-            } else {
-              mapped.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
             }
           }
         } else if ((mapped.status || curMatch.status) === 'finished') {
@@ -4856,11 +4920,12 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
         `;
       } else if (isLive) {
+        const isPaused = Boolean(m.isTimerPaused);
         statusBarHtml = `
-          <div class="match-status-bar bar-live">
+          <div class="match-status-bar ${isPaused ? 'bar-live is-paused' : 'bar-live'}">
             <div class="bar-left">
               <span class="pulse-dot"></span>
-              <strong>LIVE${cleanMinBadge ? ` • Menit ${cleanMinBadge}` : ''}</strong>
+              <strong>${isPaused ? '⏸️ JEDA' : 'LIVE'}${cleanMinBadge ? ` • Menit ${cleanMinBadge}` : ''}</strong>
             </div>
             <div class="bar-right">
               <span>${m.pitch || 'Lapangan Utama'}</span>
@@ -8177,8 +8242,13 @@ var app = window.app = Object.assign(window.app || {}, {
     let statusText = "Akan Datang";
     let statusClass = "upcoming";
     if (isLive) {
-      statusText = `🔴 LIVE ${match.liveMinute || ''}`.trim();
-      statusClass = "live";
+      if (match.isTimerPaused) {
+        statusText = `⏸️ JEDA ${match.liveMinute || ''}`.trim();
+        statusClass = "live is-paused";
+      } else {
+        statusText = `🔴 LIVE ${match.liveMinute || ''}`.trim();
+        statusClass = "live";
+      }
     } else if (isFinished) {
       statusText = "🏁 Selesai (FT)";
       statusClass = "finished";
@@ -8349,8 +8419,9 @@ var app = window.app = Object.assign(window.app || {}, {
           <!-- CENTER SCORE -->
           <div class="md-score-center">
             ${isLive ? `
-              <div class="md-live-minute-top" title="Live Minute Laga (m:dd)">
+              <div class="md-live-minute-top ${match.isTimerPaused ? 'is-paused' : ''}" id="mdLiveMinuteTop" title="${match.isTimerPaused ? 'Pertandingan Sedang Dijeda (Pause)' : 'Live Minute Laga (m:dd)'}">
                 <span class="pulse-dot"></span>
+                <span class="md-live-status-label" id="mdLiveStatusLabel">${match.isTimerPaused ? 'JEDA' : 'LIVE'}</span>
                 <span class="md-live-clock-digits" id="mdLiveClockDigits">${this.formatMatchLiveMinute(match)}</span>
               </div>
             ` : ''}
