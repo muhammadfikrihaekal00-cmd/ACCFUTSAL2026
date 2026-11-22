@@ -1544,13 +1544,13 @@ html.snap-scroll-active .home-slide-nav {
 
 /* Moment Section */
 .acc-moments-section {
-  background: rgba(15, 23, 42, 0.65) !important;
+  background: radial-gradient(circle at 50% 20%, rgba(2, 132, 199, 0.12) 0%, rgba(15, 23, 42, 0.8) 55%, rgba(6, 11, 25, 0.95) 100%) !important;
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 26px !important;
-  padding: 28px 30px !important;
-  box-shadow: var(--shadow-card) !important;
+  padding: 28px 32px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 40px rgba(2, 132, 199, 0.12) !important;
 }
 
 .moments-header-row {
@@ -1572,34 +1572,35 @@ html.snap-scroll-active .home-slide-nav {
   width: 5px;
   height: 24px;
   border-radius: 9999px;
-  background: linear-gradient(180deg, #fbbf24, #d97706);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.55);
+  background: linear-gradient(180deg, #38bdf8, #0284c7);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
 }
 
 .moment-arrow-btn {
-  background: rgba(6, 10, 23, 0.65) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: rgba(6, 10, 23, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
   color: #f8fafc !important;
   border-radius: 9999px !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transition: all 200ms ease !important;
 }
 
 .moment-arrow-btn:hover {
-  border-color: rgba(245, 158, 11, 0.65) !important;
-  color: #fbbf24 !important;
-  background: rgba(245, 158, 11, 0.14) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  background: #0284c7 !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5) !important;
 }
 
 .moment-card {
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 18px !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 20px !important;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease, border-color 0.28s ease !important;
 }
 
 .moment-card:hover {
-  transform: translateY(-5px) !important;
-  border-color: rgba(245, 158, 11, 0.6) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 24px rgba(245, 158, 11, 0.2) !important;
+  transform: translateY(-7px) scale(1.02) !important;
+  border-color: rgba(56, 189, 248, 0.7) !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.3) !important;
 }
 
 /* ============================================================================
@@ -3928,10 +3929,18 @@ body.mobile-menu-active .mobile-menu-content {
     margin-bottom: 48px !important;
   }
 
-  .live-stream-card,
-  .acc-moments-section {
+  .live-stream-card {
     padding: 18px 16px !important;
     border-radius: 20px !important;
+  }
+
+  #accMomentsContainer.home-slide-section,
+  .acc-moments-section {
+    min-height: auto !important;
+    justify-content: flex-start !important;
+    padding: 18px 14px !important;
+    border-radius: 20px !important;
+    margin-bottom: 24px !important;
   }
 
   .sponsors-showcase-bar {

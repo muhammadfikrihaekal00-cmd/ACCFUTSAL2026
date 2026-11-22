@@ -4899,44 +4899,73 @@ var app = window.app = Object.assign(window.app || {}, {
     const moments = Array.isArray(this.store.data.moments) ? this.store.data.moments : [];
 
     if (moments.length === 0) {
+      container.classList.remove("is-centered");
       container.innerHTML = `
-        <div style="color: #94a3b8; font-size: 0.85rem; padding: 24px; text-align: center; width: 100%;">
-          Belum ada momen pertandingan yang diunggah.
+        <div style="color: #94a3b8; font-size: 0.88rem; padding: 36px 20px; text-align: center; width: 100%; background: rgba(15, 23, 42, 0.4); border-radius: 18px; border: 1px dashed rgba(255, 255, 255, 0.15);">
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">📸</div>
+          <div style="font-weight: 800; color: #f8fafc; font-size: 1rem; margin-bottom: 6px;">Belum Ada Sorotan Momen</div>
+          <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; max-width: 440px; margin: 0 auto;">
+            Momen spektakuler pertandingan akan ditampilkan di sini setelah diunggah oleh panitia.
+          </p>
         </div>
       `;
       return;
     }
 
+    if (moments.length <= 3) {
+      container.classList.add("is-centered");
+    } else {
+      container.classList.remove("is-centered");
+    }
+
     const isAdmin = this.isAdmin();
-    container.innerHTML = moments.map(m => `
-      <div class="moment-card" style="background-image: url('${m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg'}');" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat momen">
-        <div class="moment-badge-new">${m.tag || 'NEW'}</div>
-        <div class="moment-badge-tag">${m.badge || '🔥 HIGHLIGHT'}</div>
-        ${isAdmin ? `
-          <div class="moment-admin-quick-actions" style="position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 10;">
-            <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); admin.editMoment('${m.id}')" style="background: rgba(15, 23, 42, 0.9); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.6); padding: 3px 8px; font-size: 0.72rem; border-radius: 6px; backdrop-filter: blur(4px); font-weight: 700;" title="Edit Momen Ini">
-              ✏️ Edit
-            </button>
-            <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); admin.deleteMoment('${m.id}')" style="background: rgba(15, 23, 42, 0.9); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.6); padding: 3px 8px; font-size: 0.72rem; border-radius: 6px; backdrop-filter: blur(4px); font-weight: 700;" title="Hapus Momen Ini">
-              🗑️
-            </button>
+    container.innerHTML = moments.map(m => {
+      const photoUrl = m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg';
+      const badgeText = m.badge || '🔥 HIGHLIGHT';
+      const tagText = m.tag || 'NEW';
+      const playerText = m.player ? `<span>⚽</span> <span>${m.player}</span>` : '';
+      const teamText = m.team ? `<span>📍</span> <span>${m.team}</span>` : '';
+      const titleText = m.title || 'Momen ACC 2026';
+
+      return `
+        <div class="moment-card" style="background-image: url('${photoUrl}');" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat sorotan momen">
+          <!-- Top Bar: Non-colliding Flex Layout -->
+          <div class="moment-card-topbar">
+            <div class="moment-badges-wrap">
+              <span class="moment-badge-tag">${badgeText}</span>
+              ${tagText ? `<span class="moment-badge-new">${tagText}</span>` : ''}
+            </div>
+            ${isAdmin ? `
+              <div class="moment-admin-quick-actions" onclick="event.stopPropagation()">
+                <button type="button" class="moment-quick-btn edit" onclick="event.stopPropagation(); admin.editMoment('${m.id}')" title="Edit Momen">
+                  ✏️ Edit
+                </button>
+                <button type="button" class="moment-quick-btn delete" onclick="event.stopPropagation(); admin.deleteMoment('${m.id}')" title="Hapus Momen">
+                  🗑️
+                </button>
+              </div>
+            ` : ''}
           </div>
-        ` : ''}
-        <div class="moment-gradient-overlay">
-          <div class="moment-player-row">
-            <span>⚽</span> <span>${m.player || ''}</span>
+
+          <!-- Bottom Gradient Overlay -->
+          <div class="moment-gradient-overlay">
+            ${playerText ? `<div class="moment-player-row">${playerText}</div>` : ''}
+            <div class="moment-title-text">${titleText}</div>
+            ${teamText ? `<div class="moment-team-text">${teamText}</div>` : ''}
+            <div class="moment-card-hint">
+              <span>Buka Momen</span>
+              <span class="hint-arrow">↗</span>
+            </div>
           </div>
-          <div class="moment-title-text">${m.title || ''}</div>
-          <div class="moment-team-text">${m.team || ''}</div>
         </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   },
 
   scrollMoments(direction) {
     const carousel = document.getElementById("momentsCarousel");
     if (carousel) {
-      carousel.scrollBy({ left: direction * 260, behavior: "smooth" });
+      carousel.scrollBy({ left: direction * 300, behavior: "smooth" });
     }
   },
 
