@@ -337,8 +337,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261123_v48">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v48">
+  <link rel="stylesheet" href="/css/styles.css?v=20261123_v49">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v49">
 </head>
 
 <body class="snap-scroll-active">
@@ -3250,15 +3250,14 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   </div>
 
   <!-- MODAL: KELOLA DAFTAR MVP (PANITIA) -->
-  <div id="modalManageMvp" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-backdrop" onclick="admin.closeManageMvpModal()"></div>
-    <div class="modal-content" style="max-width: 680px; max-height: 90vh; display: flex; flex-direction: column;">
+  <div id="modalManageMvp" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width: 680px; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-header"
         style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.8));">
         <h3 class="modal-title" style="color: var(--accent-gold); display: flex; align-items: center; gap: 8px;">
           <span>⭐</span> Manajemen Bintang Lapangan (MVP)
         </h3>
-        <button type="button" class="modal-close" onclick="admin.closeManageMvpModal()">&times;</button>
+        <button type="button" class="modal-close btn-modal-close" onclick="admin.closeManageMvpModal()">&times;</button>
       </div>
       <div class="modal-body" style="overflow-y: auto; padding: 18px;">
         <div
@@ -3279,21 +3278,20 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 0.74rem; color: var(--text-muted);">☁️ Perubahan tersimpan otomatis ke Cloud
           Supabase</span>
-        <button type="button" class="btn btn-outline" onclick="admin.closeManageMvpModal()">Tutup</button>
+        <button type="button" class="btn btn-outline btn-modal-close" onclick="admin.closeManageMvpModal()">Tutup</button>
       </div>
     </div>
   </div>
 
   <!-- MODAL: FORM TAMBAH / EDIT MVP ITEM -->
-  <div id="modalEditMvpItem" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-backdrop" onclick="admin.closeEditMvpItemModal()"></div>
-    <div class="modal-content" style="max-width: 600px; max-height: 90vh; display: flex; flex-direction: column;">
+  <div id="modalEditMvpItem" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width: 600px; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-header"
         style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.9));">
         <h3 class="modal-title" id="modalEditMvpTitle" style="color: var(--accent-gold);">
           ⭐ Edit Pemain MVP
         </h3>
-        <button type="button" class="modal-close" onclick="admin.closeEditMvpItemModal()">&times;</button>
+        <button type="button" class="modal-close btn-modal-close" onclick="admin.closeEditMvpItemModal()">&times;</button>
       </div>
       <form id="formEditMvpItem" onsubmit="admin.saveMvpItem(event)"
         style="display: flex; flex-direction: column; overflow: hidden; margin: 0;">
@@ -3416,7 +3414,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         </div>
         <div class="modal-footer"
           style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border-color);">
-          <button type="button" class="btn btn-outline" onclick="admin.closeEditMvpItemModal()">Batal</button>
+          <button type="button" class="btn btn-outline btn-modal-close" onclick="admin.closeEditMvpItemModal()">Batal</button>
           <button type="submit" class="btn btn-primary"
             style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
             💾 Simpan MVP
@@ -3431,11 +3429,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v48"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v48"></script>
-  <script defer src="/js/data.js?v=20261123_v48"></script>
-  <script defer src="/js/admin.js?v=20261123_v48"></script>
-  <script defer src="/js/app.js?v=20261123_v48"></script>
+  <script defer src="/js/security.js?v=20261123_v49"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v49"></script>
+  <script defer src="/js/data.js?v=20261123_v49"></script>
+  <script defer src="/js/admin.js?v=20261123_v49"></script>
+  <script defer src="/js/app.js?v=20261123_v49"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
