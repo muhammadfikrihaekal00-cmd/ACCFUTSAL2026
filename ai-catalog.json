@@ -1,43 +1,84 @@
 {
-  "$schema": "https://agentcatalog.org/schema/v1/ai-catalog.json",
-  "name": "ACC Futsal 2026",
-  "version": "1.0.0",
-  "description": "Portal Resmi Al-Fayyadh Champions Cup 2026 - Turnamen Futsal SD & SMP se-Indonesia",
-  "homepage": "https://accfutsal2026.vercel.app",
-  "provider": {
-    "name": "Ma'had Tahfizhul Qur'an Al Fayyadh",
-    "url": "https://accfutsal2026.vercel.app"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Ma'had Tahfizhul Qur'an Al Fayyadh",
+    "identifier": "did:web:accfutsal2026.vercel.app",
+    "documentationUrl": "https://accfutsal2026.vercel.app/juknis",
+    "logoUrl": "https://accfutsal2026.vercel.app/assets/acc_logo.png"
   },
-  "endpoints": [
+  "entries": [
     {
-      "name": "matches",
+      "identifier": "urn:air:accfutsal2026:tournament:jadwal",
+      "displayName": "Jadwal & Skor Pertandingan",
+      "type": "api",
       "url": "https://accfutsal2026.vercel.app/jadwal",
-      "description": "Jadwal dan skor pertandingan turnamen"
+      "description": "Informasi jadwal pertandingan, live score, dan hasil skor resmi turnamen ACC 2026.",
+      "representativeQueries": [
+        "jadwal futsal acc 2026",
+        "live score pertandingan futsal",
+        "hasil pertandingan hari ini"
+      ]
     },
     {
-      "name": "standings",
+      "identifier": "urn:air:accfutsal2026:tournament:klasemen",
+      "displayName": "Klasemen Grup Turnamen",
+      "type": "api",
       "url": "https://accfutsal2026.vercel.app/klasemen",
-      "description": "Klasemen grup turnamen"
+      "description": "Klasemen perolehan poin dan peringkat tim pada babak penyisihan grup SD & SMP.",
+      "representativeQueries": [
+        "klasemen grup futsal acc 2026",
+        "posisi tim grup a b c d",
+        "poin klasemen futsal"
+      ]
     },
     {
-      "name": "bracket",
+      "identifier": "urn:air:accfutsal2026:tournament:bagan",
+      "displayName": "Bagan Fase Gugur",
+      "type": "api",
       "url": "https://accfutsal2026.vercel.app/bagan",
-      "description": "Bagan fase gugur"
+      "description": "Bagan skema babak gugur perempat final, semifinal, perebutan juara 3, dan grand final.",
+      "representativeQueries": [
+        "bagan knockout turnamen acc 2026",
+        "jadwal perempat final futsal",
+        "jadwal grand final futsal"
+      ]
     },
     {
-      "name": "teams",
+      "identifier": "urn:air:accfutsal2026:tournament:tim",
+      "displayName": "Profil Tim & Pemain",
+      "type": "api",
       "url": "https://accfutsal2026.vercel.app/tim",
-      "description": "Daftar tim dan pemain"
+      "description": "Daftar 32 tim resmi (16 SD & 16 SMP), skuad pemain, nomor punggung, dan ofisial.",
+      "representativeQueries": [
+        "daftar tim turnamen futsal 2026",
+        "skuad pemain tim futsal",
+        "profil ofisial dan pelatih"
+      ]
     },
     {
-      "name": "stats",
+      "identifier": "urn:air:accfutsal2026:tournament:statistik",
+      "displayName": "Statistik Top Skor & Disiplin",
+      "type": "api",
       "url": "https://accfutsal2026.vercel.app/statistik",
-      "description": "Statistik top skor dan kartu"
+      "description": "Peringkat pencetak gol terbanyak (top goalscorer) serta rekapitulasi kartu kuning dan kartu merah.",
+      "representativeQueries": [
+        "top skor futsal acc 2026",
+        "pencetak gol terbanyak",
+        "daftar kartu kuning dan merah"
+      ]
     },
     {
-      "name": "rules",
+      "identifier": "urn:air:accfutsal2026:tournament:juknis",
+      "displayName": "Petunjuk Teknis & Regulasi",
+      "type": "api",
       "url": "https://accfutsal2026.vercel.app/juknis",
-      "description": "Regulasi dan juknis pertandingan"
+      "description": "Peraturan resmi pertandingan, format turnamen, dan sanksi teknis turnamen Futsal ACC 2026.",
+      "representativeQueries": [
+        "juknis turnamen futsal acc",
+        "peraturan dan tata tertib futsal",
+        "regulasi turnamen 2026"
+      ]
     }
   ]
 }

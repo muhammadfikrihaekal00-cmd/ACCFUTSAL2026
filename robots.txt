@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://accfutsal2026.vercel.app/sitemap.xml
+Agentmap: https://accfutsal2026.vercel.app/.well-known/ai-catalog.json

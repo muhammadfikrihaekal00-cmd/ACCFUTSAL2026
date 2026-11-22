@@ -23,6 +23,10 @@
       "destination": "/ai-catalog.json"
     },
     {
+      "source": "/ard.json",
+      "destination": "/ard.json"
+    },
+    {
       "source": "/manifest.json",
       "destination": "/manifest.json"
     },
@@ -45,7 +49,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*)ai-catalog.json",
+      "source": "/(.*)(ai-catalog|ard).json",
       "headers": [
         {
           "key": "Content-Type",
