@@ -134,10 +134,19 @@ class TournamentStore {
     };
   }
 
+  isInvalidMatchId(id) {
+    if (!id) return true;
+    const cleanId = String(id).trim();
+    if (cleanId === 'M_SMP_23') return true; // Phantom duplicate
+    if (/^T\d+$/i.test(cleanId)) return true; // Team IDs (e.g. T01..T32) are never match IDs!
+    if (cleanId.includes('registry') || cleanId.includes('config') || cleanId === 'team_meta_registry' || cleanId === 'team_logos_registry') return true;
+    return false;
+  }
+
   normalizeMatch(m, teams = []) {
     if (!m || typeof m !== "object") return null;
     const id = String(m.id || "").trim();
-    if (!id || id.includes('registry') || id.includes('config') || id === 'team_meta_registry' || id === 'team_logos_registry') {
+    if (this.isInvalidMatchId(id)) {
       return null;
     }
 
@@ -253,13 +262,29 @@ class TournamentStore {
     // Filter ketat agar metadata atau kartu tanpa nama pemain tidak pernah masuk ke cards
     cleanCards = cleanCards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
 
+    // Auto-heal group & roundName jika kedua tim bertanding berasal dari grup yang sama
+    let finalGroup = group || null;
+    let finalRoundName = roundName;
+    if (stage === "group" && homeId && awayId && Array.isArray(teams) && teams.length > 0) {
+      const hTeam = teams.find(t => t.id === homeId);
+      const aTeam = teams.find(t => t.id === awayId);
+      if (hTeam && aTeam) {
+        const hGrp = hTeam.group || hTeam.group_letter;
+        const aGrp = aTeam.group || aTeam.group_letter;
+        if (hGrp && aGrp && hGrp === aGrp && finalGroup !== hGrp) {
+          finalGroup = hGrp;
+          finalRoundName = `Grup ${hGrp} (${category || 'SMP'})`;
+        }
+      }
+    }
+
     const normalized = {
       id,
       category,
-      group: group || null,
+      group: finalGroup,
       stage,
       knockoutKey,
-      roundName,
+      roundName: finalRoundName,
       day: day || 1,
       matchday: (m.matchday !== undefined && m.matchday !== null) ? parseInt(m.matchday, 10) : (day || 1),
       date: dateStr,
@@ -383,7 +408,7 @@ class TournamentStore {
     // Normalisasi struktur tim & laga dari cache agar tidak pernah crash (tanpa mengubah isi data!)
     data.teams = data.teams.map((t, idx) => this.normalizeTeam(t, idx)).filter(Boolean);
     data.matches = data.matches
-      .filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'))
+      .filter(m => m && m.id && !this.isInvalidMatchId(m.id))
       .map(m => this.normalizeMatch(m, data.teams))
       .filter(Boolean);
 
@@ -1302,7 +1327,7 @@ var app = window.app = Object.assign(window.app || {}, {
     this.ensureStore();
     if (this.store && this.store.data && Array.isArray(this.store.data.matches)) {
       const origCount = this.store.data.matches.length;
-      this.store.data.matches = this.store.data.matches.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'));
+      this.store.data.matches = this.store.data.matches.filter(m => m && m.id && !this.store.isInvalidMatchId(m.id));
       if (this.store.data.matches.length !== origCount) {
         this.store.saveData();
       }
@@ -1310,6 +1335,8 @@ var app = window.app = Object.assign(window.app || {}, {
     if (window.SupabaseService && typeof window.SupabaseService.deleteMatch === 'function') {
       window.SupabaseService.deleteMatch('team_meta_registry').catch(() => { });
       window.SupabaseService.deleteMatch('team_logos_registry').catch(() => { });
+      window.SupabaseService.deleteMatch('M_SMP_23').catch(() => { });
+      window.SupabaseService.deleteMatch('T02').catch(() => { });
     }
     if (this.store && this.store.data && this.store.data.config) {
       if (this.store.data.config.dates !== "22 - 29 November 2026") {
@@ -2491,16 +2518,26 @@ var app = window.app = Object.assign(window.app || {}, {
         return norm;
       }).filter(Boolean);
 
-      // Pertahankan pertandingan lokal jika belum sempat tersinkronkan ke Cloud Supabase, dan push ke Cloud
+      // Pertahankan pertandingan lokal HANYA jika dibuat secara manual oleh panitia terautentikasi dan ID-nya valid
       const remoteIds = new Set(cleanRemote.map(m => m && m.id).filter(Boolean));
-      (this.store.data.matches || []).forEach(localM => {
-        if (localM && localM.id && !String(localM.id).includes('registry') && !String(localM.id).includes('config') && !remoteIds.has(localM.id) && !localM._deleted && !(this.store._deletedMatchIds && this.store._deletedMatchIds.has(localM.id))) {
-          syncedMatches.push(localM);
-          if (window.SupabaseService && typeof window.SupabaseService.syncMatch === 'function') {
-            window.SupabaseService.syncMatch(localM, window.admin ? window.admin.adminPinHash : "");
+      if (window.admin && window.admin.isAuthenticated) {
+        (this.store.data.matches || []).forEach(localM => {
+          if (
+            localM &&
+            localM.id &&
+            localM.isLocallyCreated &&
+            !this.store.isInvalidMatchId(localM.id) &&
+            !remoteIds.has(localM.id) &&
+            !localM._deleted &&
+            !(this.store._deletedMatchIds && this.store._deletedMatchIds.has(localM.id))
+          ) {
+            syncedMatches.push(localM);
+            if (window.SupabaseService && typeof window.SupabaseService.syncMatch === 'function') {
+              window.SupabaseService.syncMatch(localM, window.admin.adminPinHash || "");
+            }
           }
-        }
-      });
+        });
+      }
 
       const matchOrderWeight = (id) => {
         const mNum = String(id).match(/^M(?:_(?:SMP|SD)_)?(\d+)$/i);
@@ -2512,7 +2549,7 @@ var app = window.app = Object.assign(window.app || {}, {
         return 500;
       };
       syncedMatches.sort((a, b) => matchOrderWeight(a.id) - matchOrderWeight(b.id) || String(a.id).localeCompare(String(b.id)));
-      this.store.data.matches = syncedMatches.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'));
+      this.store.data.matches = syncedMatches.filter(m => m && m.id && !this.store.isInvalidMatchId(m.id));
     }
 
     // 3. Sinkronkan MOMENTS & SPONSORS dari Database Online Supabase

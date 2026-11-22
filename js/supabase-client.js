@@ -327,10 +327,17 @@
       if (!this.client || !this.isConfigured) return false;
       if (!match || !match.id || typeof match.id !== 'string') return false;
 
-      // Filter ketat: Registry config atau metadata BUKAN pertandingan, jangan pernah masukkan ke matches!
+      // Filter ketat: Registry config, ID tim, atau phantom duplicate BUKAN pertandingan valid!
       const cleanId = match.id.trim();
-      if (cleanId.includes('registry') || cleanId.includes('config') || cleanId === 'team_meta_registry' || cleanId === 'team_logos_registry') {
-        console.warn('[Supabase] syncMatch ditolak: item registry config bukan pertandingan futsal:', cleanId);
+      if (
+        cleanId === 'M_SMP_23' ||
+        /^T\d+$/i.test(cleanId) ||
+        cleanId.includes('registry') ||
+        cleanId.includes('config') ||
+        cleanId === 'team_meta_registry' ||
+        cleanId === 'team_logos_registry'
+      ) {
+        console.warn('[Supabase] syncMatch ditolak: item bukan pertandingan turnamen valid:', cleanId);
         return false;
       }
 
@@ -788,7 +795,7 @@
 
         // 2. Matches
         if (data.matches && Array.isArray(data.matches)) {
-          const cleanMatches = data.matches.filter(m => m && m.id && !m.id.includes('registry') && !m.id.includes('config'));
+          const cleanMatches = data.matches.filter(m => m && m.id && m.id !== 'M_SMP_23' && !/^T\d+$/i.test(m.id) && !m.id.includes('registry') && !m.id.includes('config'));
           const matchesPayload = cleanMatches.map(m => ({
             id: m.id,
             home_id: m.homeId,
