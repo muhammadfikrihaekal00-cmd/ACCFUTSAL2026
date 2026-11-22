@@ -47,10 +47,12 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "9.00";
+        var CURRENT_VER = "9.10";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           try {
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v9");
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v9_min");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v8");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v8_min");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v7");
@@ -3224,11 +3226,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v42"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v42"></script>
-  <script defer src="/js/data.js?v=20261123_v42"></script>
-  <script defer src="/js/admin.js?v=20261123_v42"></script>
-  <script defer src="/js/app.js?v=20261123_v42"></script>
+  <script defer src="/js/security.js?v=20261123_v43"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v43"></script>
+  <script defer src="/js/data.js?v=20261123_v43"></script>
+  <script defer src="/js/admin.js?v=20261123_v43"></script>
+  <script defer src="/js/app.js?v=20261123_v43"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

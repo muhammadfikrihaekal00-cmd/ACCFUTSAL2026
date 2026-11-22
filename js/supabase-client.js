@@ -237,11 +237,10 @@
       if (!this.client || !this.isConfigured) return null;
 
       try {
-        // 1. Fetch lightweight metadata & fast tables in parallel
-        // Ultra-lean teams query (~3.5 KB) instead of heavy 2.22 MB base64 players payload!
+        // 1. Fetch complete tournament dataset in parallel
         const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
           this.client.from('tournament_config').select('*'),
-          this.client.from('teams').select('id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, updated_at'),
+          this.client.from('teams').select('id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at'),
           this.client.from('matches').select('*'),
           this.client.from('moments').select('*').order('sort_order', { ascending: true }),
           this.client.from('sponsors').select('*').order('sort_order', { ascending: true })

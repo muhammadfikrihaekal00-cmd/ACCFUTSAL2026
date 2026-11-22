@@ -14,7 +14,7 @@ window.admin = window.admin || {
 
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v9";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v10";
     this.cleanObsoleteStorageKeys();
     try {
       this.data = this.loadData();
@@ -1132,7 +1132,22 @@ class TournamentStore {
               const byNo = stat.playerNo && (cardName === `#${stat.playerNo}` || cardName.endsWith(`(#${stat.playerNo})`));
               return isTeam && (cardName === pName || cardName === `${pName} (#${stat.playerNo})` || byNo);
             });
-            if (foundKey) target = playerStats[foundKey];
+            if (foundKey) {
+              target = playerStats[foundKey];
+            } else if (c.player) {
+              const tObj = (this.data.teams || []).find(t => t.id === c.team || t.name === c.team);
+              target = playerStats[`${c.team}-${c.player}`] = {
+                teamId: c.team || "",
+                teamName: tObj ? tObj.name : (c.team || ""),
+                category: tObj ? (tObj.category || "SMP") : (m.category || "SMP"),
+                badgeColor: tObj ? tObj.badgeColor : "#0284c7",
+                playerNo: "",
+                playerName: c.player,
+                yellowCount: 0,
+                redCount: 0,
+                cardsHistory: []
+              };
+            }
           }
 
           if (target) {
@@ -1221,7 +1236,22 @@ class TournamentStore {
               const isT = !s.team || sc.teamId === s.team || sc.teamName === s.team;
               return isT && (sc.playerName.toLowerCase().trim() === cleanP || (sc.playerNo && cleanP.includes(`#${sc.playerNo}`)) || (cleanP.length > 3 && sc.playerName.toLowerCase().trim().includes(cleanP)));
             });
-            if (foundKey) scorers[foundKey].goals += 1;
+            if (foundKey) {
+              scorers[foundKey].goals += 1;
+            } else {
+              const tObj = (this.data.teams || []).find(t => t.id === s.team || t.name === s.team);
+              scorers[key] = {
+                teamId: s.team || "",
+                teamName: tObj ? tObj.name : (s.team || ""),
+                category: tObj ? (tObj.category || "SMP") : (m.category || "SMP"),
+                badgeColor: tObj ? tObj.badgeColor : "#0284c7",
+                playerNo: s.no || "",
+                playerName: s.player,
+                pos: "Pemain",
+                photo: "",
+                goals: 1
+              };
+            }
           }
         });
       }
@@ -1274,7 +1304,23 @@ class TournamentStore {
                 const isTeam = !s.team || s.team === item.teamId || s.team === item.teamName;
                 return isTeam && (item.playerName.toLowerCase().trim() === cleanA || (item.playerNo && cleanA.includes(`#${item.playerNo}`)));
               });
-              if (foundKey) assisters[foundKey].assists += 1;
+              if (foundKey) {
+                assisters[foundKey].assists += 1;
+              } else {
+                const tObj = (this.data.teams || []).find(t => t.id === s.team || t.name === s.team);
+                assisters[key] = {
+                  teamId: s.team || "",
+                  teamName: tObj ? tObj.name : (s.team || ""),
+                  category: tObj ? (tObj.category || "SMP") : (m.category || "SMP"),
+                  badgeColor: tObj ? tObj.badgeColor : "#0284c7",
+                  playerNo: "",
+                  playerName: s.assist,
+                  pos: "Pemain",
+                  photo: "",
+                  assists: 1,
+                  goals: 0
+                };
+              }
             }
           }
         });
