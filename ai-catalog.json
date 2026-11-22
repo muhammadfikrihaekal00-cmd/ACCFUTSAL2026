@@ -1,27 +1,43 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://agentcatalog.org/schema/v1/ai-catalog.json",
   "name": "ACC Futsal 2026",
   "version": "1.0.0",
   "description": "Portal Resmi Al-Fayyadh Champions Cup 2026 - Turnamen Futsal SD & SMP se-Indonesia",
-  "organization": {
+  "homepage": "https://accfutsal2026.vercel.app",
+  "provider": {
     "name": "Ma'had Tahfizhul Qur'an Al Fayyadh",
-    "type": "Educational Institution"
+    "url": "https://accfutsal2026.vercel.app"
   },
-  "event": {
-    "name": "Al-Fayyadh Champions Cup 2026",
-    "startDate": "2026-11-22",
-    "endDate": "2026-11-29",
-    "categories": ["SMP", "SD"],
-    "location": "Al-Fayyadh Arena"
-  },
-  "endpoints": {
-    "home": "/",
-    "matches": "/#/jadwal-skor",
-    "standings": "/#/klasemen",
-    "bracket": "/#/bagan",
-    "drawing": "/#/drawing",
-    "teams": "/#/daftar-tim",
-    "stats": "/#/statistik",
-    "juknis": "/#/juknis"
-  }
+  "endpoints": [
+    {
+      "name": "matches",
+      "url": "https://accfutsal2026.vercel.app/jadwal",
+      "description": "Jadwal dan skor pertandingan turnamen"
+    },
+    {
+      "name": "standings",
+      "url": "https://accfutsal2026.vercel.app/klasemen",
+      "description": "Klasemen grup turnamen"
+    },
+    {
+      "name": "bracket",
+      "url": "https://accfutsal2026.vercel.app/bagan",
+      "description": "Bagan fase gugur"
+    },
+    {
+      "name": "teams",
+      "url": "https://accfutsal2026.vercel.app/tim",
+      "description": "Daftar tim dan pemain"
+    },
+    {
+      "name": "stats",
+      "url": "https://accfutsal2026.vercel.app/statistik",
+      "description": "Statistik top skor dan kartu"
+    },
+    {
+      "name": "rules",
+      "url": "https://accfutsal2026.vercel.app/juknis",
+      "description": "Regulasi dan juknis pertandingan"
+    }
+  ]
 }

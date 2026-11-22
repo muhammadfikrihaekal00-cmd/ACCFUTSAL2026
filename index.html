@@ -17,7 +17,6 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=8.58">
 
   <!-- Preconnect Candidates for Lightning LCP -->
-  <link rel="preconnect" href="https://i.ytimg.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -44,12 +43,15 @@
     (function () {
       try {
         localStorage.setItem("pondok_futsal_theme", "light");
-        var CURRENT_VER = "8.60";
+        var CURRENT_VER = "9.00";
         if (localStorage.getItem("acc_app_version") !== CURRENT_VER) {
           localStorage.setItem("acc_app_version", CURRENT_VER);
           try {
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v8");
+            localStorage.removeItem("acc_futsal_tournament_2026_cloud_v8_min");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v7");
             localStorage.removeItem("acc_futsal_tournament_2026_cloud_v7_min");
+            localStorage.removeItem("acc_matches_cleaned_v854");
           } catch (e) { }
           if ('caches' in window) {
             caches.keys().then(function (names) {
@@ -303,8 +305,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261122_v39">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261122_v39">
+  <link rel="stylesheet" href="/css/styles.css?v=20261123_v42">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v42">
 </head>
 
 <body class="snap-scroll-active">
@@ -3218,11 +3220,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261122_v40"></script>
-  <script defer src="/js/supabase-client.js?v=20261122_v40"></script>
-  <script defer src="/js/data.js?v=20261122_v40"></script>
-  <script defer src="/js/admin.js?v=20261122_v40"></script>
-  <script defer src="/js/app.js?v=20261122_v40"></script>
+  <script defer src="/js/security.js?v=20261123_v42"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v42"></script>
+  <script defer src="/js/data.js?v=20261123_v42"></script>
+  <script defer src="/js/admin.js?v=20261123_v42"></script>
+  <script defer src="/js/app.js?v=20261123_v42"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
@@ -3258,7 +3260,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
       }
       window.addEventListener("scroll", onScroll, { passive: true });
-      updateHeader();
+      if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(updateHeader);
+      } else {
+        setTimeout(updateHeader, 60);
+      }
     })();
   </script>
 </body>

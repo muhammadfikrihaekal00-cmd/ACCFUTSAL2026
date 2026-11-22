@@ -234,7 +234,7 @@ main.container {
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   padding: 8px 18px !important;
   margin: 0 !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
   box-sizing: border-box !important;
 }
 
@@ -252,7 +252,7 @@ main.container {
   align-items: center !important;
   justify-content: space-between !important;
   gap: 16px !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
   box-sizing: border-box !important;
 }
 
@@ -283,7 +283,7 @@ main.container {
   flex-shrink: 1 !important;
   min-width: 0 !important;
   overflow: hidden !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .brand-logo {
@@ -297,7 +297,7 @@ main.container {
   box-shadow: none !important;
   flex-shrink: 0 !important;
   filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.5)) !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .header.scrolled .brand-logo {
@@ -313,7 +313,7 @@ main.container {
 .brand-text {
   min-width: 0 !important;
   overflow: hidden !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .brand-text h1 {
@@ -328,7 +328,7 @@ main.container {
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0 !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .header.scrolled .brand-text h1 {
@@ -343,7 +343,7 @@ main.container {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 140px;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .header.scrolled .brand-text p {
@@ -361,7 +361,7 @@ main.container {
   font-weight: 600 !important;
   white-space: nowrap !important;
   cursor: pointer !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
   box-shadow: none !important;
 }
 
@@ -376,7 +376,7 @@ main.container {
 }
 
 .mobile-hamburger-btn {
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .header.scrolled .mobile-hamburger-btn {
@@ -422,7 +422,7 @@ main.container {
   font-weight: 600 !important;
   white-space: nowrap !important;
   cursor: pointer !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
   box-shadow: none !important;
 }
 
@@ -455,7 +455,7 @@ main.container {
   width: 36px !important;
   height: 36px !important;
   border-radius: 9999px !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .header-icon-btn:hover {
@@ -946,7 +946,7 @@ html.snap-scroll-active .home-slide-nav {
   padding: 30px 16px !important;
   text-align: center !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38) !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
   position: relative !important;
   overflow: hidden !important;
 }
@@ -1036,7 +1036,7 @@ html.snap-scroll-active .home-slide-nav {
   padding: 9px 20px !important;
   font-size: 0.84rem !important;
   font-weight: 700 !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
   box-shadow: none !important;
 }
 
@@ -1581,7 +1581,7 @@ html.snap-scroll-active .home-slide-nav {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   color: #f8fafc !important;
   border-radius: 9999px !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .moment-arrow-btn:hover {
@@ -1593,7 +1593,7 @@ html.snap-scroll-active .home-slide-nav {
 .moment-card {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 18px !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .moment-card:hover {
@@ -2041,7 +2041,7 @@ html.snap-scroll-active .home-slide-nav {
   border-radius: 12px !important;
   font-weight: 800 !important;
   box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3) !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .btn-primary:hover {
@@ -2056,7 +2056,7 @@ html.snap-scroll-active .home-slide-nav {
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
   border-radius: 12px !important;
   font-weight: 700 !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .btn-outline:hover {
@@ -2137,7 +2137,7 @@ textarea:focus {
   font-weight: 700 !important;
   cursor: pointer !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .filter-select:hover {
@@ -2169,7 +2169,7 @@ textarea:focus {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #cbd5e1 !important;
   border-radius: 9999px !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .status-pill:hover {
@@ -2231,7 +2231,7 @@ textarea:focus {
   border-radius: 20px !important;
   color: #f8fafc !important;
   box-shadow: var(--shadow-card) !important;
-  transition: var(--transition-smooth) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
 }
 
 .match-card:hover,
@@ -2291,7 +2291,7 @@ textarea:focus {
   box-shadow:
     0 16px 36px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 200ms ease, transform 200ms ease !important;
   display: flex !important;
   flex-direction: column !important;
 }

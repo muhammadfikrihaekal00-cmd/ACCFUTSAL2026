@@ -596,18 +596,16 @@ body.dark-theme .brand-text h1 {
 
 @keyframes pulse-red {
   0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7);
+    transform: scale(0.9);
+    opacity: 0.8;
   }
-
-  70% {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 6px rgba(225, 29, 72, 0);
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
   }
-
   100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
+    transform: scale(0.9);
+    opacity: 0.8;
   }
 }
 

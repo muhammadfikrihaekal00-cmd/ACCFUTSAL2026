@@ -237,46 +237,21 @@
       if (!this.client || !this.isConfigured) return null;
 
       try {
-        // 1. Fetch lightweight metadata & fast tables first in parallel
-        // teams select('id, updated_at') is only ~1.9 KB instead of 1.8 MB!
-        const [configListRes, teamsMetaRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
+        // 1. Fetch lightweight metadata & fast tables in parallel
+        // Ultra-lean teams query (~3.5 KB) instead of heavy 2.22 MB base64 players payload!
+        const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
           this.client.from('tournament_config').select('*'),
-          this.client.from('teams').select('id, updated_at'),
+          this.client.from('teams').select('id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, updated_at'),
           this.client.from('matches').select('*'),
           this.client.from('moments').select('*').order('sort_order', { ascending: true }),
           this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
         ]);
 
-        if (matchesRes.error && teamsMetaRes.error) {
+        if (matchesRes.error && teamsRes.error) {
           return null; // Database tables might not be migrated yet, fallback to local
         }
 
-        // 2. Intelligent Teams Cache Revalidation (Stale-While-Revalidate)
-        let teamsRawData = null;
-        let remoteTeamsSig = "";
-        if (teamsMetaRes && teamsMetaRes.data && Array.isArray(teamsMetaRes.data) && teamsMetaRes.data.length > 0) {
-          remoteTeamsSig = teamsMetaRes.data.map(t => t.id + ":" + (t.updated_at || "")).sort().join(";");
-        }
-
-        // Check in-memory cache on this client instance
-        if (this._cachedTeamsSig && this._cachedTeamsSig === remoteTeamsSig && Array.isArray(this._cachedTeamsData) && this._cachedTeamsData.length > 0) {
-          teamsRawData = this._cachedTeamsData;
-        }
-
-        // If cache is missing or stale, fetch full teams payload
-        if (!teamsRawData) {
-          const fullTeamsRes = await this.client.from('teams').select('*');
-          if (fullTeamsRes && fullTeamsRes.data && Array.isArray(fullTeamsRes.data)) {
-            teamsRawData = fullTeamsRes.data;
-            this._cachedTeamsData = teamsRawData;
-            this._cachedTeamsSig = remoteTeamsSig;
-            try {
-              localStorage.setItem("acc_cached_teams_sig", remoteTeamsSig);
-              // Clean up redundant heavy teams data from localStorage to keep 100% free quota
-              localStorage.removeItem("acc_cached_teams_data");
-            } catch (_) { }
-          }
-        }
+        const teamsRawData = (teamsRes && teamsRes.data && Array.isArray(teamsRes.data)) ? teamsRes.data : null;
 
         let mainConfig = null;
         let teamLogos = {};
@@ -318,6 +293,17 @@
           sponsors: sponsorsRes.data || null
         };
       } catch (err) {
+        return null;
+      }
+    }
+
+    // Lazy-load full team roster (players + photos) on demand only when viewing team detail
+    async fetchTeamFull(teamId) {
+      if (!this.client || !this.isConfigured || !teamId) return null;
+      try {
+        const res = await this.client.from('teams').select('*').eq('id', teamId).single();
+        return res.data || null;
+      } catch (e) {
         return null;
       }
     }

@@ -6,30 +6,21 @@
 - **Nama Acara**: ACC Al-Fayyadh Champions Cup 2026
 - **Penyelenggara**: Ma'had Tahfizhul Qur'an Al Fayyadh
 - **Tanggal Pelaksanaan**: 22 - 29 November 2026
-- **Lokasi / Venue**: Lapangan Futsal Al-Fayyadh Arena
+- **Lokasi / Venue**: Lapangan Futsal Al-Fayyadh Arena (Makassar, Sulawesi Selatan)
 - **Kategori Peserta**:
-  - SMP / MTs (U-15)
-  - SD / MI (U-12)
+  - SMP / MTs (U-15) - 16 Tim
+  - SD / MI (U-12) - 16 Tim
 - **Format Kompetisi**:
   - Babak Grup (Penyisihan Grup A, B, C, D)
   - Babak Gugur / Knockout (Perempatfinal / QF, Semifinal / SF, Perebutan Juara 3, Grand Final)
-  - Adu Penalti untuk Babak Gugur jika skor imbang hingga waktu penuh selesai (3 penendang utama, dilanjutkan sudden death).
+  - Regulasi Adu Penalti untuk Babak Gugur jika skor imbang hingga waktu normal selesai.
 
-## Fitur Aplikasi Portal
-- **Skor Langsung & Pemantauan Menit Pertandingan**: Pembaruan realtime via WebSocket Supabase.
-- **Klasemen Grup**: Poin, Main, Menang, Seri, Kalah, Memasukkan Gol, Kemasukan, Selisih Gol, dan Fair Play Points.
-- **Bagan Gugur (Tournament Bracket)**: Visualisasi pohon turnamen interaktif dari Perempatfinal hingga Final.
-- **Statistik & Top Scorer**: Pencetak gol terbanyak dan pencetak assist.
-- **Disiplin & Fair Play**: Rekapitulasi kartu kuning dan kartu merah serta status akumulasi hukuman pemain.
-- **Buku Panduan & Juknis**: Aturan resmi pertandingan, regulasi pergantian pemain, dan tata tertib turnamen.
-- **Live Stream Youtube**: Integrasi siaran langsung pertandingan.
-
-## Tautan Navigasi Portal
-- Beranda: `/`
-- Jadwal & Skor Pertandingan: `/#/jadwal-skor`
-- Klasemen Grup: `/#/klasemen`
-- Bagan Fase Gugur: `/#/bagan`
-- Undian Grup (Drawing): `/#/drawing`
-- Daftar Tim & Skuad: `/#/daftar-tim`
-- Statistik & Top Skor: `/#/statistik`
-- Juknis & Regulasi: `/#/juknis`
+## Halaman Resmi & Tautan Navigasi
+- [Beranda Utama](https://accfutsal2026.vercel.app/): Halaman beranda portal turnamen dengan rangkuman informasi, video streaming, dan berita terkini.
+- [Jadwal & Hasil Pertandingan](https://accfutsal2026.vercel.app/jadwal): Jadwal lengkap seluruh pertandingan fase grup dan gugur beserta skor langsung dan hasil resmi.
+- [Klasemen Grup](https://accfutsal2026.vercel.app/klasemen): Klasemen sementara dan akhir fase grup lengkap dengan poin, selisih gol, dan fair play.
+- [Bagan Fase Gugur](https://accfutsal2026.vercel.app/bagan): Bagan pohon babak gugur interaktif dari Perempatfinal hingga Grand Final.
+- [Hasil Drawing Grup](https://accfutsal2026.vercel.app/drawing): Hasil pembagian grup resmi untuk kategori SD dan SMP.
+- [Daftar Tim Peserta](https://accfutsal2026.vercel.app/tim): Profil lengkap 32 klub peserta beserta daftar pemain dan ofisial.
+- [Top Skor & Statistik](https://accfutsal2026.vercel.app/statistik): Rekapitulasi pencetak gol terbanyak, assist, dan kedisiplinan kartu.
+- [Petunjuk Teknis & Regulasi](https://accfutsal2026.vercel.app/juknis): Regulasi resmi pertandingan, sistem turnamen, dan tata tertib kompetisi.

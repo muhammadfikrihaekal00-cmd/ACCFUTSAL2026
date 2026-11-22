@@ -14,7 +14,7 @@ window.admin = window.admin || {
 
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v8";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v9";
     this.cleanObsoleteStorageKeys();
     try {
       this.data = this.loadData();
@@ -36,7 +36,7 @@ class TournamentStore {
         const k = localStorage.key(i);
         if (!k) continue;
 
-        // 1. Bersihkan versi cache lama (v1 s.d v6, dll.)
+        // 1. Bersihkan versi cache lama (v1 s.d v8, dll.)
         if (k.startsWith("acc_futsal_tournament_2026_") && k !== currentKey && k !== (currentKey + "_min")) {
           keysToRemove.push(k);
         }
@@ -45,7 +45,7 @@ class TournamentStore {
           keysToRemove.push(k);
         }
         // 3. Bersihkan redundansi cache ganda yang memakan MB besar di localStorage
-        if (k === "acc_cached_teams_data" || k === "acc_tournament_sponsors_backup") {
+        if (k === "acc_cached_teams_data" || k === "acc_tournament_sponsors_backup" || k === "acc_matches_cleaned_v854") {
           keysToRemove.push(k);
         }
       }
@@ -141,6 +141,32 @@ class TournamentStore {
     if (/^T\d+$/i.test(cleanId)) return true; // Team IDs (e.g. T01..T32) are never match IDs!
     if (cleanId.includes('registry') || cleanId.includes('config') || cleanId === 'team_meta_registry' || cleanId === 'team_logos_registry') return true;
     return false;
+  }
+
+  cleanDuplicateMatches(matches) {
+    if (!Array.isArray(matches)) return [];
+    const seenMatchups = new Map();
+    const clean = [];
+    for (const m of matches) {
+      if (!m || !m.id || this.isInvalidMatchId(m.id)) continue;
+      if (m.homeId && m.awayId) {
+        const cat = (m.category || "SMP").toUpperCase();
+        const pairKey = [m.homeId, m.awayId].sort().join("_") + "_" + cat + "_" + (m.date || "");
+        if (seenMatchups.has(pairKey)) {
+          const existing = seenMatchups.get(pairKey);
+          // Prioritaskan match yang memiliki format ID standar turnamen resmi
+          if (!existing.id.startsWith("M_") && m.id.startsWith("M_")) {
+            const idx = clean.indexOf(existing);
+            if (idx !== -1) clean[idx] = m;
+            seenMatchups.set(pairKey, m);
+          }
+          continue; // Singkirkan duplikat palsu
+        }
+        seenMatchups.set(pairKey, m);
+      }
+      clean.push(m);
+    }
+    return clean;
   }
 
   normalizeMatch(m, teams = []) {
@@ -407,10 +433,12 @@ class TournamentStore {
 
     // Normalisasi struktur tim & laga dari cache agar tidak pernah crash (tanpa mengubah isi data!)
     data.teams = data.teams.map((t, idx) => this.normalizeTeam(t, idx)).filter(Boolean);
-    data.matches = data.matches
-      .filter(m => m && m.id && !this.isInvalidMatchId(m.id))
-      .map(m => this.normalizeMatch(m, data.teams))
-      .filter(Boolean);
+    data.matches = this.cleanDuplicateMatches(
+      data.matches
+        .filter(m => m && m.id && !this.isInvalidMatchId(m.id))
+        .map(m => this.normalizeMatch(m, data.teams))
+        .filter(Boolean)
+    );
 
     return data;
   }
@@ -2589,7 +2617,7 @@ var app = window.app = Object.assign(window.app || {}, {
         return 500;
       };
       syncedMatches.sort((a, b) => matchOrderWeight(a.id) - matchOrderWeight(b.id) || String(a.id).localeCompare(String(b.id)));
-      this.store.data.matches = syncedMatches.filter(m => m && m.id && !this.store.isInvalidMatchId(m.id));
+      this.store.data.matches = this.store.cleanDuplicateMatches(syncedMatches.filter(m => m && m.id && !this.store.isInvalidMatchId(m.id)));
     }
 
     // 3. Sinkronkan MOMENTS & SPONSORS dari Database Online Supabase
@@ -3803,6 +3831,27 @@ var app = window.app = Object.assign(window.app || {}, {
       return;
     }
 
+    // Lazy load skuad & foto pemain hanya saat halaman profil tim dibuka
+    if ((!team.players || team.players.length === 0) && window.SupabaseService && typeof window.SupabaseService.fetchTeamFull === 'function') {
+      window.SupabaseService.fetchTeamFull(team.id).then(full => {
+        if (full && Array.isArray(full.players) && full.players.length > 0) {
+          team.players = full.players;
+          if (full.coach_photo && (!team.official || !team.official.coachPhoto)) {
+            if (!team.official) team.official = {};
+            team.official.coachPhoto = full.coach_photo;
+          }
+          if (full.manager_photo && (!team.official || !team.official.managerPhoto)) {
+            if (!team.official) team.official = {};
+            team.official.managerPhoto = full.manager_photo;
+          }
+          this.store.saveData();
+          if (this.currentTab === "team-detail" && this._pendingDetailTeamId === team.id) {
+            this.openTeamDetailPage(team.id, false);
+          }
+        }
+      }).catch(() => { });
+    }
+
     const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}`;
     if (pushHistory) {
       try {
@@ -4431,10 +4480,8 @@ var app = window.app = Object.assign(window.app || {}, {
       this.renderCurrentView();
       this.updateFloatingCategoryVisibility();
 
-      // Instant scroll to top without smooth scroll lag / snap collision
-      if ((window.scrollY || window.pageYOffset || 0) > 0) {
-        window.scrollTo(0, 0);
-      }
+      // Instant scroll to top without forcing synchronous layout reflow
+      window.scrollTo(0, 0);
     } catch (err) {
       console.error("switchTab error:", err);
     }
@@ -4887,22 +4934,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
   // Otomatis sesuaikan ukuran teks "Official Sponsor" agar 100% pas dengan layar tanpa terpotong
   fitOfficialSponsorTitle() {
-    const titleEl = document.querySelector(".sponsors-official-title");
-    if (!titleEl) return;
-
-    window.requestAnimationFrame(() => {
-      const container = titleEl.closest(".sponsors-official-header") || titleEl.parentElement;
-      const availWidth = Math.min(window.innerWidth - 16, (container ? container.clientWidth : window.innerWidth) - 8);
-      if (availWidth <= 0) return;
-
-      const scrollW = titleEl.scrollWidth;
-      if (scrollW > availWidth) {
-        const currentSize = parseFloat(window.getComputedStyle(titleEl).fontSize) || 36;
-        const scale = (availWidth / scrollW) * 0.97;
-        const newSize = Math.max(16, Math.floor(currentSize * scale * 10) / 10);
-        titleEl.style.fontSize = `${newSize}px`;
-      }
-    });
+    // Sizing ditangani secara native melalui CSS clamp() fluid typography tanpa forced reflow
   },
 
   getTeam(id) {
@@ -8264,6 +8296,26 @@ var app = window.app = Object.assign(window.app || {}, {
     }
     const team = this.store.getTeam(teamId);
     if (!team) return;
+
+    if ((!team.players || team.players.length === 0) && window.SupabaseService && typeof window.SupabaseService.fetchTeamFull === 'function') {
+      window.SupabaseService.fetchTeamFull(team.id).then(full => {
+        if (full && Array.isArray(full.players) && full.players.length > 0) {
+          team.players = full.players;
+          if (full.coach_photo && (!team.official || !team.official.coachPhoto)) {
+            if (!team.official) team.official = {};
+            team.official.coachPhoto = full.coach_photo;
+          }
+          if (full.manager_photo && (!team.official || !team.official.managerPhoto)) {
+            if (!team.official) team.official = {};
+            team.official.managerPhoto = full.manager_photo;
+          }
+          this.store.saveData();
+          if (this.activeTeamModalId === team.id) {
+            this.openTeamModal(team.id);
+          }
+        }
+      }).catch(() => { });
+    }
 
     const isPanitia = this.isAdmin();
 
