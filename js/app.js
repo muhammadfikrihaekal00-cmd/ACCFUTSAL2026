@@ -14,7 +14,7 @@ window.admin = window.admin || {
 
 class TournamentStore {
   constructor() {
-    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v7";
+    this.STORAGE_KEY = "acc_futsal_tournament_2026_cloud_v8";
     this.cleanObsoleteStorageKeys();
     try {
       this.data = this.loadData();
@@ -1795,16 +1795,31 @@ var app = window.app = Object.assign(window.app || {}, {
       });
 
       if (hasChange) {
-        this.store.saveData();
-        this.renderLiveStreamHero();
-        if (this.currentTab === "matches" || !this.currentTab || this.currentTab === "home") {
-          this.renderMatches();
+        // Fast targeted DOM update: perbarui teks menit live tanpa menghancurkan & me-render ulang seluruh daftar 32 kartu
+        liveMatches.forEach(m => {
+          const isPaused = Boolean(m.isTimerPaused);
+          const minOnly = (m.liveMinute || "").toString().replace(/\D/g, "");
+          const cleanMinBadge = minOnly ? `${minOnly}'` : '';
+          const displayText = `${isPaused ? '⏸️ JEDA' : 'LIVE'}${cleanMinBadge ? ` • Menit ${cleanMinBadge}` : ''}`;
+
+          const cardEl = document.getElementById(`match-card-${m.id}`) || document.querySelector(`[data-match-id="${m.id}"]`);
+          if (cardEl) {
+            const barStrong = cardEl.querySelector(".bar-live strong");
+            if (barStrong) barStrong.textContent = displayText;
+          }
+        });
+
+        // Simpan data di latar belakang secara ringan (maks 1x per 30 detik untuk menghindari lock IO pada HP)
+        if (!this._lastLiveTimerSave || (now - this._lastLiveTimerSave) > 30000) {
+          this._lastLiveTimerSave = now;
+          this.store.saveData();
         }
-        if (this.currentTab === "bracket") {
-          this.renderBracket();
+
+        try { this.updateHeroLiveBadge(); } catch (_) { }
+        try { this.updateFloatingLiveNotice(); } catch (_) { }
+        if (this.currentTab === "match-detail" && this.activeDetailMatchId) {
+          try { this.refreshActiveMatchDetail(); } catch (_) { }
         }
-        this.updateFloatingLiveNotice();
-        this.refreshActiveMatchDetail();
 
         // Jika modal admin sedang terbuka untuk pertandingan ini, update input menit
         const activeModalMatchId = window.admin && (window.admin.activeMatchId || window.admin.activeQuickMatchId);
@@ -2218,6 +2233,7 @@ var app = window.app = Object.assign(window.app || {}, {
     let lastDataSignature = "";
     let isInitialLoad = true;
     let isSyncing = false;
+    let syncWatchdogTimer = null;
 
     const syncFromRemote = () => {
       if (!window.SupabaseService || isSyncing) return;
@@ -2229,8 +2245,17 @@ var app = window.app = Object.assign(window.app || {}, {
       }
 
       isSyncing = true;
+      if (syncWatchdogTimer) clearTimeout(syncWatchdogTimer);
+      syncWatchdogTimer = setTimeout(() => {
+        if (isSyncing) {
+          isSyncing = false;
+          console.warn("[Supabase] sync lock watchdog released after timeout");
+        }
+      }, 7000);
+
       window.SupabaseService.fetchAllData().then(data => {
         isSyncing = false;
+        if (syncWatchdogTimer) clearTimeout(syncWatchdogTimer);
         if (data) {
           // Generate signature lengkap: pertandingan, waktu, skor, menit, kartu, config, DAN DATA TIM BESERTA SKUAD & LOGO
           const signature = (data.matches ? data.matches.map(m =>
@@ -2255,6 +2280,7 @@ var app = window.app = Object.assign(window.app || {}, {
         }
       }).catch(err => {
         isSyncing = false;
+        if (syncWatchdogTimer) clearTimeout(syncWatchdogTimer);
         console.warn("Supabase sync notice:", err);
       });
     };
@@ -2262,6 +2288,7 @@ var app = window.app = Object.assign(window.app || {}, {
     // Public method untuk force sync instan dari tombol UI atau tap badge
     this.forceSyncFromRemote = (showToast = true) => {
       if (showToast) this.showToast("🔄 Menyinkronkan data turnamen dari Cloud...");
+      isSyncing = false;
       syncFromRemote();
     };
 
@@ -2289,19 +2316,30 @@ var app = window.app = Object.assign(window.app || {}, {
     const safeFocusSync = () => {
       if (this.isUserEditing()) return;
       const now = Date.now();
-      if (now - lastFocusSyncTs < 3000) return;
+      if (now - lastFocusSyncTs < 2000) return;
       lastFocusSyncTs = now;
       syncFromRemote();
     };
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") safeFocusSync();
+      if (document.visibilityState === "visible") {
+        isSyncing = false; // Reset sync lock instantly upon phone wake
+        if (window.SupabaseService && typeof window.SupabaseService.setupRealtimeSubscriptions === 'function') {
+          try {
+            if (!window.SupabaseService.channel || window.SupabaseService.channel.state !== 'joined') {
+              window.SupabaseService.setupRealtimeSubscriptions();
+            }
+          } catch (_) { }
+        }
+        safeFocusSync();
+      }
     });
     window.addEventListener("online", () => {
+      isSyncing = false;
       if (!this.isUserEditing()) syncFromRemote();
     });
 
     // Realtime Background Safety Polling (WebSocket menangani update instan ~50ms, polling hanya cadangan ringan):
-    // Jika ada match LIVE: 6 detik. Normal: 15 detik. Tidak membebani CPU/jaringan!
+    // Jika ada match LIVE: 5 detik. Normal: 12 detik. Tidak membebani CPU/jaringan!
     let lastPollTimestamp = Date.now();
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
@@ -2309,18 +2347,20 @@ var app = window.app = Object.assign(window.app || {}, {
 
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
       const hasLiveMatch = matches.some(m => m.status === "live");
-      const requiredIntervalMs = hasLiveMatch ? 6000 : 15000;
+      const requiredIntervalMs = hasLiveMatch ? 5000 : 12000;
 
       const now = Date.now();
       if ((now - lastPollTimestamp) >= requiredIntervalMs) {
         lastPollTimestamp = now;
         syncFromRemote();
       }
-    }, 3000);
+    }, 2500);
   },
 
   isUserEditing() {
-    const readOnlyViewerIds = ["teamModal", "matchDetailModal", "momentModal", "newsModal"];
+    // Penonton dan perangkat non-admin TIDAK PERNAH memblokir sinkronisasi live
+    if (!this.isAdmin()) return false;
+    const readOnlyViewerIds = ["teamModal", "matchDetailModal", "momentModal", "newsModal", "rulesModal", "juknisModal"];
     const activeModals = document.querySelectorAll(".modal-overlay.active");
     for (const m of activeModals) {
       if (!readOnlyViewerIds.includes(m.id)) {
@@ -2767,9 +2807,17 @@ var app = window.app = Object.assign(window.app || {}, {
         } else if ((mapped.status || curMatch.status) === 'finished') {
           delete mapped.liveStartedAt;
           delete curMatch.liveStartedAt;
+          mapped.liveMinute = "";
+          mapped.isTimerPaused = false;
+          delete mapped.liveElapsedSec;
+          delete mapped.liveClockDisplay;
         } else if ((mapped.status || curMatch.status) === 'upcoming' || (mapped.status || curMatch.status) === 'scheduled') {
           delete mapped.liveStartedAt;
           delete curMatch.liveStartedAt;
+          mapped.liveMinute = "";
+          mapped.isTimerPaused = false;
+          delete mapped.liveElapsedSec;
+          delete mapped.liveClockDisplay;
           mapped.homeScore = null;
           mapped.awayScore = null;
           mapped.homeScoreLive = null;
@@ -5192,7 +5240,7 @@ var app = window.app = Object.assign(window.app || {}, {
         `<span class="match-category-tag cat-smp">SMP</span>`;
 
       return `
-        <div class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''} ${swipeClass}">
+        <div id="match-card-${m.id}" data-match-id="${m.id}" class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''} ${swipeClass}">
           ${statusBarHtml}
           <!-- HEADER META -->
           <div class="fixture-header-meta">

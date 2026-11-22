@@ -2168,6 +2168,14 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
   },
 
+  getValidMatches() {
+    const raw = (app.store && app.store.data && app.store.data.matches) || [];
+    if (app.store && typeof app.store.isInvalidMatchId === 'function') {
+      return raw.filter(m => m && m.id && !app.store.isInvalidMatchId(m.id));
+    }
+    return raw.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config') && !/^T\d+$/i.test(String(m.id)) && m.id !== 'M_SMP_23');
+  },
+
   // ==========================================
   // ATUR TIM LAWAN & JADWAL PERTANDINGAN (PANITIA)
   // ==========================================
@@ -2185,7 +2193,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const dashModal = document.getElementById("adminDashboardModal");
     if (dashModal) dashModal.classList.remove("active");
 
-    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    const matches = this.getValidMatches();
     if (!matches.length && !matchId) {
       this.openAddNewMatchModal();
       return;
@@ -2234,11 +2242,13 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         cards: [],
         isManualTeam: true
       };
-      matches.push(newKnockout);
-      app.store.saveData();
+      if (app.store && app.store.data && Array.isArray(app.store.data.matches)) {
+        app.store.data.matches.push(newKnockout);
+        app.store.saveData();
+      }
     }
 
-    if (!matchId || matchId === "first") {
+    if (!matchId || matchId === "first" || (app.store && typeof app.store.isInvalidMatchId === 'function' && app.store.isInvalidMatchId(matchId))) {
       matchId = matches[0] ? matches[0].id : null;
     }
     if (!matchId) {
@@ -2274,7 +2284,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     const cat = (app.currentCategory === "all" || !app.currentCategory) ? "SMP" : app.currentCategory;
     const prefix = cat === "SD" ? "M_SD_" : "M_SMP_";
-    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    const matches = this.getValidMatches();
 
     let maxNum = 0;
     matches.forEach(m => {
@@ -2339,7 +2349,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const idInput = document.getElementById("editMatchId");
     if (!idInput) return;
     const mId = idInput.value;
-    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    const matches = this.getValidMatches();
     const match = matches.find(m => m.id === mId);
     if (!match) return;
 
@@ -2406,7 +2416,20 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (!idInput || !idInput.value) return;
     const mId = idInput.value;
 
-    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    // Jika target adalah registry atau ID tidak valid, singkirkan tanpa konfirmasi palsu
+    if (app.store && typeof app.store.isInvalidMatchId === 'function' && app.store.isInvalidMatchId(mId)) {
+      if (app.store.data && Array.isArray(app.store.data.matches)) {
+        app.store.data.matches = app.store.data.matches.filter(m => m.id !== mId);
+        app.store.saveData();
+      }
+      const modal = document.getElementById("matchEditorModal");
+      if (modal) modal.classList.remove("active");
+      app.showToast("Item bukan pertandingan valid dan telah dibersihkan.");
+      app.renderCurrentView();
+      return;
+    }
+
+    const matches = this.getValidMatches();
     const match = matches.find(m => m.id === mId);
     const desc = match ? `${match.roundName || match.id}` : mId;
 
@@ -2414,9 +2437,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
 
-    const idx = matches.findIndex(m => m.id === mId);
-    if (idx !== -1) {
-      matches.splice(idx, 1);
+    if (app.store.data && Array.isArray(app.store.data.matches)) {
+      const idx = app.store.data.matches.findIndex(m => m.id === mId);
+      if (idx !== -1) {
+        app.store.data.matches.splice(idx, 1);
+      }
     }
     if (!app.store._deletedMatchIds) app.store._deletedMatchIds = new Set();
     app.store._deletedMatchIds.add(mId);
@@ -2437,7 +2462,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   switchEditorMatch(matchId, populateSelect = false) {
-    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    const matches = this.getValidMatches();
     const match = matches.find(m => m.id === matchId);
     if (!match) return;
 
@@ -2514,7 +2539,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const idInput = document.getElementById("editMatchId");
     if (!idInput) return;
     const mId = idInput.value;
-    const matches = (app.store && app.store.data && app.store.data.matches) || [];
+    const matches = this.getValidMatches();
     const match = matches.find(m => m.id === mId);
     if (!match) return;
 

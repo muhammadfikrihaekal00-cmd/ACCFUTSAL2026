@@ -18,3 +18,5 @@ dist/
 
 # Local Dev scripts
 server.ps1
+*.bak
+scratch/
