@@ -390,9 +390,10 @@ class TournamentStore {
       const slim = this.createSlimStoragePayload(this.data);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(slim));
     } catch (e) {
-      // Tangani QuotaExceededError dengan pembersihan & penyimpanan versi ultra-minimal
+      // Tangani QuotaExceededError dengan pembersihan & pelepasan memori aman
       try {
         this.cleanObsoleteStorageKeys();
+        localStorage.removeItem(this.STORAGE_KEY);
         const minimal = {
           matches: this.data.matches || [],
           settings: this.data.settings || {},
@@ -3210,6 +3211,14 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   initScrollReveal() {
+    // Konten tab yang sedang aktif langsung revealed 100% instan (< 1ms) tanpa animasi delay
+    const activePane = document.querySelector(".tab-pane.active");
+    if (activePane) {
+      activePane.querySelectorAll(".scroll-reveal, .match-card, .group-card, .team-card, .sponsor-card-primary, .sponsor-card-secondary, .moment-card").forEach(el => {
+        el.classList.add("is-revealed");
+      });
+    }
+
     if (!("IntersectionObserver" in window)) {
       document.querySelectorAll(".scroll-reveal").forEach(el => el.classList.add("is-revealed"));
       return;
@@ -3231,8 +3240,8 @@ var app = window.app = Object.assign(window.app || {}, {
         }
       });
     }, {
-      threshold: 0.1,
-      rootMargin: "0px 0px -20px 0px"
+      threshold: 0.05,
+      rootMargin: "60px 0px 60px 0px"
     });
 
     // Observe all scroll-reveal containers and cards for dynamic staggered entrance
@@ -3526,16 +3535,19 @@ var app = window.app = Object.assign(window.app || {}, {
     const btn = document.getElementById("btnMobileMenu");
     const overlay = document.getElementById("mobileMenuOverlay");
     if (btn) btn.classList.remove("active");
-    if (overlay) overlay.classList.remove("open");
+    if (overlay) {
+      overlay.classList.remove("open");
+      overlay.style.pointerEvents = "none";
+      overlay.style.visibility = "hidden";
+      overlay.style.opacity = "0";
+    }
     document.body.classList.remove("mobile-menu-active");
     document.body.style.overflow = "";
     document.documentElement.style.overflow = "";
   },
 
   navigateTo(path, tabId, data = null, pushHistory = true) {
-    if (this._isMobileMenuOpen) {
-      this.closeMobileMenu();
-    }
+    this.closeMobileMenu();
 
     if (tabId === "team-detail" && data && data.teamId) {
       this.openTeamDetailPage(data.teamId, pushHistory, path);
@@ -4111,6 +4123,21 @@ var app = window.app = Object.assign(window.app || {}, {
 
   switchTab(tabId, pushHistory = true, customPath = null) {
     try {
+      // Force close mobile menu overlay immediately
+      const overlay = document.getElementById("mobileMenuOverlay");
+      if (overlay) {
+        overlay.classList.remove("open");
+        overlay.style.pointerEvents = "none";
+        overlay.style.visibility = "hidden";
+        overlay.style.opacity = "0";
+      }
+      const menuBtn = document.getElementById("btnMobileMenu");
+      if (menuBtn) menuBtn.classList.remove("active");
+      this._isMobileMenuOpen = false;
+      document.body.classList.remove("mobile-menu-active");
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+
       const tabToPath = {
         home: "/beranda",
         matches: "/jadwal",
@@ -4167,10 +4194,10 @@ var app = window.app = Object.assign(window.app || {}, {
 
       this.renderCurrentView();
       this.updateFloatingCategoryVisibility();
+
+      // Instant scroll to top without smooth scroll lag / snap collision
       if ((window.scrollY || window.pageYOffset || 0) > 0) {
-        window.requestAnimationFrame(() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        });
+        window.scrollTo(0, 0);
       }
     } catch (err) {
       console.error("switchTab error:", err);
@@ -8553,7 +8580,10 @@ var app = window.app = Object.assign(window.app || {}, {
 
 // Guarantee window.app === app unified single instance
 app._realSwitchTab = app.switchTab.bind(app);
+app._realNavigateTo = app.navigateTo.bind(app);
 app._realSetCategory = app.setCategory.bind(app);
+app._realCloseMobileMenu = app.closeMobileMenu.bind(app);
+app._realOpenMobileMenu = app.openMobileMenu.bind(app);
 
 // Initialize when DOM ready (supports already-loaded state on mobile/PWA cache)
 const _bootAppSafely = () => {

@@ -102,9 +102,59 @@
   </script>
   <script>
     window.app = window.app || {
+      navigateTo: function (path, tabId) {
+        if (window.app && typeof window.app._realNavigateTo === 'function') {
+          window.app._realNavigateTo(path, tabId);
+        } else {
+          window.app.closeMobileMenu();
+          window.app.switchTab(tabId, true, path);
+        }
+      },
+      closeMobileMenu: function () {
+        if (window.app && typeof window.app._realCloseMobileMenu === 'function') {
+          window.app._realCloseMobileMenu();
+        } else {
+          var overlay = document.getElementById("mobileMenuOverlay");
+          if (overlay) {
+            overlay.classList.remove("open");
+            overlay.style.pointerEvents = "none";
+            overlay.style.visibility = "hidden";
+          }
+          var btn = document.getElementById("btnMobileMenu");
+          if (btn) btn.classList.remove("active");
+          document.body.classList.remove("mobile-menu-active");
+          document.body.style.overflow = "";
+        }
+      },
+      openMobileMenu: function () {
+        if (window.app && typeof window.app._realOpenMobileMenu === 'function') {
+          window.app._realOpenMobileMenu();
+        } else {
+          var overlay = document.getElementById("mobileMenuOverlay");
+          if (overlay) {
+            overlay.classList.add("open");
+            overlay.style.pointerEvents = "auto";
+            overlay.style.visibility = "visible";
+          }
+          var btn = document.getElementById("btnMobileMenu");
+          if (btn) btn.classList.add("active");
+          document.body.classList.add("mobile-menu-active");
+        }
+      },
       switchTab: function (tabId) {
         window._pendingTab = tabId;
         try {
+          var overlay = document.getElementById("mobileMenuOverlay");
+          if (overlay) {
+            overlay.classList.remove("open");
+            overlay.style.pointerEvents = "none";
+            overlay.style.visibility = "hidden";
+          }
+          var menuBtn = document.getElementById("btnMobileMenu");
+          if (menuBtn) menuBtn.classList.remove("active");
+          document.body.classList.remove("mobile-menu-active");
+          document.body.style.overflow = "";
+
           var btns = document.querySelectorAll('.tab-btn');
           for (var i = 0; i < btns.length; i++) {
             btns[i].classList.toggle('active', btns[i].getAttribute('data-tab') === tabId);
@@ -249,8 +299,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261122_v34">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261122_v34">
+  <link rel="stylesheet" href="/css/styles.css?v=20261122_v35">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261122_v35">
 </head>
 
 <body class="snap-scroll-active">
@@ -3149,11 +3199,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261122_v34"></script>
-  <script defer src="/js/supabase-client.js?v=20261122_v34"></script>
-  <script defer src="/js/data.js?v=20261122_v34"></script>
-  <script defer src="/js/admin.js?v=20261122_v34"></script>
-  <script defer src="/js/app.js?v=20261122_v34"></script>
+  <script defer src="/js/security.js?v=20261122_v35"></script>
+  <script defer src="/js/supabase-client.js?v=20261122_v35"></script>
+  <script defer src="/js/data.js?v=20261122_v35"></script>
+  <script defer src="/js/admin.js?v=20261122_v35"></script>
+  <script defer src="/js/app.js?v=20261122_v35"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

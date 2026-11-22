@@ -6327,3 +6327,35 @@ body.mobile-menu-active .mobile-menu-content {
 .scroll-reveal.is-revealed .stat-pill {
   animation: none !important;
 }
+
+/* ============================================================================
+   16. INSTANT TAB NAVIGATION & ZERO DELAY MOBILE RENDERING
+   Memastikan pergantian tab dan drawer menu instan tanpa delay atau layar kosong
+   ============================================================================ */
+.tab-pane .scroll-reveal,
+.tab-pane .match-card,
+.tab-pane .group-card,
+.tab-pane .team-card,
+.tab-pane .sponsor-card-primary,
+.tab-pane .sponsor-card-secondary,
+.tab-pane .stat-card,
+.tab-pane.active .scroll-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+  transition: opacity 0.12s ease !important;
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+}
+
+/* Mobile Menu Overlay instant close without blocking viewport */
+.mobile-menu-overlay:not(.open) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
