@@ -137,7 +137,9 @@ class TournamentStore {
   normalizeMatch(m, teams = []) {
     if (!m || typeof m !== "object") return null;
     const id = String(m.id || "").trim();
-    if (!id) return null;
+    if (!id || id.includes('registry') || id.includes('config') || id === 'team_meta_registry' || id === 'team_logos_registry') {
+      return null;
+    }
 
     const homeId = m.homeId !== undefined ? m.homeId : (m.home_id !== undefined && m.home_id !== null ? m.home_id : "");
     const awayId = m.awayId !== undefined ? m.awayId : (m.away_id !== undefined && m.away_id !== null ? m.away_id : "");
@@ -380,7 +382,10 @@ class TournamentStore {
 
     // Normalisasi struktur tim & laga dari cache agar tidak pernah crash (tanpa mengubah isi data!)
     data.teams = data.teams.map((t, idx) => this.normalizeTeam(t, idx)).filter(Boolean);
-    data.matches = data.matches.map(m => this.normalizeMatch(m, data.teams)).filter(Boolean);
+    data.matches = data.matches
+      .filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'))
+      .map(m => this.normalizeMatch(m, data.teams))
+      .filter(Boolean);
 
     return data;
   }
@@ -1278,6 +1283,13 @@ var app = window.app = Object.assign(window.app || {}, {
 
   init() {
     this.ensureStore();
+    if (this.store && this.store.data && Array.isArray(this.store.data.matches)) {
+      const origCount = this.store.data.matches.length;
+      this.store.data.matches = this.store.data.matches.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'));
+      if (this.store.data.matches.length !== origCount) {
+        this.store.saveData();
+      }
+    }
     if (this.store && this.store.data && this.store.data.config) {
       if (this.store.data.config.dates !== "22 - 29 November 2026") {
         this.store.data.config.dates = "22 - 29 November 2026";
@@ -2391,8 +2403,9 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // 2. Sinkronkan PERTANDINGAN dari Database Online Supabase (Single Source of Truth)
     if (Array.isArray(data.matches)) {
-      const prevMatchesMap = new Map((this.store.data.matches || []).map(m => [m.id, m]));
-      const syncedMatches = data.matches.map(remoteMatch => {
+      const cleanRemote = data.matches.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'));
+      const prevMatchesMap = new Map((this.store.data.matches || []).filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config')).map(m => [m.id, m]));
+      const syncedMatches = cleanRemote.map(remoteMatch => {
         if (!remoteMatch || !remoteMatch.id) return null;
         const curMatch = prevMatchesMap.get(remoteMatch.id);
         const norm = (this.store && typeof this.store.normalizeMatch === "function")
@@ -2450,9 +2463,9 @@ var app = window.app = Object.assign(window.app || {}, {
       }).filter(Boolean);
 
       // Pertahankan pertandingan lokal jika belum sempat tersinkronkan ke Cloud Supabase, dan push ke Cloud
-      const remoteIds = new Set(data.matches.map(m => m && m.id).filter(Boolean));
+      const remoteIds = new Set(cleanRemote.map(m => m && m.id).filter(Boolean));
       (this.store.data.matches || []).forEach(localM => {
-        if (localM && localM.id && !remoteIds.has(localM.id) && !localM._deleted && !(this.store._deletedMatchIds && this.store._deletedMatchIds.has(localM.id))) {
+        if (localM && localM.id && !String(localM.id).includes('registry') && !String(localM.id).includes('config') && !remoteIds.has(localM.id) && !localM._deleted && !(this.store._deletedMatchIds && this.store._deletedMatchIds.has(localM.id))) {
           syncedMatches.push(localM);
           if (window.SupabaseService && typeof window.SupabaseService.syncMatch === 'function') {
             window.SupabaseService.syncMatch(localM, window.admin ? window.admin.adminPinHash : "");
@@ -2470,7 +2483,7 @@ var app = window.app = Object.assign(window.app || {}, {
         return 500;
       };
       syncedMatches.sort((a, b) => matchOrderWeight(a.id) - matchOrderWeight(b.id) || String(a.id).localeCompare(String(b.id)));
-      this.store.data.matches = syncedMatches;
+      this.store.data.matches = syncedMatches.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'));
     }
 
     // 3. Sinkronkan MOMENTS & SPONSORS dari Database Online Supabase
@@ -2560,6 +2573,9 @@ var app = window.app = Object.assign(window.app || {}, {
   handleRemoteSync(table, payload) {
     if (!payload) return;
     if (table === 'matches') {
+      if (payload.id && (String(payload.id).includes('registry') || String(payload.id).includes('config'))) {
+        return;
+      }
       if (payload._deleted && payload.id) {
         this.store.data.matches = (this.store.data.matches || []).filter(m => m.id !== payload.id);
         this.store.syncPlayerStatsFromMatches();

@@ -325,6 +325,14 @@
     // Push Match Score with Security Validation & Direct Realtime Cloud Sync
     async syncMatch(match, pinHash) {
       if (!this.client || !this.isConfigured) return false;
+      if (!match || !match.id || typeof match.id !== 'string') return false;
+
+      // Filter ketat: Registry config atau metadata BUKAN pertandingan, jangan pernah masukkan ke matches!
+      const cleanId = match.id.trim();
+      if (cleanId.includes('registry') || cleanId.includes('config') || cleanId === 'team_meta_registry' || cleanId === 'team_logos_registry') {
+        console.warn('[Supabase] syncMatch ditolak: item registry config bukan pertandingan futsal:', cleanId);
+        return false;
+      }
 
       try {
         const hScoreNum = (match.status === 'live' || match.status === 'finished')
@@ -780,7 +788,8 @@
 
         // 2. Matches
         if (data.matches && Array.isArray(data.matches)) {
-          const matchesPayload = data.matches.map(m => ({
+          const cleanMatches = data.matches.filter(m => m && m.id && !m.id.includes('registry') && !m.id.includes('config'));
+          const matchesPayload = cleanMatches.map(m => ({
             id: m.id,
             home_id: m.homeId,
             away_id: m.awayId,
