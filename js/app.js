@@ -8684,7 +8684,7 @@ var app = window.app = Object.assign(window.app || {}, {
             ${isLive ? `
               <div class="md-live-minute-top ${match.isTimerPaused ? 'is-paused' : ''}" id="mdLiveMinuteTop" title="${match.isTimerPaused ? 'Pertandingan Sedang Dijeda (Pause)' : 'Live Minute Laga (m:dd)'}">
                 <span class="pulse-dot"></span>
-                <span class="md-live-status-label" id="mdLiveStatusLabel">${match.isTimerPaused ? 'JEDA' : ''}</span>
+                <span class="md-live-status-label" id="mdLiveStatusLabel">${match.isTimerPaused ? 'JEDA' : 'LIVE'}</span>
                 <span class="md-live-clock-digits" id="mdLiveClockDigits">${this.formatMatchLiveMinute(match)}</span>
               </div>
             ` : ''}
