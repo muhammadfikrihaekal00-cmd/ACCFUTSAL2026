@@ -3666,6 +3666,18 @@ tr.zone-qualify {
   transform: translateY(0) scale(1) !important;
 }
 
+/* Zero-CLS above-the-fold content: never animate translateY inside viewport headers */
+.feature-hero-card,
+.juknis-toolbar-card,
+.juknis-helpdesk-card,
+.category-selector-space,
+.tab-pane > .scroll-reveal:first-child,
+.tab-pane.active > .scroll-reveal:first-child {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
 /* ============================================================================
    14. MOBILE RESPONSIVE BREAKPOINTS & CLEAN MOBILE MENU DRAWER
    ============================================================================ */
@@ -4794,6 +4806,18 @@ body.mobile-menu-active .mobile-menu-content {
 .scroll-reveal.is-revealed {
   opacity: 1 !important;
   transform: translateY(0) scale(1) !important;
+}
+
+/* Zero-CLS above-the-fold content: never animate translateY inside viewport headers */
+.feature-hero-card,
+.juknis-toolbar-card,
+.juknis-helpdesk-card,
+.category-selector-space,
+.tab-pane > .scroll-reveal:first-child,
+.tab-pane.active > .scroll-reveal:first-child {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
 }
 
 /* Staggered Box Reveal for child elements */

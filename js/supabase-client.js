@@ -242,9 +242,9 @@
           ? 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at'
           : 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, updated_at';
 
-        // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob & full player base64)
+        // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob, registry backups & full player base64)
         const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
-          this.client.from('tournament_config').select('*').neq('id', 'team_logos_registry'),
+          this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry']),
           this.client.from('teams').select(teamCols),
           this.client.from('matches').select('*'),
           this.client.from('moments').select('id, title, category, media_type, media_url, thumbnail_url, caption, sort_order, created_at, player, team, badge, tag, image').order('sort_order', { ascending: true }).limit(20),

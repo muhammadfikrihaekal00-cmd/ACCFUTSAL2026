@@ -1448,12 +1448,6 @@ var app = window.app = Object.assign(window.app || {}, {
         this.store.saveData();
       }
     }
-    if (window.SupabaseService && typeof window.SupabaseService.deleteMatch === 'function') {
-      window.SupabaseService.deleteMatch('team_meta_registry').catch(() => { });
-      window.SupabaseService.deleteMatch('team_logos_registry').catch(() => { });
-      window.SupabaseService.deleteMatch('M_SMP_23').catch(() => { });
-      window.SupabaseService.deleteMatch('T02').catch(() => { });
-    }
     if (this.store && this.store.data && this.store.data.config) {
       if (this.store.data.config.dates !== "22 - 29 November 2026") {
         this.store.data.config.dates = "22 - 29 November 2026";

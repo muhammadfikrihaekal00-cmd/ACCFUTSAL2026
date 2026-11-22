@@ -11,19 +11,9 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261123_v52">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261123_v52">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261123_v53">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261123_v53">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
-
-  <!-- PWA Manifest & Favicon -->
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png?v=8.58">
-  <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon.png?v=8.58">
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=8.58">
-
-  <!-- Agentic Resource Discovery & LLM Documentation -->
-  <link rel="ard" href="/.well-known/ai-catalog.json" type="application/json">
-  <link rel="alternate" type="text/markdown" href="/llms.txt" title="LLM Documentation">
 
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,6 +29,16 @@
     <link rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Outfit:wght@600;700;800;900&display=swap">
   </noscript>
+
+  <!-- PWA Manifest & Favicon (Deferred after Critical CSS/Fonts to Eliminate Critical Path Latency) -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png?v=8.58">
+  <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon.png?v=8.58">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=8.58">
+
+  <!-- Agentic Resource Discovery & LLM Documentation -->
+  <link rel="ard" href="/.well-known/ai-catalog.json" type="application/json">
+  <link rel="alternate" type="text/markdown" href="/llms.txt" title="LLM Documentation">
 
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -343,8 +343,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261123_v52">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v52">
+  <link rel="stylesheet" href="/css/styles.css?v=20261123_v53">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v53">
 </head>
 
 <body class="snap-scroll-active">
@@ -717,7 +717,7 @@
     <section id="pane-matches" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: JADWAL & SKOR -->
-      <div class="feature-hero-card scroll-reveal">
+      <div class="feature-hero-card">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
@@ -731,7 +731,7 @@
       </div>
 
       <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
-      <div class="category-selector-space scroll-reveal">
+      <div class="category-selector-space">
         <div class="category-selector-box">
           <div class="category-selector-header">
             <div class="category-selector-kicker">
@@ -837,7 +837,7 @@
     <section id="pane-standings" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: KLASEMEN -->
-      <div class="feature-hero-card scroll-reveal">
+      <div class="feature-hero-card">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
@@ -851,7 +851,7 @@
       </div>
 
       <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
-      <div class="category-selector-space scroll-reveal">
+      <div class="category-selector-space">
         <div class="category-selector-box">
           <div class="category-selector-header">
             <div class="category-selector-kicker">
@@ -892,7 +892,7 @@
     <section id="pane-draw" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: DRAWING GRUP -->
-      <div class="feature-hero-card scroll-reveal">
+      <div class="feature-hero-card">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
@@ -1021,7 +1021,7 @@
     <section id="pane-bracket" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: BAGAN FASE GUGUR -->
-      <div class="feature-hero-card scroll-reveal">
+      <div class="feature-hero-card">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
@@ -1035,7 +1035,7 @@
       </div>
 
       <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
-      <div class="category-selector-space scroll-reveal">
+      <div class="category-selector-space">
         <div class="category-selector-box">
           <div class="category-selector-header">
             <div class="category-selector-kicker">
@@ -1059,7 +1059,7 @@
     <section id="pane-teams" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: DAFTAR TIM -->
-      <div class="feature-hero-card scroll-reveal">
+      <div class="feature-hero-card">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
@@ -1073,7 +1073,7 @@
       </div>
 
       <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
-      <div class="category-selector-space scroll-reveal">
+      <div class="category-selector-space">
         <div class="category-selector-box">
           <div class="category-selector-header">
             <div class="category-selector-kicker">
@@ -1132,7 +1132,7 @@
     <section id="pane-stats" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: STATISTIK -->
-      <div class="feature-hero-card scroll-reveal">
+      <div class="feature-hero-card">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
@@ -1146,7 +1146,7 @@
       </div>
 
       <!-- DEDICATED PROMINENT CATEGORY SELECTOR SPACE (SELALU DI BAWAH HERO SECTION) -->
-      <div class="category-selector-space scroll-reveal">
+      <div class="category-selector-space">
         <div class="category-selector-box">
           <div class="category-selector-header">
             <div class="category-selector-kicker">
@@ -1225,7 +1225,7 @@
     <section id="pane-juknis" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: REGULASI & JUKNIS -->
-      <div class="feature-hero-card scroll-reveal">
+      <div class="feature-hero-card">
         <div class="feature-hero-content">
           <div class="feature-hero-kicker">
             <span class="pulse-dot"></span>
@@ -1239,7 +1239,7 @@
       </div>
 
       <!-- DOKUMEN UNDUH & SEARCH TOOLBAR -->
-      <div class="juknis-toolbar-card scroll-reveal">
+      <div class="juknis-toolbar-card">
         <div class="juknis-download-banner">
           <div class="juknis-download-info">
             <div class="juknis-download-icon">📥</div>
@@ -1303,7 +1303,7 @@
       </div>
 
       <!-- CONTACT & HELPDESK FOOTER CARD -->
-      <div class="juknis-helpdesk-card scroll-reveal">
+      <div class="juknis-helpdesk-card">
         <div class="juknis-helpdesk-info">
           <div class="juknis-helpdesk-icon">📞</div>
           <div>
@@ -3438,12 +3438,12 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v52"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v52"></script>
-  <script defer src="/js/data.js?v=20261123_v52"></script>
-  <script defer src="/js/app.js?v=20261123_v52"></script>
+  <script defer src="/js/security.js?v=20261123_v53"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v53"></script>
+  <script defer src="/js/data.js?v=20261123_v53"></script>
+  <script defer src="/js/app.js?v=20261123_v53"></script>
 
-  <!-- Panitia Admin Module: Lazy-loaded on demand / after first paint so spectators & mobile visitors have 100% lightweight performance -->
+  <!-- Panitia Admin Module: Loaded instantly for authenticated Panitia, or strictly on-demand when clicking Panitia access -->
   <script>
     (function () {
       function loadAdminModule() {
@@ -3451,7 +3451,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         window._adminModuleLoaded = true;
         var s = document.createElement('script');
         s.id = 'adminScript';
-        s.src = '/js/admin.js?v=20261123_v52';
+        s.src = '/js/admin.js?v=20261123_v53';
         s.defer = true;
         document.body.appendChild(s);
       }
@@ -3463,12 +3463,6 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
       if (isPanitia) {
         loadAdminModule();
-      } else {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(function () { setTimeout(loadAdminModule, 3500); });
-        } else {
-          setTimeout(loadAdminModule, 4000);
-        }
       }
     })();
   </script>
