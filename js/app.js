@@ -1290,6 +1290,10 @@ var app = window.app = Object.assign(window.app || {}, {
         this.store.saveData();
       }
     }
+    if (window.SupabaseService && typeof window.SupabaseService.deleteMatch === 'function') {
+      window.SupabaseService.deleteMatch('team_meta_registry').catch(() => { });
+      window.SupabaseService.deleteMatch('team_logos_registry').catch(() => { });
+    }
     if (this.store && this.store.data && this.store.data.config) {
       if (this.store.data.config.dates !== "22 - 29 November 2026") {
         this.store.data.config.dates = "22 - 29 November 2026";
@@ -2403,6 +2407,14 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // 2. Sinkronkan PERTANDINGAN dari Database Online Supabase (Single Source of Truth)
     if (Array.isArray(data.matches)) {
+      // Bersihkan entri sampah team_meta_registry & team_logos_registry dari Supabase matches jika masih ada
+      const bogusMatches = data.matches.filter(m => m && m.id && (String(m.id).includes('registry') || String(m.id).includes('config')));
+      if (bogusMatches.length > 0 && window.SupabaseService && typeof window.SupabaseService.deleteMatch === 'function') {
+        bogusMatches.forEach(b => {
+          window.SupabaseService.deleteMatch(b.id).catch(() => { });
+        });
+      }
+
       const cleanRemote = data.matches.filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config'));
       const prevMatchesMap = new Map((this.store.data.matches || []).filter(m => m && m.id && !String(m.id).includes('registry') && !String(m.id).includes('config')).map(m => [m.id, m]));
       const syncedMatches = cleanRemote.map(remoteMatch => {
