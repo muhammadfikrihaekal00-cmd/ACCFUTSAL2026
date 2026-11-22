@@ -1383,6 +1383,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     const [recipient, role] = rawVal.split("|");
+    if (!recipient || recipient === "undefined" || recipient === "null" || recipient.trim() === "") {
+      alert("Harap pilih nama orang penerima kartu yang valid!");
+      return;
+    }
 
     if (!minute) {
       const matchMin = (document.getElementById("matchMinuteInput")?.value || "").replace(/[^0-9]/g, "");
@@ -1706,7 +1710,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       </div>
     `).join("");
 
-    const cards = (match.cards || []).map((c, idx) => `
+    const cards = (match.cards || []).filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red')).map((c, idx) => `
       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid ${c.type === 'yellow' ? '#fbbf24' : '#ef4444'};">
         <span><span class="${c.type === 'yellow' ? 'card-icon-y' : 'card-icon-r'}"></span> <strong>${c.player}</strong> (${this.cleanMinuteDisplay(c.minute)})${c.role && c.role !== 'Pemain' ? ` <span style="font-size:0.68rem; color:#94a3b8;">(${c.role})</span>` : ''} - <span style="color:#fbbf24;">${app.store.getTeam(c.team)?.shortName || c.team}</span></span>
         <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeCard(${idx})" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;">Hapus</button>
@@ -1786,9 +1790,14 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
   removeCard(index) {
     const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
-    if (!match || !match.cards || !match.cards[index]) return;
-    const removed = match.cards[index];
-    match.cards.splice(index, 1);
+    if (!match || !match.cards) return;
+    const realCards = match.cards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && (c.type === 'yellow' || c.type === 'red'));
+    const removed = realCards[index];
+    if (!removed) return;
+    const realIdx = match.cards.indexOf(removed);
+    if (realIdx !== -1) {
+      match.cards.splice(realIdx, 1);
+    }
 
     const team = app.store.getTeam(removed.team);
     const p = team?.players.find(x => x.name === removed.player);

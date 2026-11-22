@@ -240,8 +240,9 @@ class TournamentStore {
       if (Array.isArray(metaCard.substitutions) && substitutions.length === 0) substitutions = metaCard.substitutions;
       if (typeof metaCard.homeFouls === "number") homeFouls = metaCard.homeFouls;
       if (typeof metaCard.awayFouls === "number") awayFouls = metaCard.awayFouls;
-      cleanCards = cleanCards.filter(c => c && !c._meta);
     }
+    // Filter ketat agar metadata atau kartu tanpa nama pemain tidak pernah masuk ke cards
+    cleanCards = cleanCards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
 
     const normalized = {
       id,
@@ -1591,6 +1592,58 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   // =========================================================
+  // FORMAT LIVE MINUTE & CHRONOLOGICAL MATCH ORDER HELPERS
+  // =========================================================
+  formatMatchLiveMinute(m) {
+    if (!m) return "0:00";
+    const rawStr = String(m.liveMinute || "").trim();
+    if (rawStr.includes(":")) {
+      return rawStr.replace(/[^0-9:]/g, "");
+    }
+    let elapsedSec = 0;
+    if (m.liveStartedAt) {
+      elapsedSec = Math.max(0, Math.floor((Date.now() - m.liveStartedAt) / 1000));
+    } else {
+      const rawMin = parseInt(rawStr.replace(/\D/g, ""), 10) || 1;
+      elapsedSec = (rawMin - 1) * 60;
+    }
+    const min = Math.min(50, Math.floor(elapsedSec / 60));
+    const sec = elapsedSec % 60;
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+  },
+
+  getChronologicalMatchOrder(m) {
+    if (!m) return 99999999;
+    let dayNum = parseInt(m.matchday || m.day, 10);
+    if (!dayNum || isNaN(dayNum)) {
+      const dStr = String(m.date || "");
+      const dMatch = dStr.match(/(\d{1,2})\s*(?:Nov|November)?/i);
+      if (dMatch) {
+        const val = parseInt(dMatch[1], 10);
+        dayNum = (val >= 22 && val <= 30) ? (val - 21) : val;
+      } else {
+        dayNum = 1;
+      }
+    }
+
+    const tStr = String(m.time || "").trim();
+    let timeMinutes = 999;
+    const tMatch = tStr.match(/(\d{1,2})[:.](\d{2})/);
+    if (tMatch) {
+      timeMinutes = (parseInt(tMatch[1], 10) * 60) + parseInt(tMatch[2], 10);
+    } else {
+      const digits = tStr.replace(/\D/g, "");
+      if (digits.length >= 3) {
+        const h = parseInt(digits.slice(0, -2), 10);
+        const min = parseInt(digits.slice(-2), 10);
+        timeMinutes = (h * 60) + min;
+      }
+    }
+
+    return (dayNum * 1440) + timeMinutes;
+  },
+
+  // =========================================================
   // GLOBAL BACKGROUND TIMER UNTUK PERTANDINGAN LIVE
   // Otomatis menambah menit secara presisi & disinkronkan ke Supabase
   // =========================================================
@@ -1598,6 +1651,20 @@ var app = window.app = Object.assign(window.app || {}, {
     if (this._globalLiveTimerInterval) {
       clearInterval(this._globalLiveTimerInterval);
     }
+    if (this._liveClockTicker) {
+      clearInterval(this._liveClockTicker);
+    }
+
+    // 1-second live ticker untuk jam digital live minute pada Detail Laga & modal
+    this._liveClockTicker = setInterval(() => {
+      const clockEl = document.getElementById("mdLiveClockDigits");
+      if (clockEl && this.activeDetailMatchId) {
+        const activeM = (this.store?.data?.matches || []).find(m => m.id === this.activeDetailMatchId && m.status === 'live');
+        if (activeM) {
+          clockEl.textContent = this.formatMatchLiveMinute(activeM);
+        }
+      }
+    }, 1000);
 
     this._globalLiveTimerInterval = setInterval(() => {
       const matches = this.store && this.store.data ? this.store.data.matches : [];
@@ -1735,8 +1802,17 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // 1. Cari apakah ada pertandingan yang sedang LIVE saat ini
     const matches = (this.store && this.store.data && this.store.data.matches) || [];
+    const activeCat = this.currentCategory || "SMP";
     const liveMatches = matches.filter(m => m.status === "live");
-    const upcomingMatches = matches.filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled"));
+
+    // Urutkan semua laga upcoming secara kronologis presisi (berdasarkan hari & jam kick-off)
+    const sortedUpcomingAll = matches
+      .filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled"))
+      .sort((a, b) => this.getChronologicalMatchOrder(a) - this.getChronologicalMatchOrder(b));
+
+    // Cari laga selanjutnya sesuai kategori aktif, fallback ke laga berikutnya dari kategori lain jika kategori aktif sudah selesai
+    const upcomingInCat = sortedUpcomingAll.filter(m => (m.category || "SMP") === activeCat);
+    const nextMatch = upcomingInCat[0] || sortedUpcomingAll[0] || (liveMatches.length === 0 ? matches[0] : null);
 
     // 2. BOX TERPISAH: Skor Pertandingan yang Sedang Berlangsung (Hanya tampil jika ada laga LIVE)
     // Cukup tampilkan nama tim dan skornya, apabila diklik menuju ke detail laganya
@@ -1779,7 +1855,6 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // 3. BOX TERPISAH: Informasi Pertandingan Selanjutnya (Taro di bawahnya beda box)
     let upcomingMatchBoxHtml = "";
-    const nextMatch = upcomingMatches[0] || (liveMatches.length === 0 ? matches[0] : null);
     if (nextMatch) {
       const hTeam = this.store.getTeam(nextMatch.homeId) || { name: nextMatch.homePlaceholder || "Home" };
       const aTeam = this.store.getTeam(nextMatch.awayId) || { name: nextMatch.awayPlaceholder || "Away" };
@@ -2470,7 +2545,17 @@ var app = window.app = Object.assign(window.app || {}, {
         if (payload.group_letter !== undefined) mapped.group = payload.group_letter;
         if (payload.round_name !== undefined) mapped.roundName = payload.round_name;
         if (payload.scorers) mapped.scorers = payload.scorers;
-        if (payload.cards) mapped.cards = payload.cards;
+        if (payload.cards && Array.isArray(payload.cards)) {
+          const metaObj = payload.cards.find(c => c && c._meta);
+          if (metaObj) {
+            if (metaObj.knockoutKey && !mapped.knockoutKey) mapped.knockoutKey = metaObj.knockoutKey;
+            if (metaObj.lineup && !mapped.lineup) mapped.lineup = metaObj.lineup;
+            if (Array.isArray(metaObj.substitutions)) mapped.substitutions = metaObj.substitutions;
+            if (typeof metaObj.homeFouls === "number") mapped.homeFouls = metaObj.homeFouls;
+            if (typeof metaObj.awayFouls === "number") mapped.awayFouls = metaObj.awayFouls;
+          }
+          mapped.cards = payload.cards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
+        }
         if (payload.minute_live !== undefined && payload.minute_live !== null) {
           const remoteMinNum = parseInt(payload.minute_live, 10) || 0;
           const finalStatus = payload.status || curMatch.status;
@@ -4686,25 +4771,15 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Urutkan pertandingan secara logis:
     // 1. Live match di posisi teratas
-    // 2. Berdasarkan tanggal
-    // 3. Berdasarkan jam kick-off
+    // 2. Berdasarkan kronologi (Hari & Jam Kick-off)
+    // 3. ID Pertandingan
     matches.sort((a, b) => {
       if (a.status === "live" && b.status !== "live") return -1;
       if (b.status === "live" && a.status !== "live") return 1;
 
-      const dA = String(a.date || "");
-      const dB = String(b.date || "");
-      if (dA && dB && dA !== dB) {
-        const numA = parseInt(dA.replace(/\D/g, ""), 10) || 0;
-        const numB = parseInt(dB.replace(/\D/g, ""), 10) || 0;
-        if (numA !== numB) return numA - numB;
-      }
-
-      const tA = (a.time || "").replace(/\D/g, "").substring(0, 4);
-      const tB = (b.time || "").replace(/\D/g, "").substring(0, 4);
-      const timeNumA = parseInt(tA, 10) || 9999;
-      const timeNumB = parseInt(tB, 10) || 9999;
-      if (timeNumA !== timeNumB) return timeNumA - timeNumB;
+      const orderA = this.getChronologicalMatchOrder(a);
+      const orderB = this.getChronologicalMatchOrder(b);
+      if (orderA !== orderB) return orderA - orderB;
 
       return (a.id || "").localeCompare(b.id || "");
     });
@@ -8118,6 +8193,7 @@ var app = window.app = Object.assign(window.app || {}, {
     // Gabungkan & urutkan kronologi gol, kartu, dan pergantian pemain
     const eventsList = [];
     (match.scorers || []).forEach(s => {
+      if (!s || !s.player || s.player === 'undefined') return;
       eventsList.push({
         type: 'goal',
         team: s.team,
@@ -8129,6 +8205,9 @@ var app = window.app = Object.assign(window.app || {}, {
     });
 
     (match.cards || []).forEach(c => {
+      // Saring ketat agar metadata atau objek rusak tidak pernah dianggap kartu
+      if (!c || c._meta || !c.player || c.player === 'undefined' || c.player === 'null') return;
+      if (c.type !== 'yellow' && c.type !== 'red') return;
       eventsList.push({
         type: c.type === 'yellow' ? 'yellow_card' : 'red_card',
         team: c.team,
@@ -8148,8 +8227,8 @@ var app = window.app = Object.assign(window.app || {}, {
     const aLineup = match.lineup?.away || { onCourt: [], bench: [] };
 
     const getPlayerExtraInfo = (teamId, pName) => {
-      const gCount = (match.scorers || []).filter(s => s.team === teamId && s.player === pName).length;
-      const cards = (match.cards || []).filter(c => c.team === teamId && c.player === pName);
+      const gCount = (match.scorers || []).filter(s => s && s.player && s.team === teamId && s.player === pName).length;
+      const cards = (match.cards || []).filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.team === teamId && c.player === pName);
       const yc = cards.filter(c => c.type === 'yellow').length;
       const rc = cards.filter(c => c.type === 'red').length;
       let extra = '';
@@ -8209,7 +8288,7 @@ var app = window.app = Object.assign(window.app || {}, {
             ` : `
               <div style="display:flex; flex-wrap:wrap; gap:4px;">
                 ${officials.map(o => {
-        const oCards = (match.cards || []).filter(c => c.team === team.id && c.player === o.name);
+        const oCards = (match.cards || []).filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.team === team.id && c.player === o.name);
         let cBadge = '';
         if (oCards.some(c => c.type === 'yellow')) cBadge += ' <span class="card-icon-y" title="Kartu Kuning Ofisial"></span>';
         if (oCards.some(c => c.type === 'red')) cBadge += ' <span class="card-icon-r" title="Kartu Merah Ofisial"></span>';
@@ -8269,6 +8348,12 @@ var app = window.app = Object.assign(window.app || {}, {
 
           <!-- CENTER SCORE -->
           <div class="md-score-center">
+            ${isLive ? `
+              <div class="md-live-minute-top" title="Live Minute Laga (m:dd)">
+                <span class="pulse-dot"></span>
+                <span class="md-live-clock-digits" id="mdLiveClockDigits">${this.formatMatchLiveMinute(match)}</span>
+              </div>
+            ` : ''}
             <div class="md-score-digits">
               <span>${hScore}</span>
               <span class="md-score-colon">:</span>

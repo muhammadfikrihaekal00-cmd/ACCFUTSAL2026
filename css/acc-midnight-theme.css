@@ -6021,6 +6021,40 @@ body.mobile-menu-active .mobile-menu-content {
   justify-content: center !important;
 }
 
+/* Live Minute Clock Di Atas Skor Pada Detail Laga (Desktop / Laptop) */
+.md-live-minute-top {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 5px 16px !important;
+  background: rgba(239, 68, 68, 0.16) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  border-radius: 9999px !important;
+  font-family: 'JetBrains Mono', 'Outfit', monospace, sans-serif !important;
+  font-size: clamp(1.15rem, 2.2vw, 1.65rem) !important;
+  font-weight: 800 !important;
+  color: #ef4444 !important;
+  letter-spacing: 0.06em !important;
+  margin-bottom: 8px !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.28) !important;
+}
+
+.md-live-minute-top .pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+@media (min-width: 1024px) {
+  .md-live-minute-top {
+    font-size: 1.7rem !important;
+    padding: 6px 22px !important;
+    margin-bottom: 12px !important;
+  }
+}
+
 .md-score-digits {
   display: flex !important;
   align-items: center !important;
