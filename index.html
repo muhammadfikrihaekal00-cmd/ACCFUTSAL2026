@@ -552,11 +552,13 @@
           </div>
           <div class="moments-controls-wrap">
             <button id="btnAddMomentBtn" class="btn btn-primary btn-sm btn-panitia-moment"
-              onclick="admin.openMomentEditorModal()" style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); font-weight: 700;">
+              onclick="admin.openMomentEditorModal()"
+              style="display: none; background: linear-gradient(135deg, #0284c7, #0369a1); font-weight: 700;">
               ➕ Tambah Momen
             </button>
             <button id="btnManageMomentsBtn" class="btn btn-outline btn-sm btn-panitia-moment"
-              onclick="admin.openMomentEditorModal()" style="display: none; border-color: rgba(2, 132, 199, 0.5); color: #38bdf8; font-weight: 700;">
+              onclick="admin.openMomentEditorModal()"
+              style="display: none; border-color: rgba(2, 132, 199, 0.5); color: #38bdf8; font-weight: 700;">
               ⚙️ Kelola Momen
             </button>
             <div class="moments-nav-arrows">
@@ -581,7 +583,8 @@
 
       <!-- SLIDE 6: SPOTLIGHT PEMAIN TERBAIK / MVP OF THE MATCHDAY (Carousel Geser Multi-MVP) -->
       <div id="mvpSpotlightSection" class="home-slide-section scroll-reveal" style="display: none;">
-        <div class="section-header" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div class="section-header"
+          style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div>
             <h2 class="section-title">
               <span>⭐</span> Bintang Lapangan (MVP Turnamen)
@@ -591,35 +594,41 @@
             </span>
           </div>
           <div id="mvpAdminActions" style="display: none;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openManageMvpModal()" style="border-color: var(--accent-gold); color: var(--accent-gold); font-weight: 700;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="admin.openManageMvpModal()"
+              style="border-color: var(--accent-gold); color: var(--accent-gold); font-weight: 700;">
               ⚙️ Kelola MVP
             </button>
           </div>
         </div>
 
         <!-- Empty state untuk panitia ketika belum ada MVP -->
-        <div id="mvpEmptyAdminNotice" style="display: none; padding: 24px; border: 2px dashed rgba(245, 158, 11, 0.4); border-radius: var(--radius-lg); text-align: center; background: rgba(245, 158, 11, 0.05); margin-bottom: 20px;">
+        <div id="mvpEmptyAdminNotice"
+          style="display: none; padding: 24px; border: 2px dashed rgba(245, 158, 11, 0.4); border-radius: var(--radius-lg); text-align: center; background: rgba(245, 158, 11, 0.05); margin-bottom: 20px;">
           <div style="font-size: 2rem; margin-bottom: 8px;">⭐</div>
           <h3 style="font-size: 1.05rem; color: #fff; margin-bottom: 6px;">Belum Ada Pemain MVP Ditambahkan</h3>
           <p style="font-size: 0.82rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 14px auto;">
-            Sebagai panitia, Anda dapat menambahkan satu atau lebih pemain terbaik turnamen lengkap dengan statistik, foto, dan kata mutiara. Tampilan akan berupa kartu yang bisa digeser!
+            Sebagai panitia, Anda dapat menambahkan satu atau lebih pemain terbaik turnamen lengkap dengan statistik,
+            foto, dan kata mutiara. Tampilan akan berupa kartu yang bisa digeser!
           </p>
-          <button type="button" class="btn btn-primary btn-sm" onclick="admin.openManageMvpModal()" style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="admin.openManageMvpModal()"
+            style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
             ➕ Tambah Pemain MVP Pertama
           </button>
         </div>
 
         <!-- Carousel Wrapper dengan Touch Swipe & Nav Buttons -->
         <div class="mvp-carousel-wrapper" id="mvpCarouselWrapper" style="display: none;">
-          <button type="button" class="mvp-carousel-nav prev" id="btnPrevMvp" onclick="app.scrollMvpCarousel(-1)" aria-label="MVP Sebelumnya" title="Pemain Sebelumnya">
+          <button type="button" class="mvp-carousel-nav prev" id="btnPrevMvp" onclick="app.scrollMvpCarousel(-1)"
+            aria-label="MVP Sebelumnya" title="Pemain Sebelumnya">
             &#8249;
           </button>
-          
+
           <div class="mvp-carousel-track" id="mvpCarouselTrack">
             <!-- Kartu MVP diinjeksi secara dinamis oleh app.renderMvpSection() -->
           </div>
 
-          <button type="button" class="mvp-carousel-nav next" id="btnNextMvp" onclick="app.scrollMvpCarousel(1)" aria-label="MVP Berikutnya" title="Pemain Berikutnya">
+          <button type="button" class="mvp-carousel-nav next" id="btnNextMvp" onclick="app.scrollMvpCarousel(1)"
+            aria-label="MVP Berikutnya" title="Pemain Berikutnya">
             &#8250;
           </button>
         </div>
@@ -1967,13 +1976,18 @@
           </div>
 
           <!-- MVP Spotlight Section Shortcut -->
-          <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 14px; margin-top: 14px; margin-bottom: 12px;">
+          <div
+            style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 14px; margin-top: 14px; margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <div>
-                <h4 style="color: var(--accent-gold); font-size: 0.95rem; margin: 0; font-weight: 800;">⭐ Pemain Bintang (MVP Turnamen)</h4>
-                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">Dukungan multi-MVP dengan kartu carousel geser interaktif &amp; sinkronisasi Cloud otomatis.</p>
+                <h4 style="color: var(--accent-gold); font-size: 0.95rem; margin: 0; font-weight: 800;">⭐ Pemain Bintang
+                  (MVP Turnamen)</h4>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">Dukungan multi-MVP dengan
+                  kartu carousel geser interaktif &amp; sinkronisasi Cloud otomatis.</p>
               </div>
-              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('adminDashboardModal').classList.remove('active'); admin.openManageMvpModal();" style="border-color: var(--accent-gold); color: var(--accent-gold); font-weight: 700;">
+              <button type="button" class="btn btn-outline btn-sm"
+                onclick="document.getElementById('adminDashboardModal').classList.remove('active'); admin.openManageMvpModal();"
+                style="border-color: var(--accent-gold); color: var(--accent-gold); font-weight: 700;">
                 ⚙️ Kelola MVP
               </button>
             </div>
@@ -2634,7 +2648,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('sponsorEditorModal').classList.remove('active'); app.renderSponsors();">Tutup</button>
+        <button type="button" class="btn btn-outline"
+          onclick="document.getElementById('sponsorEditorModal').classList.remove('active'); app.renderSponsors();">Tutup</button>
       </div>
     </div>
   </div>
@@ -2672,24 +2687,28 @@
           <p id="momentModalCaption" style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6; margin: 0;"></p>
         </div>
       </div>
-      <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <div class="modal-footer"
+        style="border-top: 1px solid rgba(255,255,255,0.1); justify-content: space-between; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <button type="button" class="btn btn-outline btn-sm" onclick="app.shareMoment()"
             style="color: #00d2ff; border-color: rgba(0,210,255,0.4); background: rgba(0,210,255,0.08);">
             📤 Bagikan Momen
           </button>
           <div id="momentModalAdminActions" style="display: none; gap: 8px; align-items: center;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="admin.editMoment(app.activeMoment ? app.activeMoment.id : '')"
+            <button type="button" class="btn btn-outline btn-sm"
+              onclick="admin.editMoment(app.activeMoment ? app.activeMoment.id : '')"
               style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.5); font-weight: 700; background: rgba(56, 189, 248, 0.1);">
               ✏️ Edit Momen
             </button>
-            <button type="button" class="btn btn-outline btn-sm" onclick="admin.deleteMoment(app.activeMoment ? app.activeMoment.id : '')"
+            <button type="button" class="btn btn-outline btn-sm"
+              onclick="admin.deleteMoment(app.activeMoment ? app.activeMoment.id : '')"
               style="color: #f87171; border-color: rgba(239, 68, 68, 0.5); font-weight: 700; background: rgba(239, 68, 68, 0.1);">
               🗑️ Hapus
             </button>
           </div>
         </div>
-        <button type="button" class="btn btn-primary btn-sm btn-modal-close" onclick="document.getElementById('momentModal').classList.remove('active')">Tutup</button>
+        <button type="button" class="btn btn-primary btn-sm btn-modal-close"
+          onclick="document.getElementById('momentModal').classList.remove('active')">Tutup</button>
       </div>
     </div>
   </div>
@@ -3227,18 +3246,21 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="modalManageMvp" class="modal" role="dialog" aria-modal="true">
     <div class="modal-backdrop" onclick="admin.closeManageMvpModal()"></div>
     <div class="modal-content" style="max-width: 680px; max-height: 90vh; display: flex; flex-direction: column;">
-      <div class="modal-header" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.8));">
+      <div class="modal-header"
+        style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.8));">
         <h3 class="modal-title" style="color: var(--accent-gold); display: flex; align-items: center; gap: 8px;">
           <span>⭐</span> Manajemen Bintang Lapangan (MVP)
         </h3>
         <button type="button" class="modal-close" onclick="admin.closeManageMvpModal()">&times;</button>
       </div>
       <div class="modal-body" style="overflow-y: auto; padding: 18px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
           <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">
             Kelola daftar pemain terbaik. MVP dapat lebih dari satu dan akan tampil bergeser (carousel) di Beranda.
           </p>
-          <button type="button" class="btn btn-primary btn-sm" onclick="admin.openEditMvpItemModal()" style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="admin.openEditMvpItemModal()"
+            style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
             ➕ Tambah MVP Baru
           </button>
         </div>
@@ -3248,7 +3270,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         </div>
       </div>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 0.74rem; color: var(--text-muted);">☁️ Perubahan tersimpan otomatis ke Cloud Supabase</span>
+        <span style="font-size: 0.74rem; color: var(--text-muted);">☁️ Perubahan tersimpan otomatis ke Cloud
+          Supabase</span>
         <button type="button" class="btn btn-outline" onclick="admin.closeManageMvpModal()">Tutup</button>
       </div>
     </div>
@@ -3258,18 +3281,21 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <div id="modalEditMvpItem" class="modal" role="dialog" aria-modal="true">
     <div class="modal-backdrop" onclick="admin.closeEditMvpItemModal()"></div>
     <div class="modal-content" style="max-width: 600px; max-height: 90vh; display: flex; flex-direction: column;">
-      <div class="modal-header" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.9));">
+      <div class="modal-header"
+        style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.9));">
         <h3 class="modal-title" id="modalEditMvpTitle" style="color: var(--accent-gold);">
           ⭐ Edit Pemain MVP
         </h3>
         <button type="button" class="modal-close" onclick="admin.closeEditMvpItemModal()">&times;</button>
       </div>
-      <form id="formEditMvpItem" onsubmit="admin.saveMvpItem(event)" style="display: flex; flex-direction: column; overflow: hidden; margin: 0;">
+      <form id="formEditMvpItem" onsubmit="admin.saveMvpItem(event)"
+        style="display: flex; flex-direction: column; overflow: hidden; margin: 0;">
         <div class="modal-body" style="overflow-y: auto; padding: 18px; max-height: calc(90vh - 130px);">
           <input type="hidden" id="mvpEditItemId" value="">
 
           <!-- Autofill dari Tim & Skuad -->
-          <div style="background: rgba(2, 132, 199, 0.08); border: 1px dashed rgba(2, 132, 199, 0.4); border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px;">
+          <div
+            style="background: rgba(2, 132, 199, 0.08); border: 1px dashed rgba(2, 132, 199, 0.4); border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px;">
             <div style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">
               ⚡ Pilih Cepat Dari Daftar Tim &amp; Pemain Turnamen:
             </div>
@@ -3331,7 +3357,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
           </div>
 
           <!-- Statistik MVP -->
-          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
+          <div
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
             <div style="font-size: 0.78rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 8px;">
               📊 Statistik Performa Pemain:
             </div>
@@ -3359,24 +3386,32 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
           <div class="form-group">
             <label class="form-label">Foto Pemain (Bisa Unggah / Kamera / URL)</label>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <div style="width: 70px; height: 90px; border-radius: 8px; border: 2px dashed var(--accent-gold); overflow: hidden; background: #0b1120; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <img id="mvpItemPhotoPreview" src="/assets/acc_logo.webp" style="width: 100%; height: 100%; object-fit: cover;">
+              <div
+                style="width: 70px; height: 90px; border-radius: 8px; border: 2px dashed var(--accent-gold); overflow: hidden; background: #0b1120; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <img id="mvpItemPhotoPreview" src="/assets/acc_logo.webp"
+                  style="width: 100%; height: 100%; object-fit: cover;">
               </div>
               <div style="flex: 1; min-width: 200px;">
-                <input type="file" id="mvpItemPhotoFile" accept="image/*" class="form-input" onchange="admin.handleMvpPhotoUpload(this)" style="padding: 4px; font-size: 0.75rem; margin-bottom: 6px;">
-                <input type="text" id="mvpItemPhotoUrl" class="form-input" placeholder="Atau tempel URL gambar..." oninput="document.getElementById('mvpItemPhotoPreview').src = this.value || '/assets/acc_logo.webp'">
+                <input type="file" id="mvpItemPhotoFile" accept="image/*" class="form-input"
+                  onchange="admin.handleMvpPhotoUpload(this)"
+                  style="padding: 4px; font-size: 0.75rem; margin-bottom: 6px;">
+                <input type="text" id="mvpItemPhotoUrl" class="form-input" placeholder="Atau tempel URL gambar..."
+                  oninput="document.getElementById('mvpItemPhotoPreview').src = this.value || '/assets/acc_logo.webp'">
               </div>
             </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label">Kutipan Kata Mutiara Pemain</label>
-            <textarea id="mvpItemQuote" class="form-input" rows="2" placeholder="Bermain dengan hati, menjunjung sportivitas dan persaudaraan..."></textarea>
+            <textarea id="mvpItemQuote" class="form-input" rows="2"
+              placeholder="Bermain dengan hati, menjunjung sportivitas dan persaudaraan..."></textarea>
           </div>
         </div>
-        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border-color);">
+        <div class="modal-footer"
+          style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border-color);">
           <button type="button" class="btn btn-outline" onclick="admin.closeEditMvpItemModal()">Batal</button>
-          <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
+          <button type="submit" class="btn btn-primary"
+            style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #000; font-weight: 800;">
             💾 Simpan MVP
           </button>
         </div>
