@@ -243,6 +243,27 @@
     };
     window.admin = window.admin || {
       isAuthenticated: (function () { try { return sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true"; } catch (e) { return false; } })(),
+      handleLogoSecretTap: function () {
+        if (window.loadAdminModule) window.loadAdminModule();
+        this._logoTapCount = (this._logoTapCount || 0) + 1;
+        if (this._logoTapTimer) clearTimeout(this._logoTapTimer);
+        this._logoTapTimer = setTimeout(function () {
+          if (window.admin) window.admin._logoTapCount = 0;
+        }, 3500);
+        if (this._logoTapCount >= 3) {
+          this._logoTapCount = 0;
+          if (this._logoTapTimer) clearTimeout(this._logoTapTimer);
+          if (this.isAuthenticated) {
+            this.openAdminDashboard();
+          } else {
+            this.openLoginModal();
+          }
+        } else if (this._logoTapCount === 2) {
+          if (window.app && typeof window.app.showToast === 'function') {
+            window.app.showToast("🔒 Ketuk 1x lagi untuk masuk Mode Panitia");
+          }
+        }
+      },
       openLoginModal: function () {
         if (window.loadAdminModule) window.loadAdminModule();
         var m = document.getElementById("adminLoginModal");
@@ -364,8 +385,9 @@
   <!-- FLOATING GLASS STICKY NAVBAR -->
   <header class="header">
     <div class="container header-inner">
-      <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap)admin.handleLogoSecretTap();"
-        style="cursor: pointer;">
+      <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap){admin.handleLogoSecretTap();}else if(window.admin&&admin.openLoginModal){admin.openLoginModal();}"
+        style="cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none;"
+        title="Ketuk 3x untuk Akses Masuk Panitia">
         <img src="/assets/acc_logo.webp" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo"
           width="44" height="62" decoding="async">
         <div class="brand-text">
@@ -3440,34 +3462,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v53"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v53"></script>
-  <script defer src="/js/data.js?v=20261123_v53"></script>
-  <script defer src="/js/app.js?v=20261123_v53"></script>
-
-  <!-- Panitia Admin Module: Loaded instantly for authenticated Panitia, or strictly on-demand when clicking Panitia access -->
-  <script>
-    (function () {
-      function loadAdminModule() {
-        if (window._adminModuleLoaded || document.getElementById('adminScript')) return;
-        window._adminModuleLoaded = true;
-        var s = document.createElement('script');
-        s.id = 'adminScript';
-        s.src = '/js/admin.js?v=20261123_v53';
-        s.defer = true;
-        document.body.appendChild(s);
-      }
-      window.loadAdminModule = loadAdminModule;
-      var isPanitia = false;
-      try {
-        isPanitia = (sessionStorage.getItem("pondok_futsal_admin_auth") === "true" || localStorage.getItem("pondok_futsal_admin_auth") === "true");
-      } catch (e) { }
-
-      if (isPanitia) {
-        loadAdminModule();
-      }
-    })();
-  </script>
+  <script defer src="/js/security.js?v=20261123_v54"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v54"></script>
+  <script defer src="/js/data.js?v=20261123_v54"></script>
+  <script defer src="/js/admin.js?v=20261123_v54"></script>
+  <script defer src="/js/app.js?v=20261123_v54"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

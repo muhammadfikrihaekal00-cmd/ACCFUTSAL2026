@@ -38,20 +38,24 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     } catch (_) { }
   },
 
-  // Jalur Khusus #2: Ketuk / klik Logo ACC 5 kali berturut-turut dalam 3 detik
+  // Jalur Khusus #2: Ketuk / klik Logo ACC 3 kali berturut-turut dalam 3.5 detik untuk akses Panitia
   handleLogoSecretTap() {
     this._logoTapCount = (this._logoTapCount || 0) + 1;
     if (this._logoTapTimer) clearTimeout(this._logoTapTimer);
     this._logoTapTimer = setTimeout(() => {
       this._logoTapCount = 0;
-    }, 3000);
-    if (this._logoTapCount >= 5) {
+    }, 3500);
+    if (this._logoTapCount >= 3) {
       this._logoTapCount = 0;
       if (this._logoTapTimer) clearTimeout(this._logoTapTimer);
       if (this.isAuthenticated) {
         this.openAdminDashboard();
       } else {
         this.openLoginModal();
+      }
+    } else if (this._logoTapCount === 2) {
+      if (window.app && typeof window.app.showToast === 'function') {
+        window.app.showToast("🔒 Ketuk 1x lagi untuk login Panitia");
       }
     }
   },
