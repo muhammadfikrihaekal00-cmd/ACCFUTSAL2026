@@ -3569,9 +3569,28 @@ tr.zone-qualify {
    12. MODALS & ADMIN DASHBOARD (COHESIVE DARK GLASS)
    ============================================================================ */
 .modal-overlay {
+  display: none;
+  position: fixed !important;
+  inset: 0 !important;
   background: rgba(2, 6, 23, 0.78) !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
+  z-index: 2000 !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+.modal-overlay:not(.active) {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  z-index: -9999 !important;
 }
 
 .modal-box {

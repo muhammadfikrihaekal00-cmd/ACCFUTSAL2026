@@ -2595,9 +2595,12 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     // 3. Sinkronkan MOMENTS & SPONSORS dari Database Online Supabase
-    if (Array.isArray(data.moments)) {
+    if (Array.isArray(data.moments) && data.moments.length > 0) {
       this.store.data.moments = data.moments;
       if (this.store.data.homeData) this.store.data.homeData.moments = data.moments;
+    } else if (Array.isArray(data.moments) && (!this.store.data.moments || this.store.data.moments.length === 0)) {
+      this.store.data.moments = [];
+      if (this.store.data.homeData) this.store.data.homeData.moments = [];
     }
     if (data.sponsors) {
       if (Array.isArray(data.sponsors) && data.sponsors.length > 0) {

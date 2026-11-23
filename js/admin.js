@@ -4940,12 +4940,18 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     this.renderManageMvpList();
     const modal = document.getElementById("modalManageMvp");
-    if (modal) modal.classList.add("active");
+    if (modal) {
+      modal.style.display = "flex";
+      modal.classList.add("active");
+    }
   },
 
   closeManageMvpModal() {
     const modal = document.getElementById("modalManageMvp");
-    if (modal) modal.classList.remove("active");
+    if (modal) {
+      modal.classList.remove("active");
+      modal.style.display = "none";
+    }
   },
 
   renderManageMvpList() {
@@ -5090,12 +5096,18 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     const modal = document.getElementById("modalEditMvpItem");
-    if (modal) modal.classList.add("active");
+    if (modal) {
+      modal.style.display = "flex";
+      modal.classList.add("active");
+    }
   },
 
   closeEditMvpItemModal() {
     const modal = document.getElementById("modalEditMvpItem");
-    if (modal) modal.classList.remove("active");
+    if (modal) {
+      modal.classList.remove("active");
+      modal.style.display = "none";
+    }
   },
 
   onMvpTeamSelectChange() {

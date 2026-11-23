@@ -242,10 +242,10 @@
 
         // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob, registry backups)
         const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
-          this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry']),
+          this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry', 'moments_registry']),
           this.client.from('teams').select(teamCols),
           this.client.from('matches').select('*'),
-          this.client.from('moments').select('id, title, category, media_type, media_url, thumbnail_url, caption, sort_order, created_at, player, team, badge, tag, image').order('sort_order', { ascending: true }).limit(20),
+          this.client.from('moments').select('*').order('sort_order', { ascending: true }).limit(30),
           this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
         ]);
 

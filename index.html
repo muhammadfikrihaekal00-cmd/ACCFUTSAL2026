@@ -11,8 +11,8 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261123_v53">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261123_v53">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261123_v55">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261123_v55">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Preconnect Candidates for Lightning LCP -->
@@ -363,11 +363,27 @@
     .tab-pane.active {
       display: block;
     }
+
+    .modal-overlay {
+      display: none !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      z-index: 2000 !important;
+    }
+
+    .modal-overlay.active {
+      display: flex !important;
+      pointer-events: auto !important;
+      visibility: visible !important;
+    }
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261123_v53">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v53">
+  <link rel="stylesheet" href="/css/styles.css?v=20261123_v55">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261123_v55">
 </head>
 
 <body class="snap-scroll-active">
@@ -3166,7 +3182,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   </div>
 
   <!-- 17. MODAL BATCH UPLOAD 1 FOLDER BERKAS TIM & PEMAIN OTOMATIS (PANITIA) -->
-  <div id="modalBatchUploadTeams" class="modal-overlay">
+  <div id="modalBatchUploadTeams" class="modal-overlay" style="display: none;">
     <div class="modal-box" style="max-width: 820px;">
       <div class="modal-header" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff;">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -3282,7 +3298,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   </div>
 
   <!-- MODAL: KELOLA DAFTAR MVP (PANITIA) -->
-  <div id="modalManageMvp" class="modal-overlay" role="dialog" aria-modal="true">
+  <div id="modalManageMvp" class="modal-overlay" role="dialog" aria-modal="true" style="display: none;">
     <div class="modal-box" style="max-width: 680px; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-header"
         style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.8));">
@@ -3317,7 +3333,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   </div>
 
   <!-- MODAL: FORM TAMBAH / EDIT MVP ITEM -->
-  <div id="modalEditMvpItem" class="modal-overlay" role="dialog" aria-modal="true">
+  <div id="modalEditMvpItem" class="modal-overlay" role="dialog" aria-modal="true" style="display: none;">
     <div class="modal-box" style="max-width: 600px; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-header"
         style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.9));">
@@ -3464,11 +3480,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261123_v54"></script>
-  <script defer src="/js/supabase-client.js?v=20261123_v54"></script>
-  <script defer src="/js/data.js?v=20261123_v54"></script>
-  <script defer src="/js/admin.js?v=20261123_v54"></script>
-  <script defer src="/js/app.js?v=20261123_v54"></script>
+  <script defer src="/js/security.js?v=20261123_v55"></script>
+  <script defer src="/js/supabase-client.js?v=20261123_v55"></script>
+  <script defer src="/js/data.js?v=20261123_v55"></script>
+  <script defer src="/js/admin.js?v=20261123_v55"></script>
+  <script defer src="/js/app.js?v=20261123_v55"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
