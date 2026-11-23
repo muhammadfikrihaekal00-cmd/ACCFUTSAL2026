@@ -3689,8 +3689,8 @@ tr.zone-qualify {
 .juknis-toolbar-card,
 .juknis-helpdesk-card,
 .category-selector-space,
-.tab-pane > .scroll-reveal:first-child,
-.tab-pane.active > .scroll-reveal:first-child {
+.tab-pane>.scroll-reveal:first-child,
+.tab-pane.active>.scroll-reveal:first-child {
   opacity: 1 !important;
   transform: none !important;
   transition: none !important;
@@ -4831,8 +4831,8 @@ body.mobile-menu-active .mobile-menu-content {
 .juknis-toolbar-card,
 .juknis-helpdesk-card,
 .category-selector-space,
-.tab-pane > .scroll-reveal:first-child,
-.tab-pane.active > .scroll-reveal:first-child {
+.tab-pane>.scroll-reveal:first-child,
+.tab-pane.active>.scroll-reveal:first-child {
   opacity: 1 !important;
   transform: none !important;
   transition: none !important;
