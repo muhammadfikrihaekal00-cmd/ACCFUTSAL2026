@@ -4695,7 +4695,7 @@ var app = window.app = Object.assign(window.app || {}, {
                 <div class="mvp-player-name">${pName} ${pNum}</div>
                 <div class="mvp-team-row">
                   <span>${pTeam}</span>
-                  ${pPos ? `<span>•</span><span style="color: var(--secondary);">${pCat}${pPos}</span>` : ""}
+                  ${pPos ? `<span>•</span><span style="color: var(--secondary);">${pPos}</span>` : ""}
                 </div>
 
                 <div class="mvp-stats-grid">
