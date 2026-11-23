@@ -385,7 +385,8 @@
   <!-- FLOATING GLASS STICKY NAVBAR -->
   <header class="header">
     <div class="container header-inner">
-      <div class="brand-group" onclick="if(window.admin&&admin.handleLogoSecretTap){admin.handleLogoSecretTap();}else if(window.admin&&admin.openLoginModal){admin.openLoginModal();}"
+      <div class="brand-group"
+        onclick="if(window.admin&&admin.handleLogoSecretTap){admin.handleLogoSecretTap();}else if(window.admin&&admin.openLoginModal){admin.openLoginModal();}"
         style="cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none;"
         title="Ketuk 3x untuk Akses Masuk Panitia">
         <img src="/assets/acc_logo.webp" alt="Logo ACC Al-Fayyadh Champions Cup 2026" class="brand-logo" id="headerLogo"
@@ -518,7 +519,8 @@
           <div class="hero-details">
             <div class="hero-badge-live" id="heroLiveBadge" onclick="app.jumpToLiveMatch()"
               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.jumpToLiveMatch();}"
-              role="button" tabindex="0" title="🔴 Pertandingan sedang LIVE! Klik untuk langsung menuju Jadwal &amp; Skor" style="display: none;">
+              role="button" tabindex="0"
+              title="🔴 Pertandingan sedang LIVE! Klik untuk langsung menuju Jadwal &amp; Skor" style="display: none;">
               <span class="pulse-dot"></span>
               <span>LIVE MATCHDAY</span>
             </div>
