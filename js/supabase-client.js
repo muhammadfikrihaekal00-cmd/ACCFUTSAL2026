@@ -250,6 +250,7 @@
         ]);
 
         if (matchesRes.error && teamsRes.error) {
+          console.warn('[Supabase] Both matches and teams errored:', matchesRes.error, teamsRes.error);
           return null; // Database tables might not be migrated yet, fallback to local
         }
 
@@ -347,6 +348,7 @@
           sponsors: sponsorsRes.data || null
         };
       } catch (err) {
+        console.error('[Supabase] fetchAllData exception:', err);
         return null;
       }
     }

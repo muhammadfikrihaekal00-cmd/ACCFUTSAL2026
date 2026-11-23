@@ -1515,6 +1515,17 @@ var app = window.app = Object.assign(window.app || {}, {
 
     try { this.renderCurrentView(); } catch (e) { console.warn("View init:", e); }
     try { this.initFloatingCategorySwitcher(); } catch (e) { console.warn("FloatingCat init:", e); }
+    try { this.initSupabaseSync(); } catch (e) { console.warn("Supabase init:", e); }
+
+    // Pre-populate all tabs immediately if cache exists so navigation is instant on laptops & mobiles
+    if (this.store && this.store.data && Array.isArray(this.store.data.teams) && this.store.data.teams.length > 0) {
+      try { this.renderMatches(); } catch (_) { }
+      try { this.renderStandings(); } catch (_) { }
+      try { this.renderTeams(); } catch (_) { }
+      try { this.renderBracket(); } catch (_) { }
+      try { this.renderJuknis(); } catch (_) { }
+      try { this.renderStats(); } catch (_) { }
+    }
 
     // DOM-level guarantee (Critical)
     try {
@@ -1544,7 +1555,6 @@ var app = window.app = Object.assign(window.app || {}, {
       try { this.initScrollReveal(); } catch (e) { console.warn("ScrollReveal init:", e); }
       try { this.initHomeSlideNavigation(); } catch (e) { console.warn("SlideNav init:", e); }
       try { this.updateFloatingLiveNotice(); } catch (e) { console.warn("FloatingLive init:", e); }
-      try { this.initSupabaseSync(); } catch (e) { console.warn("Supabase init:", e); }
 
       // Cek jika ada draft pengisian tim / folder yang sempat terhenti (non-blocking)
       try {
@@ -2329,28 +2339,10 @@ var app = window.app = Object.assign(window.app || {}, {
       syncFromRemote();
     };
 
-    // Initial remote fetch: jika sudah ada cache lokal, unduh data cloud saat idle agar LCP & FCP instan
-    const startInitialSync = () => {
-      const runSync = () => {
-        syncFromRemote();
-      };
-      const hasLocalData = this.store && this.store.data && Array.isArray(this.store.data.teams) && this.store.data.teams.length > 0;
-      if (hasLocalData) {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(runSync, { timeout: 3500 });
-        } else {
-          setTimeout(runSync, 1200);
-        }
-      } else {
-        setTimeout(runSync, 50);
-      }
-    };
-
-    if (document.readyState === "complete") {
-      startInitialSync();
-    } else {
-      window.addEventListener("load", startInitialSync, { once: true });
-    }
+    // Jalankan sinkronisasi awal dari cloud seketika secara non-blocking
+    setTimeout(() => {
+      syncFromRemote();
+    }, 20);
 
     // Auto-refresh cepat saat pengguna kembali ke aplikasi / unlock HP
     // PROTEKSI: Jangan pernah sync/re-render saat pengguna sedang aktif mengisi form atau memilih file/folder!
@@ -2705,7 +2697,13 @@ var app = window.app = Object.assign(window.app || {}, {
       try { window.admin.renderMomentsList(); } catch (_) { }
     }
 
-    // Non-active tabs are rendered strictly on-demand via switchTab() to keep initial DOM size < 500 nodes and eliminate TBT
+    // Pastikan seluruh tab terisi data terbaru secara lengkap
+    try { this.renderMatches(); } catch (_) { }
+    try { this.renderStandings(); } catch (_) { }
+    try { this.renderTeams(); } catch (_) { }
+    try { this.renderBracket(); } catch (_) { }
+    try { this.renderJuknis(); } catch (_) { }
+    try { this.renderStats(); } catch (_) { }
 
     // Jika modal tim sedang terbuka, perbarui tampilannya langsung dengan data terbaru
     const activeTeamModal = document.getElementById("teamModal");
