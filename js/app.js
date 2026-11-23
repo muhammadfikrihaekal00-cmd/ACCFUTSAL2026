@@ -3303,13 +3303,18 @@ var app = window.app = Object.assign(window.app || {}, {
     const hasLiveMatch = liveMatches.length > 0;
 
     if (hasLiveMatch) {
+      const firstLive = liveMatches[0];
+      const liveCat = (firstLive.category || (firstLive.id && firstLive.id.includes("_SD") ? "SD" : "SMP")).toUpperCase();
+      const catLabel = liveCat === "SD" ? "Kelas SD" : "Kelas SMP";
+
       badgeEl.style.display = "inline-flex";
       badgeEl.style.cursor = "pointer";
-      badgeEl.title = "🔴 Pertandingan sedang LIVE! Klik untuk langsung menuju siaran langsung";
+      badgeEl.title = `🔴 Pertandingan ${catLabel} sedang LIVE! Klik untuk langsung menuju Jadwal & Skor (${liveCat})`;
       badgeEl.innerHTML = `
         <span class="pulse-dot"></span>
-        <span>LIVE MATCHDAY • SEDANG BERLANGSUNG</span>
+        <span>LIVE MATCHDAY • SEDANG BERLANGSUNG (${liveCat})</span>
       `;
+      badgeEl.onclick = () => this.jumpToLiveMatch();
     } else {
       badgeEl.style.display = "none";
     }
@@ -3357,23 +3362,30 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   jumpToLiveMatch() {
-    this.switchTab("matches");
-    this.filterStatus = "live";
+    const matches = (this.store && this.store.data && this.store.data.matches) || [];
+    const liveMatches = matches.filter(m => m.status === "live");
 
+    // Deteksi kategori laga yang sedang live (SD atau SMP)
+    let targetCat = this.currentCategory || "SMP";
+    if (liveMatches.length > 0) {
+      const firstLive = liveMatches[0];
+      targetCat = (firstLive.category || (firstLive.id && firstLive.id.includes("_SD") ? "SD" : "SMP")).toUpperCase();
+      if (targetCat !== "SD" && targetCat !== "SMP") {
+        targetCat = "SMP";
+      }
+    }
+
+    // Set kategori secara menyeluruh (sinkronkan tab switcher, floating category menu & data)
+    this.setCategory(targetCat, true);
+
+    // Beralih ke tab Jadwal & Skor (pane-matches)
+    this.switchTab("matches");
+
+    // Atur filter status agar menonjolkan pertandingan live
+    this.filterStatus = "live";
     document.querySelectorAll(".status-filter-pills .filter-pill").forEach(p => {
       p.classList.toggle("active", p.dataset.status === "live");
     });
-
-    const liveMatches = (this.store.data.matches || []).filter(m => m.status === "live");
-    if (liveMatches.length > 0) {
-      const targetCat = liveMatches[0].category || "SMP";
-      if (this.currentCategory !== targetCat) {
-        this.currentCategory = targetCat;
-        document.querySelectorAll(".cat-pill").forEach(p => {
-          p.classList.toggle("active", p.dataset.cat === targetCat);
-        });
-      }
-    }
 
     this.renderMatches();
 
@@ -3387,7 +3399,7 @@ var app = window.app = Object.assign(window.app || {}, {
         const list = document.getElementById("matchesList");
         if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }, 150);
+    }, 180);
   },
 
   initScrollReveal() {
@@ -3463,6 +3475,10 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   scrollToLiveStream() {
+    const liveMatches = (this.store && this.store.data && this.store.data.matches || []).filter(m => m.status === "live");
+    if (liveMatches.length > 0) {
+      return this.jumpToLiveMatch();
+    }
     if (this.currentTab !== "home") {
       this.switchTab("home");
     }
