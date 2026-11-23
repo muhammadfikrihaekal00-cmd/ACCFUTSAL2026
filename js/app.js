@@ -2329,12 +2329,21 @@ var app = window.app = Object.assign(window.app || {}, {
       syncFromRemote();
     };
 
-    // Initial remote fetch: fetch data immediately so website displays all tournament information without delay
+    // Initial remote fetch: jika sudah ada cache lokal, unduh data cloud saat idle agar LCP & FCP instan
     const startInitialSync = () => {
       const runSync = () => {
         syncFromRemote();
       };
-      setTimeout(runSync, 50);
+      const hasLocalData = this.store && this.store.data && Array.isArray(this.store.data.teams) && this.store.data.teams.length > 0;
+      if (hasLocalData) {
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(runSync, { timeout: 3500 });
+        } else {
+          setTimeout(runSync, 1200);
+        }
+      } else {
+        setTimeout(runSync, 50);
+      }
     };
 
     if (document.readyState === "complete") {
@@ -2696,34 +2705,7 @@ var app = window.app = Object.assign(window.app || {}, {
       try { window.admin.renderMomentsList(); } catch (_) { }
     }
 
-    // Defer non-active tab rendering to background idle slices to eliminate long tasks & reduce initial DOM size
-    const deferTask = (fn) => {
-      if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(fn, { timeout: 3500 });
-      } else {
-        setTimeout(fn, 1200);
-      }
-    };
-
-    deferTask(() => {
-      if (this.currentTab !== "matches") try { this.renderMatches(); } catch (_) { }
-    });
-    deferTask(() => {
-      if (this.currentTab !== "standings") try { this.renderStandings(); } catch (_) { }
-    });
-    deferTask(() => {
-      if (this.currentTab !== "teams") try { this.renderTeams(); } catch (_) { }
-    });
-    deferTask(() => {
-      if (this.currentTab !== "bracket") try { this.renderBracket(); } catch (_) { }
-    });
-    deferTask(() => {
-      if (this.currentTab !== "juknis") try { this.renderJuknis(); } catch (_) { }
-    });
-    deferTask(() => {
-      if (typeof this.renderTopScorer === "function") try { this.renderTopScorer(); } catch (_) { }
-      if (typeof this.renderDisciplinary === "function") try { this.renderDisciplinary(); } catch (_) { }
-    });
+    // Non-active tabs are rendered strictly on-demand via switchTab() to keep initial DOM size < 500 nodes and eliminate TBT
 
     // Jika modal tim sedang terbuka, perbarui tampilannya langsung dengan data terbaru
     const activeTeamModal = document.getElementById("teamModal");

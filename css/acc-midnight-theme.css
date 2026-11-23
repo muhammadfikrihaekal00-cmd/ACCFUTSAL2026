@@ -538,7 +538,6 @@ main.container {
 
 .hero-emblem-badge {
   aspect-ratio: 142 / 201 !important;
-  content-visibility: auto;
 }
 
 .hero-emblem-wrap::before {
