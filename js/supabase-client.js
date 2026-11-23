@@ -242,10 +242,10 @@
 
         // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob, registry backups)
         const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
-          this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry', 'moments_registry']),
+          this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry']),
           this.client.from('teams').select(teamCols),
           this.client.from('matches').select('*'),
-          this.client.from('moments').select('*').order('sort_order', { ascending: true }).limit(30),
+          this.client.from('moments').select('id, title, player, team, category, badge, media_url, caption, sort_order, created_at').order('sort_order', { ascending: true }).limit(30),
           this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
         ]);
 
@@ -305,11 +305,9 @@
           }, 3500);
         }
 
-        // Normalisasi daftar momen turnamen
+        // Normalisasi daftar momen turnamen: utamakan tabel 'moments' online (Single Source of Truth)
         let finalMoments = null;
-        if (Array.isArray(momentsRegistryList) && momentsRegistryList.length > 0) {
-          finalMoments = momentsRegistryList;
-        } else if (momentsRes && Array.isArray(momentsRes.data)) {
+        if (momentsRes && Array.isArray(momentsRes.data) && momentsRes.data.length > 0) {
           finalMoments = momentsRes.data.map(m => ({
             id: m.id,
             title: m.title || '',
@@ -318,11 +316,13 @@
             category: m.category || 'SMP',
             badge: m.badge || '🔥 HIGHLIGHT',
             tag: m.tag || 'NEW',
-            image: m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg',
-            mediaUrl: m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg',
+            image: m.media_url || m.image || m.mediaUrl || 'assets/hero_banner.jpg',
+            mediaUrl: m.media_url || m.image || m.mediaUrl || 'assets/hero_banner.jpg',
             caption: m.caption || '',
             sortOrder: m.sort_order || 0
           }));
+        } else if (Array.isArray(momentsRegistryList) && momentsRegistryList.length > 0) {
+          finalMoments = momentsRegistryList;
         }
 
         // Lampirkan metadata (category, instansi, logo) ke setiap baris tim
@@ -962,11 +962,16 @@
       }
     }
 
-    // Push Moments Registry Backup to tournament_config (Guarantees multi-device persistence)
+    // Push Moments Registry Backup to tournament_config (Guarantees multi-device persistence without inflating payload)
     async syncMomentsList(momentsList) {
       if (!this.client || !this.isConfigured) return false;
       try {
-        const cleanList = Array.isArray(momentsList) ? momentsList : [];
+        const cleanList = Array.isArray(momentsList) ? momentsList.map(m => ({
+          ...m,
+          image: (typeof m.image === 'string' && m.image.startsWith('data:image')) ? '' : (m.image || ''),
+          mediaUrl: (typeof m.mediaUrl === 'string' && m.mediaUrl.startsWith('data:image')) ? '' : (m.mediaUrl || ''),
+          media_url: (typeof m.media_url === 'string' && m.media_url.startsWith('data:image')) ? '' : (m.media_url || '')
+        })) : [];
         const payload = {
           id: 'moments_registry',
           rules_text: JSON.stringify(cleanList),

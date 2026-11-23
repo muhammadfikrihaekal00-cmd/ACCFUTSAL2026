@@ -67,10 +67,20 @@ class TournamentStore {
         gold: (data.sponsors.gold || []).map(s => ({ ...s, image: stripHeavyImg(s.image) })),
         media: (data.sponsors.media || []).map(s => ({ ...s, image: stripHeavyImg(s.image) }))
       } : undefined,
-      moments: (data.moments || []).map(m => ({ ...m, image: stripHeavyImg(m.image) })),
+      moments: (data.moments || []).map(m => ({
+        ...m,
+        image: stripHeavyImg(m.image),
+        mediaUrl: stripHeavyImg(m.mediaUrl),
+        media_url: stripHeavyImg(m.media_url)
+      })),
       homeData: data.homeData ? {
         ...data.homeData,
-        moments: (data.homeData.moments || []).map(m => ({ ...m, image: stripHeavyImg(m.image) }))
+        moments: (data.homeData.moments || []).map(m => ({
+          ...m,
+          image: stripHeavyImg(m.image),
+          mediaUrl: stripHeavyImg(m.mediaUrl),
+          media_url: stripHeavyImg(m.media_url)
+        }))
       } : undefined,
       teams: (data.teams || []).map(t => ({
         ...t,
@@ -454,17 +464,46 @@ class TournamentStore {
       const slim = this.createSlimStoragePayload(this.data);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(slim));
     } catch (e) {
-      // Tangani QuotaExceededError dengan pembersihan & pelepasan memori aman
+      console.warn("Storage quota warning, preserving critical tournament data:", e);
       try {
         this.cleanObsoleteStorageKeys();
-        localStorage.removeItem(this.STORAGE_KEY);
         const minimal = {
+          config: this.data.config || {},
           matches: this.data.matches || [],
+          teams: (this.data.teams || []).map(t => ({
+            id: t.id,
+            name: t.name,
+            shortName: t.shortName,
+            group: t.group,
+            category: t.category,
+            instansi: t.instansi,
+            players: (t.players || []).map(p => ({
+              id: p.id,
+              name: p.name,
+              number: p.number,
+              position: p.position,
+              goals: p.goals || 0,
+              yellowCards: p.yellowCards || 0,
+              redCards: p.redCards || 0
+            }))
+          })),
+          moments: (this.data.moments || []).map(m => ({
+            id: m.id,
+            title: m.title,
+            player: m.player,
+            team: m.team,
+            category: m.category,
+            badge: m.badge,
+            tag: m.tag
+          })),
+          sponsors: this.data.sponsors || {},
           settings: this.data.settings || {},
           groups: this.data.groups || {}
         };
-        localStorage.setItem(this.STORAGE_KEY + "_min", JSON.stringify(minimal));
-      } catch (innerErr) { }
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(minimal));
+      } catch (innerErr) {
+        console.error("Critical storage failure:", innerErr);
+      }
     }
   }
 
@@ -2249,7 +2288,7 @@ var app = window.app = Object.assign(window.app || {}, {
           isSyncing = false;
           console.warn("[Supabase] sync lock watchdog released after timeout");
         }
-      }, 7000);
+      }, 25000);
 
       window.SupabaseService.fetchAllData().then(data => {
         isSyncing = false;
@@ -2290,16 +2329,12 @@ var app = window.app = Object.assign(window.app || {}, {
       syncFromRemote();
     };
 
-    // Initial remote fetch non-blocking agar tidak pernah mengganggu LCP & First Contentful Paint
+    // Initial remote fetch: fetch data immediately so website displays all tournament information without delay
     const startInitialSync = () => {
       const runSync = () => {
         syncFromRemote();
       };
-      if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(runSync, { timeout: 3500 });
-      } else {
-        setTimeout(runSync, 2500);
-      }
+      setTimeout(runSync, 50);
     };
 
     if (document.readyState === "complete") {
@@ -2415,8 +2450,12 @@ var app = window.app = Object.assign(window.app || {}, {
         cfg.adminPinHash = data.config.admin_pin_hash || data.config.adminPinHash;
       }
       this.store.data.config = cfg;
-      this.renderHeader();
-      this.renderLiveStreamHero();
+      try {
+        this.renderHeader();
+        this.renderLiveStreamHero();
+      } catch (err) {
+        console.warn("Header render non-fatal notice:", err);
+      }
     }
 
     // 1. Sinkronkan TIM dari Database Online Supabase (Single Source of Truth — ZERO data mutlak!)
@@ -2629,6 +2668,7 @@ var app = window.app = Object.assign(window.app || {}, {
       this.syncDrawStateFromTournament("SMP", true);
       this.syncDrawStateFromTournament("SD", true);
     } catch (e) { }
+    this.store.saveData();
     // Jika panitia sedang mengisi form/upload di modal editor, jangan re-render DOM supaya fokus ketikan tidak terganggu!
     if (this.isUserEditing()) return;
 
@@ -2643,13 +2683,17 @@ var app = window.app = Object.assign(window.app || {}, {
     }
     this.updateHeroLiveBadge();
     this.updateFloatingLiveNotice();
-    this.renderHeader();
-    this.renderLiveStreamHero();
-    this.renderHeroBanner();
-    this.renderSponsors();
+    try { this.renderHeader(); } catch (_) { }
+    try { this.renderLiveStreamHero(); } catch (_) { }
+    try { this.renderHeroBanner(); } catch (_) { }
+    try { this.renderMoments(); } catch (_) { }
+    try { this.renderSponsors(); } catch (_) { }
     this.refreshActiveMatchDetail();
     if (window.admin && typeof window.admin.renderSponsorsList === 'function') {
       try { window.admin.renderSponsorsList(); } catch (_) { }
+    }
+    if (window.admin && typeof window.admin.renderMomentsList === 'function') {
+      try { window.admin.renderMomentsList(); } catch (_) { }
     }
 
     // Defer non-active tab rendering to background idle slices to eliminate long tasks & reduce initial DOM size
@@ -2958,15 +3002,33 @@ var app = window.app = Object.assign(window.app || {}, {
       if (payload._deleted && payload.id) {
         this.store.data.moments = this.store.data.moments.filter(m => m.id !== payload.id);
       } else {
+        const norm = {
+          id: payload.id,
+          title: payload.title || '',
+          player: payload.player || '',
+          team: payload.team || '',
+          category: payload.category || 'SMP',
+          badge: payload.badge || '🔥 HIGHLIGHT',
+          tag: payload.tag || 'NEW',
+          image: payload.media_url || payload.image || payload.mediaUrl || 'assets/hero_banner.jpg',
+          mediaUrl: payload.media_url || payload.image || payload.mediaUrl || 'assets/hero_banner.jpg',
+          media_url: payload.media_url || payload.image || payload.mediaUrl || 'assets/hero_banner.jpg',
+          caption: payload.caption || '',
+          sortOrder: payload.sort_order || payload.sortOrder || 0
+        };
         const idx = this.store.data.moments.findIndex(m => m.id === payload.id);
         if (idx !== -1) {
-          Object.assign(this.store.data.moments[idx], payload);
+          this.store.data.moments[idx] = { ...this.store.data.moments[idx], ...norm };
         } else {
-          this.store.data.moments.unshift(payload);
+          this.store.data.moments.unshift(norm);
         }
       }
+      if (this.store.data.homeData) this.store.data.homeData.moments = this.store.data.moments;
       this.store.saveData();
       this.renderMoments();
+      if (window.admin && typeof window.admin.renderMomentsList === 'function') {
+        try { window.admin.renderMomentsList(); } catch (_) { }
+      }
     } else if (table === 'tournament_config' || table === 'config') {
       if (payload.id === 'team_meta_registry' && payload.rules_text) {
         try {
@@ -3250,51 +3312,57 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   renderHeader() {
-    const config = this.store.data.config || {};
-    // Navbar header: Selalu ringkas "ACC 2026"
-    const headerTitleEl = document.getElementById("headerTitle");
-    if (headerTitleEl) headerTitleEl.textContent = "ACC 2026";
+    try {
+      const config = this.store.data.config || {};
+      // Navbar header: Selalu ringkas "ACC 2026"
+      const headerTitleEl = document.getElementById("headerTitle");
+      if (headerTitleEl) headerTitleEl.textContent = "ACC 2026";
 
-    // Hero section di beranda: Nama lengkap turnamen
-    const heroTitleEl = document.getElementById("heroTitle");
-    if (heroTitleEl) {
-      let tName = config.tournamentName || DEFAULT_DATA.config.tournamentName || 'Al-Fayyadh Champions Cup 2026';
-      if (tName && (tName.includes('ACC "Al-Fayyadh') || tName === 'ACC 2026')) {
-        tName = 'Al-Fayyadh Champions Cup 2026';
-        config.tournamentName = tName;
+      // Hero section di beranda: Nama lengkap turnamen
+      const heroTitleEl = document.getElementById("heroTitle");
+      if (heroTitleEl) {
+        let tName = config.tournamentName || (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.config ? DEFAULT_DATA.config.tournamentName : '') || 'Al-Fayyadh Champions Cup 2026';
+        if (tName && (tName.includes('ACC "Al-Fayyadh') || tName === 'ACC 2026')) {
+          tName = 'Al-Fayyadh Champions Cup 2026';
+          config.tournamentName = tName;
+        }
+        heroTitleEl.textContent = tName;
       }
-      heroTitleEl.textContent = tName;
-    }
-    const rawSub = config.subTitle || DEFAULT_DATA.config.subTitle;
-    let cleanSub = (rawSub || "")
-      .replace(/•/g, "•")
-      .replace(/â\S*¢/g, "•")
-      .replace(/Â/g, "")
-      .replace(/â/g, "")
-      .trim();
-    if (!cleanSub.includes("•")) {
-      cleanSub = cleanSub.replace(/\s+Ma'had/i, " • Ma'had");
-    }
-    document.getElementById("heroSub").textContent = cleanSub;
-    document.getElementById("heroVenue").textContent = config.venue || DEFAULT_DATA.config.venue;
-    const heroDatesEl = document.getElementById("heroDates");
-    if (heroDatesEl) {
-      let d = String(config.dates || "22 - 29 November 2026");
-      if (!d || d.includes("28") || d.includes("26")) d = "22 - 29 November 2026";
-      heroDatesEl.textContent = d;
-    }
+      const rawSub = config.subTitle || (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.config ? DEFAULT_DATA.config.subTitle : '');
+      let cleanSub = (rawSub || "")
+        .replace(/•/g, "•")
+        .replace(/â\S*¢/g, "•")
+        .replace(/Â/g, "")
+        .replace(/â/g, "")
+        .trim();
+      if (!cleanSub.includes("•")) {
+        cleanSub = cleanSub.replace(/\s+Ma'had/i, " • Ma'had");
+      }
+      const heroSubEl = document.getElementById("heroSub");
+      if (heroSubEl) heroSubEl.textContent = cleanSub;
+      const heroVenueEl = document.getElementById("heroVenue");
+      if (heroVenueEl) heroVenueEl.textContent = config.venue || (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.config ? DEFAULT_DATA.config.venue : '');
+      const heroDatesEl = document.getElementById("heroDates");
+      if (heroDatesEl) {
+        let d = String(config.dates || "22 - 29 November 2026");
+        if (!d || d.includes("28") || d.includes("26")) d = "22 - 29 November 2026";
+        heroDatesEl.textContent = d;
+      }
 
-    let cleanTicker = config.runningAnnouncement || DEFAULT_DATA.config.runningAnnouncement || "";
-    if (cleanTicker.includes("Selamat Datang")) {
-      cleanTicker = "🏆 " + cleanTicker.substring(cleanTicker.indexOf("Selamat Datang")).trim();
-    } else {
-      cleanTicker = cleanTicker.replace(/ð[^\s]*\s*†?/g, "🏆 ").replace(/ðŸ\S*/g, "🏆 ");
+      let cleanTicker = config.runningAnnouncement || (typeof DEFAULT_DATA !== 'undefined' && DEFAULT_DATA.config ? DEFAULT_DATA.config.runningAnnouncement : '') || "";
+      if (cleanTicker.includes("Selamat Datang")) {
+        cleanTicker = "🏆 " + cleanTicker.substring(cleanTicker.indexOf("Selamat Datang")).trim();
+      } else {
+        cleanTicker = cleanTicker.replace(/ð[^\s]*\s*†?/g, "🏆 ").replace(/ðŸ\S*/g, "🏆 ");
+      }
+      const tickerEl = document.getElementById("tickerText");
+      if (tickerEl) tickerEl.textContent = cleanTicker;
+      this.renderHeroBanner();
+      this.updateHeroLiveBadge();
+      this.updateFloatingLiveNotice();
+    } catch (e) {
+      console.warn("renderHeader notice:", e);
     }
-    const tickerEl = document.getElementById("tickerText");
-    if (tickerEl) tickerEl.textContent = cleanTicker;
-    this.renderHeroBanner();
-    this.updateHeroLiveBadge();
-    this.updateFloatingLiveNotice();
   },
 
   updateHeroLiveBadge() {
