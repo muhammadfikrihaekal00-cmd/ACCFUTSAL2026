@@ -404,8 +404,27 @@ class TournamentStore {
         data.config.contactCommittee = "0859-3322-8817 (Ust. Ahmadi)";
       }
     }
-    if (!Array.isArray(data.teams)) data.teams = [];
-    if (!Array.isArray(data.matches)) data.matches = [];
+    if (!Array.isArray(data.teams) || data.teams.length === 0) {
+      if (Array.isArray(base.teams) && base.teams.length > 0) {
+        data.teams = JSON.parse(JSON.stringify(base.teams));
+      } else {
+        data.teams = [];
+      }
+    }
+    if (!Array.isArray(data.matches) || data.matches.length === 0) {
+      if (Array.isArray(base.matches) && base.matches.length > 0) {
+        data.matches = JSON.parse(JSON.stringify(base.matches));
+      } else {
+        data.matches = [];
+      }
+    }
+    if (!Array.isArray(data.moments) || data.moments.length === 0) {
+      if (Array.isArray(base.moments) && base.moments.length > 0) {
+        data.moments = JSON.parse(JSON.stringify(base.moments));
+      } else {
+        data.moments = [];
+      }
+    }
 
     // Hapus data WhatsApp official untuk seluruh tim secara permanen
     data.teams.forEach(t => {
@@ -414,10 +433,13 @@ class TournamentStore {
       t.phone = "";
     });
 
-    // Bersihkan cache jadwal dummy lama (M01, T04, dll) satu kali saja saat migrasi
-    if (!_safeStorageGet(localStorage, "acc_matches_cleaned_v854")) {
-      data.matches = [];
-      _safeStorageSet(localStorage, "acc_matches_cleaned_v854", "true");
+    // Pastikan daftar laga selalu valid dan terisi dari data default jika kosong
+    if (!Array.isArray(data.matches) || data.matches.length === 0) {
+      if (Array.isArray(base.matches) && base.matches.length > 0) {
+        data.matches = JSON.parse(JSON.stringify(base.matches));
+      } else {
+        data.matches = [];
+      }
     }
     if (!Array.isArray(data.moments)) data.moments = [];
     if (!data.sponsors || typeof data.sponsors !== "object") {

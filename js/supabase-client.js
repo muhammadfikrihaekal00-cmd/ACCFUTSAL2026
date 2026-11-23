@@ -240,13 +240,20 @@
         // Kolom skuad pemain wajib selalu dimuat agar panitia dapat mencatat gol, kartu, dan susunan pemain di detail laga
         const teamCols = 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at';
 
-        // 1. Fetch complete tournament dataset in parallel with optimized payload (excludes heavy logos blob, registry backups)
-        const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.all([
-          this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry']),
-          this.client.from('teams').select(teamCols),
-          this.client.from('matches').select('*'),
-          this.client.from('moments').select('id, title, player, team, category, badge, media_url, caption, sort_order, created_at').order('sort_order', { ascending: true }).limit(30),
-          this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
+        // 1. Fetch complete tournament dataset in parallel with optimized payload & 7s network timeout safeguard
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Supabase request timed out after 7s (server unreachable/paused)')), 7000)
+        );
+
+        const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.race([
+          Promise.all([
+            this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry']),
+            this.client.from('teams').select(teamCols),
+            this.client.from('matches').select('*'),
+            this.client.from('moments').select('id, title, player, team, category, badge, media_url, caption, sort_order, created_at').order('sort_order', { ascending: true }).limit(30),
+            this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
+          ]),
+          timeoutPromise
         ]);
 
         if (matchesRes.error && teamsRes.error) {
