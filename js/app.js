@@ -9017,25 +9017,25 @@ var app = window.app = Object.assign(window.app || {}, {
         ` : `
           <div class="md-timeline-list">
             ${eventsList.map(e => {
-              const isHome = (e.team === match.homeId || (home.id && e.team === home.id) || e.team === home.name || e.team === home.shortName);
-              let iconHtml = '⚽';
-              let subText = '';
+      const isHome = (e.team === match.homeId || (home.id && e.team === home.id) || e.team === home.name || e.team === home.shortName);
+      let iconHtml = '⚽';
+      let subText = '';
 
-              if (e.type === 'goal') {
-                iconHtml = '⚽';
-                if (e.assist) subText = `<span class="md-event-sub">Assist: <strong>${e.assist}</strong></span>`;
-              } else if (e.type === 'own_goal') {
-                iconHtml = '⚡';
-                subText = `<span class="md-event-sub og-tag">Gol Bunuh Diri (OG)</span>`;
-              } else if (e.type === 'yellow_card') {
-                iconHtml = '<span class="card-icon-y" title="Kartu Kuning"></span>';
-                if (e.role && e.role !== 'Pemain') subText = `<span class="md-event-sub">(${e.role})</span>`;
-              } else if (e.type === 'red_card') {
-                iconHtml = '<span class="card-icon-r" title="Kartu Merah"></span>';
-                if (e.role && e.role !== 'Pemain') subText = `<span class="md-event-sub">(${e.role})</span>`;
-              }
+      if (e.type === 'goal') {
+        iconHtml = '⚽';
+        if (e.assist) subText = `<span class="md-event-sub">Assist: <strong>${e.assist}</strong></span>`;
+      } else if (e.type === 'own_goal') {
+        iconHtml = '⚡';
+        subText = `<span class="md-event-sub og-tag">Gol Bunuh Diri (OG)</span>`;
+      } else if (e.type === 'yellow_card') {
+        iconHtml = '<span class="card-icon-y" title="Kartu Kuning"></span>';
+        if (e.role && e.role !== 'Pemain') subText = `<span class="md-event-sub">(${e.role})</span>`;
+      } else if (e.type === 'red_card') {
+        iconHtml = '<span class="card-icon-r" title="Kartu Merah"></span>';
+        if (e.role && e.role !== 'Pemain') subText = `<span class="md-event-sub">(${e.role})</span>`;
+      }
 
-              return `
+      return `
                 <div class="md-timeline-row ${isHome ? 'home-event' : 'away-event'}">
                   <!-- Sisi Kiri (Tim A / Home) -->
                   <div class="md-timeline-side home">
@@ -9069,7 +9069,7 @@ var app = window.app = Object.assign(window.app || {}, {
                   </div>
                 </div>
               `;
-            }).join("")}
+    }).join("")}
           </div>
         `}
       </div>
