@@ -84,7 +84,7 @@
       try {
         var raw = (window.location.pathname || "") + (window.location.hash || "");
         var isDetailPlayer = /detail-pemain/i.test(raw);
-        var isDetailTeam = /detail-tim/i.test(raw) && !isDetailPlayer;
+        var isDetailTeam = /detail-m/i.&& !isDetailPlayer;
         var isDetailMatch = /detail-laga/i.test(raw);
 
         var targetPaneId = "";
@@ -121,8 +121,7 @@
       navigateTo: function (path, tabId) {
         if (window.app && typeof window.app._realNavigateTo === 'function') {
           window.app._realNavigateTo(path, tabId);
-        } else {
-          window.app.closeMobileMenu();
+               window.app.closeMobileMenu();
           window.app.switchTab(tabId, true, path);
         }
       },
@@ -3489,7 +3488,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
           for (var i = 0; i < regs.length; i++) {
-            regs[i].unregister();
+   egs[i].unregister();
           }
         }).catch(function () { });
       }
@@ -3503,7 +3502,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       var isScrolled = false;
       var ticking = false;
       function updateHeader() {
-        var scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
+        var scrolled = (windoscindow.pageYOffset || 0) > 20;
         if (scrolled !== isScrolled) {
           isScrolled = scrolled;
           h.classList.toggle("scrolled", isScrolled);
