@@ -5129,10 +5129,11 @@ var app = window.app = Object.assign(window.app || {}, {
     const elFin = document.getElementById("countFinishedMatches");
     if (elFin) elFin.textContent = countFinished;
 
-    // Filter by Status (all / live / upcoming / finished)
+    // Filter by Status (all / upcoming / finished)
     if (this.filterStatus === "live") {
-      matches = matches.filter(m => m.status === "live");
-    } else if (this.filterStatus === "upcoming") {
+      this.filterStatus = "all";
+    }
+    if (this.filterStatus === "upcoming") {
       matches = matches.filter(m => m.status === "upcoming" || (!m.status || m.status === "scheduled"));
     } else if (this.filterStatus === "finished") {
       matches = matches.filter(m => m.status === "finished");
@@ -5204,6 +5205,7 @@ var app = window.app = Object.assign(window.app || {}, {
         isPlaceholder: true
       };
 
+      const isLive = Boolean(m.status === "live");
       const isFinished = (m.status === "finished" || m.status === "live") && (!isKnockout || hasDeterminedTeams);
       const isUpcoming = !isFinished;
       const statusClass = isFinished ? "status-finished" : "status-upcoming";
@@ -5305,7 +5307,7 @@ var app = window.app = Object.assign(window.app || {}, {
                   <div class="fixture-team-subcity">📍 ${home.city || '-'}</div>
                 </div>
               </div>
-              <div class="fixture-score-number ${isLive ? 'live' : ''}">
+              <div class="fixture-score-number">
                 ${homeScore} ${hasPenalties ? `<small style="font-size:0.75rem; color:#ca8a04; font-weight:700;">(${m.penaltyHomeScore})</small>` : ''}
               </div>
             </div>
@@ -5346,7 +5348,7 @@ var app = window.app = Object.assign(window.app || {}, {
                   <div class="fixture-team-subcity">📍 ${away.city || '-'}</div>
                 </div>
               </div>
-              <div class="fixture-score-number ${isLive ? 'live' : ''}">
+              <div class="fixture-score-number">
                 ${awayScore} ${hasPenalties ? `<small style="font-size:0.75rem; color:#ca8a04; font-weight:700;">(${m.penaltyAwayScore})</small>` : ''}
               </div>
             </div>
