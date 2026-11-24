@@ -64,12 +64,209 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (_safeAdminGet(sessionStorage, "pondok_futsal_admin_auth") === "true" || _safeAdminGet(localStorage, "pondok_futsal_admin_auth") === "true") {
       this.isAuthenticated = true;
       this.adminPinHash = _safeAdminGet(sessionStorage, "pondok_futsal_admin_pin_hash") || _safeAdminGet(localStorage, "pondok_futsal_admin_pin_hash") || "";
+      this.currentUserEmail = _safeAdminGet(sessionStorage, "pondok_futsal_admin_email") || _safeAdminGet(localStorage, "pondok_futsal_admin_email") || "";
+      this.authMethod = _safeAdminGet(sessionStorage, "pondok_futsal_admin_auth_method") || (this.currentUserEmail ? 'supabase' : 'pin');
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
         if (this.adminPinHash) sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
+        if (this.currentUserEmail) sessionStorage.setItem("pondok_futsal_admin_email", this.currentUserEmail);
       } catch (_) { }
     }
     this.updateAdminUi();
+
+    // Verifikasi otomatis session Supabase Auth resmi jika tersedia
+    if (window.SupabaseService && typeof window.SupabaseService.getSession === 'function') {
+      window.SupabaseService.getSession().then(session => {
+        if (session && session.user) {
+          this.isAuthenticated = true;
+          this.authMethod = 'supabase';
+          this.currentUserEmail = session.user.email || "";
+          try {
+            sessionStorage.setItem("pondok_futsal_admin_auth", "true");
+            sessionStorage.setItem("pondok_futsal_admin_email", this.currentUserEmail);
+            sessionStorage.setItem("pondok_futsal_admin_auth_method", "supabase");
+            localStorage.setItem("pondok_futsal_admin_auth", "true");
+            localStorage.setItem("pondok_futsal_admin_email", this.currentUserEmail);
+            localStorage.setItem("pondok_futsal_admin_auth_method", "supabase");
+          } catch (_) { }
+          this.updateAdminUi();
+        }
+      }).catch(() => { });
+    }
+  },
+
+  switchLoginTab(tab) {
+    this._activeLoginTab = tab;
+    const tabSupabase = document.getElementById("tabLoginSupabase");
+    const tabPin = document.getElementById("tabLoginPin");
+    const paneSupabase = document.getElementById("paneLoginSupabase");
+    const panePin = document.getElementById("paneLoginPin");
+
+    if (tab === 'pin') {
+      if (tabSupabase) {
+        tabSupabase.style.background = "transparent";
+        tabSupabase.style.color = "var(--text-muted)";
+      }
+      if (tabPin) {
+        tabPin.style.background = "var(--primary)";
+        tabPin.style.color = "#000";
+      }
+      if (paneSupabase) paneSupabase.style.display = "none";
+      if (panePin) panePin.style.display = "block";
+      const pinInp = document.getElementById("adminPinInput");
+      if (pinInp) setTimeout(() => pinInp.focus(), 80);
+    } else {
+      if (tabSupabase) {
+        tabSupabase.style.background = "var(--primary)";
+        tabSupabase.style.color = "#000";
+      }
+      if (tabPin) {
+        tabPin.style.background = "transparent";
+        tabPin.style.color = "var(--text-muted)";
+      }
+      if (paneSupabase) paneSupabase.style.display = "block";
+      if (panePin) panePin.style.display = "none";
+      const emailInp = document.getElementById("adminEmailInput");
+      if (emailInp) setTimeout(() => emailInp.focus(), 80);
+    }
+  },
+
+  handlePendingAdminActions() {
+    if (this.pendingTeamEditorId !== undefined && this.pendingTeamEditorId !== null) {
+      const tId = this.pendingTeamEditorId;
+      this.pendingTeamEditorId = null;
+      setTimeout(() => { this.openTeamEditorModal(tId); }, 200);
+    }
+    if (this.pendingScoreMatchId) {
+      const mId = this.pendingScoreMatchId;
+      this.pendingScoreMatchId = null;
+      setTimeout(() => { this.openQuickScore(mId); }, 150);
+    }
+    if (this.pendingEditorMatchId) {
+      const mId = this.pendingEditorMatchId;
+      this.pendingEditorMatchId = null;
+      setTimeout(() => { this.openMatchEditor(mId); }, 150);
+    }
+    if (this.pendingAddNewMatch) {
+      this.pendingAddNewMatch = false;
+      setTimeout(() => { this.openAddNewMatchModal(); }, 150);
+    }
+    if (this.pendingBatchSave) {
+      this.pendingBatchSave = false;
+      setTimeout(() => { this.saveBatchUploadedTeams(); }, 150);
+    }
+    if (this.pendingOpenMvpManager) {
+      this.pendingOpenMvpManager = false;
+      setTimeout(() => { this.openManageMvpModal(); }, 150);
+    }
+  },
+
+  async loginWithSupabase() {
+    const emailInput = document.getElementById("adminEmailInput");
+    const passInput = document.getElementById("adminPasswordInput");
+    const errorEl = document.getElementById("adminAuthErrorNote");
+    const submitBtn = document.getElementById("btnSubmitSupabaseAuth");
+
+    const email = (emailInput?.value || "").trim();
+    const password = passInput?.value || "";
+
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+
+    if (!email || !email.includes("@")) {
+      const msg = "⚠️ Masukkan alamat email panitia yang valid.";
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = "block";
+      }
+      return false;
+    }
+
+    if (!password || password.length < 6) {
+      const msg = "⚠️ Password akun panitia minimal 6 karakter.";
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = "block";
+      }
+      return false;
+    }
+
+    if (!window.SupabaseService || typeof window.SupabaseService.signIn !== 'function') {
+      const msg = "⚠️ Layanan Supabase belum siap. Silakan refresh halaman.";
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = "block";
+      }
+      return false;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "⏳ Memverifikasi Akun...";
+    }
+
+    try {
+      const res = await window.SupabaseService.signIn(email, password);
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Masuk Mode Panitia (Supabase Auth) ➔";
+      }
+
+      if (!res.ok) {
+        let errMsg = res.error || "Gagal masuk. Periksa kembali email dan password Anda.";
+        if (errMsg.includes("Invalid login credentials")) {
+          errMsg = "⚠️ Email atau Password Panitia salah. Pastikan akun sudah dibuat di Supabase Auth.";
+        } else if (errMsg.includes("Email not confirmed")) {
+          errMsg = "⚠️ Email belum dikonfirmasi di Supabase. Aktifkan auto-confirm di Authentication Settings.";
+        }
+        if (errorEl) {
+          errorEl.textContent = errMsg;
+          errorEl.style.display = "block";
+        }
+        return false;
+      }
+
+      // Berhasil Login Resmi Supabase Auth
+      this.isAuthenticated = true;
+      this.authMethod = 'supabase';
+      this.currentUserEmail = res.user?.email || email;
+
+      try {
+        sessionStorage.setItem("pondok_futsal_admin_auth", "true");
+        sessionStorage.setItem("pondok_futsal_admin_email", this.currentUserEmail);
+        sessionStorage.setItem("pondok_futsal_admin_auth_method", "supabase");
+        localStorage.setItem("pondok_futsal_admin_auth", "true");
+        localStorage.setItem("pondok_futsal_admin_email", this.currentUserEmail);
+        localStorage.setItem("pondok_futsal_admin_auth_method", "supabase");
+      } catch (_) { }
+
+      if (emailInput) emailInput.value = "";
+      if (passInput) passInput.value = "";
+
+      const loginModal = document.getElementById("adminLoginModal");
+      if (loginModal) loginModal.classList.remove("active");
+
+      this.updateAdminUi();
+
+      if (window.app && typeof app.showToast === "function") {
+        app.showToast(`✅ Login Berhasil: ${this.currentUserEmail} (Hak Akses Database Aktif)`);
+      }
+
+      this.handlePendingAdminActions();
+      return true;
+    } catch (err) {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Masuk Mode Panitia (Supabase Auth) ➔";
+      }
+      if (errorEl) {
+        errorEl.textContent = "⚠️ " + (err.message || "Terjadi kesalahan koneksi.");
+        errorEl.style.display = "block";
+      }
+      return false;
+    }
   },
 
   bindAdminEvents() {
@@ -223,8 +420,16 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
   },
 
-  // Core Login Routine - Cryptographic Verification with Anti-Brute-Force
+  // Core Login Routine - Cryptographic Verification with Anti-Brute-Force & Supabase Auth
   async doLogin(providedPin) {
+    const activeTab = this._activeLoginTab || 'supabase';
+    const emailInput = document.getElementById("adminEmailInput");
+
+    // Jika tab aktif adalah Supabase Auth atau input email terisi, lakukan login via Supabase Auth
+    if (activeTab === 'supabase' && emailInput && emailInput.value.trim()) {
+      return await this.loginWithSupabase();
+    }
+
     const input = document.getElementById("adminPinInput");
     const rawPin = (providedPin !== undefined ? providedPin : (input ? input.value : "")).toString().trim();
     const lockoutNote = document.getElementById("adminLoginLockoutNote");
@@ -270,13 +475,16 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         window.Security.recordSuccess();
       }
       this.isAuthenticated = true;
+      this.authMethod = 'pin';
       this.adminPinHash = computedHash || storedHash;
 
       try {
         sessionStorage.setItem("pondok_futsal_admin_auth", "true");
         sessionStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
+        sessionStorage.setItem("pondok_futsal_admin_auth_method", "pin");
         localStorage.setItem("pondok_futsal_admin_auth", "true");
         localStorage.setItem("pondok_futsal_admin_pin_hash", this.adminPinHash);
+        localStorage.setItem("pondok_futsal_admin_auth_method", "pin");
       } catch (e) { }
 
       if (input) input.value = "";
@@ -292,32 +500,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       this.updateAdminUi();
 
       if (window.app && typeof app.showToast === "function") {
-        app.showToast("✅ Berhasil Masuk Mode Panitia! Akses Pengaturan & Berkas Tim Aktif.");
+        app.showToast("✅ Masuk Mode Panitia (PIN Offline). Akses lokal aktif.");
       }
 
-      if (this.pendingTeamEditorId !== undefined && this.pendingTeamEditorId !== null) {
-        const tId = this.pendingTeamEditorId;
-        this.pendingTeamEditorId = null;
-        setTimeout(() => { this.openTeamEditorModal(tId); }, 200);
-      }
-      if (this.pendingScoreMatchId) {
-        const mId = this.pendingScoreMatchId;
-        this.pendingScoreMatchId = null;
-        setTimeout(() => { this.openQuickScore(mId); }, 150);
-      }
-      if (this.pendingEditorMatchId) {
-        const mId = this.pendingEditorMatchId;
-        this.pendingEditorMatchId = null;
-        setTimeout(() => { this.openMatchEditor(mId); }, 150);
-      }
-      if (this.pendingAddNewMatch) {
-        this.pendingAddNewMatch = false;
-        setTimeout(() => { this.openAddNewMatchModal(); }, 150);
-      }
-      if (this.pendingBatchSave) {
-        this.pendingBatchSave = false;
-        setTimeout(() => { this.saveBatchUploadedTeams(); }, 150);
-      }
+      this.handlePendingAdminActions();
     } else {
       let penaltyMsg = "⚠️ PIN Panitia yang Anda masukkan salah. Akses ditolak!";
       if (window.Security && typeof window.Security.recordFailedAttempt === "function") {
@@ -358,10 +544,34 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       iconEl.textContent = this.isAuthenticated ? "⚙️" : "🔒";
     }
     if (labelEl) {
-      labelEl.textContent = this.isAuthenticated ? "Panitia Aktif" : "Mode Panitia";
+      if (this.isAuthenticated) {
+        labelEl.textContent = this.currentUserEmail ? `Panitia (${this.currentUserEmail.split('@')[0]})` : "Panitia Aktif";
+      } else {
+        labelEl.textContent = "Mode Panitia";
+      }
+    }
+    const emailDisplay = document.getElementById("adminUserEmailDisplay");
+    if (emailDisplay) {
+      if (this.isAuthenticated) {
+        emailDisplay.textContent = this.currentUserEmail ? `Terverifikasi: ${this.currentUserEmail} (Supabase Auth)` : "Mode PIN Offline";
+        emailDisplay.style.display = "inline";
+      } else {
+        emailDisplay.style.display = "none";
+      }
     }
     if (dotEl) {
       dotEl.style.display = this.isAuthenticated ? "block" : "none";
+    }
+
+    const mobileIcon = document.getElementById("mobileMenuAdminIcon");
+    const mobileLabel = document.getElementById("mobileMenuAdminLabel");
+    if (mobileIcon) mobileIcon.textContent = this.isAuthenticated ? "⚙️" : "🔐";
+    if (mobileLabel) {
+      if (this.isAuthenticated) {
+        mobileLabel.textContent = this.currentUserEmail ? `Panel Panitia (${this.currentUserEmail.split('@')[0]})` : "Panel Kontrol Panitia";
+      } else {
+        mobileLabel.textContent = "Akses Masuk Panitia (Supabase Auth)";
+      }
     }
 
     if (window.app) {
@@ -410,31 +620,34 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   openLoginModal() {
     const modal = document.getElementById("adminLoginModal");
     const pinInput = document.getElementById("adminPinInput");
+    const emailInput = document.getElementById("adminEmailInput");
+    const passInput = document.getElementById("adminPasswordInput");
+    const errorEl = document.getElementById("adminAuthErrorNote");
     const lockoutNote = document.getElementById("adminLoginLockoutNote");
 
-    if (window.Security && typeof window.Security.checkLockout === "function") {
-      const lockInfo = window.Security.checkLockout();
-      if (lockInfo.isLocked) {
-        if (lockoutNote) {
-          lockoutNote.textContent = `⚠️ Akun panitia terkunci sementara (${lockInfo.remainingSeconds} detik tersisa).`;
-          lockoutNote.style.display = "block";
-        }
-      } else if (lockoutNote) {
-        lockoutNote.textContent = "";
-        lockoutNote.style.display = "none";
-      }
-    } else if (lockoutNote) {
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+    if (lockoutNote) {
       lockoutNote.textContent = "";
       lockoutNote.style.display = "none";
     }
-
     if (pinInput) pinInput.value = "";
+    if (passInput) passInput.value = "";
+
+    this.switchLoginTab(this._activeLoginTab || 'supabase');
+
     if (modal) modal.classList.add("active");
-    if (pinInput) {
-      setTimeout(() => {
-        try { pinInput.focus(); } catch (e) { }
-      }, 100);
-    }
+    setTimeout(() => {
+      try {
+        if (this._activeLoginTab === 'pin') {
+          if (pinInput) pinInput.focus();
+        } else {
+          if (emailInput) emailInput.focus();
+        }
+      } catch (e) { }
+    }, 120);
   },
 
   openAdminDashboard() {
@@ -2473,7 +2686,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         app.store.saveData();
       }
       if (window.SupabaseService && typeof window.SupabaseService.deleteMatch === 'function') {
-        window.SupabaseService.deleteMatch(mId).catch(() => {});
+        window.SupabaseService.deleteMatch(mId).catch(() => { });
       }
       const modal = document.getElementById("matchEditorModal");
       if (modal) modal.classList.remove("active");
@@ -7281,13 +7494,25 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   logout() {
     this.isAuthenticated = false;
     this.adminPinHash = "";
+    this.currentUserEmail = "";
+    this.authMethod = "";
+    if (window.SupabaseService && typeof window.SupabaseService.signOut === 'function') {
+      window.SupabaseService.signOut().catch(() => {});
+    }
     sessionStorage.removeItem("pondok_futsal_admin_auth");
     sessionStorage.removeItem("pondok_futsal_admin_pin_hash");
+    sessionStorage.removeItem("pondok_futsal_admin_email");
+    sessionStorage.removeItem("pondok_futsal_admin_auth_method");
     localStorage.removeItem("pondok_futsal_admin_auth");
     localStorage.removeItem("pondok_futsal_admin_pin_hash");
+    localStorage.removeItem("pondok_futsal_admin_email");
+    localStorage.removeItem("pondok_futsal_admin_auth_method");
     this.updateAdminUi();
-    document.getElementById("adminDashboardModal").classList.remove("active");
-    app.showToast("Anda telah keluar dari Mode Panitia (kembali ke Mode Peserta).");
+    const modal = document.getElementById("adminDashboardModal");
+    if (modal) modal.classList.remove("active");
+    if (window.app && typeof app.showToast === 'function') {
+      app.showToast("Anda telah keluar dari Mode Panitia (kembali ke Mode Peserta).");
+    }
   }
 });
 

@@ -155,6 +155,102 @@
       }
     }
 
+    // =========================================================================
+    // SUPABASE AUTHENTICATION ENGINE (Email/Password Panitia & RLS Authorization)
+    // =========================================================================
+
+    async signIn(email, password) {
+      if (!this.client || !this.isConfigured) {
+        if (window.supabase) this.init();
+      }
+      if (!this.client || !this.isConfigured) {
+        return { ok: false, error: "Layanan Supabase belum terhubung. Periksa koneksi internet Anda." };
+      }
+      try {
+        const cleanEmail = (email || '').trim();
+        const cleanPassword = (password || '');
+        if (!cleanEmail || !cleanPassword) {
+          return { ok: false, error: "Email dan Password panitia wajib diisi." };
+        }
+
+        const { data, error } = await this.client.auth.signInWithPassword({
+          email: cleanEmail,
+          password: cleanPassword
+        });
+
+        if (error) {
+          console.warn('[Supabase Auth] Login error:', error.message);
+          return { ok: false, error: error.message };
+        }
+
+        console.log('🔐 [Supabase Auth] Sukses Login Panitia:', data.user?.email, '(Role:', data.user?.role || 'authenticated', ')');
+        return {
+          ok: true,
+          user: data.user,
+          session: data.session
+        };
+      } catch (err) {
+        console.error('[Supabase Auth] Exception during signIn:', err);
+        return { ok: false, error: err.message || "Terjadi kesalahan koneksi autentikasi." };
+      }
+    }
+
+    async signOut() {
+      if (!this.client) return { ok: true };
+      try {
+        const { error } = await this.client.auth.signOut();
+        if (error) {
+          console.warn('[Supabase Auth] SignOut notice:', error.message);
+          return { ok: false, error: error.message };
+        }
+        console.log('🚪 [Supabase Auth] Sukses SignOut Panitia');
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err.message };
+      }
+    }
+
+    async getSession() {
+      if (!this.client) return null;
+      try {
+        const { data, error } = await this.client.auth.getSession();
+        if (error || !data) return null;
+        return data.session || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async getCurrentUser() {
+      if (!this.client) return null;
+      try {
+        const { data, error } = await this.client.auth.getUser();
+        if (error || !data) return null;
+        return data.user || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    onAuthStateChange(callback) {
+      if (!this.client || !this.client.auth) return null;
+      try {
+        const { data: { subscription } } = this.client.auth.onAuthStateChange((event, session) => {
+          if (typeof callback === 'function') {
+            try {
+              callback(event, session);
+            } catch (e) {
+              console.error('[Supabase Auth] onAuthStateChange callback error:', e);
+            }
+          }
+        });
+        return subscription;
+      } catch (e) {
+        console.warn('[Supabase Auth] onAuthStateChange error:', e);
+        return null;
+      }
+    }
+
     // Listen for incoming remote updates without showing noisy UI alerts
     onRemoteUpdate(callback) {
       if (typeof callback === 'function') {

@@ -448,6 +448,8 @@ ON CONFLICT (id) DO NOTHING;
 
 DROP POLICY IF EXISTS "Public Read tournament-assets" ON storage.objects;
 DROP POLICY IF EXISTS "Admin Upload tournament-assets" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Update tournament-assets" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Delete tournament-assets" ON storage.objects;
 DROP POLICY IF EXISTS "App Upload tournament-assets" ON storage.objects;
 DROP POLICY IF EXISTS "App Update tournament-assets" ON storage.objects;
 
@@ -462,5 +464,10 @@ WITH CHECK (bucket_id = 'tournament-assets');
 
 CREATE POLICY "Admin Update tournament-assets"
 ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'tournament-assets');
+
+CREATE POLICY "Admin Delete tournament-assets"
+ON storage.objects FOR DELETE
 TO authenticated
 USING (bucket_id = 'tournament-assets');
