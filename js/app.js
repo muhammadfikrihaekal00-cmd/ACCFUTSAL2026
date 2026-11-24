@@ -1768,7 +1768,7 @@ var app = window.app = Object.assign(window.app || {}, {
     });
 
     text += `\n───────────────────\n`;
-    text += `📊 *Pantau Klasemen, Top Skor & Live Streaming YouTube di Portal Resmi:*\n`;
+    text += `📊 *Pantau Klasemen, Top Skor & Hasil Laga di Portal Resmi:*\n`;
     text += `👉 https://accfutsal2026.vercel.app\n\n`;
     text += `_#ACC2026 #AlFayyadhChampionsCup #FutsalSulsel_`;
 
@@ -1923,106 +1923,12 @@ var app = window.app = Object.assign(window.app || {}, {
   initGlobalLiveMatchTimer() {
     if (this._globalLiveTimerInterval) {
       clearInterval(this._globalLiveTimerInterval);
+      this._globalLiveTimerInterval = null;
     }
     if (this._liveClockTicker) {
       clearInterval(this._liveClockTicker);
+      this._liveClockTicker = null;
     }
-
-    // 1-second live ticker untuk jam digital live minute pada Detail Laga & modal
-    this._liveClockTicker = setInterval(() => {
-      const clockEl = document.getElementById("mdLiveClockDigits");
-      const wrapperEl = document.getElementById("mdLiveMinuteTop");
-      if (clockEl && this.activeDetailMatchId) {
-        const activeM = (this.store?.data?.matches || []).find(m => m.id === this.activeDetailMatchId && m.status === 'live');
-        if (activeM) {
-          clockEl.textContent = this.formatMatchLiveMinute(activeM);
-          if (wrapperEl) {
-            if (activeM.isTimerPaused) {
-              wrapperEl.classList.add("is-paused");
-              wrapperEl.setAttribute("title", "Waktu Pertandingan Dijeda (m:dd)");
-            } else {
-              wrapperEl.classList.remove("is-paused");
-              wrapperEl.setAttribute("title", "Live Minute Pertandingan (m:dd)");
-            }
-          }
-        }
-      }
-    }, 1000);
-
-    this._globalLiveTimerInterval = setInterval(() => {
-      const matches = this.store && this.store.data ? this.store.data.matches : [];
-      if (!matches || matches.length === 0) return;
-
-      const liveMatches = matches.filter(m => m.status === "live");
-      if (liveMatches.length === 0) return;
-
-      const now = Date.now();
-      let hasChange = false;
-
-      // HANYA PANITIA RESMI yang berhak memajukan timer secara otomatis dan menyinkronkannya ke Supabase
-      // Penonton dan perangkat mobile hanya menerima data resmi dari Supabase agar tidak bentrok atau berkurang
-      const isOfficial = this.isAdmin();
-
-      liveMatches.forEach(m => {
-        // JIKA TIMER DIJEDA OLEH PANITIA, JANGAN NAIKKAN MENIT SAMA SEKALI
-        if (m.isTimerPaused) return;
-
-        let curMin = parseInt((m.liveMinute || "1'").toString().replace(/\D/g, ""), 10) || 1;
-        if (!m.liveStartedAt) {
-          m.liveStartedAt = now - ((curMin - 1) * 60000);
-        }
-
-        // Hitung menit berjalan presisi di SEMUA perangkat (HP peserta & laptop panitia)
-        const elapsed = Math.floor((now - m.liveStartedAt) / 60000) + 1;
-        const newMin = Math.min(50, Math.max(curMin, elapsed));
-        const newMinStr = `${newMin}'`;
-
-        if (m.liveMinute !== newMinStr) {
-          m.liveMinute = newMinStr;
-          hasChange = true;
-        }
-      });
-
-      if (hasChange) {
-        // Fast targeted DOM update: perbarui teks menit live tanpa menghancurkan & me-render ulang seluruh daftar 32 kartu
-        liveMatches.forEach(m => {
-          const isPaused = Boolean(m.isTimerPaused);
-          const minOnly = (m.liveMinute || "").toString().replace(/\D/g, "");
-          const cleanMinBadge = minOnly ? `${minOnly}'` : '';
-          const displayText = `${isPaused ? '⏸️ JEDA' : 'LIVE'}${cleanMinBadge ? ` • Menit ${cleanMinBadge}` : ''}`;
-
-          const cardEl = document.getElementById(`match-card-${m.id}`) || document.querySelector(`[data-match-id="${m.id}"]`);
-          if (cardEl) {
-            const barStrong = cardEl.querySelector(".bar-live strong");
-            if (barStrong) barStrong.textContent = displayText;
-          }
-        });
-
-        // Simpan data di latar belakang secara ringan (maks 1x per 30 detik untuk menghindari lock IO pada HP)
-        if (!this._lastLiveTimerSave || (now - this._lastLiveTimerSave) > 30000) {
-          this._lastLiveTimerSave = now;
-          this.store.saveData();
-        }
-
-        try { this.updateHeroLiveBadge(); } catch (_) { }
-        try { this.updateFloatingLiveNotice(); } catch (_) { }
-        if (this.currentTab === "match-detail" && this.activeDetailMatchId) {
-          try { this.refreshActiveMatchDetail(); } catch (_) { }
-        }
-
-        // Jika modal admin sedang terbuka untuk pertandingan ini, update input menit
-        const activeModalMatchId = window.admin && (window.admin.activeMatchId || window.admin.activeQuickMatchId);
-        if (activeModalMatchId) {
-          const activeM = liveMatches.find(m => m.id === activeModalMatchId);
-          if (activeM) {
-            const matchMinInput = document.getElementById("matchMinuteInput");
-            if (matchMinInput && document.activeElement !== matchMinInput) {
-              matchMinInput.value = activeM.liveMinute;
-            }
-          }
-        }
-      }
-    }, 1000);
   },
 
   dismissSplashScreen() {
@@ -2084,88 +1990,14 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   renderLiveStreamHero() {
-    this.updateHeroLiveBadge();
     const container = document.getElementById("liveStreamHero");
-    if (!container) return;
-
-    const cfg = (this.store && this.store.data && this.store.data.config) || {};
-    const rawYtUrl = cfg.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
-    const videoId = this.getYoutubeVideoId(rawYtUrl);
-    const title = (cfg.youtubeLiveTitle || "Siaran Langsung Lapangan Utama - GOR Futsal Ma'had Al-Fayyadh Maros").replace(/^[🔴\s]+/, "");
-
-    // Cek apakah video player iframe sudah sedang aktif berputar
-    const existingPlayer = document.getElementById("mainYoutubeIframe");
-    const isAlreadyPlaying = Boolean(existingPlayer);
-
-    // Jika video sedang aktif ditonton, update title tanpa me-reset iframe video yang sedang diputar
-    if (isAlreadyPlaying) {
-      const titleEl = container.querySelector(".live-stream-title");
-      if (titleEl) titleEl.textContent = title;
-      return;
+    if (container) {
+      container.style.display = "none";
+      container.innerHTML = "";
     }
-
-    // Banner Siaran Langsung YouTube Bersih (Fokus Live Stream Siaran Resmi Lapangan)
-    container.innerHTML = `
-      <div class="live-stream-card">
-        <div class="live-stream-header">
-          <div class="live-stream-header-left">
-            <div class="live-on-air-pill">
-              <span class="live-blink-circle"></span>
-              <span>LIVE BROADCAST</span>
-            </div>
-            <h2 class="live-stream-title">${title}</h2>
-          </div>
-          <div class="live-stream-header-right">
-            ${this.isAdmin() ? `
-              <button class="btn btn-outline btn-sm btn-edit-stream" onclick="admin.openYoutubeLiveModal()" title="Ubah Link Siaran Langsung YouTube (Panitia)">
-                Ganti Link Live
-              </button>
-            ` : ''}
-          </div>
-        </div>
-
-        <!-- LITE YOUTUBE FACADE (On-demand video loading) -->
-        <div class="live-video-player-wrapper yt-facade" id="ytVideoPlayerContainer" onclick="app.playYoutubeLiveStream('${videoId}')" title="Klik untuk memutar siaran langsung YouTube">
-          <img class="yt-facade-thumb" 
-               src="https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp" 
-               onerror="this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg'" 
-               alt="${title}" 
-               loading="lazy" 
-               decoding="async">
-          <div class="yt-facade-overlay">
-            <button type="button" class="yt-facade-play-btn" aria-label="Putar Siaran Langsung YouTube">
-              <svg viewBox="0 0 68 48" width="68" height="48" aria-hidden="true">
-                <path class="yt-play-bg" d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#f00"></path>
-                <path d="M45 24L27 14v20z" fill="#fff"></path>
-              </svg>
-            </button>
-            <div class="yt-facade-info">
-              <span class="yt-facade-badge">🔴 KLIK UNTUK NONTON LIVE STREAM</span>
-              <span class="yt-facade-title">${title}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
   },
 
-  playYoutubeLiveStream(videoId) {
-    const container = document.getElementById("ytVideoPlayerContainer");
-    if (!container) return;
-    const vid = videoId || this.getYoutubeVideoId((this.store && this.store.data && this.store.data.config && this.store.data.config.youtubeLiveUrl));
-    container.innerHTML = `
-      <iframe 
-        id="mainYoutubeIframe" 
-        src="https://www.youtube-nocookie.com/embed/${vid}?autoplay=1&rel=0" 
-        title="YouTube Live Siaran ACC Ma'had Al-Fayyadh" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-        allowfullscreen>
-      </iframe>
-    `;
-    container.classList.remove("yt-facade");
-    container.style.cursor = "default";
-    container.onclick = null;
-  },
+  playYoutubeLiveStream(videoId) {},
 
   setCategory(cat, showToastMsg = true) {
     if (this.isDrawingSpinning) return;
@@ -3369,110 +3201,22 @@ var app = window.app = Object.assign(window.app || {}, {
 
   updateHeroLiveBadge() {
     const badgeEl = document.getElementById("heroLiveBadge");
-    if (!badgeEl) return;
-
-    const matches = (this.store && this.store.data && this.store.data.matches) || [];
-    const liveMatches = matches.filter(m => m.status === "live");
-    const hasLiveMatch = liveMatches.length > 0;
-
-    if (hasLiveMatch) {
-      const firstLive = liveMatches[0];
-      const liveCat = (firstLive.category || (firstLive.id && firstLive.id.includes("_SD") ? "SD" : "SMP")).toUpperCase();
-      const catLabel = liveCat === "SD" ? "Kelas SD" : "Kelas SMP";
-
-      badgeEl.style.display = "inline-flex";
-      badgeEl.style.cursor = "pointer";
-      badgeEl.title = `🔴 Pertandingan ${catLabel} sedang LIVE! Klik untuk langsung menuju Jadwal & Skor (${liveCat})`;
-      badgeEl.innerHTML = `
-        <span class="pulse-dot"></span>
-        <span>LIVE MATCHDAY • SEDANG BERLANGSUNG (${liveCat})</span>
-      `;
-      badgeEl.onclick = () => this.jumpToLiveMatch();
-    } else {
-      badgeEl.style.display = "none";
-    }
-
-    this.updateFloatingLiveNotice();
+    if (badgeEl) badgeEl.style.display = "none";
   },
 
   updateFloatingLiveNotice() {
     const noticeEl = document.getElementById("floatingLiveNotice");
-    if (!noticeEl) return;
-
-    if (this.currentTab === "matches" || this.floatingNoticeDismissed) {
-      noticeEl.style.display = "none";
-      return;
-    }
-
-    const matches = (this.store && this.store.data && this.store.data.matches) || [];
-    const liveMatches = matches.filter(m => m.status === "live");
-
-    if (liveMatches.length > 0) {
-      const firstLive = liveMatches[0];
-      const home = this.store.getTeam(firstLive.homeId) || { name: firstLive.homePlaceholder || "TBD", shortName: "TBD" };
-      const away = this.store.getTeam(firstLive.awayId) || { name: firstLive.awayPlaceholder || "TBD", shortName: "TBD" };
-      const hScore = firstLive.homeScoreLive ?? firstLive.homeScore ?? 0;
-      const aScore = firstLive.awayScoreLive ?? firstLive.awayScore ?? 0;
-      const cleanMin = (firstLive.liveMinute || "").toString().replace(/\D/g, "");
-      const minText = cleanMin ? `(${cleanMin}')` : '';
-
-      const textEl = document.getElementById("floatingLiveText");
-      if (textEl) {
-        textEl.textContent = `${home.shortName || home.name} ${hScore} - ${aScore} ${away.shortName || away.name} ${minText}`;
-      }
-
-      noticeEl.style.display = "block";
-    } else {
-      noticeEl.style.display = "none";
-    }
+    if (noticeEl) noticeEl.style.display = "none";
   },
 
   dismissFloatingLiveNotice(e) {
     if (e) e.stopPropagation();
-    this.floatingNoticeDismissed = true;
     const noticeEl = document.getElementById("floatingLiveNotice");
     if (noticeEl) noticeEl.style.display = "none";
   },
 
   jumpToLiveMatch() {
-    const matches = (this.store && this.store.data && this.store.data.matches) || [];
-    const liveMatches = matches.filter(m => m.status === "live");
-
-    // Deteksi kategori laga yang sedang live (SD atau SMP)
-    let targetCat = this.currentCategory || "SMP";
-    if (liveMatches.length > 0) {
-      const firstLive = liveMatches[0];
-      targetCat = (firstLive.category || (firstLive.id && firstLive.id.includes("_SD") ? "SD" : "SMP")).toUpperCase();
-      if (targetCat !== "SD" && targetCat !== "SMP") {
-        targetCat = "SMP";
-      }
-    }
-
-    // Set kategori secara menyeluruh (sinkronkan tab switcher, floating category menu & data)
-    this.setCategory(targetCat, true);
-
-    // Beralih ke tab Jadwal & Skor (pane-matches)
-    this.switchTab("matches");
-
-    // Atur filter status agar menonjolkan pertandingan live
-    this.filterStatus = "live";
-    document.querySelectorAll(".status-filter-pills .filter-pill").forEach(p => {
-      p.classList.toggle("active", p.dataset.status === "live");
-    });
-
-    this.renderMatches();
-
-    setTimeout(() => {
-      const liveCard = document.querySelector(".match-card.status-live, .match-card.is-live");
-      if (liveCard) {
-        liveCard.scrollIntoView({ behavior: "smooth", block: "center" });
-        liveCard.classList.add("highlight-pulse");
-        setTimeout(() => liveCard.classList.remove("highlight-pulse"), 2500);
-      } else {
-        const list = document.getElementById("matchesList");
-        if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 180);
+    this.navigateTo("/jadwal", "matches");
   },
 
   initScrollReveal() {
@@ -3541,31 +3285,14 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   scrollPastHero() {
-    const target = document.getElementById("homeStatsShowcase") || document.getElementById("liveStreamHero");
+    const target = document.getElementById("homeStatsShowcase");
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   },
 
   scrollToLiveStream() {
-    const liveMatches = (this.store && this.store.data && this.store.data.matches || []).filter(m => m.status === "live");
-    if (liveMatches.length > 0) {
-      return this.jumpToLiveMatch();
-    }
-    if (this.currentTab !== "home") {
-      this.switchTab("home");
-    }
-    setTimeout(() => {
-      const liveSection = document.getElementById("liveStreamHero");
-      if (liveSection) {
-        liveSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        const card = liveSection.querySelector(".live-stream-card");
-        if (card) {
-          card.classList.add("highlight-pulse");
-          setTimeout(() => card.classList.remove("highlight-pulse"), 2000);
-        }
-      }
-    }, 120);
+    this.navigateTo("/jadwal", "matches");
   },
 
   bindEvents() {
@@ -5477,13 +5204,10 @@ var app = window.app = Object.assign(window.app || {}, {
         isPlaceholder: true
       };
 
-      const isLive = m.status === "live" && (!isKnockout || hasDeterminedTeams);
-      const isFinished = m.status === "finished" && (!isKnockout || hasDeterminedTeams);
-      const isUpcoming = !isLive && !isFinished;
-      const statusClass = isLive ? "status-live" : (isFinished ? "status-finished" : "status-upcoming");
+      const isFinished = (m.status === "finished" || m.status === "live") && (!isKnockout || hasDeterminedTeams);
+      const isUpcoming = !isFinished;
+      const statusClass = isFinished ? "status-finished" : "status-upcoming";
       const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
-      const minOnly = (m.liveMinute || "").toString().replace(/\D/g, "");
-      const cleanMinBadge = minOnly ? `${minOnly}'` : '';
 
       let statusBarHtml = "";
       if (isKnockout && !hasDeterminedTeams) {
@@ -5494,19 +5218,6 @@ var app = window.app = Object.assign(window.app || {}, {
             </div>
             <div class="bar-right">
               <span>${m.time || ''}</span>
-            </div>
-          </div>
-        `;
-      } else if (isLive) {
-        const isPaused = Boolean(m.isTimerPaused);
-        statusBarHtml = `
-          <div class="match-status-bar ${isPaused ? 'bar-live is-paused' : 'bar-live'}">
-            <div class="bar-left">
-              <span class="pulse-dot"></span>
-              <strong>${isPaused ? '⏸️ JEDA' : 'LIVE'}${cleanMinBadge ? ` • Menit ${cleanMinBadge}` : ''}</strong>
-            </div>
-            <div class="bar-right">
-              <span>${m.pitch || 'Lapangan Utama'}</span>
             </div>
           </div>
         `;
@@ -5528,7 +5239,7 @@ var app = window.app = Object.assign(window.app || {}, {
               <strong>AKAN DATANG</strong>
             </div>
             <div class="bar-right">
-              <span>${m.time}</span>
+              <span>${m.time || 'Waktu Belum Diatur'}</span>
             </div>
           </div>
         `;
@@ -5540,13 +5251,13 @@ var app = window.app = Object.assign(window.app || {}, {
       const homeCards = (m.cards || []).filter(c => c.team === m.homeId);
       const awayCards = (m.cards || []).filter(c => c.team === m.awayId);
 
-      let homeScore = (isLive || isFinished) ? (m.homeScore ?? m.homeScoreLive ?? 0) : "-";
-      let awayScore = (isLive || isFinished) ? (m.awayScore ?? m.awayScoreLive ?? 0) : "-";
+      let homeScore = isFinished ? (m.homeScore ?? m.homeScoreLive ?? 0) : "-";
+      let awayScore = isFinished ? (m.awayScore ?? m.awayScoreLive ?? 0) : "-";
 
       if (isKnockout && !hasDeterminedTeams) {
         homeScore = "-";
         awayScore = "-";
-      } else if (isLive || isFinished) {
+      } else if (isFinished) {
         if (homeScorers.length > 0) {
           homeScore = Math.max(parseInt(homeScore, 10) || 0, homeScorers.length);
         }
@@ -5563,7 +5274,7 @@ var app = window.app = Object.assign(window.app || {}, {
         `<span class="match-category-tag cat-smp">SMP</span>`;
 
       return `
-        <div id="match-card-${m.id}" data-match-id="${m.id}" class="match-card uefa-fixture-card ${statusClass} ${isLive ? 'is-live' : ''} ${swipeClass}">
+        <div id="match-card-${m.id}" data-match-id="${m.id}" class="match-card uefa-fixture-card ${statusClass} ${swipeClass}">
           ${statusBarHtml}
           <!-- HEADER META -->
           <div class="fixture-header-meta">
@@ -5574,8 +5285,8 @@ var app = window.app = Object.assign(window.app || {}, {
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="fixture-time-hint">${m.date}</span>
-              <span class="match-status-tag ${m.status}">
-                ${isLive ? `<span class="pulse-dot"></span> LIVE ${cleanMinBadge}` : (isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : (m.time || 'Waktu Belum Diatur'))}
+              <span class="match-status-tag ${statusClass}">
+                ${isFinished ? (hasPenalties ? `FT (P: ${m.penaltyHomeScore}-${m.penaltyAwayScore})` : 'Selesai') : (m.time || 'Waktu Belum Diatur')}
               </span>
             </div>
           </div>
@@ -8850,20 +8561,8 @@ var app = window.app = Object.assign(window.app || {}, {
 
     const hasPenalties = isFinished && (match.penaltyHomeScore !== null && match.penaltyAwayScore !== null && match.penaltyHomeScore !== undefined && match.penaltyAwayScore !== undefined);
 
-    let statusText = "Akan Datang";
-    let statusClass = "upcoming";
-    if (isLive) {
-      if (match.isTimerPaused) {
-        statusText = `⏸️ JEDA ${match.liveMinute || ''}`.trim();
-        statusClass = "live is-paused";
-      } else {
-        statusText = `🔴 LIVE ${match.liveMinute || ''}`.trim();
-        statusClass = "live";
-      }
-    } else if (isFinished) {
-      statusText = "🏁 Selesai (FT)";
-      statusClass = "finished";
-    }
+    let statusText = isFinished ? "🏁 Selesai (FT)" : "Belum Dimulai";
+    let statusClass = isFinished ? "finished" : "upcoming";
 
     const cleanMin = (m) => {
       if (!m) return "";
@@ -9014,7 +8713,6 @@ var app = window.app = Object.assign(window.app || {}, {
             <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">${match.id}</span>
           </div>
           <div class="md-score-status-badge ${statusClass}">
-            ${isLive ? '<span class="pulse-dot"></span>' : ''}
             <span>${statusText}</span>
           </div>
         </div>
@@ -9031,11 +8729,6 @@ var app = window.app = Object.assign(window.app || {}, {
 
           <!-- CENTER SCORE -->
           <div class="md-score-center">
-            ${isLive ? `
-              <div class="md-live-minute-top ${match.isTimerPaused ? 'is-paused' : ''}" id="mdLiveMinuteTop" title="${match.isTimerPaused ? 'Waktu Pertandingan Dijeda (m:dd)' : 'Live Minute Pertandingan (m:dd)'}">
-                <span class="md-live-clock-digits" id="mdLiveClockDigits">${this.formatMatchLiveMinute(match)}</span>
-              </div>
-            ` : ''}
             <div class="md-score-digits">
               <span>${hScore}</span>
               <span class="md-score-colon">:</span>

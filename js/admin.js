@@ -727,21 +727,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     const statusSelect = document.getElementById("matchStatusSelect");
     if (statusSelect) statusSelect.value = match.status;
-    this.updateStatusPills(match.status);
+    this.updateStatusPills(match.status === 'live' ? 'finished' : (match.status || 'upcoming'));
 
-    // Hentikan timer sebelumnya jika masih aktif
-    this.stopLiveTimer();
-
-    // Dapatkan menit awal (bersihkan petik)
-    let initialMinute = "1";
-    if (match.status === "live") {
-      let cur = parseInt((match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
-      initialMinute = String(Math.max(1, cur));
-      match.liveMinute = `${initialMinute}'`;
-    } else {
-      let cur = parseInt((match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
-      initialMinute = String(Math.max(1, cur));
-    }
+    // Dapatkan menit acuan awal
+    let cur = parseInt((match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
+    let initialMinute = String(Math.max(1, cur));
 
     const matchMinInput = document.getElementById("matchMinuteInput");
     if (matchMinInput) matchMinInput.value = `${initialMinute}'`;
@@ -781,36 +771,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (statusSelect) {
       statusSelect.onchange = () => {
         this.updateStatusPills(statusSelect.value);
-        if (statusSelect.value === "live") {
-          if (!matchMinInput.value || matchMinInput.value === "0'") {
-            matchMinInput.value = "1'";
-            this.syncEventMinute("1");
-          }
-        } else {
-          this.stopLiveTimer();
-        }
       };
-    }
-
-    const btnTimer = document.getElementById("btnLiveTimerToggle");
-    if (match.status === "live") {
-      if (match.isTimerPaused) {
-        this.stopLiveTimer();
-        const pSec = typeof match.liveElapsedSec === "number" ? match.liveElapsedSec : 0;
-        const clockStr = match.liveClockDisplay || `${Math.floor(pSec / 60)}:${(pSec % 60 < 10 ? '0' : '')}${pSec % 60}`;
-        if (btnTimer) {
-          btnTimer.innerHTML = `▶️ Lanjutkan (${clockStr})`;
-          btnTimer.classList.remove("active");
-        }
-      } else {
-        this.startLiveTimer();
-      }
-    } else {
-      this.stopLiveTimer();
-      if (btnTimer) {
-        btnTimer.innerHTML = "⏱️ Mulai";
-        btnTimer.classList.remove("active");
-      }
     }
 
     this.ensureMatchLineup(match);
@@ -896,6 +857,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   setStatus(status) {
+    if (status === 'live') status = 'finished';
     const statusSelect = document.getElementById("matchStatusSelect");
     if (statusSelect) statusSelect.value = status;
     this.updateStatusPills(status);
@@ -905,6 +867,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     if (match) {
       match.status = status;
+      delete match.liveStartedAt;
+      match.isTimerPaused = false;
+      delete match.liveElapsedSec;
+      delete match.liveClockDisplay;
+
       const hDisplay = document.getElementById("homeScoreDisplay");
       const aDisplay = document.getElementById("awayScoreDisplay");
       if (hDisplay && aDisplay) {
@@ -916,67 +883,30 @@ var admin = window.admin = Object.assign(window.admin || {}, {
           hScore = Math.max(hScore, hCount);
           aScore = Math.max(aScore, aCount);
         }
-        match.homeScore = hScore;
-        match.awayScore = aScore;
-        match.homeScoreLive = hScore;
-        match.awayScoreLive = aScore;
+        if (status === "finished") {
+          match.homeScore = hScore;
+          match.awayScore = aScore;
+          match.homeScoreLive = hScore;
+          match.awayScoreLive = aScore;
+        } else {
+          match.homeScore = null;
+          match.awayScore = null;
+          match.homeScoreLive = null;
+          match.awayScoreLive = null;
+        }
       }
+      app.store.saveData();
+      if (window.SupabaseService && window.SupabaseService.syncMatch) {
+        window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+      }
+      this.checkPenaltySectionVisibility(match);
     }
-
-    if (status === "live") {
-      // Jika baru dimulai live atau belum ada timer berjalan, mulai dari menit 1
-      if (!match || (!match.liveStartedAt && !match.isTimerPaused)) {
-        minInput.value = "1'";
-        this.syncEventMinute("1");
-        if (match) {
-          match.liveMinute = "1'";
-          match.liveElapsedSec = 0;
-          match.isTimerPaused = false;
-          delete match.liveClockDisplay;
-          match.liveStartedAt = Date.now();
-        }
-      } else if (match && match.isTimerPaused) {
-        match.isTimerPaused = false;
-        delete match.liveClockDisplay;
-        const resumeSec = typeof match.liveElapsedSec === "number" ? match.liveElapsedSec : 0;
-        match.liveStartedAt = Date.now() - (resumeSec * 1000);
-      } else {
-        let cur = parseInt((minInput.value || match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
-        minInput.value = `${cur}'`;
-        this.syncEventMinute(cur);
-      }
-      if (match) {
-        app.store.saveData();
-        if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match, this.adminPinHash || "");
-        }
-      }
-      this.startLiveTimer();
-    } else {
-      this.stopLiveTimer();
-      if (match) {
-        match.isTimerPaused = false;
-        delete match.liveElapsedSec;
-        delete match.liveClockDisplay;
-        delete match.liveStartedAt;
-        if (status === "upcoming") {
-          match.liveMinute = "";
-          if (minInput) minInput.value = "";
-          this.syncEventMinute("");
-        }
-        app.store.saveData();
-        if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match, this.adminPinHash || "");
-        }
-      }
-    }
-    if (match) this.checkPenaltySectionVisibility(match);
   },
 
   updateStatusPills(status) {
     document.querySelectorAll(".status-pill-btn").forEach(btn => {
       const bStatus = btn.dataset.status;
-      btn.classList.remove("active", "active-upcoming", "active-live", "active-finished");
+      btn.classList.remove("active", "active-upcoming", "active-finished");
       if (bStatus === status) {
         btn.classList.add("active", `active-${status}`);
       }
@@ -1018,7 +948,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
   },
 
-  // Stopwatch & Sinkronisasi Menit Laga (Akurat per detik, sinkron 100% dengan HP penonton)
+  // Helper Menit Pertandingan & Sinkronisasi Kejadian
   liveTimerInterval: null,
 
   stopLiveTimer() {
@@ -1026,160 +956,14 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       clearInterval(this.liveTimerInterval);
       this.liveTimerInterval = null;
     }
-    const btn = document.getElementById("btnLiveTimerToggle");
-    if (btn) {
-      btn.innerHTML = "⏱️ Mulai";
-      btn.classList.remove("active");
-    }
   },
 
   startLiveTimer() {
-    if (this.liveTimerInterval) {
-      clearInterval(this.liveTimerInterval);
-      this.liveTimerInterval = null;
-    }
-
-    const tick = () => {
-      const matchId = this.activeMatchId || this.activeQuickMatchId;
-      if (!matchId) return;
-      const match = app.store.getMatch(matchId);
-      if (!match || match.status !== "live" || match.isTimerPaused) {
-        this.stopLiveTimer();
-        return;
-      }
-
-      const now = Date.now();
-      if (!match.liveStartedAt) {
-        const curSec = typeof match.liveElapsedSec === "number" ? match.liveElapsedSec : (((parseInt((match.liveMinute || "1").replace(/\D/g, ""), 10) || 1) - 1) * 60);
-        match.liveStartedAt = now - (curSec * 1000);
-      }
-
-      // Rumus matematis presisi sama persis dengan perhitungan di HP peserta
-      const elapsedSec = Math.max(0, Math.floor((now - match.liveStartedAt) / 1000));
-      match.liveElapsedSec = elapsedSec;
-      const elapsedMin = Math.max(1, Math.min(50, Math.floor(elapsedSec / 60) + 1));
-      const elapsedStr = `${elapsedMin}'`;
-
-      const input = document.getElementById("matchMinuteInput");
-      if (input && document.activeElement !== input) {
-        input.value = elapsedStr;
-      }
-      this.syncEventMinute(elapsedMin);
-
-      const btn = document.getElementById("btnLiveTimerToggle");
-      if (btn) {
-        const pMin = Math.floor(elapsedSec / 60);
-        const pSec = elapsedSec % 60;
-        btn.innerHTML = `⏸️ ${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
-        btn.classList.add("active");
-      }
-
-      if (match.liveMinute !== elapsedStr) {
-        match.liveMinute = elapsedStr;
-        app.store.saveData();
-        if (window.SupabaseService && window.SupabaseService.syncMatch) {
-          window.SupabaseService.syncMatch(match, this.adminPinHash || "");
-        }
-        app.renderCurrentView();
-        if (app.currentTab === "matches" || !app.currentTab || app.currentTab === "home") {
-          app.renderMatches();
-        }
-        app.renderLiveStreamHero();
-        app.updateFloatingLiveNotice();
-        app.refreshActiveMatchDetail();
-      }
-    };
-
-    tick();
-    this.liveTimerInterval = setInterval(tick, 1000);
+    this.stopLiveTimer();
   },
 
   toggleLiveTimer() {
-    const matchId = this.activeMatchId || this.activeQuickMatchId;
-    if (!matchId) return;
-    const match = app.store.getMatch(matchId);
-    if (!match) return;
-
-    // 1. JIKA TIMER SEDANG BERJALAN -> LAKUKAN JEDA (PAUSE)
-    if (this.liveTimerInterval || (!match.isTimerPaused && match.status === "live")) {
-      this.stopLiveTimer();
-
-      let elapsedSec = 0;
-      if (match.liveStartedAt) {
-        elapsedSec = Math.max(0, Math.floor((Date.now() - match.liveStartedAt) / 1000));
-      } else if (typeof match.liveElapsedSec === "number" && match.liveElapsedSec > 0) {
-        elapsedSec = match.liveElapsedSec;
-      } else {
-        const curMin = parseInt((match.liveMinute || "1").replace(/\D/g, ""), 10) || 1;
-        elapsedSec = (curMin - 1) * 60;
-      }
-
-      const pMin = Math.min(50, Math.floor(elapsedSec / 60));
-      const pSec = elapsedSec % 60;
-      const clockStr = `${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
-      const minStr = `${pMin + 1}'`;
-
-      match.isTimerPaused = true;
-      match.liveElapsedSec = elapsedSec;
-      match.liveClockDisplay = clockStr;
-      match.liveMinute = minStr;
-      delete match.liveStartedAt;
-
-      app.store.saveData();
-
-      const btn = document.getElementById("btnLiveTimerToggle");
-      if (btn) {
-        btn.innerHTML = `▶️ Lanjutkan (${clockStr})`;
-        btn.classList.remove("active");
-      }
-
-      if (window.SupabaseService && window.SupabaseService.syncMatch) {
-        window.SupabaseService.syncMatch(match, this.adminPinHash || "");
-      }
-
-      app.renderCurrentView();
-      if (app.currentTab === "matches" || !app.currentTab || app.currentTab === "home") {
-        app.renderMatches();
-      }
-      app.renderLiveStreamHero();
-      app.updateFloatingLiveNotice();
-      app.refreshActiveMatchDetail();
-
-      app.showToast(`⏸️ Stopwatch dijeda pada ${clockStr}`);
-      return;
-    }
-
-    // 2. JIKA TIMER SEDANG DIJEDA / BELUM DIMULAI -> LANJUTKAN
-    const statusSelect = document.getElementById("matchStatusSelect");
-    if (statusSelect && statusSelect.value !== "live") {
-      this.setStatus("live");
-      return;
-    }
-
-    let resumeSec = 0;
-    if (typeof match.liveElapsedSec === "number" && match.liveElapsedSec > 0) {
-      resumeSec = match.liveElapsedSec;
-    } else {
-      const input = document.getElementById("matchMinuteInput");
-      let cur = parseInt((input?.value || match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
-      resumeSec = (cur - 1) * 60;
-    }
-
-    match.status = "live";
-    match.isTimerPaused = false;
-    match.liveStartedAt = Date.now() - (resumeSec * 1000);
-    match.liveElapsedSec = resumeSec;
-    delete match.liveClockDisplay;
-
-    app.store.saveData();
-    if (window.SupabaseService && window.SupabaseService.syncMatch) {
-      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
-    }
-
-    this.startLiveTimer();
-    app.renderCurrentView();
-    app.refreshActiveMatchDetail();
-    app.showToast("▶️ Stopwatch pertandingan berjalan");
+    this.stopLiveTimer();
   },
 
   stepMatchMinute(delta) {
@@ -1197,24 +981,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     this.syncEventMinute(next);
 
     match.liveMinute = nextStr;
-    const nextSec = (next - 1) * 60;
-    match.liveElapsedSec = nextSec;
-
-    if (match.isTimerPaused) {
-      match.liveClockDisplay = `${next - 1}:00`;
-      delete match.liveStartedAt;
-      const btn = document.getElementById("btnLiveTimerToggle");
-      if (btn) {
-        btn.innerHTML = `▶️ Lanjutkan (${match.liveClockDisplay})`;
-      }
-    } else {
-      match.liveStartedAt = Date.now() - (nextSec * 1000);
-      const btn = document.getElementById("btnLiveTimerToggle");
-      if (btn && this.liveTimerInterval) {
-        btn.innerHTML = `⏸️ ${nextStr}`;
-      }
-    }
-
     app.store.saveData();
 
     if (window.SupabaseService && window.SupabaseService.syncMatch) {
@@ -1222,7 +988,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     app.renderCurrentView();
     app.refreshActiveMatchDetail();
-    app.showToast(`⏱️ Menit disetel ke ${nextStr}`);
+    app.showToast(`⏱️ Menit acuan disetel ke ${nextStr}`);
   },
 
   syncEventMinute(val) {
@@ -2310,7 +2076,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     let hScore = parseInt(document.getElementById("homeScoreDisplay").textContent, 10) || 0;
     let aScore = parseInt(document.getElementById("awayScoreDisplay").textContent, 10) || 0;
-    const status = overrideStatus || document.getElementById("matchStatusSelect").value;
+    let status = overrideStatus || document.getElementById("matchStatusSelect").value;
+    if (status === 'live') status = 'finished';
 
     // Sinkronkan selalu dengan catatan gol jika ada pencetak gol resmi yang dicatat
     if (match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0) {
@@ -2327,7 +2094,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
 
     match.status = status;
-    match.liveMinute = status === 'live' ? (minute || "1'") : minute;
+    match.liveMinute = minute || "";
+    delete match.liveStartedAt;
+    match.isTimerPaused = false;
+    delete match.liveElapsedSec;
+    delete match.liveClockDisplay;
 
     // Handle Knockout Penalty Shootout if tied
     const isKnockout = match.stage !== "group" && (app.store && typeof app.store.classifyKnockoutStage === 'function' ? Boolean(app.store.classifyKnockoutStage(match)) : (match.stage === "knockout" || /(QF|SF|FINAL|3RD)/i.test(match.id)));
@@ -2349,36 +2120,12 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       delete match.penaltyWinner;
     }
 
-    if (status === "live") {
-      const minNum = parseInt((match.liveMinute || "1").replace(/\D/g, ''), 10) || 1;
-      // JANGAN timpa liveStartedAt jika pertandingan memang sudah berstatus live dan menitnya masih sama
-      if (!match.liveStartedAt) {
-        match.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
-      } else {
-        const curElapsed = Math.floor((Date.now() - match.liveStartedAt) / 60000) + 1;
-        if (minNum !== curElapsed) {
-          match.liveStartedAt = Date.now() - ((minNum - 1) * 60000);
-        }
-      }
-      match.homeScore = hScore;
-      match.awayScore = aScore;
-      match.homeScoreLive = hScore;
-      match.awayScoreLive = aScore;
-    } else if (status === "finished") {
-      delete match.liveStartedAt;
-      match.isTimerPaused = false;
-      delete match.liveElapsedSec;
-      delete match.liveClockDisplay;
-      match.liveMinute = "";
+    if (status === "finished") {
       match.homeScore = hScore;
       match.awayScore = aScore;
       match.homeScoreLive = hScore;
       match.awayScoreLive = aScore;
     } else {
-      delete match.liveStartedAt;
-      match.isTimerPaused = false;
-      delete match.liveElapsedSec;
-      delete match.liveClockDisplay;
       match.homeScore = null;
       match.awayScore = null;
       match.homeScoreLive = null;
@@ -2407,16 +2154,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     document.getElementById("quickScoreModal").classList.remove("active");
     document.body.classList.remove("modal-open");
-    if (status === 'live') {
-      this.startLiveTimer();
-    }
     app.showToast(status === 'finished' ? "🏁 Pertandingan selesai & hasil resmi disimpan!" : "💾 Skor pertandingan berhasil disimpan!");
     app.renderCurrentView();
     if (app && typeof app.renderBracket === 'function') app.renderBracket();
     if (app && typeof app.renderMatches === 'function') app.renderMatches();
-    if (app && typeof app.updateHeroLiveBadge === 'function') {
-      app.updateHeroLiveBadge();
-    }
     if (app && typeof app.refreshActiveMatchDetail === 'function') {
       app.refreshActiveMatchDetail();
     }
@@ -2956,61 +2697,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   },
 
   // ==========================================
-  // PENGATURAN SIARAN LANGSUNG YOUTUBE (PANITIA)
-  // ==========================================
-  openYoutubeLiveModal() {
-    if (!this.isAuthenticated) {
-      this.openLoginModal();
-      app.showToast("🔒 Silakan login Mode Panitia untuk mengubah siaran langsung!");
-      return;
-    }
-    const cfg = (app.store && app.store.data && app.store.data.config) || {};
-    const titleInput = document.getElementById("ytLiveTitleInput");
-    const urlInput = document.getElementById("ytLiveUrlInput");
-    if (titleInput) titleInput.value = cfg.youtubeLiveTitle || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
-    if (urlInput) urlInput.value = cfg.youtubeLiveUrl || "https://www.youtube.com/embed/5qap5aO4i9A";
-
-    this.previewYoutubeUrl(urlInput ? urlInput.value : "");
-
-    const modal = document.getElementById("youtubeLiveModal");
-    if (modal) modal.classList.add("active");
-  },
-
-  previewYoutubeUrl(url) {
-    const frame = document.getElementById("ytPreviewFrame");
-    if (!frame) return;
-    const embedUrl = app.formatYoutubeEmbedUrl(url);
-    frame.src = embedUrl;
-  },
-
-  saveYoutubeLiveConfig() {
-    if (!this.isAuthenticated) {
-      app.showToast("🔒 Akses ditolak. Anda belum login sebagai panitia!");
-      return;
-    }
-    const titleInput = document.getElementById("ytLiveTitleInput");
-    const urlInput = document.getElementById("ytLiveUrlInput");
-    if (!urlInput) return;
-
-    const title = titleInput ? titleInput.value.trim() : "";
-    const url = urlInput.value.trim();
-
-    if (!app.store.data.config) app.store.data.config = {};
-    app.store.data.config.youtubeLiveTitle = title || "🔴 Siaran Langsung Lapangan Utama - GOR Futsal MTQ Al-Fayyadh Maros";
-    app.store.data.config.youtubeLiveUrl = url || "https://www.youtube.com/embed/5qap5aO4i9A";
-
-    app.store.saveData();
-
-    if (window.SupabaseService) {
-      window.SupabaseService.syncConfig(app.store.data.config, this.adminPinHash);
-    }
-
-    const modal = document.getElementById("youtubeLiveModal");
-    if (modal) modal.classList.remove("active");
-
-    app.showToast("✅ Siaran Langsung YouTube Berhasil Diperbarui!");
-    app.renderLiveStreamHero();
-  },
+  openYoutubeLiveModal() {},
+  previewYoutubeUrl(url) {},
+  saveYoutubeLiveConfig() {},
 
   // SETTINGS MANAGEMENT
   populateSettingsForm() {
@@ -5588,33 +5277,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   async runDemoSimulation(scenario) {
     if (!this.isAuthenticated) {
       this.openLoginModal();
-      return;
-    }
-
-    if (scenario === 'live') {
-      // Set Match M20 to LIVE
-      const m20 = app.store.data.matches.find(m => m.id === "M20");
-      if (m20) {
-        m20.status = "live";
-        m20.liveMinute = "24'";
-        m20.liveStartedAt = Date.now() - (23 * 60000);
-        m20.homeScore = 2;
-        m20.awayScore = 2;
-        m20.homeScoreLive = 2;
-        m20.awayScoreLive = 2;
-      }
-      app.store.saveData();
-      app.renderCurrentView();
-      if (app && typeof app.updateHeroLiveBadge === 'function') {
-        app.updateHeroLiveBadge();
-      }
-      if (window.SupabaseService) {
-        window.SupabaseService.syncMatch(m20, this.adminPinHash);
-      }
-      app.switchTab("matches");
-      const modal = document.getElementById("adminDashboardModal");
-      if (modal) modal.classList.remove("active");
-      app.showToast("🔴 Mode Live Match Aktif: Laga M20 sedang berjalan 2-2 di menit 24'!");
       return;
     }
 
