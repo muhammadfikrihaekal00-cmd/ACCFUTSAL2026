@@ -16,6 +16,7 @@
       this.isConfigured = false;
       this.channel = null;
       this.listeners = [];
+      this.isRealtimeConnected = false;
       this.init();
     }
 
@@ -312,8 +313,10 @@
           })
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
+              this.isRealtimeConnected = true;
               console.log("🟢 Realtime channel Supabase aktif terhubung!");
             } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+              this.isRealtimeConnected = false;
               console.warn("⚠️ Realtime channel terputus, menghubungkan ulang...");
               setTimeout(() => {
                 if (navigator.onLine) this.setupRealtimeSubscriptions();
@@ -321,7 +324,30 @@
             }
           });
       } catch (e) {
+        this.isRealtimeConnected = false;
         console.warn("Realtime subscription fallback error:", e);
+      }
+    }
+
+    // Lightweight Live Fetch: Hanya ambil tabel matches (Sangat hemat CPU & Disk IO untuk polling background)
+    async fetchLiveMatchesOnly() {
+      if (!this.client || !this.isConfigured) return null;
+      try {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Supabase request timed out after 5s')), 5000)
+        );
+        const { data, error } = await Promise.race([
+          this.client.from('matches').select('*'),
+          timeoutPromise
+        ]);
+        if (error) {
+          console.warn('[Supabase] fetchLiveMatchesOnly error:', error);
+          return null;
+        }
+        return Array.isArray(data) ? data : null;
+      } catch (err) {
+        console.warn('[Supabase] fetchLiveMatchesOnly exception:', err);
+        return null;
       }
     }
 

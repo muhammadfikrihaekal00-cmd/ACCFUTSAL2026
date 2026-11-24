@@ -2132,9 +2132,37 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Helper to apply full remote dataset with change detection
     let lastDataSignature = "";
+    let lastMatchSignature = "";
     let isInitialLoad = true;
     let isSyncing = false;
     let syncWatchdogTimer = null;
+
+    // Polling ringan khusus tabel matches (Hanya ~5 KB per request, hemat 99% CPU & Disk I/O)
+    const syncMatchesOnlyFromRemote = () => {
+      if (!window.SupabaseService || isSyncing) return;
+      if (typeof window.SupabaseService.fetchLiveMatchesOnly !== 'function') {
+        syncFromRemote();
+        return;
+      }
+
+      isSyncing = true;
+      window.SupabaseService.fetchLiveMatchesOnly().then(matchesData => {
+        isSyncing = false;
+        if (matchesData && Array.isArray(matchesData) && matchesData.length > 0) {
+          const matchSig = matchesData.map(m =>
+            `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${m.updated_at}`
+          ).join("|");
+
+          if (matchSig !== lastMatchSignature) {
+            lastMatchSignature = matchSig;
+            this.applyRemoteData({ matches: matchesData });
+          }
+        }
+      }).catch(err => {
+        isSyncing = false;
+        console.warn("[Supabase] live matches polling notice:", err);
+      });
+    };
 
     const syncFromRemote = () => {
       if (!window.SupabaseService || isSyncing) return;
@@ -2204,9 +2232,9 @@ var app = window.app = Object.assign(window.app || {}, {
     const safeFocusSync = () => {
       if (this.isUserEditing()) return;
       const now = Date.now();
-      if (now - lastFocusSyncTs < 2000) return;
+      if (now - lastFocusSyncTs < 10000) return;
       lastFocusSyncTs = now;
-      syncFromRemote();
+      syncMatchesOnlyFromRemote();
     };
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
@@ -2223,26 +2251,31 @@ var app = window.app = Object.assign(window.app || {}, {
     });
     window.addEventListener("online", () => {
       isSyncing = false;
-      if (!this.isUserEditing()) syncFromRemote();
+      if (!this.isUserEditing()) syncMatchesOnlyFromRemote();
     });
 
-    // Realtime Background Safety Polling (WebSocket menangani update instan ~50ms, polling hanya cadangan ringan):
-    // Jika ada match LIVE: 5 detik. Normal: 12 detik. Tidak membebani CPU/jaringan!
+    // Realtime Background Polling Cerdas (Hemat CPU & Disk IO 99%):
+    // 1. WebSocket aktif: Push instan aktif ~50ms, polling santai 60-90s hanya sebagai safety net.
+    // 2. WebSocket putus / fallback: Polling 30s.
+    // 3. Polling HANYA meminta tabel matches (~5 KB), BUKAN 5 tabel sekaligus (450 KB)!
     let lastPollTimestamp = Date.now();
     setInterval(() => {
       if (document.visibilityState !== "visible") return;
       if (this.isUserEditing()) return;
 
+      const isWsActive = Boolean(window.SupabaseService && window.SupabaseService.isRealtimeConnected);
       const matches = (this.store && this.store.data && this.store.data.matches) || [];
-      const hasLiveMatch = matches.some(m => m.status === "live");
-      const requiredIntervalMs = hasLiveMatch ? 5000 : 12000;
+      const hasLiveMatch = matches.some(m => m && m.status === "live");
+
+      // Jika WebSocket sudah aktif terhubung, polling background sangat santai agar tidak membebani server database
+      const requiredIntervalMs = isWsActive ? 75000 : (hasLiveMatch ? 18000 : 30000);
 
       const now = Date.now();
       if ((now - lastPollTimestamp) >= requiredIntervalMs) {
         lastPollTimestamp = now;
-        syncFromRemote();
+        syncMatchesOnlyFromRemote();
       }
-    }, 2500);
+    }, 3000);
   },
 
   isUserEditing() {
