@@ -6756,3 +6756,286 @@ body.mobile-menu-active .mobile-menu-content {
   border-radius: 6px !important;
   box-shadow: 0 0 12px rgba(245, 158, 11, 0.7) !important;
 }
+
+/* ============================================================================
+   18. MOBILE-FIRST SMOOTH SCROLL, 60FPS GPU OPTIMIZATION & FOOTBALL MOTION UX
+   ============================================================================ */
+
+/* Top Scroll Progress Indicator (GPU transform only) */
+#scrollProgressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  z-index: 2500;
+  background: linear-gradient(90deg, #10b981 0%, #fbbf24 55%, #f59e0b 100%);
+  transform-origin: left center;
+  transform: scaleX(0);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Smart Auto-Hide Header when scrolling down deeply on long lists */
+.header.header-hidden {
+  transform: translate3d(-50%, -140%, 0) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.mobile-menu-active .header,
+body.modal-open .header {
+  transform: translate3d(-50%, 0, 0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Snappy Football-App Tab Crossfade (GPU-only, 190ms) */
+@keyframes accTabFadeSlide {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.tab-pane.active {
+  animation: accTabFadeSlide 190ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Zero-CLS guard for hero section and initial viewport cards */
+#homeHeroFullscreen,
+#homeHeroFullscreen.scroll-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
+  transition: none !important;
+}
+
+/* GPU-Composited Scroll Reveal for Below-the-Fold Cards */
+.tab-pane.active .scroll-reveal:not(.is-revealed) {
+  opacity: 0 !important;
+  transform: translate3d(0, 14px, 0) !important;
+  will-change: opacity, transform;
+  transition:
+    opacity 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.tab-pane.active .scroll-reveal.is-revealed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  will-change: auto;
+  transition:
+    opacity 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Tactile Native-App Tap Feedback & Zero 300ms Touch Delay */
+.match-card,
+.school-card,
+.player-interactive-card,
+.player-search-card,
+.bracket-match-card,
+.moment-card,
+.sponsor-card-primary,
+.sponsor-card-secondary,
+.cat-select-btn,
+.tab-btn,
+.mobile-nav-link,
+.btn,
+.juknis-filter-chip {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.match-card:active,
+.school-card:active,
+.player-interactive-card:active,
+.player-search-card:active,
+.bracket-match-card:active,
+.moment-card:active,
+.sponsor-card-primary:active,
+.sponsor-card-secondary:active,
+.cat-select-btn:active,
+.tab-btn:active,
+.mobile-nav-link:active,
+.btn:active {
+  transform: scale(0.976) !important;
+  transition: transform 90ms ease-out !important;
+}
+
+/* Disable sticky hover lifts on touch devices */
+@media (hover: none) {
+  .match-card:hover,
+  .school-card:hover,
+  .team-card:hover,
+  .bracket-match-card:hover,
+  .draw-group-card:hover,
+  .player-interactive-card:hover,
+  .player-search-card:hover,
+  .moment-card:hover {
+    transform: none !important;
+  }
+}
+
+/* Horizontal Scroll Snap on Filter Bars & Sponsor Carousels */
+.juknis-quick-filter-bar,
+.stats-tabs {
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.juknis-filter-chip,
+.stats-tab-btn {
+  scroll-snap-align: start;
+}
+
+/* Lightweight GPU-Only Live Pulse Ring (avoids expensive box-shadow animation) */
+.pulse-dot,
+.floating-pulse-dot,
+.admin-live-pulse-dot {
+  position: relative;
+  animation: none !important;
+}
+
+.pulse-dot::after,
+.floating-pulse-dot::after,
+.admin-live-pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+  animation: accLiveRingPulse 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  pointer-events: none;
+}
+
+.pulse-dot::after {
+  background: #ef4444;
+}
+
+.floating-pulse-dot::after,
+.admin-live-pulse-dot::after {
+  background: #10b981;
+}
+
+@keyframes accLiveRingPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.65;
+  }
+  75%, 100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Broadcast Real-Time Goal Score Flash (FotMob / TV Broadcast Feel) */
+@keyframes accGoalCardFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.75), var(--shadow-card) !important;
+    border-color: rgba(16, 185, 129, 0.95) !important;
+  }
+  40% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0), 0 0 28px rgba(251, 191, 36, 0.45) !important;
+    border-color: rgba(251, 191, 36, 0.95) !important;
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0), var(--shadow-card) !important;
+  }
+}
+
+@keyframes accScoreDigitPop {
+  0% {
+    transform: scale(1);
+    color: #ffffff;
+  }
+  35% {
+    transform: scale(1.26);
+    color: #34d399;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.match-card.score-goal-flash {
+  animation: accGoalCardFlash 1.5s cubic-bezier(0.22, 1, 0.36, 1) 2 !important;
+}
+
+.match-card.score-goal-flash .fixture-score-number,
+.md-score-center.score-goal-flash .md-score-digits {
+  animation: accScoreDigitPop 650ms cubic-bezier(0.22, 1, 0.36, 1) 2 !important;
+}
+
+/* Mobile 60fps Performance Offload: Skip costly multi-card backdrop blur while scrolling */
+@media (max-width: 980px) {
+  html.snap-scroll-active .home-slide-section,
+  body.snap-scroll-active .home-slide-section {
+    scroll-snap-stop: normal !important;
+  }
+
+  .match-card,
+  .standings-card,
+  .group-card,
+  .team-card,
+  .school-card,
+  .bracket-match-card,
+  .table-card,
+  .leaderboard-card,
+  .juknis-card,
+  .juknis-chapter-card,
+  .mvp-spotlight-card,
+  .news-card,
+  .moment-card,
+  .sponsor-card-primary,
+  .sponsor-card-secondary,
+  .player-interactive-card,
+  .draw-stage-card,
+  .draw-group-card,
+  .draw-pool-card,
+  .draw-controls-card,
+  .scorer-card,
+  .discipline-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(15, 23, 42, 0.92) !important;
+  }
+
+  .sponsors-grid-primary,
+  .sponsors-grid-secondary {
+    scroll-snap-type: x proximity !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .sponsor-card-primary,
+  .sponsor-card-secondary {
+    scroll-snap-align: center !important;
+  }
+}
+
+/* Respect System Accessibility & Battery-Saver Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body,
+  .mvp-carousel-track {
+    scroll-behavior: auto !important;
+  }
+  .tab-pane.active,
+  .tab-pane.active .scroll-reveal,
+  .match-card.score-goal-flash,
+  .pulse-dot::after,
+  .floating-pulse-dot::after,
+  .admin-live-pulse-dot::after,
+  .hero-scroll-hint {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

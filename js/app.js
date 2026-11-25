@@ -2580,8 +2580,17 @@ var app = window.app = Object.assign(window.app || {}, {
           norm.awayScoreLive = norm.awayScore;
         }
 
+        if (this._initialGoalBaselineDone && curMatch && norm.status === "live") {
+          const prevH = parseInt(curMatch.homeScore, 10) || 0;
+          const prevA = parseInt(curMatch.awayScore, 10) || 0;
+          if ((parseInt(norm.homeScore, 10) || 0) > prevH || (parseInt(norm.awayScore, 10) || 0) > prevA) {
+            this.triggerGoalFlash(norm.id);
+          }
+        }
+
         return norm;
       }).filter(Boolean);
+      this._initialGoalBaselineDone = true;
 
       // Pertahankan pertandingan lokal HANYA jika dibuat secara manual oleh panitia terautentikasi dan ID-nya valid
       const remoteIds = new Set(cleanRemote.map(m => m && m.id).filter(Boolean));
@@ -2842,6 +2851,14 @@ var app = window.app = Object.assign(window.app || {}, {
           mapped.homeScoreLive = null;
           mapped.awayScoreLive = null;
           mapped.liveMinute = "";
+        }
+
+        if ((mapped.status || curMatch.status) === 'live') {
+          const prevH = parseInt(curMatch.homeScore, 10) || 0;
+          const prevA = parseInt(curMatch.awayScore, 10) || 0;
+          if ((parseInt(mapped.homeScore, 10) || 0) > prevH || (parseInt(mapped.awayScore, 10) || 0) > prevA) {
+            this.triggerGoalFlash(payload.id);
+          }
         }
 
         Object.assign(this.store.data.matches[idx], mapped);
@@ -3348,12 +3365,41 @@ var app = window.app = Object.assign(window.app || {}, {
     this.navigateTo("/jadwal", "matches");
   },
 
+  triggerGoalFlash(matchId) {
+    if (!matchId) return;
+    if (!this._recentGoalFlashMap) this._recentGoalFlashMap = new Map();
+    this._recentGoalFlashMap.set(matchId, Date.now() + 2800);
+    setTimeout(() => {
+      const card = document.getElementById(`match-card-${matchId}`);
+      if (card) card.classList.remove("score-goal-flash");
+      document.querySelectorAll(".md-score-center.score-goal-flash").forEach(el => {
+        el.classList.remove("score-goal-flash");
+      });
+    }, 3000);
+  },
+
+  isMatchGoalFlashing(matchId) {
+    if (!matchId || !this._recentGoalFlashMap) return false;
+    const exp = this._recentGoalFlashMap.get(matchId);
+    if (!exp) return false;
+    if (Date.now() > exp) {
+      this._recentGoalFlashMap.delete(matchId);
+      return false;
+    }
+    return true;
+  },
+
   initScrollReveal() {
-    // Konten tab yang sedang aktif langsung revealed 100% instan (< 1ms) tanpa animasi delay
+    // Reveal elemen yang sudah berada di dalam viewport segera, biarkan sisanya muncul mulus saat di-scroll
+    const revealTargets = ".scroll-reveal, .match-card, .group-card, .school-card, .team-card, .sponsor-card-primary, .sponsor-card-secondary, .moment-card, .bracket-match-card, .juknis-chapter-card";
+    const vh = (window.innerHeight || 800) + 80;
     const activePane = document.querySelector(".tab-pane.active");
     if (activePane) {
-      activePane.querySelectorAll(".scroll-reveal, .match-card, .group-card, .team-card, .sponsor-card-primary, .sponsor-card-secondary, .moment-card").forEach(el => {
-        el.classList.add("is-revealed");
+      activePane.querySelectorAll(revealTargets).forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < vh) {
+          el.classList.add("is-revealed");
+        }
       });
     }
 
@@ -3378,12 +3424,12 @@ var app = window.app = Object.assign(window.app || {}, {
         }
       });
     }, {
-      threshold: 0.05,
-      rootMargin: "60px 0px 60px 0px"
+      threshold: 0.04,
+      rootMargin: "48px 0px 48px 0px"
     });
 
-    // Observe all scroll-reveal containers and cards for dynamic staggered entrance
-    document.querySelectorAll(".home-slide-section, .scroll-reveal:not(.is-revealed), .match-card:not(.is-revealed), .sponsor-card-primary:not(.is-revealed), .sponsor-card-secondary:not(.is-revealed), .moment-card:not(.is-revealed), .group-card:not(.is-revealed), .team-card:not(.is-revealed)").forEach(el => {
+    // Observe all scroll-reveal containers and below-the-fold cards
+    document.querySelectorAll(".home-slide-section, .scroll-reveal:not(.is-revealed), .match-card:not(.is-revealed), .school-card:not(.is-revealed), .sponsor-card-primary:not(.is-revealed), .sponsor-card-secondary:not(.is-revealed), .moment-card:not(.is-revealed), .group-card:not(.is-revealed), .team-card:not(.is-revealed), .bracket-match-card:not(.is-revealed), .juknis-chapter-card:not(.is-revealed)").forEach(el => {
       if (!el.classList.contains("scroll-reveal")) {
         el.classList.add("scroll-reveal");
       }
@@ -4461,6 +4507,10 @@ var app = window.app = Object.assign(window.app || {}, {
       this.renderCurrentView();
       this.updateFloatingCategoryVisibility();
 
+      // Pastikan header kembali tampil penuh saat pindah tab
+      const headerEl = document.querySelector(".header");
+      if (headerEl) headerEl.classList.remove("header-hidden");
+
       // Instant scroll to top without forcing synchronous layout reflow
       window.scrollTo(0, 0);
     } catch (err) {
@@ -5414,7 +5464,7 @@ var app = window.app = Object.assign(window.app || {}, {
         `<span class="match-category-tag cat-smp">SMP</span>`;
 
       return `
-        <div id="match-card-${m.id}" data-match-id="${m.id}" class="match-card uefa-fixture-card ${statusClass} ${swipeClass}">
+        <div id="match-card-${m.id}" data-match-id="${m.id}" class="match-card uefa-fixture-card ${statusClass} ${swipeClass} ${this.isMatchGoalFlashing(m.id) ? 'score-goal-flash' : ''}">
           ${statusBarHtml}
           <!-- HEADER META -->
           <div class="fixture-header-meta">
@@ -9084,7 +9134,7 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
 
           <!-- CENTER SCORE -->
-          <div class="md-score-center">
+          <div class="md-score-center ${this.isMatchGoalFlashing(match.id) ? 'score-goal-flash' : ''}">
             <div class="md-score-digits">
               <span>${hScore}</span>
               <span class="md-score-colon">:</span>

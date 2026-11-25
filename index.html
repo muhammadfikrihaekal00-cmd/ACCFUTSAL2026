@@ -11,8 +11,8 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261125_v65">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261125_v65">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261125_v67">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261125_v67">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Preconnect Candidates for Lightning LCP -->
@@ -378,11 +378,13 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261125_v65">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261125_v65">
+  <link rel="stylesheet" href="/css/styles.css?v=20261125_v67">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261125_v67">
 </head>
 
 <body class="snap-scroll-active">
+  <!-- SCROLL PROGRESS INDICATOR (GPU COMPOSITED) -->
+  <div id="scrollProgressBar" aria-hidden="true"></div>
 
   <!-- AMBIENT MESH / STADIUM NIGHT AURA & ORBITAL RINGS (RECURSION-INSPIRED ACC PALETTE) -->
   <div class="ambient-mesh-bg" aria-hidden="true">
@@ -3474,11 +3476,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261125_v66"></script>
-  <script defer src="/js/supabase-client.js?v=20261125_v66"></script>
-  <script defer src="/js/data.js?v=20261125_v66"></script>
-  <script defer src="/js/admin.js?v=20261125_v66"></script>
-  <script defer src="/js/app.js?v=20261125_v66"></script>
+  <script defer src="/js/security.js?v=20261125_v67"></script>
+  <script defer src="/js/supabase-client.js?v=20261125_v67"></script>
+  <script defer src="/js/data.js?v=20261125_v67"></script>
+  <script defer src="/js/admin.js?v=20261125_v67"></script>
+  <script defer src="/js/app.js?v=20261125_v67"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
@@ -3492,32 +3494,73 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       }
     } catch (e) { }
   </script>
-  <!-- Immediate Dynamic Sticky Header Scroll-Driven Animation Init (Throttled with rAF) -->
+  <!-- Immediate Dynamic Sticky Header + Smart Mobile Scroll Progress (Throttled with rAF, Zero Layout Thrash) -->
   <script>
     (function () {
       var h = document.querySelector(".header");
-      if (!h) return;
+      var progressEl = document.getElementById("scrollProgressBar");
+      if (!h && !progressEl) return;
+
       var isScrolled = false;
+      var isHidden = false;
+      var lastY = window.scrollY || window.pageYOffset || 0;
       var ticking = false;
-      function updateHeader() {
-        var scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
-        if (scrolled !== isScrolled) {
-          isScrolled = scrolled;
-          h.classList.toggle("scrolled", isScrolled);
+
+      function updateOnScroll() {
+        var y = Math.max(0, window.scrollY || window.pageYOffset || 0);
+
+        if (h) {
+          var scrolled = y > 20;
+          if (scrolled !== isScrolled) {
+            isScrolled = scrolled;
+            h.classList.toggle("scrolled", isScrolled);
+          }
+
+          var bodyCls = document.body ? document.body.classList : null;
+          var lockedOpen = bodyCls && (bodyCls.contains("mobile-menu-active") || bodyCls.contains("modal-open"));
+          var delta = y - lastY;
+
+          if (lockedOpen || y < 160) {
+            if (isHidden) {
+              isHidden = false;
+              h.classList.remove("header-hidden");
+            }
+          } else if (delta > 14 && y > 220) {
+            if (!isHidden) {
+              isHidden = true;
+              h.classList.add("header-hidden");
+            }
+          } else if (delta < -6) {
+            if (isHidden) {
+              isHidden = false;
+              h.classList.remove("header-hidden");
+            }
+          }
         }
+
+        if (progressEl) {
+          var docEl = document.documentElement;
+          var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
+          var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
+          progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+        }
+
+        lastY = y;
         ticking = false;
       }
+
       function onScroll() {
         if (!ticking) {
-          window.requestAnimationFrame(updateHeader);
+          window.requestAnimationFrame(updateOnScroll);
           ticking = true;
         }
       }
+
       window.addEventListener("scroll", onScroll, { passive: true });
       if (window.requestAnimationFrame) {
-        window.requestAnimationFrame(updateHeader);
+        window.requestAnimationFrame(updateOnScroll);
       } else {
-        setTimeout(updateHeader, 60);
+        setTimeout(updateOnScroll, 60);
       }
     })();
   </script>
