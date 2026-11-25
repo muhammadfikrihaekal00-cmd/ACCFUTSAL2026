@@ -4003,7 +4003,7 @@ body.mobile-menu-active .mobile-menu-content {
 
   #pane-home>section,
   #pane-home>div {
-    margin-bottom: 48px !important;
+    margin-bottom: 0 !important;
   }
 
   #liveStreamHero.home-slide-section,
@@ -4021,11 +4021,12 @@ body.mobile-menu-active .mobile-menu-content {
 
   #accMomentsContainer.home-slide-section,
   .acc-moments-section {
-    min-height: auto !important;
-    justify-content: flex-start !important;
-    padding: 18px 14px !important;
+    min-height: calc(100svh - 68px) !important;
+    min-height: calc(100dvh - 68px) !important;
+    justify-content: center !important;
+    padding: 14px 12px !important;
     border-radius: 20px !important;
-    margin-bottom: 24px !important;
+    margin-bottom: 0 !important;
   }
 
   .sponsors-showcase-bar {
@@ -7343,5 +7344,192 @@ body.modal-open .header {
   .juknis-download-btn {
     width: 100% !important;
     justify-content: center !important;
+  }
+
+  /* ==========================================================================
+     20. MOBILE PPT SLIDE FIT (BERANDA, MOMEN & MVP 1-LAYAR PENUH)
+     ========================================================================== */
+  .home-slide-section {
+    min-height: calc(100svh - 68px) !important;
+    min-height: calc(100dvh - 68px) !important;
+    padding: 12px 12px !important;
+    justify-content: center !important;
+    margin-bottom: 0 !important;
+  }
+
+  #homeHeroFullscreen .hero-identity-stack {
+    gap: 12px !important;
+  }
+
+  #homeStatsShowcase .slide-section-header {
+    margin-bottom: 14px !important;
+  }
+
+  /* Slide Momen: header 1 baris & tinggi kartu pas 1 layar HP */
+  .moments-header-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .moments-kicker {
+    margin-bottom: 2px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .moments-main-title {
+    font-size: 1.15rem !important;
+  }
+
+  .moments-controls-wrap {
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .moments-carousel {
+    padding: 4px 2px 8px 2px !important;
+  }
+
+  .moment-card {
+    flex: 0 0 72vw !important;
+    max-width: 256px !important;
+    width: 72vw !important;
+    height: clamp(270px, 46svh, 340px) !important;
+  }
+
+  /* Slide MVP: ringkas, 4 stat sejajar 1 baris, muat penuh di 1 layar HP */
+  #mvpSpotlightSection.home-slide-section {
+    justify-content: center !important;
+  }
+
+  .mvp-slide-header {
+    margin-bottom: 10px !important;
+  }
+
+  #mvpSpotlightSection .section-title {
+    font-size: 1.15rem !important;
+  }
+
+  .mvp-carousel-slide {
+    padding: 0 4px !important;
+  }
+
+  .mvp-spotlight-card {
+    padding: 14px 12px !important;
+    gap: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .mvp-photo-wrapper {
+    max-width: 148px !important;
+    border-radius: 14px !important;
+  }
+
+  .mvp-photo-img {
+    height: clamp(148px, 24svh, 190px) !important;
+    object-position: center 20% !important;
+  }
+
+  .mvp-badge-overlay {
+    top: 6px !important;
+    left: 6px !important;
+    font-size: 0.62rem !important;
+    padding: 3px 8px !important;
+  }
+
+  .mvp-details-col {
+    gap: 6px !important;
+    align-items: center !important;
+  }
+
+  .mvp-tagline {
+    font-size: 0.66rem !important;
+    justify-content: center !important;
+  }
+
+  .mvp-player-name {
+    font-size: 1.25rem !important;
+  }
+
+  .mvp-team-row {
+    font-size: 0.78rem !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  .mvp-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin: 4px 0 !important;
+    width: 100% !important;
+  }
+
+  .mvp-stat-box {
+    padding: 7px 4px !important;
+    border-radius: 10px !important;
+  }
+
+  .mvp-stat-val {
+    font-size: 1.08rem !important;
+  }
+
+  .mvp-stat-lbl {
+    font-size: 0.6rem !important;
+    letter-spacing: 0.3px !important;
+  }
+
+  .mvp-quote-box {
+    padding: 7px 10px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.35 !important;
+    width: 100% !important;
+  }
+
+  .mvp-quote-box p {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+  }
+
+  .mvp-actions-row {
+    justify-content: center !important;
+    margin-top: 2px !important;
+  }
+
+  .mvp-carousel-nav {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 20px !important;
+  }
+
+  .mvp-carousel-nav.prev {
+    left: 4px !important;
+  }
+
+  .mvp-carousel-nav.next {
+    right: 4px !important;
+  }
+
+  .mvp-carousel-dots {
+    margin-top: 8px !important;
+  }
+
+  /* Slide Sponsors: header ringkas */
+  .sponsors-official-header {
+    margin-bottom: 14px !important;
+  }
+
+  .sponsors-official-title {
+    font-size: 1.35rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  .sponsors-official-caption {
+    font-size: 0.78rem !important;
+    margin-bottom: 0 !important;
   }
 }

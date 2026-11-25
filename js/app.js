@@ -4775,19 +4775,19 @@ var app = window.app = Object.assign(window.app || {}, {
                   </div>
                   <div class="mvp-stat-box">
                     <div class="mvp-stat-val">${pMotm}</div>
-                    <div class="mvp-stat-lbl">Man of the Match</div>
+                    <div class="mvp-stat-lbl">MOTM</div>
                   </div>
                   <div class="mvp-stat-box">
                     <div class="mvp-stat-val" style="color: var(--accent-gold);">${pRating}</div>
-                    <div class="mvp-stat-lbl">Rating Performa</div>
+                    <div class="mvp-stat-lbl">RATING</div>
                   </div>
                 </div>
 
                 ${pQuote ? `<div class="mvp-quote-box"><p>${pQuote}</p></div>` : ""}
 
-                <div style="display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; align-items: center;">
+                <div class="mvp-actions-row" style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; align-items: center;">
                   <button class="btn btn-outline btn-sm" onclick="app.switchTab('stats')">
-                    ⚽ Lihat Statistik Turnamen Lengkap
+                    Statistik Lengkap →
                   </button>
                   ${isAdmin ? `
                     <button class="btn btn-admin btn-sm" onclick="admin.openEditMvpItemModal('${mvp.id || idx}')" style="font-size: 0.75rem; padding: 4px 10px;">

@@ -11,8 +11,8 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261126_v76">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261126_v76">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261126_v77">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261126_v77">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Preconnect Candidates for Lightning LCP -->
@@ -378,8 +378,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261126_v76">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261126_v76">
+  <link rel="stylesheet" href="/css/styles.css?v=20261126_v77">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261126_v77">
 </head>
 
 <body class="snap-scroll-active">
@@ -515,10 +515,10 @@
           aria-label="Slide 1: Beranda Utama"></button>
         <button type="button" class="slide-nav-dot" data-target="homeStatsShowcase" title="Statistik Turnamen"
           aria-label="Slide 2: Statistik Turnamen"></button>
-        <button type="button" class="slide-nav-dot" data-target="homeBannerSection" title="Panggung Turnamen"
-          aria-label="Slide 3: Panggung Turnamen"></button>
         <button type="button" class="slide-nav-dot" data-target="accMomentsContainer" title="Momen Turnamen"
-          aria-label="Slide 4: Momen Turnamen"></button>
+          aria-label="Slide 3: Momen Turnamen"></button>
+        <button type="button" class="slide-nav-dot" data-target="mvpSpotlightSection" title="MVP Turnamen"
+          aria-label="Slide 4: MVP Turnamen"></button>
         <button type="button" class="slide-nav-dot" data-target="sponsorsShowcaseBar" title="Official Sponsors"
           aria-label="Slide 5: Official Sponsors"></button>
       </nav>
@@ -580,12 +580,11 @@
           <div class="moments-title-wrap">
             <div class="moments-kicker">
               <span class="moments-kicker-dot"></span>
-              <span>ACC 2026 HIGHLIGHTS</span>
+              <span>HIGHLIGHTS</span>
             </div>
             <h2 class="moments-main-title">
-              <span>⚡ Momen &amp; Sorotan Laga</span>
+              <span>⚡ Momen Laga</span>
             </h2>
-            <p class="moments-sub-title">Dokumentasi aksi spektakuler, gol terbaik, dan atmosfer emosional turnamen</p>
           </div>
           <div class="moments-controls-wrap">
             <div class="moments-admin-btn-group">
@@ -620,15 +619,16 @@
 
       <!-- SLIDE 6: SPOTLIGHT PEMAIN TERBAIK / MVP OF THE MATCHDAY (Carousel Geser Multi-MVP) -->
       <div id="mvpSpotlightSection" class="home-slide-section scroll-reveal" style="display: none;">
-        <div class="section-header"
-          style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div class="section-header mvp-slide-header"
+          style="margin-top: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div>
-            <h2 class="section-title">
-              <span>⭐</span> Bintang Lapangan (MVP Turnamen)
+            <div class="slide-kicker-pill" style="margin-bottom: 6px;">
+              <span class="slide-kicker-dot"></span>
+              <span>MVP SPOTLIGHT</span>
+            </div>
+            <h2 class="section-title" style="margin: 0;">
+              <span>⭐</span> Bintang Turnamen
             </h2>
-            <span style="font-size: 0.78rem; color: var(--accent-gold); font-weight: 700;">
-              Pemain Pilihan &amp; Terbaik Turnamen
-            </span>
           </div>
           <div id="mvpAdminActions" style="display: none;">
             <button type="button" class="btn btn-outline btn-sm" onclick="admin.openManageMvpModal()"
@@ -685,9 +685,7 @@
         <div class="sponsors-official-header">
           <h2 class="sponsors-official-title">Official <span class="gradient-text-gold">Sponsor</span></h2>
           <p class="sponsors-official-caption">
-            Turnamen ini terselenggara atas izin Allah SWT dan dukungan penuh para mitra strategis yang memiliki visi
-            bersama dalam membina generasi muda Qur'ani yang berkarakter, berakhlak mulia, sehat jasmani, serta
-            menjunjung tinggi nilai-nilai sportivitas dan ukhuwah Islamiyah.
+            Didukung penuh oleh mitra strategis ACC 2026.
           </p>
           <div class="sponsors-admin-toolbar" id="sponsorsAdminToolbar">
             <button id="btnManageSponsors" class="btn btn-primary btn-sm btn-manage-sponsors"
@@ -3480,7 +3478,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script defer src="/js/supabase-client.js?v=20261126_v75"></script>
   <script defer src="/js/data.js?v=20261125_v70"></script>
   <script defer src="/js/admin.js?v=20261125_v70"></script>
-  <script defer src="/js/app.js?v=20261126_v76"></script>
+  <script defer src="/js/app.js?v=20261126_v77"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
