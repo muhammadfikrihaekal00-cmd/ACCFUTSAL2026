@@ -3492,76 +3492,76 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
           }
         }).catch(function () { });
       }
-      </script>
+  </script>
   <!-- Immediate Dynamic Sticky Header + Smart Mobile Scroll Progress (Throttled with rAF, Zero Layout Thrash) -->
   <script>
-    (function () {
-      var h = document.querySelector(".header");
-      var progressEl = document.getElementById("scrollProgressBar");
-      if (!h && !progressEl) return;
+      (function () {
+        var h = document.querySelector(".header");
+        var progressEl = document.getElementById("scrollProgressBar");
+        if (!h && !progressEl) return;
 
-      var isScrolled = false;
-      var isHidden = false;
-      var lastY = window.scrollY || window.pageYOffset || 0;
-      var ticking = false;
+        var isScrolled = false;
+        var isHidden = false;
+        var lastY = window.scrollY || window.pageYOffset || 0;
+        var ticking = false;
 
-      function updateOnScroll() {
-        var y = Math.max(0, window.scrollY || window.pageYOffset || 0);
+        function updateOnScroll() {
+          var y = Math.max(0, window.scrollY || window.pageYOffset || 0);
 
-        if (h) {
-          var scrolled = y > 20;
-          if (scrolled !== isScrolled) {
-            isScrolled = scrolled;
-            h.classList.toggle("scrolled", isScrolled);
+          if (h) {
+            var scrolled = y > 20;
+            if (scrolled !== isScrolled) {
+              isScrolled = scrolled;
+              h.classList.toggle("scrolled", isScrolled);
+            }
+
+            var bodyCls = document.body ? document.body.classList : null;
+            var lockedOpen = bodyCls && (bodyCls.contains("mobile-menu-active") || bodyCls.contas("pen"));
+            del - lastY;
+
+            if (lockedOpen || y < 160) {
+              if (isHidden) {
+                isHidden = false;
+                h.classList.remove("header-hidden");
+              }
+            } else if (delta > 14 && y > 220) {
+              if (!isHidden) {
+                isHidden = true;
+                h.classList.add("header-hidden");
+              }
+            } else if (delta < -6) {
+              if (isHidden) {
+                isHidden = false;
+                h.classList.remove("header-hidden");
+              }
+            }
           }
 
-          var bodyCls = document.body ? document.body.classList : null;
-          var lockedOpen = bodyCls && (bodyCls.contains("mobile-menu-active") || bodyCls.contas("pen"));
-   del- lastY;
+          if (progressEl) {
+            var docEl = document.documentElement;
+            var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
+            var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
+            progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+          }
 
-          if (lockedOpen || y < 160) {
-            if (isHidden) {
-              isHidden = false;
-              h.classList.remove("header-hidden");
-            }
-          } else if (delta > 14 && y > 220) {
-            if (!isHidden) {
-              isHidden = true;
-              h.classList.add("header-hidden");
-            }
-          } else if (delta < -6) {
-            if (isHidden) {
-              isHidden = false;
-              h.classList.remove("header-hidden");
-            }
+          lastY = y;
+          ticking = false;
+        }
+
+        function onScroll() {
+          if (!ticking) {
+            window.requestAnimationFrame(updateOnScroll);
+            ticking = true;
           }
         }
 
-        if (progressEl) {
-          var docEl = document.documentElement;
-          var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
-          var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
-          progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
-        }
-
-        lastY = y;
-        ticking = false;
-      }
-
-      function onScroll() {
-        if (!ticking) {
+        window.addEventListener("scroll", onScroll, { passive: true });
+        if (window.requestAnimationFrame) {
           window.requestAnimationFrame(updateOnScroll);
-          ticking = true;
+        } else {
+          setTimeout(updateOnScroll, 60);
         }
-      }
-
-      window.addEventListener("scroll", onScroll, { passive: true });
-      if (window.requestAnimationFrame) {
-        window.requestAnimationFrame(updateOnScroll);
-      } else {
-        setTimeout(updateOnScroll, 60);
-      }
-    })();
+      })();
   </script>
 </body>
 
