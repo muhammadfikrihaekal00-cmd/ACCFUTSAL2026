@@ -11,8 +11,8 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261125_v69">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261125_v69">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261125_v71">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261125_v71">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Preconnect Candidates for Lightning LCP -->
@@ -378,8 +378,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261125_v69">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261125_v69">
+  <link rel="stylesheet" href="/css/styles.css?v=20261125_v71">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261125_v71">
 </head>
 
 <body class="snap-scroll-active">
@@ -3496,73 +3496,73 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   </script>
   <!-- Immediate Dynamic Sticky Header + Smart Mobile Scroll Progress (Throttled with rAF, Zero Layout Thrash) -->
   <script>
-      (function () {
-        var h = document.querySelector(".header");
-        var progressEl = document.getElementById("scrollProgressBar");
-        if (!h && !progressEl) return;
+    (function () {
+      var h = document.querySelector(".header");
+      var progressEl = document.getElementById("scrollProgressBar");
+      if (!h && !progressEl) return;
 
-        var isScrolled = false;
-        var isHidden = false;
-        var lastY = window.scrollY || window.pageYOffset || 0;
-        var ticking = false;
+      var isScrolled = false;
+      var isHidden = false;
+      var lastY = window.scrollY || window.pageYOffset || 0;
+      var ticking = false;
 
-        function updateOnScroll() {
-          var y = Math.max(0, window.scrollY || window.pageYOffset || 0);
+      function updateOnScroll() {
+        var y = Math.max(0, window.scrollY || window.pageYOffset || 0);
 
-          if (h) {
-            var scrolled = y > 20;
-            if (scrolled !== isScrolled) {
-              isScrolled = scrolled;
-              h.classList.toggle("scrolled", isScrolled);
-            }
-
-            var bodyCls = document.body ? document.body.classList : null;
-            var lockedOpen = bodyCls && (bodyCls.contains("mobile-menu-active") || bodyCls.contains("modal-open"));
-            var delta = y - lastY;
-
-            if (lockedOpen || y < 160) {
-              if (isHidden) {
-                isHidden = false;
-                h.classList.remove("header-hidden");
-              }
-            } else if (delta > 14 && y > 220) {
-              if (!isHidden) {
-                isHidden = true;
-                h.classList.add("header-hidden");
-              }
-            } else if (delta < -6) {
-              if (isHidden) {
-                isHidden = false;
-                h.classList.remove("header-hidden");
-              }
-            }
+        if (h) {
+          var scrolled = isScrolled ? (y > 14) : (y > 40);
+          if (scrolled !== isScrolled) {
+            isScrolled = scrolled;
+            h.classList.toggle("scrolled", isScrolled);
           }
 
-          if (progressEl) {
-            var docEl = document.documentElement;
-            var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
-            var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
-            progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
-          }
+          var bodyCls = document.body ? document.body.classList : null;
+          var lockedOpen = bodyCls && (bodyCls.contains("mobile-menu-active") || bodyCls.contains("modal-open"));
+          var delta = y - lastY;
 
-          lastY = y;
-          ticking = false;
-        }
-
-        function onScroll() {
-          if (!ticking) {
-            window.requestAnimationFrame(updateOnScroll);
-            ticking = true;
+          if (lockedOpen || y < 160) {
+            if (isHidden) {
+              isHidden = false;
+              h.classList.remove("header-hidden");
+            }
+          } else if (delta > 14 && y > 220) {
+            if (!isHidden) {
+              isHidden = true;
+              h.classList.add("header-hidden");
+            }
+          } else if (delta < -6) {
+            if (isHidden) {
+              isHidden = false;
+              h.classList.remove("header-hidden");
+            }
           }
         }
 
-        window.addEventListener("scroll", onScroll, { passive: true });
-        if (window.requestAnimationFrame) {
+        if (progressEl) {
+          var docEl = document.documentElement;
+          var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
+          var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
+          progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+        }
+
+        lastY = y;
+        ticking = false;
+      }
+
+      function onScroll() {
+        if (!ticking) {
           window.requestAnimationFrame(updateOnScroll);
-        } else {
-          setTimeout(updateOnScroll, 60);
+          ticking = true;
         }
-      })();
+      }
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(updateOnScroll);
+      } else {
+        setTimeout(updateOnScroll, 60);
+      }
+    })();
   </script>
 </body>
 

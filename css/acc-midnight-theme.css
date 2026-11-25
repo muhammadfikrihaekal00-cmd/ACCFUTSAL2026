@@ -219,7 +219,7 @@ main.container {
   position: fixed !important;
   top: 14px !important;
   left: 50% !important;
-  transform: translateX(-50%) !important;
+  transform: translate3d(-50%, 0, 0) !important;
   width: calc(100% - 28px) !important;
   max-width: 1200px !important;
   z-index: 1200 !important;
@@ -234,7 +234,15 @@ main.container {
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   padding: 8px 18px !important;
   margin: 0 !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  will-change: transform, opacity;
+  transition:
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 340ms ease,
+    border-color 340ms ease,
+    box-shadow 340ms ease !important;
   box-sizing: border-box !important;
 }
 
@@ -252,13 +260,14 @@ main.container {
   align-items: center !important;
   justify-content: space-between !important;
   gap: 16px !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transition: min-height 340ms cubic-bezier(0.22, 1, 0.36, 1), gap 340ms cubic-bezier(0.22, 1, 0.36, 1) !important;
   box-sizing: border-box !important;
 }
 
-/* Scrolled State: Stays floating, compact shrink & elevated stadium glow */
+/* Scrolled State: Silky-smooth floating compact shrink & elevated stadium glow */
 .header.scrolled {
-  top: 8px !important;
+  top: 14px !important;
+  transform: translate3d(-50%, -6px, 0) !important;
   padding: 5px 14px !important;
   border-radius: 14px !important;
   background: rgba(6, 10, 23, 0.92) !important;
@@ -272,7 +281,7 @@ main.container {
 }
 
 .header.scrolled .header-inner {
-  min-height: 42px !important;
+  min-height: 40px !important;
   padding: 0 !important;
 }
 
@@ -283,7 +292,12 @@ main.container {
   flex-shrink: 1 !important;
   min-width: 0 !important;
   overflow: hidden !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transform-origin: left center !important;
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1), opacity 260ms ease !important;
+}
+
+.header.scrolled .brand-group {
+  transform: scale(0.88) !important;
 }
 
 .brand-logo {
@@ -297,12 +311,12 @@ main.container {
   box-shadow: none !important;
   flex-shrink: 0 !important;
   filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.5)) !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1), filter 340ms ease !important;
 }
 
 .header.scrolled .brand-logo {
-  width: 32px !important;
-  height: 42px !important;
+  width: 42px !important;
+  height: 56px !important;
   filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4)) !important;
 }
 
@@ -313,7 +327,7 @@ main.container {
 .brand-text {
   min-width: 0 !important;
   overflow: hidden !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transition: opacity 280ms ease, transform 340ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 .brand-text h1 {
@@ -328,11 +342,6 @@ main.container {
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0 !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
-}
-
-.header.scrolled .brand-text h1 {
-  font-size: 0.92rem !important;
 }
 
 .brand-text p {
@@ -343,12 +352,11 @@ main.container {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 140px;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transition: opacity 280ms ease !important;
 }
 
 .header.scrolled .brand-text p {
-  font-size: 0.62rem !important;
-  opacity: 0.85 !important;
+  opacity: 0.82 !important;
 }
 
 .header-nav-center .tab-btn {
@@ -361,27 +369,32 @@ main.container {
   font-weight: 600 !important;
   white-space: nowrap !important;
   cursor: pointer !important;
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transition:
+    padding 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    transform 120ms ease !important;
   box-shadow: none !important;
 }
 
 .header.scrolled .header-nav-center .tab-btn {
-  padding: 5px 11px !important;
-  font-size: 0.74rem !important;
+  padding: 6px 12px !important;
 }
 
 .header.scrolled .header-nav-center .nav-tabs {
   padding: 3px !important;
   gap: 2px !important;
+  transition: padding 320ms cubic-bezier(0.22, 1, 0.36, 1), gap 320ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 .mobile-hamburger-btn {
-  transition: opacity 200ms ease, transform 200ms ease !important;
+  transform-origin: center !important;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 220ms ease, border-color 220ms ease !important;
 }
 
 .header.scrolled .mobile-hamburger-btn {
-  width: 36px !important;
-  height: 36px !important;
+  transform: scale(0.9) !important;
   border-radius: 11px !important;
 }
 
@@ -3716,7 +3729,7 @@ tr.zone-qualify {
   .header {
     top: 10px !important;
     left: 50% !important;
-    transform: translateX(-50%) !important;
+    transform: translate3d(-50%, 0, 0) !important;
     width: calc(100% - 24px) !important;
     max-width: 480px !important;
     padding: 6px 14px !important;
@@ -3724,7 +3737,8 @@ tr.zone-qualify {
   }
 
   .header.scrolled {
-    top: 6px !important;
+    top: 10px !important;
+    transform: translate3d(-50%, -4px, 0) !important;
     padding: 4px 10px !important;
     border-radius: 12px !important;
     max-width: 480px !important;
@@ -3741,7 +3755,7 @@ tr.zone-qualify {
   }
 
   .header.scrolled .header-inner {
-    min-height: 38px !important;
+    min-height: 36px !important;
   }
 
   .brand-logo {
@@ -3750,8 +3764,8 @@ tr.zone-qualify {
   }
 
   .header.scrolled .brand-logo {
-    width: 26px !important;
-    height: 34px !important;
+    width: 34px !important;
+    height: 46px !important;
   }
 
   .mobile-hamburger-btn {
@@ -3760,16 +3774,9 @@ tr.zone-qualify {
   }
 
   .header.scrolled .mobile-hamburger-btn {
-    width: 34px !important;
-    height: 34px !important;
-  }
-
-  .header.scrolled .brand-text h1 {
-    font-size: 0.88rem !important;
-  }
-
-  .header.scrolled .brand-text p {
-    font-size: 0.58rem !important;
+    width: 40px !important;
+    height: 40px !important;
+    transform: scale(0.88) !important;
   }
 
   .mobile-nav {
@@ -7099,7 +7106,7 @@ body.modal-open .header {
     }
   }
 
-  /* Proporsi logo header agar tidak gepeng atau terpotong */
+  /* Proporsi logo header agar tidak gepeng atau terpotong (scale halus dihandle .brand-group) */
   .brand-logo {
     width: 32px !important;
     height: 42px !important;
@@ -7110,8 +7117,8 @@ body.modal-open .header {
   }
 
   .header.scrolled .brand-logo {
-    width: 26px !important;
-    height: 34px !important;
+    width: 32px !important;
+    height: 42px !important;
   }
 
   .brand-text {
