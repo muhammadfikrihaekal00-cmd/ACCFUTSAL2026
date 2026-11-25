@@ -5831,7 +5831,7 @@ var app = window.app = Object.assign(window.app || {}, {
           : `<span class="bracket-status-chip ft">FT • Selesai</span>`;
       } else {
         const timeDisplay = m.time ? m.time.replace(' WIB', '') : 'Waktu TBD';
-        statusBadge = `<span class="bracket-status-chip upcoming">📅 ${m.date ? m.date.replace(' Nov 2026', '') : ''} • ${timeDisplay}</span>`;
+        statusBadge = `<span class="bracket-status-chip upcoming">⏰ ${timeDisplay}</span>`;
       }
 
       const isFinal = cardType === "final";
@@ -5882,11 +5882,6 @@ var app = window.app = Object.assign(window.app || {}, {
               </div>
               <div class="bracket-score-val">${awayScore}</div>
             </div>
-          </div>
-
-          <div class="bracket-card-footer">
-            <span>📅 ${m.date || 'Jadwal TBD'}${m.time ? ' • ' + m.time : ''}</span>
-            <span style="color: var(--primary); font-weight: 700;">${isFinished ? 'Skor Akhir' : 'Detail Laga ➔'}</span>
           </div>
         </div>
       `;
