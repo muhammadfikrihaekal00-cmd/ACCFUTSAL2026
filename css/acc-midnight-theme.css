@@ -7490,6 +7490,7 @@ body.modal-open .header {
   .mvp-quote-box p {
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
     margin: 0 !important;
