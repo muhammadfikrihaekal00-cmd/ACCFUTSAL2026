@@ -3706,9 +3706,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const instansi = (document.getElementById("editTeamInstansi")?.value || "").trim();
     const badgeColor = (document.getElementById("editTeamColor")?.value || "").trim() || "#10b981";
 
-    const coach = (document.getElementById("editTeamCoach")?.value || "").trim();
-    const manager = (document.getElementById("editTeamManager")?.value || "").trim();
-    const medic = (document.getElementById("editTeamMedic")?.value || "").trim();
+    const fmtName = (v) => (typeof window.formatPersonName === "function" ? window.formatPersonName(v) : (v || "").trim());
+    const coach = fmtName(document.getElementById("editTeamCoach")?.value || "");
+    const manager = fmtName(document.getElementById("editTeamManager")?.value || "");
+    const medic = fmtName(document.getElementById("editTeamMedic")?.value || "");
     const phone = "";
     const jerseyHome = (document.getElementById("editTeamJerseyHome")?.value || "").trim();
     const jerseyAway = (document.getElementById("editTeamJerseyAway")?.value || "").trim();
@@ -3733,7 +3734,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       const players = [];
       for (const r of rows) {
         const pNameInput = r.querySelector(".player-name-input");
-        const pName = pNameInput ? pNameInput.value.trim() : "";
+        const pName = pNameInput ? fmtName(pNameInput.value) : "";
         const pNoInput = r.querySelector(".player-no-input");
         const pNo = pNoInput ? parseInt(pNoInput.value, 10) : NaN;
         const pPosSelect = r.querySelector(".player-pos-select");

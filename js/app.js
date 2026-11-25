@@ -5,6 +5,63 @@ function _safeStorageGet(storage, key) {
 function _safeStorageSet(storage, key, value) {
   try { storage.setItem(key, value); } catch (_) { }
 }
+
+// Helper format nama orang (pemain, pelatih, manager, medis): Kapital di awal kata, huruf kecil setelahnya
+// Tetap menjaga singkatan gelar akademik (S.Pd, M.Pd, S.Sos, S.Ag, S.Or, S.H, S.Tr.Pi, dll), inisial bertitik, dan tanda hubung
+const _NAME_DEGREE_MAP = {
+  's.pd': 'S.Pd', 's.pd.': 'S.Pd.', 's.pd.i': 'S.Pd.I', 's.pd.i.': 'S.Pd.I.',
+  'm.pd': 'M.Pd', 'm.pd.': 'M.Pd.', 's.sos': 'S.Sos', 's.sos.': 'S.Sos.',
+  's.ag': 'S.Ag', 's.ag.': 'S.Ag.', 's.or': 'S.Or', 's.or.': 'S.Or.',
+  's.h': 'S.H', 's.h.': 'S.H.', 's.tr.pi': 'S.Tr.Pi', 's.tr.pi.': 'S.Tr.Pi.',
+  's.kom': 'S.Kom', 's.e': 'S.E', 's.si': 'S.Si', 'amd': 'A.Md', 'a.md': 'A.Md',
+  'gr': 'Gr', 'gr.': 'Gr.', 'mts': 'MTs'
+};
+const _NAME_KEEP_UPPER = new Set(['SMPN', 'SDN', 'FC', 'SIPA', 'SDIT', 'SMPIT', 'SMA', 'SMK', '(C)']);
+
+function _capNameSegment(seg) {
+  if (!seg) return '';
+  return seg.split('-').map(part => {
+    if (!part) return '';
+    return part.toLowerCase().replace(/^([^a-zA-Z]*)([a-zA-Z])/, (_, pre, ch) => pre + ch.toUpperCase());
+  }).join('-');
+}
+
+function formatPersonName(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  let s = raw.trim().replace(/\s+/g, ' ');
+  if (!s || s === '-') return s;
+  s = s.replace(/,\s*s\s*,\s*pd\s*,?/gi, ', S.Pd.');
+  s = s.replace(/,\s*/g, ', ').replace(/,\s*$/, '');
+  return s.split(' ').map(token => {
+    const trailingComma = token.endsWith(',') ? ',' : '';
+    const clean = trailingComma ? token.slice(0, -1) : token;
+    if (!clean) return token;
+    const upper = clean.toUpperCase();
+    if (_NAME_KEEP_UPPER.has(upper)) return upper + trailingComma;
+    const lower = clean.toLowerCase();
+    if (_NAME_DEGREE_MAP[lower]) return _NAME_DEGREE_MAP[lower] + trailingComma;
+    if (clean.includes('.')) {
+      const parts = clean.split('.');
+      let out = '';
+      for (let i = 0; i < parts.length; i++) {
+        const p = parts[i];
+        if (i > 0) {
+          const prev = parts[i - 1];
+          out += (prev && prev.length === 1 && p && p.length > 1) ? '. ' : '.';
+        }
+        if (!p) continue;
+        if (p.length === 1 && i < parts.length - 1) {
+          out += p.toUpperCase();
+        } else {
+          out += _capNameSegment(p);
+        }
+      }
+      return out + trailingComma;
+    }
+    return _capNameSegment(clean) + trailingComma;
+  }).join(' ');
+}
+if (typeof window !== 'undefined') window.formatPersonName = formatPersonName;
 window.admin = window.admin || {
   isAuthenticated: (_safeStorageGet(sessionStorage, "pondok_futsal_admin_auth") === "true" || _safeStorageGet(localStorage, "pondok_futsal_admin_auth") === "true"),
   activeMatchId: null,
@@ -109,9 +166,9 @@ class TournamentStore {
       : ((typeof t.short_name === "string" && t.short_name.trim()) ? t.short_name : name.substring(0, 10).toUpperCase());
     const offSrc = (t.official && typeof t.official === "object") ? t.official : {};
     const official = {
-      coach: offSrc.coach || t.official_coach || t.coach || "",
-      manager: offSrc.manager || t.official_manager || t.manager || "",
-      medic: offSrc.medic || t.official_medic || t.medic || "",
+      coach: formatPersonName(offSrc.coach || t.official_coach || t.coach || ""),
+      manager: formatPersonName(offSrc.manager || t.official_manager || t.manager || ""),
+      medic: formatPersonName(offSrc.medic || t.official_medic || t.medic || ""),
       phone: "",
       jerseyHome: offSrc.jerseyHome || t.official_jersey_home || t.jerseyHome || "",
       jerseyAway: offSrc.jerseyAway || t.official_jersey_away || t.jerseyAway || "",
@@ -120,7 +177,7 @@ class TournamentStore {
     };
     const players = Array.isArray(t.players) ? t.players.filter(p => p && typeof p === "object").map((p, pIdx) => ({
       no: (p.no !== undefined && p.no !== null && p.no !== "") ? p.no : (pIdx + 1),
-      name: (typeof p.name === "string") ? p.name : ("Pemain " + (pIdx + 1)),
+      name: (typeof p.name === "string" && p.name.trim()) ? formatPersonName(p.name) : ("Pemain " + (pIdx + 1)),
       pos: p.pos || "Flank",
       goals: parseInt(p.goals, 10) || 0,
       yc: parseInt(p.yc, 10) || 0,
@@ -344,8 +401,15 @@ class TournamentStore {
       isTimerPaused,
       liveElapsedSec,
       liveClockDisplay,
-      scorers: Array.isArray(m.scorers) ? m.scorers : [],
-      cards: cleanCards,
+      scorers: Array.isArray(m.scorers) ? m.scorers.map(s => s && typeof s === "object" ? {
+        ...s,
+        player: s.player ? formatPersonName(s.player) : s.player,
+        assist: s.assist ? formatPersonName(s.assist) : s.assist
+      } : s) : [],
+      cards: Array.isArray(cleanCards) ? cleanCards.map(c => c && typeof c === "object" ? {
+        ...c,
+        player: c.player ? formatPersonName(c.player) : c.player
+      } : c) : [],
       lineup: lineup || null,
       substitutions: substitutions,
       homeFouls: homeFouls,
@@ -2930,6 +2994,7 @@ var app = window.app = Object.assign(window.app || {}, {
               const lP = localPlayers[pIdx] || localPlayers.find(lp => lp.no === rP.no || (lp.name && lp.name === rP.name)) || {};
               return {
                 ...rP,
+                name: (typeof rP.name === "string" && rP.name.trim()) ? formatPersonName(rP.name) : (lP.name || ("Pemain " + (pIdx + 1))),
                 photo: isValidPhoto(rP.photo) ? rP.photo : (lP.photo || ""),
                 goals: (rP.goals !== undefined && rP.goals !== null) ? rP.goals : (lP.goals || 0),
                 yc: (rP.yc !== undefined && rP.yc !== null) ? rP.yc : (lP.yc || 0),
@@ -2945,9 +3010,9 @@ var app = window.app = Object.assign(window.app || {}, {
 
           mapped.official = {
             ...curOff,
-            coach: payload.official_coach !== undefined ? payload.official_coach : ((payload.official && payload.official.coach) || curOff.coach || ''),
-            manager: payload.official_manager !== undefined ? payload.official_manager : ((payload.official && payload.official.manager) || curOff.manager || ''),
-            medic: payload.official_medic !== undefined ? payload.official_medic : ((payload.official && payload.official.medic) || curOff.medic || ''),
+            coach: formatPersonName(payload.official_coach !== undefined ? payload.official_coach : ((payload.official && payload.official.coach) || curOff.coach || '')),
+            manager: formatPersonName(payload.official_manager !== undefined ? payload.official_manager : ((payload.official && payload.official.manager) || curOff.manager || '')),
+            medic: formatPersonName(payload.official_medic !== undefined ? payload.official_medic : ((payload.official && payload.official.medic) || curOff.medic || '')),
             phone: '',
             jerseyHome: payload.official_jersey_home !== undefined ? payload.official_jersey_home : ((payload.official && payload.official.jerseyHome) || curOff.jerseyHome || ''),
             jerseyAway: payload.official_jersey_away !== undefined ? payload.official_jersey_away : ((payload.official && payload.official.jerseyAway) || curOff.jerseyAway || ''),
