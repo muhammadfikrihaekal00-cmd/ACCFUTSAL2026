@@ -3886,12 +3886,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         try { app.openTeamModal(targetTeamId); } catch (_) { }
       }
 
-      // Refresh seluruh tampilan UI
+      // Refresh seluruh tampilan UI tanpa berpindah tab
       try {
         if (typeof app.renderTeams === 'function') app.renderTeams();
         if (typeof app.renderStandings === 'function') app.renderStandings();
-        if (typeof app.renderScorers === 'function') app.renderScorers();
-        if (typeof app.renderDiscipline === 'function') app.renderDiscipline();
+        if (typeof app.renderStats === 'function') app.renderStats();
         if (app.currentTab === "draw" && typeof app.renderDrawView === 'function') app.renderDrawView();
       } catch (renderErr) {
         console.error("Render error after team save:", renderErr);
@@ -4247,8 +4246,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
       app.renderTeams();
       app.renderStandings();
-      app.renderScorers();
-      app.renderDiscipline();
+      if (typeof app.renderStats === 'function') app.renderStats();
       if (typeof app.renderDrawPool === "function") app.renderDrawPool();
 
       this.clearTeamEditorDraft();

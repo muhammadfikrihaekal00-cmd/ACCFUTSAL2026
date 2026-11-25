@@ -6770,15 +6770,15 @@ var app = window.app = Object.assign(window.app || {}, {
     }
   },
 
-  // Fallbacks for legacy calls
+  // Fallbacks for legacy calls (refresh stats without forcing tab switch)
   renderDiscipline() {
     this.currentStatsTab = "yellow";
-    this.switchTab("stats", false);
+    if (typeof this.renderStats === "function") this.renderStats();
   },
 
   renderTopScorers() {
     this.currentStatsTab = "scorers";
-    this.switchTab("stats", false);
+    if (typeof this.renderStats === "function") this.renderStats();
   },
 
   // 7. RENDER JUKNIS (Buku Panduan & Regulasi ACC 2026)
