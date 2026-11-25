@@ -369,7 +369,7 @@
 
         const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.race([
           Promise.all([
-            this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'mvp_spotlight_registry']),
+            this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'team_logos_registry', 'mvp_spotlight_registry']),
             this.client.from('teams').select(teamCols),
             this.client.from('matches').select('*'),
             this.client.from('moments').select('id, title, player, team, category, badge, media_url, caption, sort_order, created_at').order('sort_order', { ascending: true }).limit(30),
@@ -407,6 +407,16 @@
               teamMeta = JSON.parse(metaRow.rules_text) || {};
             } catch (_) { }
           }
+          const logosRow = configListRes.data.find(c => c.id === 'team_logos_registry');
+          if (logosRow && logosRow.rules_text) {
+            try {
+              const parsedLogos = JSON.parse(logosRow.rules_text);
+              if (parsedLogos && typeof parsedLogos === 'object') {
+                teamLogos = parsedLogos;
+                try { localStorage.setItem('acc_team_logos_cache', logosRow.rules_text); } catch (_) { }
+              }
+            } catch (_) { }
+          }
           const mvpRow = configListRes.data.find(c => c.id === 'mvp_spotlight_registry');
           if (mvpRow && mvpRow.rules_text) {
             try {
@@ -419,20 +429,6 @@
               momentsRegistryList = JSON.parse(momentsRegistryRow.rules_text) || null;
             } catch (_) { }
           }
-        }
-
-        // Lazy fetch logos registry di background jika belum ada di cache
-        if (Object.keys(teamLogos).length === 0) {
-          setTimeout(async () => {
-            try {
-              if (this.client) {
-                const { data: logosRow } = await this.client.from('tournament_config').select('rules_text').eq('id', 'team_logos_registry').maybeSingle();
-                if (logosRow && logosRow.rules_text) {
-                  localStorage.setItem('acc_team_logos_cache', logosRow.rules_text);
-                }
-              }
-            } catch (_) { }
-          }, 3500);
         }
 
         // Normalisasi daftar momen turnamen: utamakan tabel 'moments' online (Single Source of Truth)
@@ -681,6 +677,9 @@
             rules_text: JSON.stringify(registry),
             updated_at: new Date().toISOString()
           });
+        if (!error) {
+          try { localStorage.setItem('acc_team_logos_cache', JSON.stringify(registry)); } catch (_) { }
+        }
         return !error;
       } catch (e) {
         console.warn("syncTeamLogo notice:", e);

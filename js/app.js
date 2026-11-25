@@ -491,10 +491,23 @@ class TournamentStore {
     }
 
     // Hapus data WhatsApp official untuk seluruh tim secara permanen
+    // & sinkronkan fallback logo dari cache registry / DEFAULT_DATA agar konsisten saat refresh
+    let cachedLogos = {};
+    try {
+      const rawLogos = _safeStorageGet(localStorage, "acc_team_logos_cache");
+      if (rawLogos) cachedLogos = JSON.parse(rawLogos) || {};
+    } catch (_) { }
+    const baseTeamsMap = new Map((Array.isArray(base.teams) ? base.teams : []).map(bt => [bt.id, bt]));
     data.teams.forEach(t => {
       if (t.official) t.official.phone = "";
       t.official_phone = "";
       t.phone = "";
+      if (t.id && cachedLogos[t.id]) {
+        t.logo = cachedLogos[t.id];
+      } else if (!t.logo && t.id && baseTeamsMap.has(t.id)) {
+        const defLogo = baseTeamsMap.get(t.id).logo;
+        if (defLogo) t.logo = defLogo;
+      }
     });
 
     // Pastikan daftar laga selalu valid dan terisi dari data default jika kosong
@@ -2353,7 +2366,7 @@ var app = window.app = Object.assign(window.app || {}, {
             "#" + (data.config ? `${data.config.tournament_name}:${data.config.youtube_live_url}:${data.config.updated_at}` : "") +
             "#" + (data.teams ? data.teams.map(t => `${t.id}:${t.name}:${t.updated_at}:${(t.players || []).length}`).join("|") : "") +
             "#" + (data.teamMeta ? Object.keys(data.teamMeta).sort().map(k => `${k}:${data.teamMeta[k]?.category || ''}:${data.teamMeta[k]?.instansi || ''}`).join("|") : "") +
-            "#" + (data.teamLogos ? Object.keys(data.teamLogos).map(k => `${k}:${(data.teamLogos[k] || '').length}`).join("|") : "") +
+            "#" + (data.teamLogos ? Object.keys(data.teamLogos).sort().map(k => { const v = data.teamLogos[k] || ''; return `${k}:${v.length}:${v.slice(-32)}`; }).join("|") : "") +
             "#" + (data.sponsors ? (Array.isArray(data.sponsors) ? data.sponsors.map(s => `${s.id}:${s.name}:${(s.logo_url || s.image || '').length}:${s.tier}`).join("|") : JSON.stringify(data.sponsors)) : "");
 
           if (isInitialLoad || signature !== lastDataSignature) {
