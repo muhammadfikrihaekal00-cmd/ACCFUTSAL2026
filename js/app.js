@@ -670,6 +670,59 @@ class TournamentStore {
   }
 
   // Calculate Standings for a specific group & category
+  // Status resmi sanksi / pengunduran diri tim dalam turnamen
+  getTeamTournamentStatus(team) {
+    if (!team) return { excluded: false };
+    const id = String(team.id || "").toUpperCase().trim();
+    const name = String(team.name || "").toUpperCase();
+
+    const meta = (this.data && this.data.teamMeta && this.data.teamMeta[team.id]) || {};
+    const statusProp = String(team.tournamentStatus || meta.tournamentStatus || "").toLowerCase();
+
+    if (statusProp === "disqualified" || team.disqualified || meta.disqualified) {
+      return {
+        excluded: true,
+        type: "disqualified",
+        badge: "DISKUALIFIKASI",
+        shortBadge: "DSQ",
+        reason: team.statusReason || meta.statusReason || "Melanggar persyaratan pemain"
+      };
+    }
+    if (statusProp === "withdrawn" || team.withdrawn || meta.withdrawn) {
+      return {
+        excluded: true,
+        type: "withdrawn",
+        badge: "MUNDUR",
+        shortBadge: "MUNDUR",
+        reason: team.statusReason || meta.statusReason || "Mengundurkan diri dari turnamen"
+      };
+    }
+
+    // Ketentuan Resmi Panitia ACC 2026:
+    // T05 / MA'HAD HABIBURARAHMAN B -> Didiskualifikasi karena melanggar persyaratan pemain
+    if (id === "T05" || /MA'?HAD\s+HABIBUR[A-Z]*\s+B\b/i.test(name)) {
+      return {
+        excluded: true,
+        type: "disqualified",
+        badge: "DISKUALIFIKASI",
+        shortBadge: "DSQ",
+        reason: "Melanggar persyaratan pemain"
+      };
+    }
+    // T03 / MA'HAD HABIBURRAHMAN A -> Mengundurkan diri dari turnamen
+    if (id === "T03" || /MA'?HAD\s+HABIBUR[A-Z]*\s+A\b/i.test(name)) {
+      return {
+        excluded: true,
+        type: "withdrawn",
+        badge: "MUNDUR",
+        shortBadge: "MUNDUR",
+        reason: "Mengundurkan diri dari turnamen"
+      };
+    }
+
+    return { excluded: false };
+  }
+
   calculateGroupStandings(groupLetter, category = null) {
     let groupTeams = this.data.teams.filter(t => t.group === groupLetter);
     if (category && category !== "all") {
@@ -680,6 +733,7 @@ class TournamentStore {
     groupTeams.forEach(t => {
       stats[t.id] = {
         team: t,
+        statusInfo: this.getTeamTournamentStatus(t),
         mp: 0, // matches played
         w: 0,  // win
         d: 0,  // draw
@@ -688,6 +742,7 @@ class TournamentStore {
         ga: 0, // goals against
         gd: 0, // goal diff
         pts: 0,
+        cardPts: 0, // akumulasi kartu (kuning=1, merah=3)
         recentForm: [] // "W", "D", "L"
       };
     });
@@ -737,42 +792,80 @@ class TournamentStore {
 
       h.gd = h.gf - h.ga;
       a.gd = a.gf - a.ga;
+
+      (m.cards || []).forEach(c => {
+        if (!c || c._meta) return;
+        const target = (c.team === m.homeId || c.team === h.team.id || c.team === h.team.name || c.team === h.team.shortName)
+          ? h
+          : ((c.team === m.awayId || c.team === a.team.id || c.team === a.team.name || c.team === a.team.shortName) ? a : null);
+        if (!target) return;
+        if (c.type === "yellow" || c.type === "card_yellow") target.cardPts += 1;
+        else if (c.type === "red" || c.type === "card_red") target.cardPts += 3;
+      });
     });
 
-    // Sort by: Pts DESC, GD DESC, GF DESC, H2H, Fair-Play
-    return Object.values(stats).sort((a, b) => {
+    const entries = Object.values(stats);
+
+    // Urutan regulasi resmi ACC 2026:
+    // 0. Tim diskualifikasi / mundur selalu berada di posisi paling bawah
+    // Utama: Jumlah Poin (DESC)
+    // Jika poin sama, berurutan:
+    // 1. Head-to-Head (mini-league antar tim dengan poin & status kelayakan sama)
+    // 2. Selisih Gol (GD DESC)
+    // 3. Gol Kemasukan paling sedikit (GA ASC)
+    // 4. Akumulasi Kartu paling sedikit (cardPts ASC: Kuning=1, Merah=3)
+    return entries.sort((a, b) => {
+      const aExcl = Boolean(a.statusInfo && a.statusInfo.excluded);
+      const bExcl = Boolean(b.statusInfo && b.statusInfo.excluded);
+      if (aExcl !== bExcl) return aExcl ? 1 : -1;
+
       if (b.pts !== a.pts) return b.pts - a.pts;
-      if (b.gd !== a.gd) return b.gd - a.gd;
-      if (b.gf !== a.gf) return b.gf - a.gf;
-      // Head-to-Head: skor di pertandingan langsung antara kedua tim
-      const h2h = groupMatches.find(m =>
-        (m.homeId === a.team.id && m.awayId === b.team.id) ||
-        (m.homeId === b.team.id && m.awayId === a.team.id)
+
+      // 1. Head-to-Head (mendukung 2 tim maupun 3+ tim dengan poin sama)
+      const tiedGroup = entries.filter(x =>
+        Boolean(x.statusInfo && x.statusInfo.excluded) === aExcl && x.pts === a.pts
       );
-      if (h2h && h2h.status === "finished") {
-        const aGoals = h2h.homeId === a.team.id ? (h2h.homeScore || 0) : (h2h.awayScore || 0);
-        const bGoals = h2h.homeId === b.team.id ? (h2h.homeScore || 0) : (h2h.awayScore || 0);
-        if (bGoals !== aGoals) return bGoals - aGoals;
-      }
-      // Fair-play: kuning*1 + merah*3, lebih rendah = lebih baik
-      const getCards = (st) => {
-        let yellow = 0, red = 0;
-        this.data.matches.forEach(m => {
-          if (m.stage !== "group" || m.group !== groupLetter) return;
-          if (m.status !== "finished") return;
-          if (m.homeId !== st.team.id && m.awayId !== st.team.id) return;
-          (m.cards || []).forEach(c => {
-            if (c.team !== st.team.id && c.team !== st.team.name) return;
-            if (c.type === "yellow") yellow++;
-            else if (c.type === "red") red++;
-          });
+      const tiedIds = new Set(tiedGroup.map(x => x.team.id));
+      if (tiedIds.size >= 2) {
+        const h2hStats = {};
+        tiedIds.forEach(id => { h2hStats[id] = { pts: 0, gd: 0, ga: 0, gf: 0 }; });
+        groupMatches.forEach(m => {
+          if (tiedIds.has(m.homeId) && tiedIds.has(m.awayId)) {
+            const hs = m.homeScore ?? 0;
+            const as = m.awayScore ?? 0;
+            h2hStats[m.homeId].gf += hs;
+            h2hStats[m.homeId].ga += as;
+            h2hStats[m.awayId].gf += as;
+            h2hStats[m.awayId].ga += hs;
+            if (hs > as) h2hStats[m.homeId].pts += 3;
+            else if (hs < as) h2hStats[m.awayId].pts += 3;
+            else {
+              h2hStats[m.homeId].pts += 1;
+              h2hStats[m.awayId].pts += 1;
+            }
+          }
         });
-        return yellow * 1 + red * 3;
-      };
-      const fpA = getCards(a);
-      const fpB = getCards(b);
-      if (fpA !== fpB) return fpA - fpB; // lebih sedikit = lebih baik
-      return 0; // undian koin
+        const hA = h2hStats[a.team.id];
+        const hB = h2hStats[b.team.id];
+        hA.gd = hA.gf - hA.ga;
+        hB.gd = hB.gf - hB.ga;
+        if (hB.pts !== hA.pts) return hB.pts - hA.pts;
+        if (tiedIds.size > 2) {
+          if (hB.gd !== hA.gd) return hB.gd - hA.gd;
+          if (hA.ga !== hB.ga) return hA.ga - hB.ga;
+        }
+      }
+
+      // 2. Selisih Gol (GD DESC)
+      if (b.gd !== a.gd) return b.gd - a.gd;
+
+      // 3. Gol Kemasukan paling sedikit (GA ASC)
+      if (a.ga !== b.ga) return a.ga - b.ga;
+      if (b.gf !== a.gf) return b.gf - a.gf;
+
+      // 4. Akumulasi Kartu (Fair-play: lebih sedikit = lebih baik)
+      if (a.cardPts !== b.cardPts) return a.cardPts - b.cardPts;
+      return 0;
     });
   }
 
@@ -963,14 +1056,17 @@ class TournamentStore {
         return;
       }
 
-      if (homeDone && homeStandings[homeIdx] && homeStandings[homeIdx].team) {
-        m.homeId = homeStandings[homeIdx].team.id;
+      const eligibleHome = (homeStandings || []).filter(s => !s.statusInfo || !s.statusInfo.excluded);
+      const eligibleAway = (awayStandings || []).filter(s => !s.statusInfo || !s.statusInfo.excluded);
+
+      if (homeDone && eligibleHome[homeIdx] && eligibleHome[homeIdx].team) {
+        m.homeId = eligibleHome[homeIdx].team.id;
       } else if (!m.isManualTeam) {
         m.homeId = "";
       }
 
-      if (awayDone && awayStandings[awayIdx] && awayStandings[awayIdx].team) {
-        m.awayId = awayStandings[awayIdx].team.id;
+      if (awayDone && eligibleAway[awayIdx] && eligibleAway[awayIdx].team) {
+        m.awayId = eligibleAway[awayIdx].team.id;
       } else if (!m.isManualTeam) {
         m.awayId = "";
       }
@@ -3752,6 +3848,9 @@ var app = window.app = Object.assign(window.app || {}, {
     const gd = gf - ga;
     const pts = (w * 3) + d;
     const off = team.official || {};
+    const teamStatusInfo = (this.store && typeof this.store.getTeamTournamentStatus === 'function')
+      ? this.store.getTeamTournamentStatus(team)
+      : { excluded: false };
     const waLink = this.getWhatsAppUrl(off.phone || "", `Halo Official ${team.name}, informasi ACC 2026`);
 
     // Roster pemain dinamis dengan kalkulasi gol & kartu dari matches aktual
@@ -3899,6 +3998,12 @@ var app = window.app = Object.assign(window.app || {}, {
                 </span>
               </div>
               <h1>${typeof Security !== 'undefined' ? Security.sanitize(team.name) : team.name}</h1>
+              ${teamStatusInfo.excluded ? `
+                <div style="margin: 6px 0 8px; padding: 7px 12px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; ${teamStatusInfo.type === 'disqualified' ? 'background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.45);' : 'background: rgba(245,158,11,0.18); color: #fde68a; border: 1px solid rgba(245,158,11,0.45);'}">
+                  <span>${teamStatusInfo.type === 'disqualified' ? '⛔' : '🏳️'} STATUS TIM: ${teamStatusInfo.badge}</span>
+                  <span style="font-weight: 500; opacity: 0.9;">(${teamStatusInfo.reason})</span>
+                </div>
+              ` : ''}
               <p>Official Pelatih: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.coach || '-') : (off.coach || '-')}</strong></p>
               <p style="margin-top: 3px;">Manager: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.manager || '-') : (off.manager || '-')}</strong> • Medis: <strong style="color: #ffffff;">${typeof Security !== 'undefined' ? Security.sanitize(off.medic || '-') : (off.medic || '-')}</strong></p>
             </div>
@@ -5469,6 +5574,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     container.innerHTML = groupsToShow.map((g, idx) => {
       const standings = this.store.calculateGroupStandings(g.letter, g.category);
+      const excludedTeams = standings.filter(r => r.statusInfo && r.statusInfo.excluded);
       const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
 
       return `
@@ -5500,16 +5606,31 @@ var app = window.app = Object.assign(window.app || {}, {
                 </tr>
               </thead>
               <tbody>
-                ${standings.map((row, idx) => {
-        const isQualify = idx < 2;
+                ${standings.map((row, rIdx) => {
+        const statusInfo = row.statusInfo || { excluded: false };
+        const isExcluded = Boolean(statusInfo.excluded);
+        const isQualify = !isExcluded && rIdx < 2;
+        const rowClass = isExcluded ? `excluded-row status-${statusInfo.type}` : (isQualify ? 'qualify' : '');
+        const badgeStyle = statusInfo.type === 'disqualified'
+          ? 'background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.45);'
+          : 'background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.45);';
         return `
-                    <tr class="${isQualify ? 'qualify' : ''}">
-                      <td class="td-pos">${idx + 1}</td>
-                      <td class="td-team" onclick="app.openTeamModal('${row.team.id}')" style="cursor: pointer;" title="Klik untuk lihat skuad">
-                        <span class="mini-badge" style="background: ${row.team.badgeColor};">
+                    <tr class="${rowClass}">
+                      <td class="td-pos">${isExcluded ? `<span title="${statusInfo.badge}: ${statusInfo.reason}">${rIdx + 1}</span>` : (rIdx + 1)}</td>
+                      <td class="td-team" onclick="app.openTeamModal('${row.team.id}')" style="cursor: pointer;" title="Klik untuk lihat skuad${isExcluded ? ' • ' + statusInfo.badge + ': ' + statusInfo.reason : ''}">
+                        <span class="mini-badge" style="background: ${row.team.badgeColor}; flex-shrink: 0; ${isExcluded ? 'opacity: 0.6;' : ''}">
                           ${row.team.logo ? `<img src="${row.team.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : row.team.shortName.substring(0, 2)}
                         </span>
-                        <span>${row.team.name}</span>
+                        <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+                          <span style="${isExcluded ? 'text-decoration: line-through; opacity: 0.78;' : ''}">${row.team.name}</span>
+                          ${isExcluded ? `
+                            <span style="display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                              <span style="font-size:0.60rem; font-weight:800; padding:1px 6px; border-radius:99px; letter-spacing:0.3px; white-space:nowrap; ${badgeStyle}">
+                                ${statusInfo.type === 'disqualified' ? '⛔' : '🏳️'} ${statusInfo.badge}
+                              </span>
+                            </span>
+                          ` : ''}
+                        </div>
                       </td>
                       <td class="col-secondary">${row.mp}</td>
                       <td>${row.w}</td>
@@ -5530,6 +5651,16 @@ var app = window.app = Object.assign(window.app || {}, {
             <span class="legend-dot"></span>
             <span>Peringkat 1 & 2 melaju ke Babak 8 Besar (Perempat Final) ${g.category}</span>
           </div>
+          ${excludedTeams.length > 0 ? `
+            <div class="group-sanction-note" style="margin: 8px 12px 12px; padding: 9px 12px; border-radius: 10px; background: rgba(239, 68, 68, 0.09); border: 1px solid rgba(239, 68, 68, 0.28); font-size: 0.74rem; color: #fca5a5; line-height: 1.45;">
+              ${excludedTeams.map(r => `
+                <div>
+                  <strong style="color: ${r.statusInfo.type === 'disqualified' ? '#f87171' : '#fbbf24'};">${r.statusInfo.type === 'disqualified' ? '⛔' : '🏳️'} ${r.team.name} (${r.statusInfo.badge}):</strong>
+                  ${r.statusInfo.reason}. Seluruh pertandingan tetap dihitung sesuai regulasi, namun tim ditempatkan di peringkat terbawah dan tidak lolos ke babak berikutnya.
+                </div>
+              `).join("")}
+            </div>
+          ` : ''}
         </div>
       `;
     }).join("");
@@ -5969,11 +6100,14 @@ var app = window.app = Object.assign(window.app || {}, {
       const tName = (t && t.name) ? String(t.name) : ("Tim " + (t && t.id ? t.id : ""));
       const tShort = (t && (t.shortName || t.short_name)) ? String(t.shortName || t.short_name) : tName;
       const tPlayers = (t && Array.isArray(t.players)) ? t.players : [];
+      const statusInfo = (this.store && typeof this.store.getTeamTournamentStatus === 'function')
+        ? this.store.getTeamTournamentStatus(t)
+        : { excluded: false };
       const waLink = this.getWhatsAppUrl(off.phone || "", `Halo Official ${tName}, informasi ACC 2026`);
       const swipeClass = idx % 2 === 1 ? 'scroll-reveal reveal-right' : 'scroll-reveal';
 
       return `
-        <div class="school-card ${swipeClass}" onclick="app.navigateTo('/daftar-tim/detail-tim/${t.id}', 'team-detail', { teamId: '${t.id}' })" style="cursor: pointer;">
+        <div class="school-card ${swipeClass}" onclick="app.navigateTo('/daftar-tim/detail-tim/${t.id}', 'team-detail', { teamId: '${t.id}' })" style="cursor: pointer; ${statusInfo.excluded ? 'border-color: rgba(239,68,68,0.35);' : ''}">
           ${t.logo ? `<div class="school-card-watermark" style="background-image: url('${t.logo}');"></div>` : ''}
           <div class="school-card-banner" style="background: linear-gradient(135deg, ${t.badgeColor || '#0284c7'}, #0f172a);">
             <span class="group-tag-corner">
@@ -5988,6 +6122,11 @@ var app = window.app = Object.assign(window.app || {}, {
 
             <div class="school-card-name">${tName}</div>
             <div class="school-card-city">📍 ${t.city || '-'}</div>
+            ${statusInfo.excluded ? `
+              <div style="margin: 6px auto 2px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 0.68rem; font-weight: 800; ${statusInfo.type === 'disqualified' ? 'background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.45);' : 'background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.45);'}">
+                ${statusInfo.type === 'disqualified' ? '⛔' : '🏳️'} ${statusInfo.badge} • ${statusInfo.reason}
+              </div>
+            ` : ''}
 
             <div class="official-info-box">
               <div class="official-row" style="align-items: center; gap: 8px;">
