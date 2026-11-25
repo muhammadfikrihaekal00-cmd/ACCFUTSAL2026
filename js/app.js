@@ -4413,7 +4413,7 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="player-watermark-number">#${player.no || ''}</div>
           <div class="player-hero-inner">
             <div class="player-hero-photo-wrap">
-              ${player.photo ? `<img src="${player.photo}" alt="${player.name}" class="player-hero-photo" onerror="this.onerror=null; this.src='assets/acc_logo.png';">` : `<img src="assets/acc_logo.png" alt="ACC 2026" class="player-hero-photo">`}
+              ${player.photo ? `<img src="${player.photo}" alt="${player.name}" class="player-hero-photo" onerror="this.onerror=null; this.classList.add('is-fallback'); this.src='assets/acc_logo.png';">` : `<img src="assets/acc_logo.png" alt="ACC 2026" class="player-hero-photo is-fallback">`}
             </div>
             <div class="player-hero-meta" style="flex: 1;">
               <div class="team-badge-row">
