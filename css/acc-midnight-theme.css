@@ -2360,8 +2360,13 @@ textarea:focus {
 }
 
 .school-avatar {
+  width: 64px !important;
+  height: 64px !important;
   padding: 6px !important;
   box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   border: 3px solid rgba(245, 158, 11, 0.55) !important;
   background: rgba(11, 19, 43, 0.98) !important;
   box-shadow:
@@ -2377,9 +2382,12 @@ textarea:focus {
 .school-avatar img.team-logo-img {
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto !important;
   border-radius: 0 !important;
   object-fit: contain !important;
-  object-position: center !important;
+  object-position: center center !important;
   background: transparent !important;
 }
 

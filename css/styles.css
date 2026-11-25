@@ -2170,8 +2170,8 @@ body.dark-theme .bracket-match-card.is-bronze {
 }
 
 .school-avatar {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: 3px solid #ffffff;
   background: #ffffff;
@@ -2196,9 +2196,12 @@ body.dark-theme .bracket-match-card.is-bronze {
 .school-avatar img.team-logo-img {
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto !important;
   border-radius: 0 !important;
   object-fit: contain !important;
-  object-position: center !important;
+  object-position: center center !important;
   display: block !important;
   background: transparent !important;
 }

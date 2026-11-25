@@ -6251,6 +6251,111 @@ var app = window.app = Object.assign(window.app || {}, {
     return { matchedTeam, matchedPlayers };
   },
 
+  normalizeLogoElement(imgEl) {
+    if (!imgEl || imgEl.dataset.logoNormalized === "1") return;
+    const src = imgEl.getAttribute("src") || imgEl.src;
+    if (!src) return;
+
+    if (!this._normalizedLogoCache) this._normalizedLogoCache = new Map();
+    if (this._normalizedLogoCache.has(src)) {
+      const cached = this._normalizedLogoCache.get(src);
+      if (cached && cached !== src) {
+        imgEl.dataset.logoNormalized = "1";
+        imgEl.src = cached;
+      }
+      return;
+    }
+
+    const computeTrimmed = (sourceImg) => {
+      try {
+        const nw = sourceImg.naturalWidth || 0;
+        const nh = sourceImg.naturalHeight || 0;
+        if (nw < 8 || nh < 8) return null;
+
+        const maxDim = 160;
+        const scale = Math.min(1, maxDim / Math.max(nw, nh));
+        const w = Math.max(1, Math.round(nw * scale));
+        const h = Math.max(1, Math.round(nh * scale));
+
+        const c1 = document.createElement("canvas");
+        c1.width = w;
+        c1.height = h;
+        const ctx1 = c1.getContext("2d", { willReadFrequently: true });
+        if (!ctx1) return null;
+        ctx1.drawImage(sourceImg, 0, 0, w, h);
+
+        const data = ctx1.getImageData(0, 0, w, h).data;
+        let minX = w, minY = h, maxX = -1, maxY = -1;
+        for (let y = 0; y < h; y++) {
+          const rowOff = y * w * 4;
+          for (let x = 0; x < w; x++) {
+            if (data[rowOff + x * 4 + 3] > 15) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        if (maxX < minX || maxY < minY) return null;
+
+        // Jika sudah simetris dan hampir penuh tanpa margin transparan berlebih, biarkan
+        const cropW = maxX - minX + 1;
+        const cropH = maxY - minY + 1;
+        const outSize = 144;
+        const innerTarget = 132;
+        const fitScale = innerTarget / Math.max(cropW, cropH);
+        const drawW = Math.round(cropW * fitScale);
+        const drawH = Math.round(cropH * fitScale);
+        const dx = Math.round((outSize - drawW) / 2);
+        const dy = Math.round((outSize - drawH) / 2);
+
+        const c2 = document.createElement("canvas");
+        c2.width = outSize;
+        c2.height = outSize;
+        const ctx2 = c2.getContext("2d");
+        if (!ctx2) return null;
+        ctx2.imageSmoothingEnabled = true;
+        ctx2.imageSmoothingQuality = "high";
+
+        const sx = (minX / w) * nw;
+        const sy = (minY / h) * nh;
+        const sw = (cropW / w) * nw;
+        const sh = (cropH / h) * nh;
+        ctx2.drawImage(sourceImg, sx, sy, sw, sh, dx, dy, drawW, drawH);
+
+        return c2.toDataURL("image/png");
+      } catch (_) {
+        return null;
+      }
+    };
+
+    const isCrossOriginHttp = /^https?:\/\//i.test(src) && !src.startsWith(window.location.origin);
+    if (!isCrossOriginHttp) {
+      const out = computeTrimmed(imgEl);
+      this._normalizedLogoCache.set(src, out);
+      if (out) {
+        imgEl.dataset.logoNormalized = "1";
+        imgEl.src = out;
+      }
+    } else {
+      const probe = new Image();
+      probe.crossOrigin = "anonymous";
+      probe.onload = () => {
+        const out = computeTrimmed(probe);
+        this._normalizedLogoCache.set(src, out);
+        if (out && imgEl.isConnected) {
+          imgEl.dataset.logoNormalized = "1";
+          imgEl.src = out;
+        }
+      };
+      probe.onerror = () => {
+        this._normalizedLogoCache.set(src, null);
+      };
+      probe.src = src;
+    }
+  },
+
   renderTeams() {
     const container = document.getElementById("teamGridContainer");
     if (!container) return;
@@ -6422,7 +6527,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
           <div class="school-card-body">
             <div class="school-avatar${t.logo ? ' has-logo' : ''}" style="${t.logo ? 'background: #ffffff;' : `background: ${t.badgeColor || '#0284c7'};`}">
-              ${t.logo ? `<img src="${t.logo}" class="team-logo-img" alt="${tName}">` : tShort.substring(0, 3)}
+              ${t.logo ? `<img src="${t.logo}" class="team-logo-img" alt="${tName}" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : tShort.substring(0, 3)}
             </div>
 
             <div class="school-card-name">${tName}</div>
