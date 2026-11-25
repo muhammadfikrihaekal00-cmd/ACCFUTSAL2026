@@ -1233,8 +1233,9 @@ body.dark-theme .team-badge-circle {
 }
 
 .mini-badge {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -1242,6 +1243,20 @@ body.dark-theme .team-badge-circle {
   font-size: 0.65rem;
   font-weight: 800;
   color: #ffffff;
+  overflow: hidden;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.mini-badge img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  display: block !important;
 }
 
 .table-legend {
@@ -1844,8 +1859,9 @@ body.dark-theme .bracket-match-card.is-bronze {
 }
 
 .bracket-team-avatar {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1855,6 +1871,18 @@ body.dark-theme .bracket-match-card.is-bronze {
   font-weight: 800;
   flex-shrink: 0;
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+.bracket-team-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  display: block !important;
 }
 
 .bracket-team-name {
@@ -5558,14 +5586,19 @@ body.dark-theme .fixture-team-row:hover {
   font-size: 0.82rem;
   color: #fff;
   overflow: hidden;
+  box-sizing: border-box;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .team-avatar-mini img.team-logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  display: block !important;
 }
 
 .fixture-team-name-wrap {

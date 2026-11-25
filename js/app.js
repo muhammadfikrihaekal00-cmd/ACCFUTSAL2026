@@ -5566,8 +5566,8 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- BARIS 1: TIM HOME -->
             <div class="fixture-team-row" onclick="${home.id ? `app.openTeamModal('${home.id}')` : `app.showToast('Tim yang lolos belum ditentukan (menunggu hasil fase grup)')`}" title="${home.id ? 'Klik untuk lihat profil tim' : 'Menunggu tim lolos'}">
               <div class="fixture-team-left">
-                <div class="team-avatar-mini${home.logo ? ' has-logo' : ''}" style="background: ${home.logo ? '#ffffff' : (home.badgeColor || '#10b981')};${home.logo ? ' padding: 3px; box-sizing: border-box;' : ''}">
-                  ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}">` : `<span style="font-size:0.72rem;font-weight:800;color:#cbd5e1;">${(home.shortName || 'TBD').substring(0, 3)}</span>`}
+                <div class="team-avatar-mini${home.logo ? ' has-logo' : ''}" style="background: ${home.logo ? '#ffffff' : (home.badgeColor || '#10b981')};${home.logo ? ' padding: 4px; box-sizing: border-box;' : ''}">
+                  ${home.logo ? `<img src="${home.logo}" class="team-logo-img" alt="${home.name}" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : `<span style="font-size:0.72rem;font-weight:800;color:#cbd5e1;">${(home.shortName || 'TBD').substring(0, 3)}</span>`}
                 </div>
                 <div class="fixture-team-name-wrap">
                   <div class="fixture-team-fullname ${home.isPlaceholder ? 'text-placeholder' : ''}">${home.name}</div>
@@ -5607,8 +5607,8 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- BARIS 2: TIM AWAY -->
             <div class="fixture-team-row" onclick="${away.id ? `app.openTeamModal('${away.id}')` : `app.showToast('Tim yang lolos belum ditentukan (menunggu hasil fase grup)')`}" title="${away.id ? 'Klik untuk lihat profil tim' : 'Menunggu tim lolos'}">
               <div class="fixture-team-left">
-                <div class="team-avatar-mini${away.logo ? ' has-logo' : ''}" style="background: ${away.logo ? '#ffffff' : (away.badgeColor || '#3b82f6')};${away.logo ? ' padding: 3px; box-sizing: border-box;' : ''}">
-                  ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}">` : `<span style="font-size:0.72rem;font-weight:800;color:#cbd5e1;">${(away.shortName || 'TBD').substring(0, 3)}</span>`}
+                <div class="team-avatar-mini${away.logo ? ' has-logo' : ''}" style="background: ${away.logo ? '#ffffff' : (away.badgeColor || '#3b82f6')};${away.logo ? ' padding: 4px; box-sizing: border-box;' : ''}">
+                  ${away.logo ? `<img src="${away.logo}" class="team-logo-img" alt="${away.name}" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : `<span style="font-size:0.72rem;font-weight:800;color:#cbd5e1;">${(away.shortName || 'TBD').substring(0, 3)}</span>`}
                 </div>
                 <div class="fixture-team-name-wrap">
                   <div class="fixture-team-fullname ${away.isPlaceholder ? 'text-placeholder' : ''}">${away.name}</div>
@@ -5747,8 +5747,8 @@ var app = window.app = Object.assign(window.app || {}, {
                     <tr class="${rowClass}">
                       <td class="td-pos">${isExcluded ? `<span title="${statusInfo.badge}: ${statusInfo.reason}">${rIdx + 1}</span>` : (rIdx + 1)}</td>
                       <td class="td-team" onclick="app.openTeamModal('${row.team.id}')" style="cursor: pointer;" title="Klik untuk lihat skuad${isExcluded ? ' • ' + statusInfo.badge + ': ' + statusInfo.reason : ''}">
-                        <span class="mini-badge${row.team.logo ? ' has-logo' : ''}" style="background: ${row.team.logo ? '#ffffff' : row.team.badgeColor}; flex-shrink: 0; ${row.team.logo ? 'padding: 2px; box-sizing: border-box; ' : ''}${isExcluded ? 'opacity: 0.6;' : ''}">
-                          ${row.team.logo ? `<img src="${row.team.logo}" style="width:100%;height:100%;object-fit:contain;display:block;">` : row.team.shortName.substring(0, 2)}
+                        <span class="mini-badge${row.team.logo ? ' has-logo' : ''}" style="background: ${row.team.logo ? '#ffffff' : row.team.badgeColor}; flex-shrink: 0; ${row.team.logo ? 'padding: 3px; box-sizing: border-box; ' : ''}${isExcluded ? 'opacity: 0.6;' : ''}">
+                          ${row.team.logo ? `<img src="${row.team.logo}" style="width:100%;height:100%;object-fit:contain;display:block;" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : row.team.shortName.substring(0, 2)}
                         </span>
                         <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
                           <span style="${isExcluded ? 'text-decoration: line-through; opacity: 0.78;' : ''}">${row.team.name}</span>
@@ -6016,8 +6016,8 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- HOME -->
             <div class="bracket-team-line ${isHomeWinner ? 'winner' : ''}">
               <div class="bracket-team-left">
-                <div class="bracket-team-avatar${hasDeterminedHome && home.logo ? ' has-logo' : ''}" style="background: ${hasDeterminedHome && home.logo ? '#ffffff' : (hasDeterminedHome ? (home.badgeColor || '#0284c7') : '#1e293b')};${hasDeterminedHome && home.logo ? ' padding: 2px; box-sizing: border-box;' : ''}">
-                  ${hasDeterminedHome && home.logo ? `<img src="${home.logo}" alt="${homeName}" style="width:100%;height:100%;object-fit:contain;display:block;">` : `<span style="font-size:0.75rem;font-weight:800;color:#94a3b8;">${homeSeed || (home ? (home.shortName || 'TBD').substring(0, 3) : '⏳')}</span>`}
+                <div class="bracket-team-avatar${hasDeterminedHome && home.logo ? ' has-logo' : ''}" style="background: ${hasDeterminedHome && home.logo ? '#ffffff' : (hasDeterminedHome ? (home.badgeColor || '#0284c7') : '#1e293b')};${hasDeterminedHome && home.logo ? ' padding: 3px; box-sizing: border-box;' : ''}">
+                  ${hasDeterminedHome && home.logo ? `<img src="${home.logo}" alt="${homeName}" style="width:100%;height:100%;object-fit:contain;display:block;" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : `<span style="font-size:0.75rem;font-weight:800;color:#94a3b8;">${homeSeed || (home ? (home.shortName || 'TBD').substring(0, 3) : '⏳')}</span>`}
                 </div>
                 <div class="bracket-team-name ${!hasDeterminedHome ? 'text-placeholder' : ''}" title="${homeName}">${homeName}</div>
                 ${homeSeed ? `<span class="bracket-team-seed">${homeSeed}</span>` : ''}
@@ -6028,8 +6028,8 @@ var app = window.app = Object.assign(window.app || {}, {
             <!-- AWAY -->
             <div class="bracket-team-line ${isAwayWinner ? 'winner' : ''}">
               <div class="bracket-team-left">
-                <div class="bracket-team-avatar${hasDeterminedAway && away.logo ? ' has-logo' : ''}" style="background: ${hasDeterminedAway && away.logo ? '#ffffff' : (hasDeterminedAway ? (away.badgeColor || '#0284c7') : '#1e293b')};${hasDeterminedAway && away.logo ? ' padding: 2px; box-sizing: border-box;' : ''}">
-                  ${hasDeterminedAway && away.logo ? `<img src="${away.logo}" alt="${awayName}" style="width:100%;height:100%;object-fit:contain;display:block;">` : `<span style="font-size:0.75rem;font-weight:800;color:#94a3b8;">${awaySeed || (away ? (away.shortName || 'TBD').substring(0, 3) : '⏳')}</span>`}
+                <div class="bracket-team-avatar${hasDeterminedAway && away.logo ? ' has-logo' : ''}" style="background: ${hasDeterminedAway && away.logo ? '#ffffff' : (hasDeterminedAway ? (away.badgeColor || '#0284c7') : '#1e293b')};${hasDeterminedAway && away.logo ? ' padding: 3px; box-sizing: border-box;' : ''}">
+                  ${hasDeterminedAway && away.logo ? `<img src="${away.logo}" alt="${awayName}" style="width:100%;height:100%;object-fit:contain;display:block;" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : `<span style="font-size:0.75rem;font-weight:800;color:#94a3b8;">${awaySeed || (away ? (away.shortName || 'TBD').substring(0, 3) : '⏳')}</span>`}
                 </div>
                 <div class="bracket-team-name ${!hasDeterminedAway ? 'text-placeholder' : ''}" title="${awayName}">${awayName}</div>
                 ${awaySeed ? `<span class="bracket-team-seed">${awaySeed}</span>` : ''}
