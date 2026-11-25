@@ -8967,8 +8967,8 @@ var app = window.app = Object.assign(window.app || {}, {
       return `
         <div class="md-lineup-col-card">
           <div class="md-lineup-team-header">
-            <div style="width:36px; height:36px; border-radius:50%; background:${team.badgeColor || '#0284c7'}; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
-              ${team.logo ? `<img src="${team.logo}" alt="${team.name}" style="width:100%;height:100%;object-fit:contain;">` : `<span style="font-weight:800;font-size:0.75rem;color:#fff;">${(team.shortName || 'TBD').substring(0, 3)}</span>`}
+            <div style="width:38px; height:38px; min-width:38px; border-radius:50%; background:${team.logo ? '#ffffff' : (team.badgeColor || '#0284c7')};${team.logo ? ' padding:4px; box-sizing:border-box;' : ''} display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; border:1px solid rgba(255,255,255,0.2);">
+              ${team.logo ? `<img src="${team.logo}" alt="${team.name}" style="width:100%;height:100%;max-width:100%;max-height:100%;margin:auto;object-fit:contain;object-position:center;display:block;" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : `<span style="font-weight:800;font-size:0.75rem;color:#fff;">${(team.shortName || 'TBD').substring(0, 3)}</span>`}
             </div>
             <div>
               <strong style="font-size:0.92rem; color:#fff; display:block;">${team.name}</strong>
@@ -9053,8 +9053,8 @@ var app = window.app = Object.assign(window.app || {}, {
         <div class="md-matchup-grid">
           <!-- HOME -->
           <div class="md-team-box">
-            <div class="md-team-logo-wrap" style="border-color: ${home.badgeColor || '#10b981'};">
-              ${home.logo ? `<img src="${home.logo}" alt="${home.name}" class="md-team-logo-img">` : `<span class="md-team-logo-fallback">${(home.shortName || 'TBD').substring(0, 3)}</span>`}
+            <div class="md-team-logo-wrap${home.logo ? ' has-logo' : ''}" style="border-color: ${home.badgeColor || '#10b981'};">
+              ${home.logo ? `<img src="${home.logo}" alt="${home.name}" class="md-team-logo-img" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : `<span class="md-team-logo-fallback">${(home.shortName || 'TBD').substring(0, 3)}</span>`}
             </div>
             <div class="md-team-title">${home.name}</div>
             <div class="md-team-sub">📍 ${home.city || '-'}</div>
@@ -9077,8 +9077,8 @@ var app = window.app = Object.assign(window.app || {}, {
 
           <!-- AWAY -->
           <div class="md-team-box">
-            <div class="md-team-logo-wrap" style="border-color: ${away.badgeColor || '#3b82f6'};">
-              ${away.logo ? `<img src="${away.logo}" alt="${away.name}" class="md-team-logo-img">` : `<span class="md-team-logo-fallback">${(away.shortName || 'TBD').substring(0, 3)}</span>`}
+            <div class="md-team-logo-wrap${away.logo ? ' has-logo' : ''}" style="border-color: ${away.badgeColor || '#3b82f6'};">
+              ${away.logo ? `<img src="${away.logo}" alt="${away.name}" class="md-team-logo-img" onload="window.app && window.app.normalizeLogoElement && window.app.normalizeLogoElement(this)">` : `<span class="md-team-logo-fallback">${(away.shortName || 'TBD').substring(0, 3)}</span>`}
             </div>
             <div class="md-team-title">${away.name}</div>
             <div class="md-team-sub">📍 ${away.city || '-'}</div>

@@ -6105,14 +6105,26 @@ body.mobile-menu-active .mobile-menu-content {
   border: 2px solid var(--border-color) !important;
   margin-bottom: 10px !important;
   overflow: hidden !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+}
+
+.md-team-logo-wrap.has-logo {
+  background: #ffffff !important;
+  padding: 6px !important;
 }
 
 .md-team-logo-img {
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto !important;
   object-fit: contain !important;
-  padding: 4px !important;
+  object-position: center center !important;
+  display: block !important;
+  padding: 0 !important;
 }
 
 .md-team-logo-fallback {
@@ -7313,9 +7325,14 @@ body.modal-open .header {
   }
 
   .md-team-logo-wrap {
-    width: 54px !important;
-    height: 54px !important;
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
     margin-bottom: 8px !important;
+  }
+
+  .md-team-logo-wrap.has-logo {
+    padding: 5px !important;
   }
 
   .md-team-title {
