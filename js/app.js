@@ -5185,7 +5185,10 @@ var app = window.app = Object.assign(window.app || {}, {
         if (dStr.includes(`matchday ${selectedMd}`) || dStr.includes(`hari ${selectedMd}`) || dStr.includes(`hari ke-${selectedMd}`) || dStr.includes(`md ${selectedMd}`) || dStr.includes(`md${selectedMd}`)) return true;
 
         const dayDateMap = { "1": "22", "2": "23", "3": "24", "4": "25", "5": "26", "6": "27", "7": "28", "8": "29" };
-        if (dayDateMap[selectedMd] && dStr.includes(dayDateMap[selectedMd])) return true;
+        if (dayDateMap[selectedMd]) {
+          const dNoYear = dStr.replace(/\b20\d{2}\b/g, "");
+          if (new RegExp(`\\b${dayDateMap[selectedMd]}\\b`).test(dNoYear)) return true;
+        }
 
         if (selectedMd === "6" && m.stage === "qf") return true;
         if (selectedMd === "7" && m.stage === "sf") return true;
