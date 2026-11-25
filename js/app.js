@@ -6408,7 +6408,7 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
 
           <div class="school-card-body">
-            <div class="school-avatar" style="background: ${t.badgeColor || '#0284c7'};">
+            <div class="school-avatar${t.logo ? ' has-logo' : ''}" style="${t.logo ? 'background: #ffffff;' : `background: ${t.badgeColor || '#0284c7'};`}">
               ${t.logo ? `<img src="${t.logo}" class="team-logo-img" alt="${tName}">` : tShort.substring(0, 3)}
             </div>
 
