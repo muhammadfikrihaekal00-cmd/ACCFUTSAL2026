@@ -2170,11 +2170,13 @@ body.dark-theme .bracket-match-card.is-bronze {
 }
 
 .school-avatar {
-  width: 58px;
-  height: 58px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: 3px solid #ffffff;
   background: #ffffff;
+  padding: 6px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2194,10 +2196,11 @@ body.dark-theme .bracket-match-card.is-bronze {
 .school-avatar img.team-logo-img {
   width: 100% !important;
   height: 100% !important;
-  border-radius: 50% !important;
+  border-radius: 0 !important;
   object-fit: contain !important;
+  object-position: center !important;
   display: block !important;
-  background: #ffffff !important;
+  background: transparent !important;
 }
 
 .school-card-name {

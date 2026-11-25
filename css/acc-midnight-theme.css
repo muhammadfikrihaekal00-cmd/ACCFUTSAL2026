@@ -2360,6 +2360,8 @@ textarea:focus {
 }
 
 .school-avatar {
+  padding: 6px !important;
+  box-sizing: border-box !important;
   border: 3px solid rgba(245, 158, 11, 0.55) !important;
   background: rgba(11, 19, 43, 0.98) !important;
   box-shadow:
@@ -2369,6 +2371,11 @@ textarea:focus {
 
 .school-avatar img,
 .school-avatar img.team-logo-img {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
   background: transparent !important;
 }
 
