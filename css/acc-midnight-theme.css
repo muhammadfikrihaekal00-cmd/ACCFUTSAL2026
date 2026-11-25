@@ -1577,12 +1577,14 @@ html.snap-scroll-active .home-slide-nav {
 
 /* Moment Section */
 .acc-moments-section {
+  min-height: auto !important;
+  margin: 20px auto !important;
   background: radial-gradient(circle at 50% 20%, rgba(2, 132, 199, 0.12) 0%, rgba(15, 23, 42, 0.8) 55%, rgba(6, 11, 25, 0.95) 100%) !important;
   backdrop-filter: blur(18px) !important;
   -webkit-backdrop-filter: blur(18px) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 26px !important;
-  padding: 28px 32px !important;
+  padding: 24px 28px !important;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 40px rgba(2, 132, 199, 0.12) !important;
 }
 
@@ -4021,9 +4023,8 @@ body.mobile-menu-active .mobile-menu-content {
 
   #accMomentsContainer.home-slide-section,
   .acc-moments-section {
-    min-height: calc(100svh - 68px) !important;
-    min-height: calc(100dvh - 68px) !important;
-    justify-content: center !important;
+    min-height: auto !important;
+    justify-content: flex-start !important;
     padding: 14px 12px !important;
     border-radius: 20px !important;
     margin-bottom: 0 !important;
@@ -7363,6 +7364,12 @@ body.modal-open .header {
 
   #homeStatsShowcase .slide-section-header {
     margin-bottom: 14px !important;
+  }
+
+  #accMomentsContainer.home-slide-section {
+    min-height: auto !important;
+    margin: 12px auto !important;
+    padding: 14px 12px !important;
   }
 
   /* Slide Momen: header 1 baris & tinggi kartu pas 1 layar HP */

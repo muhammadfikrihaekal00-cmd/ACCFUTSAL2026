@@ -4749,9 +4749,6 @@ var app = window.app = Object.assign(window.app || {}, {
             <div class="mvp-spotlight-card">
               <div class="mvp-photo-wrapper">
                 <img src="${pPhoto}" alt="Foto ${pName}" class="mvp-photo-img" width="160" height="200" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/assets/acc_logo.webp'">
-                <div class="mvp-badge-overlay">
-                  <span>🏆</span> <span>${pBadge}</span>
-                </div>
               </div>
 
               <div class="mvp-details-col">
@@ -4879,8 +4876,11 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     const isAdmin = this.isAdmin();
-    container.innerHTML = moments.map(m => {
-      const photoUrl = m.image || m.media_url || m.mediaUrl || 'assets/hero_banner.jpg';
+    container.innerHTML = moments.map((m, idx) => {
+      let photoUrl = m.image || m.media_url || m.mediaUrl || '/assets/hero_banner.webp';
+      if (/^\/?assets\/(hero_banner|moment_celebration|moment_gk_save|moment_strike|moment_trophy)\.jpg$/i.test(photoUrl)) {
+        photoUrl = '/' + photoUrl.replace(/^\//, '').replace(/\.jpg$/i, '.webp');
+      }
       const badgeText = m.badge || '🔥 HIGHLIGHT';
       const tagText = m.tag || 'NEW';
       const playerText = m.player ? `<span>⚽</span> <span>${m.player}</span>` : '';
@@ -4888,7 +4888,8 @@ var app = window.app = Object.assign(window.app || {}, {
       const titleText = m.title || 'Momen ACC 2026';
 
       return `
-        <div class="moment-card" style="background-image: url('${photoUrl}');" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat sorotan momen">
+        <div class="moment-card" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat sorotan momen">
+          <img src="${photoUrl}" class="moment-card-bg-img" alt="${titleText}" loading="${idx < 2 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${idx === 0 ? 'high' : 'auto'}" onerror="this.onerror=null;this.src='/assets/hero_banner.webp';">
           <!-- Top Bar: Non-colliding Flex Layout -->
           <div class="moment-card-topbar">
             <div class="moment-badges-wrap">
