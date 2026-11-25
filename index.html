@@ -11,8 +11,8 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261125_v64">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261125_v64">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261125_v65">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261125_v65">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Preconnect Candidates for Lightning LCP -->
@@ -378,8 +378,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261125_v64">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261125_v64">
+  <link rel="stylesheet" href="/css/styles.css?v=20261125_v65">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261125_v65">
 </head>
 
 <body class="snap-scroll-active">
@@ -1121,15 +1121,29 @@
           </div>
         </div>
       </div>
-      <div class="section-header" style="flex-wrap: wrap; gap: 10px;">
-
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()"
-            style="display: none; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); cursor: pointer;">
-            ➕ Tambah Tim Baru
-          </button>
+      <!-- SEARCH TIM & PEMAIN TOOLBAR -->
+      <div class="teams-search-toolbar">
+        <div class="teams-search-row">
+          <div class="juknis-search-bar teams-search-bar">
+            <input type="text" id="teamsSearchInput" class="form-input juknis-input teams-search-input"
+              placeholder="🔍 Cari nama tim, sekolah, kota, pelatih, atau nama pemain..."
+              oninput="app.filterTeams(this.value)" autocomplete="off">
+            <button type="button" id="teamsSearchClearBtn" class="juknis-search-clear"
+              onclick="app.clearTeamsSearch()" title="Hapus pencarian" style="display: none;">✕</button>
+          </div>
+          <div class="teams-toolbar-meta">
+            <span id="teamsTotalCount" class="teams-count-pill">16 Tim</span>
+            <button id="btnAddTeamBtn" class="btn btn-primary btn-sm" onclick="admin.openTeamEditorModal()"
+              style="display: none; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; color: #ffffff; padding: 6px 16px; border-radius: 999px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); cursor: pointer;">
+              ➕ Tambah Tim Baru
+            </button>
+          </div>
         </div>
+        <div id="teamsSearchInfoBar" class="teams-search-info" style="display: none;"></div>
       </div>
+
+      <div id="playerSearchResultsContainer" class="player-search-results" style="display: none;"></div>
+
       <div class="team-grid" id="teamGridContainer">
         <!-- Rendered by app.js -->
       </div>
@@ -3460,11 +3474,11 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/js/security.js?v=20261125_v64"></script>
-  <script defer src="/js/supabase-client.js?v=20261125_v64"></script>
-  <script defer src="/js/data.js?v=20261125_v64"></script>
-  <script defer src="/js/admin.js?v=20261125_v64"></script>
-  <script defer src="/js/app.js?v=20261125_v64"></script>
+  <script defer src="/js/security.js?v=20261125_v65"></script>
+  <script defer src="/js/supabase-client.js?v=20261125_v65"></script>
+  <script defer src="/js/data.js?v=20261125_v65"></script>
+  <script defer src="/js/admin.js?v=20261125_v65"></script>
+  <script defer src="/js/app.js?v=20261125_v65"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

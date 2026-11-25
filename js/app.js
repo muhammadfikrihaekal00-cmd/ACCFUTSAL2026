@@ -6078,28 +6078,205 @@ var app = window.app = Object.assign(window.app || {}, {
     }
   },
 
-  // 4. RENDER TEAM & OFFICIAL PORTAL (FILTERED BY CATEGORY)
+  // 4. RENDER TEAM & OFFICIAL PORTAL (FILTERED BY CATEGORY & SEARCH TIM/PEMAIN)
+  filterTeams(query) {
+    this.teamSearchQuery = typeof query === "string" ? query : "";
+    const clearBtn = document.getElementById("teamsSearchClearBtn");
+    if (clearBtn) {
+      clearBtn.style.display = this.teamSearchQuery.trim() ? "inline-flex" : "none";
+    }
+    this.renderTeams();
+  },
+
+  clearTeamsSearch() {
+    this.teamSearchQuery = "";
+    const input = document.getElementById("teamsSearchInput");
+    if (input) input.value = "";
+    const clearBtn = document.getElementById("teamsSearchClearBtn");
+    if (clearBtn) clearBtn.style.display = "none";
+    this.renderTeams();
+  },
+
+  matchTeamOrPlayers(team, queryLower) {
+    if (!team) return { matchedTeam: false, matchedPlayers: [] };
+    const off = (team.official && typeof team.official === "object") ? team.official : {};
+    const teamText = [
+      team.name,
+      team.shortName,
+      team.short_name,
+      team.city,
+      team.group ? `grup ${team.group}` : "",
+      team.group,
+      off.coach,
+      off.manager
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    const matchedTeam = teamText.includes(queryLower);
+    const players = Array.isArray(team.players) ? team.players : [];
+    const matchedPlayers = players.filter(p => {
+      if (!p) return false;
+      const pNo = p.no !== undefined && p.no !== null ? String(p.no) : "";
+      const pText = `${p.name || ""} ${p.pos || ""} ${pNo} #${pNo}`.toLowerCase();
+      return pText.includes(queryLower);
+    });
+
+    return { matchedTeam, matchedPlayers };
+  },
+
   renderTeams() {
     const container = document.getElementById("teamGridContainer");
     if (!container) return;
 
-    let teams = this.store.data.teams;
+    const allTeams = this.store.data.teams || [];
+    let catTeams = allTeams;
     if (this.currentCategory !== "all") {
-      teams = teams.filter(t => (t.category || "SMP") === this.currentCategory);
+      catTeams = allTeams.filter(t => (t.category || "SMP") === this.currentCategory);
     }
+
+    const qRaw = (this.teamSearchQuery || "").trim();
+    const qLower = qRaw.toLowerCase();
+
+    // Sinkronkan isi input jika renderTeams dipanggil setelah ganti kategori/tab
+    const searchInput = document.getElementById("teamsSearchInput");
+    if (searchInput && searchInput.value !== (this.teamSearchQuery || "")) {
+      searchInput.value = this.teamSearchQuery || "";
+    }
+    const clearBtn = document.getElementById("teamsSearchClearBtn");
+    if (clearBtn) {
+      clearBtn.style.display = qRaw ? "inline-flex" : "none";
+    }
+
+    const infoBar = document.getElementById("teamsSearchInfoBar");
+    const playerResEl = document.getElementById("playerSearchResultsContainer");
+
+    let teamsToRender = catTeams;
+    const matchedPlayersMap = new Map();
+    const matchedPlayerEntries = [];
+    let otherCatMatchCount = 0;
+    const otherCat = this.currentCategory === "SMP" ? "SD" : "SMP";
+
+    if (qLower) {
+      teamsToRender = [];
+      catTeams.forEach(t => {
+        const res = this.matchTeamOrPlayers(t, qLower);
+        if (res.matchedTeam || res.matchedPlayers.length > 0) {
+          teamsToRender.push(t);
+          if (res.matchedPlayers.length > 0) {
+            matchedPlayersMap.set(t.id, res.matchedPlayers);
+            res.matchedPlayers.forEach(p => {
+              matchedPlayerEntries.push({ team: t, player: p });
+            });
+          }
+        }
+      });
+
+      if (this.currentCategory !== "all") {
+        otherCatMatchCount = allTeams
+          .filter(t => (t.category || "SMP") === otherCat)
+          .filter(t => {
+            const res = this.matchTeamOrPlayers(t, qLower);
+            return res.matchedTeam || res.matchedPlayers.length > 0;
+          }).length;
+      }
+    }
+
+    const safeQ = typeof Security !== "undefined" ? Security.sanitize(qRaw) : qRaw;
+    const catLabel = this.currentCategory === "all" ? "Semua Kelas" : (this.currentCategory === "SMP" ? "SMP / MTs" : "SD / MI");
 
     const countEl = document.getElementById("teamsTotalCount");
     if (countEl) {
-      countEl.textContent = `${teams.length} Tim (${this.currentCategory === 'all' ? 'Semua Kelas' : (this.currentCategory === 'SMP' ? 'SMP / MTs' : 'SD / MI')})`;
+      countEl.textContent = qLower
+        ? `${teamsToRender.length} Tim (${matchedPlayerEntries.length} Pemain)`
+        : `${teamsToRender.length} Tim (${catLabel})`;
+    }
+
+    if (infoBar) {
+      if (qLower) {
+        infoBar.style.display = "flex";
+        infoBar.innerHTML = `
+          <span>🔎 Hasil pencarian "<strong>${safeQ}</strong>" di <strong>${catLabel}</strong>: <strong>${teamsToRender.length}</strong> tim &amp; <strong>${matchedPlayerEntries.length}</strong> pemain cocok.</span>
+          ${otherCatMatchCount > 0 ? `
+            <button type="button" class="teams-switch-cat-btn" onclick="app.setCategory('${otherCat}')">
+              Lihat ${otherCatMatchCount} hasil di Kelas ${otherCat} →
+            </button>
+          ` : ''}
+        `;
+      } else {
+        infoBar.style.display = "none";
+        infoBar.innerHTML = "";
+      }
+    }
+
+    if (playerResEl) {
+      if (qLower && matchedPlayerEntries.length > 0) {
+        const maxPlayersShown = 24;
+        const visiblePlayers = matchedPlayerEntries.slice(0, maxPlayersShown);
+        playerResEl.style.display = "block";
+        playerResEl.innerHTML = `
+          <div class="player-search-header">
+            <span>⚽ PEMAIN COCOK (${matchedPlayerEntries.length})</span>
+            ${matchedPlayerEntries.length > maxPlayersShown ? `<span style="font-size:0.72rem; color:#94a3b8; font-weight:600;">Menampilkan ${maxPlayersShown} teratas</span>` : ''}
+          </div>
+          <div class="player-search-grid">
+            ${visiblePlayers.map(({ team: t, player: p }) => {
+              const pName = typeof Security !== "undefined" ? Security.sanitize(p.name || "Pemain") : (p.name || "Pemain");
+              const pPos = typeof Security !== "undefined" ? Security.sanitize(p.pos || "Pemain") : (p.pos || "Pemain");
+              const tName = typeof Security !== "undefined" ? Security.sanitize(t.name || "") : (t.name || "");
+              const playerKey = p.id || p.no || p.name;
+              const detailUrl = `/daftar-tim/detail-tim/${encodeURIComponent(t.id)}/detail-pemain/${encodeURIComponent(playerKey)}`;
+              return `
+                <div class="player-search-card" onclick="app.navigateTo('${detailUrl}', 'player-detail', { teamId: '${t.id}', playerId: '${encodeURIComponent(playerKey)}' })" title="Klik untuk lihat profil ${pName}">
+                  <div class="player-search-num" style="background: ${t.badgeColor || '#0284c7'};">#${p.no || '-'}</div>
+                  <div class="player-search-meta">
+                    <div class="player-search-name">${pName}</div>
+                    <div class="player-search-sub">${pPos} • ${tName}${t.group && t.group !== '-' ? ` (Grup ${t.group})` : ''}</div>
+                  </div>
+                  <span style="color:#94a3b8; font-size:0.8rem;">➔</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        `;
+      } else {
+        playerResEl.style.display = "none";
+        playerResEl.innerHTML = "";
+      }
+    }
+
+    if (teamsToRender.length === 0) {
+      container.innerHTML = `
+        <div class="teams-search-empty">
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">🔍</div>
+          <div style="font-size: 0.95rem; font-weight: 700; color: #f8fafc; margin-bottom: 6px;">
+            Tidak ada tim atau pemain yang cocok dengan "${safeQ}"
+          </div>
+          <div style="font-size: 0.8rem; margin-bottom: 14px;">
+            Coba kata kunci lain (nama sekolah, kota, pelatih, atau nama/nomor pemain) pada kategori ${catLabel}.
+          </div>
+          <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            ${otherCatMatchCount > 0 ? `
+              <button type="button" class="teams-switch-cat-btn" onclick="app.setCategory('${otherCat}')">
+                🔄 Cari di Kelas ${otherCat} (${otherCatMatchCount} ditemukan)
+              </button>
+            ` : ''}
+            <button type="button" class="btn btn-outline btn-sm" onclick="app.clearTeamsSearch()" style="border-radius: 999px; padding: 5px 14px;">
+              ✕ Reset Pencarian
+            </button>
+          </div>
+        </div>
+      `;
+      this.updateFloatingLiveNotice();
+      return;
     }
 
     const isPanitia = this.isAdmin();
 
-    container.innerHTML = teams.map((t, idx) => {
+    container.innerHTML = teamsToRender.map((t, idx) => {
       const off = (t && t.official && typeof t.official === "object") ? t.official : {};
       const tName = (t && t.name) ? String(t.name) : ("Tim " + (t && t.id ? t.id : ""));
       const tShort = (t && (t.shortName || t.short_name)) ? String(t.shortName || t.short_name) : tName;
       const tPlayers = (t && Array.isArray(t.players)) ? t.players : [];
+      const matchedPlayers = matchedPlayersMap.get(t.id) || [];
       const statusInfo = (this.store && typeof this.store.getTeamTournamentStatus === 'function')
         ? this.store.getTeamTournamentStatus(t)
         : { excluded: false };
@@ -6125,6 +6302,11 @@ var app = window.app = Object.assign(window.app || {}, {
             ${statusInfo.excluded ? `
               <div style="margin: 6px auto 2px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 0.68rem; font-weight: 800; ${statusInfo.type === 'disqualified' ? 'background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.45);' : 'background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.45);'}">
                 ${statusInfo.type === 'disqualified' ? '⛔' : '🏳️'} ${statusInfo.badge} • ${statusInfo.reason}
+              </div>
+            ` : ''}
+            ${matchedPlayers.length > 0 ? `
+              <div class="team-matched-players-pill">
+                ⚽ <strong>Pemain cocok:</strong> ${matchedPlayers.slice(0, 4).map(p => `#${p.no || '-'} ${typeof Security !== 'undefined' ? Security.sanitize(p.name || '') : (p.name || '')}`).join(', ')}${matchedPlayers.length > 4 ? ` (+${matchedPlayers.length - 4} lainnya)` : ''}
               </div>
             ` : ''}
 
