@@ -5564,7 +5564,8 @@ body.dark-theme .fixture-team-row:hover {
 .team-avatar-mini img.team-logo-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  display: block;
 }
 
 .fixture-team-name-wrap {
