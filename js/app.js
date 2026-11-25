@@ -330,9 +330,6 @@ class TournamentStore {
       else if (stage === "3rd" || stage === "final") day = 8;
     }
 
-    const pitch = m.pitch || m.venue || "Lapangan Utama";
-    const pitchNum = m.pitchNum || (/2/.test(pitch) ? 2 : 1);
-
     // Ambil dan pulihkan metadata Starting 5, pergantian pemain, dan fouls
     let cleanCards = Array.isArray(m.cards) ? [...m.cards] : [];
     let lineup = m.lineup || null;
@@ -385,8 +382,6 @@ class TournamentStore {
       matchday: (m.matchday !== undefined && m.matchday !== null) ? parseInt(m.matchday, 10) : (day || 1),
       date: dateStr,
       time: m.time || "",
-      pitch,
-      pitchNum,
       homeId: homeId || "",
       awayId: awayId || "",
       homePlaceholder: m.homePlaceholder !== undefined ? m.homePlaceholder : (m.home_placeholder || ""),
@@ -403,8 +398,7 @@ class TournamentStore {
       liveClockDisplay,
       scorers: Array.isArray(m.scorers) ? m.scorers.map(s => s && typeof s === "object" ? {
         ...s,
-        player: s.player ? formatPersonName(s.player) : s.player,
-        assist: s.assist ? formatPersonName(s.assist) : s.assist
+        player: s.player ? formatPersonName(s.player) : s.player
       } : s) : [],
       cards: Array.isArray(cleanCards) ? cleanCards.map(c => c && typeof c === "object" ? {
         ...c,
@@ -629,17 +623,8 @@ class TournamentStore {
           if (sName && !isOg) {
             const key = `${tId}:${sName}`;
             let entry = statsMap.get(key);
-            if (!entry) { entry = { goals: 0, assists: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
+            if (!entry) { entry = { goals: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
             entry.goals += 1;
-          }
-          if (s.assist) {
-            const aName = (s.assist || '').toLowerCase().trim();
-            if (aName) {
-              const key = `${tId}:${aName}`;
-              let entry = statsMap.get(key);
-              if (!entry) { entry = { goals: 0, assists: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
-              entry.assists += 1;
-            }
           }
         });
       }
@@ -652,7 +637,7 @@ class TournamentStore {
           if (cName) {
             const key = `${tId}:${cName}`;
             let entry = statsMap.get(key);
-            if (!entry) { entry = { goals: 0, assists: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
+            if (!entry) { entry = { goals: 0, yc: 0, rc: 0 }; statsMap.set(key, entry); }
             if (c.type === 'yellow') entry.yc += 1;
             if (c.type === 'red') entry.rc += 1;
           }
@@ -666,7 +651,6 @@ class TournamentStore {
       t.players.forEach(p => {
         const cleanPName = (p.name || '').toLowerCase().trim();
         let matchGoals = 0;
-        let matchAssists = 0;
         let matchYc = 0;
         let matchRc = 0;
 
@@ -675,7 +659,6 @@ class TournamentStore {
         const entry = statsMap.get(directKey);
         if (entry) {
           matchGoals = entry.goals;
-          matchAssists = entry.assists;
           matchYc = entry.yc;
           matchRc = entry.rc;
         } else {
@@ -688,7 +671,6 @@ class TournamentStore {
               const scorerName = k.split(":")[1] || "";
               if (scorerName === cleanPName || (p.no && scorerName.includes(`#${p.no}`)) || (cleanPName && (scorerName.includes(cleanPName) || cleanPName.includes(scorerName)))) {
                 matchGoals += v.goals;
-                matchAssists += v.assists;
                 matchYc += v.yc;
                 matchRc += v.rc;
               }
@@ -697,10 +679,8 @@ class TournamentStore {
         }
 
         const newGoals = Math.max(parseInt(p.goals, 10) || 0, matchGoals);
-        const newAssists = Math.max(parseInt(p.assists, 10) || 0, matchAssists);
-        if (p.goals !== newGoals || p.assists !== newAssists || p.yc !== matchYc || p.rc !== matchRc) {
+        if (p.goals !== newGoals || p.yc !== matchYc || p.rc !== matchRc) {
           p.goals = newGoals;
-          p.assists = newAssists;
           p.yc = matchYc;
           p.rc = matchRc;
           hasChanged = true;
@@ -1521,93 +1501,13 @@ class TournamentStore {
       .filter(s => s.goals > 0 && (!targetCat || (s.category || "SMP").toUpperCase() === targetCat))
       .sort((a, b) => b.goals - a.goals);
   }
-
-  // Calculate Top Assists
-  getTopAssistsList(category = null) {
-    const assisters = {};
-    const targetCat = (category && category !== "all") ? category.toUpperCase() : null;
-    let teams = this.data.teams || [];
-    if (targetCat) {
-      teams = teams.filter(t => (t.category || "SMP").toUpperCase() === targetCat);
-    }
-
-    teams.forEach(t => {
-      if (!t || !Array.isArray(t.players)) return;
-      t.players.forEach(p => {
-        if (!p) return;
-        const key = `${t.id}-${p.name}`;
-        assisters[key] = {
-          teamId: t.id,
-          teamName: t.name,
-          category: t.category || "SMP",
-          badgeColor: t.badgeColor,
-          playerNo: p.no,
-          playerName: p.name,
-          pos: p.pos,
-          photo: p.photo || "",
-          assists: parseInt(p.assists || p.assist, 10) || 0,
-          goals: parseInt(p.goals, 10) || 0
-        };
-      });
-    });
-
-    const catMatches = (this.data.matches || []).filter(m => {
-      if (!m || this.isInvalidMatchId(m.id)) return false;
-      if (!targetCat) return true;
-      return (m.category || "SMP").toUpperCase() === targetCat;
-    });
-
-    catMatches.forEach(m => {
-      if (m.scorers && Array.isArray(m.scorers)) {
-        m.scorers.forEach(s => {
-          if (s.assist) {
-            const key = `${s.team}-${s.assist}`;
-            if (assisters[key]) {
-              assisters[key].assists += 1;
-            } else {
-              const cleanA = (s.assist || '').toLowerCase().trim();
-              const foundKey = Object.keys(assisters).find(k => {
-                const item = assisters[k];
-                const isTeam = !s.team || s.team === item.teamId || s.team === item.teamName;
-                return isTeam && (item.playerName.toLowerCase().trim() === cleanA || (item.playerNo && cleanA.includes(`#${item.playerNo}`)));
-              });
-              if (foundKey) {
-                assisters[foundKey].assists += 1;
-              } else {
-                const tObj = (this.data.teams || []).find(t => t.id === s.team || t.name === s.team);
-                const pCat = tObj ? (tObj.category || "SMP") : (m.category || "SMP");
-                if (!targetCat || pCat.toUpperCase() === targetCat) {
-                  assisters[key] = {
-                    teamId: s.team || "",
-                    teamName: tObj ? tObj.name : (s.team || ""),
-                    category: pCat,
-                    badgeColor: tObj ? tObj.badgeColor : "#0284c7",
-                    playerNo: "",
-                    playerName: s.assist,
-                    pos: "Pemain",
-                    photo: "",
-                    assists: 1,
-                    goals: 0
-                  };
-                }
-              }
-            }
-          }
-        });
-      }
-    });
-
-    return Object.values(assisters)
-      .filter(a => a.assists > 0 && (!targetCat || (a.category || "SMP").toUpperCase() === targetCat))
-      .sort((a, b) => b.assists - a.assists || b.goals - a.goals);
-  }
 }
 
 // Global UI Manager (Unified single instance with window.app, ZERO TDZ!)
 var app = window.app = Object.assign(window.app || {}, {
   store: null,
   currentTab: "home", // Default sekarang membuka tab Beranda Utama
-  currentStatsTab: "scorers", // Default sub-tab di statistik: scorers | assists | yellow | red
+  currentStatsTab: "scorers", // Default sub-tab di statistik: scorers | yellow | red
   currentCategory: _safeStorageGet(localStorage, "acc_active_category") || "SMP",
   filterDay: "all",
   filterTeam: "all",
@@ -2807,7 +2707,6 @@ var app = window.app = Object.assign(window.app || {}, {
         if (payload.away_id !== undefined) mapped.awayId = payload.away_id || "";
         if (payload.date !== undefined) mapped.date = payload.date || "";
         if (payload.time !== undefined) mapped.time = payload.time || "";
-        if (payload.pitch !== undefined) mapped.pitch = payload.pitch || "";
         if (payload.home_placeholder !== undefined) mapped.homePlaceholder = payload.home_placeholder || "";
         if (payload.away_placeholder !== undefined) mapped.awayPlaceholder = payload.away_placeholder || "";
         if (payload.stage !== undefined) mapped.stage = payload.stage;
@@ -2965,7 +2864,6 @@ var app = window.app = Object.assign(window.app || {}, {
           awayPlaceholder: payload.away_placeholder || "",
           date: payload.date || "",
           time: payload.time || "",
-          pitch: payload.pitch || "Lapangan 1 (Utama Vinyl)",
           status: payload.status || "upcoming",
           homeScore: payload.home_score !== undefined ? payload.home_score : null,
           awayScore: payload.away_score !== undefined ? payload.away_score : null,
@@ -3271,11 +3169,10 @@ var app = window.app = Object.assign(window.app || {}, {
     this.renderHeroBanner();
   },
 
-  // Kalkulasi rating performa pemain otomatis berdasarkan Gol, Assist, Kartu, & Posisi
+  // Kalkulasi rating performa pemain otomatis berdasarkan Gol, Kartu, & Posisi
   calculatePlayerRating(player) {
     if (!player) return "7.0";
     const g = parseInt(player.goals, 10) || 0;
-    const a = parseInt(player.assists, 10) || 0;
     const yc = parseInt(player.yc, 10) || 0;
     const rc = parseInt(player.rc, 10) || 0;
     const pos = (player.pos || player.position || '').toLowerCase();
@@ -3285,9 +3182,6 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Kontribusi Gol (+1.0 per gol)
     rating += (g * 1.0);
-
-    // Kontribusi Assist (+0.7 per assist)
-    rating += (a * 0.7);
 
     // Bonus penjaga gawang
     if (pos.includes('kiper') || pos.includes('gk')) {
@@ -3983,7 +3877,6 @@ var app = window.app = Object.assign(window.app || {}, {
       const pNameLower = pName.toLowerCase();
       const pNo = p.no ? String(p.no).trim() : "";
       let goalsCount = 0;
-      let assistsCount = 0;
       let ycCount = 0;
       let rcCount = 0;
 
@@ -4006,17 +3899,6 @@ var app = window.app = Object.assign(window.app || {}, {
           if (isMyTeam && isPlayer && !isOg) {
             goalsCount++;
           }
-          if (s.assist) {
-            const aPlayer = (s.assist || "").toLowerCase().trim();
-            const isAssistPlayer = aPlayer === pNameLower ||
-              aPlayer === `${pNameLower} (#${pNo})` ||
-              (pNo && aPlayer.includes(`#${pNo}`)) ||
-              (aPlayer.length > 3 && pNameLower.includes(aPlayer)) ||
-              (pNameLower.length > 3 && aPlayer.includes(pNameLower));
-            if (isMyTeam && isAssistPlayer) {
-              assistsCount++;
-            }
-          }
         });
 
         (m.cards || []).forEach(c => {
@@ -4036,7 +3918,6 @@ var app = window.app = Object.assign(window.app || {}, {
       });
 
       goalsCount = Math.max(goalsCount, parseInt(p.goals, 10) || 0);
-      assistsCount = Math.max(assistsCount, parseInt(p.assists, 10) || 0);
       ycCount = Math.max(ycCount, parseInt(p.yc, 10) || 0);
       rcCount = Math.max(rcCount, parseInt(p.rc, 10) || 0);
 
@@ -4052,7 +3933,6 @@ var app = window.app = Object.assign(window.app || {}, {
               <div class="player-card-tags">
                 <span class="player-tag pos">${typeof Security !== 'undefined' ? Security.sanitize(p.pos || 'Flank') : (p.pos || 'Flank')}</span>
                 ${goalsCount > 0 ? `<span class="player-tag goal">⚽ ${goalsCount} Gol</span>` : ''}
-                ${assistsCount > 0 ? `<span class="player-tag assist" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3);">🎯 ${assistsCount} Ast</span>` : ''}
                 ${ycCount > 0 ? `<span class="player-tag yc">🟨 ${ycCount}</span>` : ''}
                 ${rcCount > 0 ? `<span class="player-tag rc">🟥 ${rcCount}</span>` : ''}
               </div>
@@ -4088,7 +3968,7 @@ var app = window.app = Object.assign(window.app || {}, {
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;">
           <div>
             <div style="font-size: 0.84rem; font-weight: 700; color: #ffffff;">vs ${typeof Security !== 'undefined' ? Security.sanitize(oppName) : oppName}</div>
-            <div style="font-size: 0.70rem; color: #94a3b8; margin-top: 2px;">${m.time || 'Waktu Pertandingan'} • Lapangan ${m.pitch || '1'}</div>
+            <div style="font-size: 0.70rem; color: #94a3b8; margin-top: 2px;">${m.date ? m.date + ' • ' : ''}${m.time || 'Waktu Pertandingan'}</div>
           </div>
           <div>${statusBadge}</div>
         </div>
@@ -4275,7 +4155,6 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Hitung seluruh statistik pemain secara aktual dari data.matches
     let totalGoals = 0;
-    let totalAssists = 0;
     let totalYc = 0;
     let totalRc = 0;
     let matchesCount = 0;
@@ -4324,27 +4203,7 @@ var app = window.app = Object.assign(window.app || {}, {
               type: "goal",
               matchTitle: `vs ${oppName}`,
               minute: minStr,
-              note: s.assist ? `⚽ Mencetak Gol (Assist: ${s.assist})` : "⚽ Mencetak Gol"
-            });
-          }
-        }
-
-        // Periksa jika pemain memberikan assist
-        if (s.assist) {
-          const aPlayer = (s.assist || "").toLowerCase().trim();
-          const isAssistPlayer = aPlayer === cleanPName ||
-            aPlayer === `${cleanPName} (#${pNo})` ||
-            (pNo && aPlayer.includes(`#${pNo}`)) ||
-            (aPlayer.length > 3 && cleanPName.includes(aPlayer)) ||
-            (cleanPName.length > 3 && aPlayer.includes(cleanPName));
-          if (isMyTeam && isAssistPlayer) {
-            totalAssists++;
-            playerInMatch = true;
-            playerEventsLog.push({
-              type: "assist",
-              matchTitle: `vs ${oppName}`,
-              minute: minStr,
-              note: `🎯 Memberikan Assist (Gol oleh ${s.player})`
+              note: "⚽ Mencetak Gol"
             });
           }
         }
@@ -4393,7 +4252,6 @@ var app = window.app = Object.assign(window.app || {}, {
     });
 
     totalGoals = Math.max(totalGoals, parseInt(player.goals, 10) || 0);
-    totalAssists = Math.max(totalAssists, parseInt(player.assists, 10) || 0);
     totalYc = Math.max(totalYc, parseInt(player.yc, 10) || 0);
     totalRc = Math.max(totalRc, parseInt(player.rc, 10) || 0);
 
@@ -4449,10 +4307,6 @@ var app = window.app = Object.assign(window.app || {}, {
               <div class="fullpage-stat-lbl">Gol Dicetak</div>
             </div>
             <div class="fullpage-stat-card">
-              <div class="fullpage-stat-val" style="color: #38bdf8;">${totalAssists}</div>
-              <div class="fullpage-stat-lbl">Assist 🎯</div>
-            </div>
-            <div class="fullpage-stat-card">
               <div class="fullpage-stat-val gold">${totalYc}</div>
               <div class="fullpage-stat-lbl">Kartu Kuning 🟨</div>
             </div>
@@ -4483,9 +4337,8 @@ var app = window.app = Object.assign(window.app || {}, {
                 </div>
                 <div>
                   ${ev.type === 'goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #10b981;">+1 Gol</span>' :
-          (ev.type === 'assist' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #38bdf8;">+1 Assist</span>' :
-            (ev.type === 'yellow' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f59e0b;">Kartu Kuning</span>' :
-              (ev.type === 'own_goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f87171;">Own Goal</span>' : '<span style="font-size: 0.74rem; font-weight: 700; color: #ef4444;">Kartu Merah</span>')))}
+          (ev.type === 'yellow' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f59e0b;">Kartu Kuning</span>' :
+            (ev.type === 'own_goal' ? '<span style="font-size: 0.74rem; font-weight: 700; color: #f87171;">Own Goal</span>' : '<span style="font-size: 0.74rem; font-weight: 700; color: #ef4444;">Kartu Merah</span>'))}
                 </div>
               </div>
             `).join('') : `
@@ -4739,7 +4592,6 @@ var app = window.app = Object.assign(window.app || {}, {
         const pTagline = mvp.tagline || "PERFORMA GEMILANG &amp; FAIR PLAY";
         const pPhoto = mvp.photo || "/assets/acc_logo.webp";
         const pGoals = parseInt(mvp.goals, 10) || 0;
-        const pAssists = parseInt(mvp.assists, 10) || 0;
         const pMotm = mvp.motm || `${mvp.motmCount || 1}x`;
         const pRating = mvp.rating || this.calculatePlayerRating(mvp);
         const pQuote = mvp.quote ? `"${mvp.quote}"` : "";
@@ -4765,10 +4617,6 @@ var app = window.app = Object.assign(window.app || {}, {
                   <div class="mvp-stat-box">
                     <div class="mvp-stat-val">${pGoals}</div>
                     <div class="mvp-stat-lbl">GOL</div>
-                  </div>
-                  <div class="mvp-stat-box">
-                    <div class="mvp-stat-val">${pAssists}</div>
-                    <div class="mvp-stat-lbl">ASSIST</div>
                   </div>
                   <div class="mvp-stat-box">
                     <div class="mvp-stat-val">${pMotm}</div>
@@ -5549,7 +5397,6 @@ var app = window.app = Object.assign(window.app || {}, {
           <div class="fixture-header-meta">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${catBadge}
-              <span class="fixture-pitch-pill">${m.pitch || 'Lapangan Utama'}</span>
               <span class="fixture-group-pill">${this.getMatchStageName(m)}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -5868,7 +5715,6 @@ var app = window.app = Object.assign(window.app || {}, {
           awayPlaceholder: aPlaceholder,
           date: isSMP ? "25 Nov 2026" : "25 Nov 2026",
           time: defaultTime || (activeCat === "SD" ? "08:00 - 08:35 WITA" : "08:00 - 08:45 WITA"),
-          pitch: "Lapangan 1 (Utama Vinyl)",
           status: "upcoming",
           homeScore: null,
           awayScore: null,
@@ -6039,7 +5885,7 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
 
           <div class="bracket-card-footer">
-            <span>🏟️ ${m.pitch ? m.pitch.replace(" (Vinyl)", "") : "Lapangan Utama"}</span>
+            <span>📅 ${m.date || 'Jadwal TBD'}${m.time ? ' • ' + m.time : ''}</span>
             <span style="color: var(--primary); font-weight: 700;">${isFinished ? 'Skor Akhir' : 'Detail Laga ➔'}</span>
           </div>
         </div>
@@ -6575,9 +6421,9 @@ var app = window.app = Object.assign(window.app || {}, {
     this.initScrollReveal();
   },
 
-  // 5. STATISTIK TURNAMEN (TOP SKOR, TOP ASSIST, KARTU KUNING, KARTU MERAH)
+  // 5. STATISTIK TURNAMEN (TOP SKOR, KARTU KUNING, KARTU MERAH)
   setStatsTab(tab) {
-    const validTabs = ["scorers", "assists", "yellow", "red"];
+    const validTabs = ["scorers", "yellow", "red"];
     this.currentStatsTab = validTabs.includes(tab) ? tab : "scorers";
     document.querySelectorAll(".stats-tab-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.stat === this.currentStatsTab);
@@ -6601,9 +6447,6 @@ var app = window.app = Object.assign(window.app || {}, {
     const cat = this.currentCategory;
     const scorers = this.store.getTopScorersList(cat);
     const topScorer = scorers.length > 0 ? scorers[0] : null;
-
-    const assisters = typeof this.store.getTopAssistsList === "function" ? this.store.getTopAssistsList(cat) : [];
-    const topAssister = assisters.length > 0 ? assisters[0] : null;
 
     const discRecords = this.store.getDisciplinaryRecords(cat);
     const totalYellow = discRecords.reduce((sum, r) => sum + (r.yellowCount || 0), 0);
@@ -6633,28 +6476,6 @@ var app = window.app = Object.assign(window.app || {}, {
       </div>
     `;
 
-    const card2 = topAssister ? `
-      <div class="stats-summary-card ${this.currentStatsTab === 'assists' ? 'active' : ''}" onclick="app.setStatsTab('assists')">
-        <img src="${safeImg(topAssister.photo)}" alt="${topAssister.playerName}" class="stats-summary-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
-        <div class="stats-summary-info">
-          <div class="stats-summary-kicker">👟 TOP ASSIST</div>
-          <div class="stats-summary-name" title="${topAssister.playerName}">${topAssister.playerName}</div>
-          <div class="stats-summary-sub">${topAssister.teamName}</div>
-        </div>
-        <div class="stats-summary-value text-cyan">${topAssister.assists}<span class="stats-summary-unit">Ast</span></div>
-      </div>
-    ` : `
-      <div class="stats-summary-card ${this.currentStatsTab === 'assists' ? 'active' : ''}" onclick="app.setStatsTab('assists')">
-        <div class="stats-summary-icon-fallback">👟</div>
-        <div class="stats-summary-info">
-          <div class="stats-summary-kicker">👟 TOP ASSIST</div>
-          <div class="stats-summary-name">Belum Ada Assist</div>
-          <div class="stats-summary-sub">Kandidat Playmaker</div>
-        </div>
-        <div class="stats-summary-value text-cyan">0<span class="stats-summary-unit">Ast</span></div>
-      </div>
-    `;
-
     const card3 = `
       <div class="stats-summary-card ${this.currentStatsTab === 'yellow' ? 'active' : ''}" onclick="app.setStatsTab('yellow')">
         <div class="stats-summary-icon-fallback">🟨</div>
@@ -6679,7 +6500,7 @@ var app = window.app = Object.assign(window.app || {}, {
       </div>
     `;
 
-    container.innerHTML = card1 + card2 + card3 + card4;
+    container.innerHTML = card1 + card3 + card4;
   },
 
   renderStatsTable() {
@@ -6768,78 +6589,6 @@ var app = window.app = Object.assign(window.app || {}, {
             </td>
             <td style="text-align: center; vertical-align: middle;">
               <span class="stats-metric-pill metric-gold">${s.goals}</span>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-    } else if (tab === "assists") {
-      if (badgeEl) {
-        badgeEl.innerHTML = `<span>👟</span> Peringkat Assist Terbanyak &amp; Playmaker Turnamen`;
-      }
-      if (tableHead) {
-        tableHead.innerHTML = `
-          <tr>
-            <th style="width: 50px; text-align: center;">#</th>
-            <th style="text-align: left;">Pemain</th>
-            <th class="col-secondary" style="text-align: left; width: 190px;">Sekolah / Tim</th>
-            <th class="col-secondary" style="text-align: center; width: 85px;">Posisi</th>
-            <th style="text-align: center; width: 85px;">ASSIST</th>
-          </tr>
-        `;
-      }
-
-      const assisters = typeof this.store.getTopAssistsList === "function" ? this.store.getTopAssistsList(cat) : [];
-      if (assisters.length === 0) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="5" style="text-align: center; padding: 36px 16px; color: #94a3b8;">
-              <div style="font-size: 2rem; margin-bottom: 8px;">👟</div>
-              <strong>Belum ada catatan assist pada kelas ${cat}.</strong>
-              <div style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Data akan otomatis bertambah seiring berlangsungnya laga.</div>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tableBody.innerHTML = assisters.map((s, idx) => {
-        let rankHtml = `<span class="stats-pos-num">${idx + 1}</span>`;
-        if (idx === 0) rankHtml = `<span class="stats-medal-badge gold" title="Peringkat 1">🥇 1</span>`;
-        else if (idx === 1) rankHtml = `<span class="stats-medal-badge silver" title="Peringkat 2">🥈 2</span>`;
-        else if (idx === 2) rankHtml = `<span class="stats-medal-badge bronze" title="Peringkat 3">🥉 3</span>`;
-
-        const pRating = this.calculatePlayerRating(s);
-        const pTarget = s.playerNo || s.playerName;
-
-        return `
-          <tr class="stats-clickable-row" onclick="app.openPlayerDetailPage('${s.teamId}', '${encodeURIComponent(pTarget)}')">
-            <td style="text-align: center; vertical-align: middle;">${rankHtml}</td>
-            <td style="text-align: left; vertical-align: middle;">
-              <div class="stats-player-cell">
-                <img src="${safeImg(s.photo)}" alt="${s.playerName}" class="stats-player-avatar" onerror="this.onerror=null; this.src='assets/acc_logo.png'">
-                <div class="stats-player-meta">
-                  <div class="stats-player-name-row">
-                    <strong class="stats-player-name">${s.playerName}</strong>
-                    <span class="stats-jersey-no">(#${s.playerNo})</span>
-                  </div>
-                  <div class="stats-player-sub-row">
-                    <span class="stats-mobile-team">${s.teamName}</span>
-                    <span class="stats-dot-sep">•</span>
-                    <span class="stats-pos-pill">${s.pos || 'Flank'}</span>
-                    <span class="stats-rating-pill">⭐ ${pRating}</span>
-                  </div>
-                </div>
-              </div>
-            </td>
-            <td class="col-secondary" style="text-align: left; vertical-align: middle; color: #e2e8f0; font-weight: 600;">
-              ${s.teamName}
-            </td>
-            <td class="col-secondary" style="text-align: center; vertical-align: middle;">
-              <span class="stats-pos-pill">${s.pos || 'Pemain'}</span>
-            </td>
-            <td style="text-align: center; vertical-align: middle;">
-              <span class="stats-metric-pill metric-cyan">${s.assists}</span>
             </td>
           </tr>
         `;
@@ -9170,7 +8919,6 @@ var app = window.app = Object.assign(window.app || {}, {
         isOwnGoal: isOg,
         team: s.team,
         player: s.player,
-        assist: isOg ? '' : (s.assist || ''),
         minStr: cleanMin(s.minute),
         minNum: parseInt((s.minute || '0').replace(/\D/g, ''), 10) || 0
       });
@@ -9379,7 +9127,6 @@ var app = window.app = Object.assign(window.app || {}, {
 
       if (e.type === 'goal') {
         iconHtml = '⚽';
-        if (e.assist) subText = `<span class="md-event-sub">Assist: <strong>${e.assist}</strong></span>`;
       } else if (e.type === 'own_goal') {
         iconHtml = '⚡';
         subText = `<span class="md-event-sub og-tag">Gol Bunuh Diri (OG)</span>`;

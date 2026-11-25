@@ -1305,9 +1305,8 @@ var admin = window.admin = Object.assign(window.admin || {}, {
   onGoalTeamChange() {
     const teamSelect = document.getElementById("goalTeamSelect");
     const scorerSelect = document.getElementById("goalScorerSelect");
-    const assistSelect = document.getElementById("goalAssistSelect");
     const ogCheck = document.getElementById("goalIsOwnGoal");
-    if (!teamSelect || !scorerSelect || !assistSelect) return;
+    if (!teamSelect || !scorerSelect) return;
 
     const matchId = this.activeMatchId || this.activeQuickMatchId;
     const match = app.store.data.matches.find(m => m.id === matchId);
@@ -1316,9 +1315,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const teamId = teamSelect.value;
     if (!teamId) {
       scorerSelect.innerHTML = `<option value="">Pilih Pencetak Gol</option>`;
-      assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>`;
       if (ogCheck) ogCheck.checked = false;
-      assistSelect.disabled = false;
       return;
     }
 
@@ -1332,7 +1329,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       return;
     }
 
-    assistSelect.disabled = false;
     let players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
     const oppPlayers = (oppTeam?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
 
@@ -1365,20 +1361,13 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         `).join("")}
       </optgroup>
     `;
-
-    assistSelect.innerHTML = `<option value="">(Tanpa Assist)</option>` + (players.length > 0 ? players.map(p => `
-      <option value="${p.name}">#${p.no || '-'} ${p.name}</option>
-    `).join("") : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => `
-      <option value="Pemain #${n}">#${n} Pemain #${n}</option>
-    `).join(""));
   },
 
   toggleOwnGoalMode(isOg) {
     const teamSelect = document.getElementById("goalTeamSelect");
     const scorerSelect = document.getElementById("goalScorerSelect");
-    const assistSelect = document.getElementById("goalAssistSelect");
     const ogCheck = document.getElementById("goalIsOwnGoal");
-    if (!teamSelect || !scorerSelect || !assistSelect) return;
+    if (!teamSelect || !scorerSelect) return;
 
     if (ogCheck) ogCheck.checked = Boolean(isOg);
 
@@ -1396,9 +1385,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const oppTeam = app.store.getTeam(oppTeamId);
 
     if (isOg) {
-      assistSelect.innerHTML = `<option value="">(Tidak Ada Assist - Gol Bunuh Diri)</option>`;
-      assistSelect.disabled = true;
-
       const oppPlayers = (oppTeam?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
 
       scorerSelect.innerHTML = `
@@ -1412,27 +1398,17 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         ` : ''}
       `;
     } else {
-      assistSelect.disabled = false;
       this.onGoalTeamChange();
     }
   },
 
   onGoalScorerChange() {
     const scorerSelect = document.getElementById("goalScorerSelect");
-    const assistSelect = document.getElementById("goalAssistSelect");
     const ogCheck = document.getElementById("goalIsOwnGoal");
     if (!scorerSelect) return;
     const val = scorerSelect.value || "";
     const isOg = val.includes("(GBD)") || val.toLowerCase().includes("bunuh diri") || val.toLowerCase().includes("own goal");
     if (ogCheck) ogCheck.checked = isOg;
-    if (assistSelect) {
-      if (isOg) {
-        assistSelect.value = "";
-        assistSelect.disabled = true;
-      } else {
-        assistSelect.disabled = false;
-      }
-    }
   },
 
   addGoalWithAssist() {
@@ -1442,7 +1418,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
     const teamId = document.getElementById("goalTeamSelect")?.value;
     const scorer = document.getElementById("goalScorerSelect")?.value;
-    const assist = document.getElementById("goalAssistSelect")?.value;
     let minute = document.getElementById("goalMinuteInput")?.value?.trim() || "";
 
     if (!teamId || !scorer) {
@@ -1465,16 +1440,10 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       scorer.toLowerCase().includes("own goal")
     );
 
-    if (!isOwnGoal && scorer === assist && assist) {
-      alert("Pencetak gol dan pemberi assist tidak boleh pemain yang sama!");
-      return;
-    }
-
     if (!match.scorers) match.scorers = [];
     match.scorers.push({
       team: teamId,
       player: scorer,
-      assist: isOwnGoal ? "" : (assist || ""),
       minute: minute,
       isOwnGoal: isOwnGoal
     });
@@ -1484,11 +1453,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       const team = app.store.getTeam(teamId);
       const pScorer = team?.players.find(x => x.name === scorer);
       if (pScorer) pScorer.goals = (pScorer.goals || 0) + 1;
-
-      if (assist) {
-        const pAssist = team?.players.find(x => x.name === assist);
-        if (pAssist) pAssist.assists = (pAssist.assists || 0) + 1;
-      }
     }
 
     // Auto increment skor laga
@@ -1509,13 +1473,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (isOwnGoal) {
       app.showToast(`⚡ Gol Bunuh Diri (Own Goal) dicatat! Poin untuk ${teamObj?.shortName || teamObj?.name || 'Tim'} - Menit ${minute}`);
     } else {
-      app.showToast(`⚽ Gol dicatat: ${scorer}${assist ? ` (Assist: ${assist})` : ''} - Menit ${minute}`);
+      app.showToast(`⚽ Gol dicatat: ${scorer} - Menit ${minute}`);
     }
 
     const ogCheck = document.getElementById("goalIsOwnGoal");
     if (ogCheck) ogCheck.checked = false;
-    const assistSelect = document.getElementById("goalAssistSelect");
-    if (assistSelect) assistSelect.disabled = false;
 
     const goalInput = document.getElementById("goalMinuteInput");
     if (goalInput) {
@@ -1955,7 +1917,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       const ogBadge = isOg ? ' <span style="background:rgba(239,68,68,0.25); color:#fca5a5; font-weight:800; font-size:0.65rem; padding:1px 5px; border-radius:3px; border:1px solid rgba(239,68,68,0.4);">OWN GOAL</span>' : '';
       return `
       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid ${isOg ? '#ef4444' : '#f59e0b'};">
-        <span>${icon} <strong>${s.player}</strong> (${this.cleanMinuteDisplay(s.minute)})${ogBadge}${s.assist ? ` <em style="color:#94a3b8;">[Assist: ${s.assist}]</em>` : ''} - <span style="color:#fbbf24;">${app.store.getTeam(s.team)?.shortName || s.team}</span></span>
+        <span>${icon} <strong>${s.player}</strong> (${this.cleanMinuteDisplay(s.minute)})${ogBadge} - <span style="color:#fbbf24;">${app.store.getTeam(s.team)?.shortName || s.team}</span></span>
         <button type="button" class="btn btn-outline btn-sm" onclick="admin.removeScorer(${idx})" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;">Hapus</button>
       </div>
       `;
@@ -2231,7 +2193,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         awayPlaceholder: "",
         date: "25 Nov 2026",
         time: isSD ? "08:00 - 08:35 WITA" : "08:00 - 08:45 WITA",
-        pitch: "Lapangan 1 (Utama Vinyl)",
         status: "upcoming",
         homeScore: null,
         awayScore: null,
@@ -2308,7 +2269,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       awayPlaceholder: "",
       date: "22 Nov 2026",
       time: cat === "SD" ? "08:00 - 08:30 WITA" : "08:00 - 08:40 WITA",
-      pitch: "Lapangan 1 (Utama Vinyl)",
       status: "scheduled",
       homeScore: null,
       awayScore: null,
@@ -2510,7 +2470,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       titleEl.textContent = `⚙️ Atur Pertandingan: ${stageDisplay} (${cat})`;
     }
     if (subTitle) {
-      subTitle.textContent = "Pilih jenis babak (Pertandingan Biasa / Babak Gugur), tim yang bertanding, serta tanggal, jam, dan lapangan laga.";
+      subTitle.textContent = "Pilih jenis babak (Pertandingan Biasa / Babak Gugur), tim yang bertanding, serta tanggal dan jam laga.";
     }
     if (submitBtn) {
       submitBtn.textContent = "💾 Simpan Pertandingan";
@@ -2528,14 +2488,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (dateInput) dateInput.value = match.date || "22 Nov 2026";
     const timeInput = document.getElementById("editMatchTimeInput");
     if (timeInput) timeInput.value = match.time || (cat === "SD" ? "08:00 - 08:30 WITA" : "08:00 - 08:40 WITA");
-    const pitchInput = document.getElementById("editMatchPitchInput");
-    if (pitchInput) {
-      if (match.pitch && match.pitch.includes("2")) {
-        pitchInput.value = "Lapangan 2";
-      } else {
-        pitchInput.value = "Lapangan 1 (Utama Vinyl)";
-      }
-    }
   },
 
   async saveMatchSchedule(andNext = false) {
@@ -2653,8 +2605,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     const timeInput = document.getElementById("editMatchTimeInput");
     if (timeInput && timeInput.value.trim()) match.time = timeInput.value.trim();
-    const pitchInput = document.getElementById("editMatchPitchInput");
-    if (pitchInput && pitchInput.value.trim()) match.pitch = pitchInput.value.trim();
 
     if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
       app.store.syncPlayerStatsFromMatches();
@@ -2729,7 +2679,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       if (document.getElementById("settingMvpTeam")) document.getElementById("settingMvpTeam").value = mvp.team || "";
       if (document.getElementById("settingMvpPos")) document.getElementById("settingMvpPos").value = mvp.position || "";
       if (document.getElementById("settingMvpGoals")) document.getElementById("settingMvpGoals").value = mvp.goals || 0;
-      if (document.getElementById("settingMvpAssists")) document.getElementById("settingMvpAssists").value = mvp.assists || 0;
       if (document.getElementById("settingMvpQuote")) document.getElementById("settingMvpQuote").value = mvp.quote || "";
     }
 
@@ -2845,7 +2794,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       if (document.getElementById("settingMvpTeam")) mvp.team = document.getElementById("settingMvpTeam").value.trim();
       if (document.getElementById("settingMvpPos")) mvp.position = document.getElementById("settingMvpPos").value.trim();
       if (document.getElementById("settingMvpGoals")) mvp.goals = parseInt(document.getElementById("settingMvpGoals").value, 10) || 0;
-      if (document.getElementById("settingMvpAssists")) mvp.assists = parseInt(document.getElementById("settingMvpAssists").value, 10) || 0;
       if (document.getElementById("settingMvpQuote")) mvp.quote = document.getElementById("settingMvpQuote").value.trim();
     } else {
       app.store.data.homeData.mvp = null;
@@ -4886,7 +4834,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       const pBadge = m.badge || "MVP MATCHDAY";
       const pPhoto = m.photo || "/assets/acc_logo.webp";
       const pGoals = parseInt(m.goals, 10) || 0;
-      const pAssists = parseInt(m.assists, 10) || 0;
       const mId = m.id || String(idx);
 
       return `
@@ -4901,7 +4848,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
                 <span style="font-size: 0.72rem; color: #94a3b8;">#${idx + 1}</span>
               </div>
               <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${pName} ${pNum}</div>
-              <div style="font-size: 0.76rem; color: var(--text-muted);">${pCat}${pTeam} ${pPos} • ⚽ ${pGoals}G / 👟 ${pAssists}A</div>
+              <div style="font-size: 0.76rem; color: var(--text-muted);">${pCat}${pTeam} ${pPos} • ⚽ ${pGoals} Gol</div>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -4946,7 +4893,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const badgeInput = document.getElementById("mvpItemBadge");
     const tagInput = document.getElementById("mvpItemTagline");
     const goalsInput = document.getElementById("mvpItemGoals");
-    const assistsInput = document.getElementById("mvpItemAssists");
     const motmInput = document.getElementById("mvpItemMotm");
     const ratingInput = document.getElementById("mvpItemRating");
     const quoteInput = document.getElementById("mvpItemQuote");
@@ -4971,7 +4917,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       if (badgeInput) badgeInput.value = item.badge || "MVP MATCHDAY";
       if (tagInput) tagInput.value = item.tagline || "PERFORMA GEMILANG & FAIR PLAY";
       if (goalsInput) goalsInput.value = item.goals || 0;
-      if (assistsInput) assistsInput.value = item.assists || 0;
       if (motmInput) motmInput.value = item.motm || `${item.motmCount || 1}x`;
       if (ratingInput) ratingInput.value = item.rating || "9.5";
       if (quoteInput) quoteInput.value = item.quote || "";
@@ -4988,7 +4933,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       if (badgeInput) badgeInput.value = "MVP MATCHDAY";
       if (tagInput) tagInput.value = "PERFORMA GEMILANG & FAIR PLAY";
       if (goalsInput) goalsInput.value = 0;
-      if (assistsInput) assistsInput.value = 0;
       if (motmInput) motmInput.value = "1x";
       if (ratingInput) ratingInput.value = "9.5";
       if (quoteInput) quoteInput.value = "";
@@ -5036,7 +4980,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     } else {
       playerSelect.innerHTML = `<option value="">-- Pilih Pemain --</option>` +
         players.map((p, idx) => `
-          <option value="${idx}" data-name="${p.name}" data-num="${p.number || ''}" data-pos="${p.pos || p.position || ''}" data-goals="${p.goals || 0}" data-assists="${p.assists || 0}" data-photo="${p.photo || ''}">
+          <option value="${idx}" data-name="${p.name}" data-num="${p.number || ''}" data-pos="${p.pos || p.position || ''}" data-goals="${p.goals || 0}" data-photo="${p.photo || ''}">
             #${p.number || '-'} ${p.name} (${p.pos || p.position || 'Pemain'})
           </option>
         `).join("");
@@ -5054,14 +4998,12 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const num = opt.getAttribute("data-num");
     const pos = opt.getAttribute("data-pos");
     const goals = opt.getAttribute("data-goals");
-    const assists = opt.getAttribute("data-assists");
     const photo = opt.getAttribute("data-photo");
 
     if (name && document.getElementById("mvpItemName")) document.getElementById("mvpItemName").value = name;
     if (num && document.getElementById("mvpItemNumber")) document.getElementById("mvpItemNumber").value = num;
     if (pos && document.getElementById("mvpItemPos")) document.getElementById("mvpItemPos").value = pos;
     if (goals !== null && document.getElementById("mvpItemGoals")) document.getElementById("mvpItemGoals").value = goals;
-    if (assists !== null && document.getElementById("mvpItemAssists")) document.getElementById("mvpItemAssists").value = assists;
     if (photo) {
       if (document.getElementById("mvpItemPhotoUrl")) document.getElementById("mvpItemPhotoUrl").value = photo;
       if (document.getElementById("mvpItemPhotoPreview")) document.getElementById("mvpItemPhotoPreview").src = photo;
@@ -5123,7 +5065,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const badge = (document.getElementById("mvpItemBadge")?.value || "MVP MATCHDAY").trim();
     const tagline = (document.getElementById("mvpItemTagline")?.value || "PERFORMA GEMILANG & FAIR PLAY").trim();
     const goals = parseInt(document.getElementById("mvpItemGoals")?.value, 10) || 0;
-    const assists = parseInt(document.getElementById("mvpItemAssists")?.value, 10) || 0;
     const motm = (document.getElementById("mvpItemMotm")?.value || "1x").trim();
     const rating = (document.getElementById("mvpItemRating")?.value || "9.5").trim();
     const quote = (document.getElementById("mvpItemQuote")?.value || "").trim();
@@ -5148,7 +5089,6 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       badge,
       tagline,
       goals,
-      assists,
       motm,
       rating,
       quote,

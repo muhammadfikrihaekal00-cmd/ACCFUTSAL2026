@@ -3654,14 +3654,14 @@ body:has(.modal-overlay.active) .mobile-nav {
 
 .mvp-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin: 10px 0;
 }
 
 @media (max-width: 500px) {
   .mvp-stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

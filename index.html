@@ -11,8 +11,8 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261126_v80">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261126_v80">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261126_v81">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261126_v81">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Preconnect Candidates for Lightning LCP -->
@@ -378,8 +378,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261126_v80">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261126_v80">
+  <link rel="stylesheet" href="/css/styles.css?v=20261126_v81">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261126_v81">
 </head>
 
 <body class="snap-scroll-active">
@@ -562,10 +562,6 @@
           <div class="stat-pill">
             <div class="stat-val">8</div>
             <div class="stat-lbl">Grup Turnamen</div>
-          </div>
-          <div class="stat-pill">
-            <div class="stat-val">1</div>
-            <div class="stat-lbl">Lapangan Utama</div>
           </div>
           <div class="stat-pill">
             <div class="stat-val">64</div>
@@ -1159,7 +1155,7 @@
       </div>
     </section>
 
-    <!-- TAB 5: STATISTIK TURNAMEN (TOP SKOR, TOP ASSIST, KARTU KUNING, KARTU MERAH) -->
+    <!-- TAB 5: STATISTIK TURNAMEN (TOP SKOR, KARTU KUNING, KARTU MERAH) -->
     <section id="pane-stats" class="tab-pane">
 
       <!-- FEATURE HERO SECTION: STATISTIK -->
@@ -1170,8 +1166,7 @@
             <span>TOURNAMENT LEADERBOARDS &amp; STATS</span>
           </div>
           <h2 class="feature-hero-title">Statistik Turnamen</h2>
-          <p class="feature-hero-desc">Pusat data statistik individu pemain: Top Skor (Golden Boot), Top Assist
-            (Playmaker), Rekapitulasi Kartu Kuning, dan Kartu Merah.</p>
+          <p class="feature-hero-desc">Pusat data statistik individu pemain: Top Skor (Golden Boot), Rekapitulasi Kartu Kuning, dan Kartu Merah.</p>
         </div>
         <div class="feature-hero-badge" aria-hidden="true">📊</div>
       </div>
@@ -1203,15 +1198,11 @@
         </div>
       </div>
 
-      <!-- STATISTIK 4 SUB-NAVIGATION PILLS -->
+      <!-- STATISTIK 3 SUB-NAVIGATION PILLS -->
       <div class="stats-subnav-container scroll-reveal">
         <button type="button" class="stats-tab-btn active" data-stat="scorers" onclick="app.setStatsTab('scorers')">
           <span class="stat-tab-icon">⚽</span>
           <span class="stat-tab-label">Top Skor</span>
-        </button>
-        <button type="button" class="stats-tab-btn" data-stat="assists" onclick="app.setStatsTab('assists')">
-          <span class="stat-tab-icon">👟</span>
-          <span class="stat-tab-label">Top Assist</span>
         </button>
         <button type="button" class="stats-tab-btn" data-stat="yellow" onclick="app.setStatsTab('yellow')">
           <span class="stat-tab-icon">🟨</span>
@@ -1223,9 +1214,9 @@
         </button>
       </div>
 
-      <!-- QUICK STATS SUMMARY RIBBON (4 LEADER CARDS) -->
+      <!-- QUICK STATS SUMMARY RIBBON (3 LEADER CARDS) -->
       <div class="stats-summary-ribbon scroll-reveal" id="statsSummaryRibbon">
-        <!-- Rendered dynamically by app.js: 4 Cards (Top Skor Leader, Top Assist Leader, Kartu Kuning, Kartu Merah) -->
+        <!-- Rendered dynamically by app.js: 3 Cards (Top Skor Leader, Kartu Kuning, Kartu Merah) -->
       </div>
 
       <!-- MAIN STATS LEADERBOARD TABLE CARD -->
@@ -1556,7 +1547,7 @@
             <button type="button" class="qs-tab-btn active" id="qsTabBtn_score"
               onclick="admin.switchQuickScoreTab('score')">⏱️ Skor &amp; Laga</button>
             <button type="button" class="qs-tab-btn" id="qsTabBtn_goal" onclick="admin.switchQuickScoreTab('goal')">⚽
-              Gol &amp; Assist</button>
+              Catatan Gol</button>
             <button type="button" class="qs-tab-btn" id="qsTabBtn_card" onclick="admin.switchQuickScoreTab('card')">🟨🟥
               Kartu</button>
             <button type="button" class="qs-tab-btn" id="qsTabBtn_foul" onclick="admin.switchQuickScoreTab('foul')">⚠️
@@ -1661,7 +1652,7 @@
             </div>
           </div>
 
-          <!-- TAB: CATAT GOL & ASSIST (SEMUA PEMAIN TERDAFTAR + OPSI GOL BUNUH DIRI) -->
+          <!-- TAB: CATAT GOL (SEMUA PEMAIN TERDAFTAR + OPSI GOL BUNUH DIRI) -->
           <div id="qsPanel_goal" class="qs-tab-panel" style="display: none;">
 
             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -1686,21 +1677,12 @@
                 <span style="font-size: 0.68rem; color: #94a3b8;">Skor untuk tim terpilih di atas</span>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <div>
-                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol:</label>
-                  <select id="goalScorerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
-                    onchange="admin.onGoalScorerChange()">
-                    <option value="">Pilih Pencetak Gol</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pemberi Assist
-                    (Opsional):</label>
-                  <select id="goalAssistSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
-                    <option value="">(Tanpa Assist)</option>
-                  </select>
-                </div>
+              <div>
+                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol:</label>
+                <select id="goalScorerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
+                  onchange="admin.onGoalScorerChange()">
+                  <option value="">Pilih Pencetak Gol</option>
+                </select>
               </div>
               <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
                 <div style="display: flex; align-items: center; gap: 4px;">
@@ -1711,7 +1693,7 @@
                 </div>
                 <button type="button" class="btn btn-primary btn-sm" onclick="admin.addGoalWithAssist()"
                   style="flex: 1; padding: 8px 12px; font-weight: 800; font-size: 0.82rem; justify-content: center;">
-                  ⚽ Simpan Gol &amp; Assist
+                  ⚽ Simpan Gol
                 </button>
               </div>
             </div>
@@ -1844,8 +1826,7 @@
         <input type="hidden" id="editMatchId">
         <div class="modal-body">
           <p id="editMatchSubtitle" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-            Pilih jenis babak (Pertandingan Biasa / Babak Gugur), tim yang bertanding, serta tanggal, jam, dan lapangan
-            laga.
+            Pilih jenis babak (Pertandingan Biasa / Babak Gugur), tim yang bertanding, serta tanggal dan jam laga.
           </p>
 
           <!-- Pilihan Jenis / Babak Pertandingan & Pilihan Grup -->
@@ -1879,7 +1860,7 @@
             </div>
           </div>
 
-          <!-- Schedule Row (Tanggal, Jam Kick-off, Lapangan) -->
+          <!-- Schedule Row (Tanggal & Jam Kick-off) -->
           <div
             style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
             <div
@@ -1922,14 +1903,6 @@
                   <option value="Menyesuaikan">Menyesuaikan</option>
                 </datalist>
               </div>
-            </div>
-
-            <div class="form-group" style="margin-top: 8px;">
-              <label class="form-label" style="font-weight: 600;">Lapangan Pertandingan</label>
-              <select id="editMatchPitchInput" class="form-select">
-                <option value="Lapangan 1 (Utama Vinyl)">🏟️ Lapangan 1 (Utama Vinyl)</option>
-                <option value="Lapangan 2">🏟️ Lapangan 2</option>
-              </select>
             </div>
           </div>
 
@@ -3407,14 +3380,10 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
             <div style="font-size: 0.78rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 8px;">
               📊 Statistik Performa Pemain:
             </div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
               <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label" style="font-size: 0.7rem;">Gol</label>
                 <input type="number" id="mvpItemGoals" class="form-input" style="padding: 6px;" value="0">
-              </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.7rem;">Assist</label>
-                <input type="number" id="mvpItemAssists" class="form-input" style="padding: 6px;" value="0">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label" style="font-size: 0.7rem;">MotM</label>
@@ -3471,10 +3440,10 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="/js/security.js?v=20261125_v70"></script>
-  <script defer src="/js/supabase-client.js?v=20261126_v75"></script>
-  <script defer src="/js/data.js?v=20261125_v70"></script>
-  <script defer src="/js/admin.js?v=20261125_v70"></script>
-  <script defer src="/js/app.js?v=20261126_v80"></script>
+  <script defer src="/js/supabase-client.js?v=20261126_v81"></script>
+  <script defer src="/js/data.js?v=20261126_v81"></script>
+  <script defer src="/js/admin.js?v=20261126_v81"></script>
+  <script defer src="/js/app.js?v=20261126_v81"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>

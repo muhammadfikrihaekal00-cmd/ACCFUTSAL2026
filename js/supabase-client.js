@@ -536,14 +536,14 @@
           });
         }
 
-        // Persist all match details (schedule, pitch, teams, stage, scores) to Supabase
+        // Persist all match details (schedule, teams, stage, scores) to Supabase
         const upsertPayload = {
           id: match.id,
           home_id: (match.homeId !== undefined && match.homeId !== null) ? String(match.homeId) : "",
           away_id: (match.awayId !== undefined && match.awayId !== null) ? String(match.awayId) : "",
           date: match.date || "22 Nov 2026",
           time: match.time || "08:00 - 08:40 WITA",
-          pitch: match.pitch || match.venue || "Lapangan 1 (Utama Vinyl)",
+          pitch: "",
           stage: match.stage || (/(QF|SF|3RD|FINAL)/i.test(match.id) ? "knockout" : "group"),
           group_letter: match.group || match.group_letter || null,
           round_name: match.roundName || match.round_name || "",
@@ -994,7 +994,7 @@
             away_id: m.awayId,
             date: m.date || "22 Nov 2026",
             time: m.time || "08:00",
-            pitch: m.pitch || m.venue || "Lapangan 1",
+            pitch: "",
             stage: m.stage || "group",
             group_letter: m.group || null,
             round_name: m.roundName || "",
