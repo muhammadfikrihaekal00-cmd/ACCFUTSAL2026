@@ -3516,8 +3516,8 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
             }
 
             var bodyCls = document.body ? document.body.classList : null;
-            var lockedOpen = bodyCls && (bodyCls.contains("mobile-menu-active") || bodyCls.contas("pen"));
-            del - lastY;
+            var lockedOpen = bodyCls && (bodyCls.contains("mobile-menu-active") || bodyCls.contains("modal-open"));
+            var delta = y - lastY;
 
             if (lockedOpen || y < 160) {
               if (isHidden) {
