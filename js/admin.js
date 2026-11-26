@@ -2558,11 +2558,11 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         match.knockoutKey = "sf1";
         match.roundName = `Semifinal 1 (${cat})`;
         match.homePlaceholder = "Pemenang QF 1";
-        match.awayPlaceholder = "Pemenang QF 2";
+        match.awayPlaceholder = "Pemenang QF 3";
       } else if (selectedStage === "sf2") {
         match.knockoutKey = "sf2";
         match.roundName = `Semifinal 2 (${cat})`;
-        match.homePlaceholder = "Pemenang QF 3";
+        match.homePlaceholder = "Pemenang QF 2";
         match.awayPlaceholder = "Pemenang QF 4";
       } else if (selectedStage === "3rd") {
         match.knockoutKey = "3rd";
@@ -5330,20 +5330,20 @@ var admin = window.admin = Object.assign(window.admin || {}, {
 
       app.store.syncKnockoutFromStandings();
 
-      // 2. Finish SF SMP & SD
-      finishMatch("SF1_SMP", 3, 2, "T01", "T09");
-      finishMatch("SF2_SMP", 1, 3, "T02", "T13");
+      // 2. Finish SF SMP & SD (SF1: QF1 vs QF3, SF2: QF2 vs QF4)
+      finishMatch("SF1_SMP", 3, 2, "T01", "T02");
+      finishMatch("SF2_SMP", 1, 3, "T09", "T13");
 
-      finishMatch("SF1_SD", 4, 3, "T17", "T25");
-      finishMatch("SF2_SD", 2, 4, "T18", "T32");
+      finishMatch("SF1_SD", 4, 3, "T17", "T18");
+      finishMatch("SF2_SD", 2, 4, "T25", "T32");
 
       app.store.syncKnockoutFromStandings();
 
       // 3. Finish 3RD & FINAL
-      finishMatch("3RD_SMP", 3, 1, "T09", "T02");
+      finishMatch("3RD_SMP", 3, 1, "T02", "T09");
       finishMatch("FINAL_SMP", 2, 3, "T01", "T13");
 
-      finishMatch("3RD_SD", 2, 0, "T25", "T18");
+      finishMatch("3RD_SD", 2, 0, "T18", "T25");
       finishMatch("FINAL_SD", 3, 4, "T17", "T32");
 
       app.store.saveData();

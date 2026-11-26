@@ -274,8 +274,8 @@ class TournamentStore {
       if (rawStage === "3rd" || /(3rd|bronze)/i.test(id) || /juara\s*3|peringkat\s*3/i.test(roundName) || /kalah\s*semi/i.test(hPlace)) knockoutKey = "3rd";
       else if (rawStage === "final" || (/final/i.test(id) && !/qf|sf/i.test(id)) || /grand\s*final/i.test(roundName) || /pemenang\s*semi/i.test(hPlace)) knockoutKey = "final";
       else if (rawStage.startsWith("sf") || /sf/i.test(id) || /semi/i.test(roundName) || /pemenang\s*qf/i.test(hPlace)) {
-        if (/sf1|\b1\b/i.test(id) || /semifinal\s*1/i.test(roundName) || /qf\s*1/i.test(hPlace)) knockoutKey = "sf1";
-        else if (/sf2|\b2\b/i.test(id) || /semifinal\s*2/i.test(roundName) || /qf\s*3/i.test(hPlace)) knockoutKey = "sf2";
+        if (/sf1|\b1\b/i.test(id) || /semifinal\s*1/i.test(roundName) || (/qf\s*1/i.test(hPlace) && /qf\s*3/i.test(aPlace))) knockoutKey = "sf1";
+        else if (/sf2|\b2\b/i.test(id) || /semifinal\s*2/i.test(roundName) || (/qf\s*2/i.test(hPlace) && /qf\s*4/i.test(aPlace))) knockoutKey = "sf2";
         else knockoutKey = "sf1";
       } else if (rawStage.startsWith("qf") || /qf/i.test(id) || /perempat|quarter|8\s*besar/i.test(roundName) || /juara\s*grup/i.test(hPlace)) {
         if (/qf1|\b1\b/i.test(id) || /perempat\s*final\s*1/i.test(roundName) || (/grup\s*a/i.test(hPlace) && /grup\s*b/i.test(aPlace))) knockoutKey = "qf1";
@@ -1001,8 +1001,8 @@ class TournamentStore {
     const aPlace = String(m.awayPlaceholder || '').toLowerCase().trim();
 
     if (stage === 'sf') {
-      if (id.includes('SF1') || round.includes('semifinal 1') || round.includes('sf 1') || round.includes('sf1') || hPlace.includes('qf 1') || hPlace.includes('qf1')) return 'sf1';
-      if (id.includes('SF2') || round.includes('semifinal 2') || round.includes('sf 2') || round.includes('sf2') || hPlace.includes('qf 3') || hPlace.includes('qf3')) return 'sf2';
+      if (id.includes('SF1') || round.includes('semifinal 1') || round.includes('sf 1') || round.includes('sf1') || ((hPlace.includes('qf 1') || hPlace.includes('qf1')) && (aPlace.includes('qf 3') || aPlace.includes('qf3')))) return 'sf1';
+      if (id.includes('SF2') || round.includes('semifinal 2') || round.includes('sf 2') || round.includes('sf2') || ((hPlace.includes('qf 2') || hPlace.includes('qf2')) && (aPlace.includes('qf 4') || aPlace.includes('qf4')))) return 'sf2';
       return 'sf1';
     }
 
@@ -1273,8 +1273,8 @@ class TournamentStore {
     };
 
     // 3. SF, Final, 3RD SMP
-    // SF1: W(QF1) vs W(QF2), SF2: W(QF3) vs W(QF4)
-    // Final: W(SF1) vs W(SF2), 3rd: L(SF1) vs L(SF2)
+    // SF1 (Kiri): W(QF1) vs W(QF3), SF2 (Kanan): W(QF2) vs W(QF4)
+    // Final (Tengah): W(SF1) vs W(SF2), Juara 3 (Tengah): L(SF1) vs L(SF2)
     const sfMatches_SMP = getSortedKnockoutMatches("SMP", "sf");
     const sf1_smp = findKnockoutSlotMatch("SMP", "sf1", sfMatches_SMP, 0, "SF1_SMP");
     const sf2_smp = findKnockoutSlotMatch("SMP", "sf2", sfMatches_SMP, 1, "SF2_SMP");
@@ -1285,8 +1285,8 @@ class TournamentStore {
     const thirdMatches_SMP = getSortedKnockoutMatches("SMP", "3rd");
     const third_smp = findKnockoutSlotMatch("SMP", "3rd", thirdMatches_SMP, 0, "3RD_SMP");
 
-    syncDownstream(sf1_smp, qf1_smp, true, qf2_smp, true, "Pemenang QF 1", "Pemenang QF 2", "sf1", "Semifinal 1", "SMP");
-    syncDownstream(sf2_smp, qf3_smp, true, qf4_smp, true, "Pemenang QF 3", "Pemenang QF 4", "sf2", "Semifinal 2", "SMP");
+    syncDownstream(sf1_smp, qf1_smp, true, qf3_smp, true, "Pemenang QF 1", "Pemenang QF 3", "sf1", "Semifinal 1", "SMP");
+    syncDownstream(sf2_smp, qf2_smp, true, qf4_smp, true, "Pemenang QF 2", "Pemenang QF 4", "sf2", "Semifinal 2", "SMP");
     syncDownstream(final_smp, sf1_smp, true, sf2_smp, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2", "final", "Grand Final", "SMP");
     syncDownstream(third_smp, sf1_smp, false, sf2_smp, false, "Kalah Semifinal 1", "Kalah Semifinal 2", "3rd", "Perebutan Juara 3", "SMP");
 
@@ -1301,8 +1301,8 @@ class TournamentStore {
     const thirdMatches_SD = getSortedKnockoutMatches("SD", "3rd");
     const third_sd = findKnockoutSlotMatch("SD", "3rd", thirdMatches_SD, 0, "3RD_SD");
 
-    syncDownstream(sf1_sd, qf1_sd, true, qf2_sd, true, "Pemenang QF 1", "Pemenang QF 2", "sf1", "Semifinal 1", "SD");
-    syncDownstream(sf2_sd, qf3_sd, true, qf4_sd, true, "Pemenang QF 3", "Pemenang QF 4", "sf2", "Semifinal 2", "SD");
+    syncDownstream(sf1_sd, qf1_sd, true, qf3_sd, true, "Pemenang QF 1", "Pemenang QF 3", "sf1", "Semifinal 1", "SD");
+    syncDownstream(sf2_sd, qf2_sd, true, qf4_sd, true, "Pemenang QF 2", "Pemenang QF 4", "sf2", "Semifinal 2", "SD");
     syncDownstream(final_sd, sf1_sd, true, sf2_sd, true, "Pemenang Semifinal 1", "Pemenang Semifinal 2", "final", "Grand Final", "SD");
     syncDownstream(third_sd, sf1_sd, false, sf2_sd, false, "Kalah Semifinal 1", "Kalah Semifinal 2", "3rd", "Perebutan Juara 3", "SD");
   }
@@ -5738,8 +5738,8 @@ var app = window.app = Object.assign(window.app || {}, {
     ];
 
     const sfMatches = [
-      getOrBuildKnockoutMatch(findSlotMatch("sf1", actualSFs, 0, `SF1_${activeCat}`), `SF1_${activeCat}`, `Semifinal 1`, `Pemenang QF 1`, `Pemenang QF 2`, isSMP ? "14:00 - 14:50 WITA" : "13:30 - 14:10 WITA"),
-      getOrBuildKnockoutMatch(findSlotMatch("sf2", actualSFs, 1, `SF2_${activeCat}`), `SF2_${activeCat}`, `Semifinal 2`, `Pemenang QF 3`, `Pemenang QF 4`, isSMP ? "15:00 - 15:50 WITA" : "14:20 - 15:00 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("sf1", actualSFs, 0, `SF1_${activeCat}`), `SF1_${activeCat}`, `Semifinal 1`, `Pemenang QF 1`, `Pemenang QF 3`, isSMP ? "14:00 - 14:50 WITA" : "13:30 - 14:10 WITA"),
+      getOrBuildKnockoutMatch(findSlotMatch("sf2", actualSFs, 1, `SF2_${activeCat}`), `SF2_${activeCat}`, `Semifinal 2`, `Pemenang QF 2`, `Pemenang QF 4`, isSMP ? "15:00 - 15:50 WITA" : "14:20 - 15:00 WITA"),
     ];
 
     const thirdMatch = getOrBuildKnockoutMatch(findSlotMatch("3rd", actual3RDs, 0, `3RD_${activeCat}`), `3RD_${activeCat}`, `Perebutan Juara 3`, `Kalah Semifinal 1`, `Kalah Semifinal 2`, isSMP ? "16:00 - 16:50 WITA" : "15:15 - 15:55 WITA");
@@ -5908,118 +5908,127 @@ var app = window.app = Object.assign(window.app || {}, {
       <div class="bracket-mobile-hint">
         <div style="margin-bottom: 6px;">👉 Geser layar ke samping atau pilih babak untuk melihat bagan lengkap:</div>
         <div class="bracket-quick-nav">
-          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('qf')">Babak 8 Besar</button>
-          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('sf')">Semifinal</button>
-          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('final')">🏆 Grand Final & Juara 3</button>
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('qf-left')">8 Besar (Kiri)</button>
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('sf1')">Semifinal 1</button>
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('final')">🏆 Final & Juara 3</button>
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('sf2')">Semifinal 2</button>
+          <button type="button" class="bracket-quick-nav-btn" onclick="app.scrollBracket('qf-right')">8 Besar (Kanan)</button>
         </div>
       </div>
 
-      <!-- MAIN TREE CONTAINER -->
+      <!-- MAIN TREE CONTAINER (SIMETRIS KIRI - TENGAH - KANAN) -->
       <div class="bracket-tree-container">
         <!-- HEADER ROW -->
         <div class="bracket-tree-headers">
           <div class="bracket-header-cell col-qf">
             <div class="bracket-header-pill">BABAK 8 BESAR</div>
-            <div class="bracket-header-title">PEREMPAT FINAL</div>
-            <div class="bracket-header-sub">📅 27 Nov 2026 • 4 Pertandingan</div>
+            <div class="bracket-header-title">QF 1 &amp; QF 3</div>
+            <div class="bracket-header-sub">📅 27 Nov 2026 • Jalur Kiri</div>
           </div>
 
           <div class="bracket-header-spacer"></div>
 
           <div class="bracket-header-cell col-sf">
             <div class="bracket-header-pill">BABAK 4 BESAR</div>
-            <div class="bracket-header-title">SEMIFINAL</div>
-            <div class="bracket-header-sub">📅 28 Nov 2026 • 3 Pertandingan</div>
+            <div class="bracket-header-title">SEMIFINAL 1</div>
+            <div class="bracket-header-sub">📅 28 Nov 2026 • QF 1 vs QF 3</div>
+          </div>
+
+          <div class="bracket-header-spacer spacer-inner"></div>
+
+          <div class="bracket-header-cell col-final">
+            <div class="bracket-header-pill" style="color: var(--accent-gold);">BABAK PUNCAK &amp; JUARA 3</div>
+            <div class="bracket-header-title">🏆 GRAND FINAL 🏆</div>
+            <div class="bracket-header-sub">📅 29 Nov 2026 • Penentuan Juara</div>
+          </div>
+
+          <div class="bracket-header-spacer spacer-inner"></div>
+
+          <div class="bracket-header-cell col-sf">
+            <div class="bracket-header-pill">BABAK 4 BESAR</div>
+            <div class="bracket-header-title">SEMIFINAL 2</div>
+            <div class="bracket-header-sub">📅 28 Nov 2026 • QF 2 vs QF 4</div>
           </div>
 
           <div class="bracket-header-spacer"></div>
 
-          <div class="bracket-header-cell col-final">
-            <div class="bracket-header-pill" style="color: var(--accent-gold);">BABAK PUNCAK & JUARA 3</div>
-            <div class="bracket-header-title">🏆 GRAND FINAL 🏆</div>
-            <div class="bracket-header-sub">📅 29 Nov 2026 • Penentuan Juara</div>
+          <div class="bracket-header-cell col-qf">
+            <div class="bracket-header-pill">BABAK 8 BESAR</div>
+            <div class="bracket-header-title">QF 2 &amp; QF 4</div>
+            <div class="bracket-header-sub">📅 27 Nov 2026 • Jalur Kanan</div>
           </div>
         </div>
 
-        <!-- TREE BODY -->
+        <!-- TREE BODY (MIRRORED 5 COLUMNS) -->
         <div class="bracket-tree-body">
-          <!-- COLUMN 1: QUARTERFINALS -->
-          <div class="bracket-col-qf">
-            <!-- Pair 1: QF1 & QF2 -->
-            <div class="bracket-pair">
-              ${qfMatches[0] ? renderBracketCard(qfMatches[0], "qf") : ''}
-              ${qfMatches[1] ? renderBracketCard(qfMatches[1], "qf") : ''}
-            </div>
-            <!-- Pair 2: QF3 & QF4 -->
-            <div class="bracket-pair">
-              ${qfMatches[2] ? renderBracketCard(qfMatches[2], "qf") : ''}
-              ${qfMatches[3] ? renderBracketCard(qfMatches[3], "qf") : ''}
-            </div>
+          <!-- COLUMN 1 (KIRI): QF 1 & QF 3 -->
+          <div class="bracket-col-qf-side">
+            ${qfMatches[0] ? renderBracketCard(qfMatches[0], "qf") : ''}
+            ${qfMatches[2] ? renderBracketCard(qfMatches[2], "qf") : ''}
           </div>
 
-          <!-- CONNECTOR 1: QF TO SF -->
+          <!-- CONNECTOR 1: QF (KIRI) -> SEMIFINAL 1 -->
           <div class="bracket-connector-col">
-            <svg class="bracket-connector-svg" viewBox="0 0 40 580" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M 0 62 H 20 V 206 H 0 M 20 134 H 40 M 0 374 H 20 V 518 H 0 M 20 446 H 40" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <svg class="bracket-connector-svg" viewBox="0 0 24 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 0 62 H 12 V 438 H 0 M 12 250 H 24" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </div>
 
-          <!-- COLUMN 2: SEMIFINALS -->
-          <div class="bracket-col-sf">
+          <!-- COLUMN 2 (KIRI): SEMIFINAL 1 (QF1 vs QF3) -->
+          <div class="bracket-col-sf-side">
             <div class="bracket-sf-slot">
               ${sfMatches[0] ? renderBracketCard(sfMatches[0], "sf") : ''}
             </div>
-            <div class="bracket-sf-slot">
-              ${sfMatches[1] ? renderBracketCard(sfMatches[1], "sf") : ''}
-            </div>
           </div>
 
-          <!-- CONNECTOR 2: SF TO FINAL -->
-          <div class="bracket-connector-col">
-            <svg class="bracket-connector-svg" viewBox="0 0 40 580" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M 0 134 H 20 V 446 H 0 M 20 290 H 40" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- CONNECTOR 2: SEMIFINAL 1 -> GRAND FINAL -->
+          <div class="bracket-connector-col conn-inner">
+            <svg class="bracket-connector-svg" viewBox="0 0 20 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 0 250 H 20" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" />
             </svg>
           </div>
 
-          <!-- COLUMN 3: GRAND FINAL & BRONZE -->
-          <div class="bracket-col-final">
-            <!-- Dedicated Champion 1 Podium Showcase / Trophy Box -->
-            ${champTeam ? `
-              <div class="bracket-champion-podium-card">
-                <div class="champ-banner-tag">
-                  <span>🏆</span>
-                  <span>BAGAN KHUSUS JUARA 1</span>
-                  <span>🏆</span>
-                </div>
-                <div class="champ-content-row">
-                  <div class="champ-logo-wrap" style="border-color: ${champTeam.badgeColor || '#f59e0b'};">
-                    ${champTeam.logo ? `<img src="${champTeam.logo}" alt="${champTeam.name}">` : `<span class="champ-logo-fallback" style="background:${champTeam.badgeColor || '#059669'};">${(champTeam.shortName || 'ACC').substring(0, 3)}</span>`}
-                    <div class="champ-crown-badge">👑</div>
+          <!-- COLUMN 3 (TENGAH): TROFI, GRAND FINAL & PEREBUTAN JUARA 3 -->
+          <div class="bracket-col-center">
+            <div class="bracket-podium-slot">
+              <!-- Dedicated Champion 1 Podium Showcase / Trophy Box -->
+              ${champTeam ? `
+                <div class="bracket-champion-podium-card">
+                  <div class="champ-banner-tag">
+                    <span>🏆</span>
+                    <span>BAGAN KHUSUS JUARA 1</span>
+                    <span>🏆</span>
                   </div>
-                  <div class="champ-info-text">
-                    <div class="champ-podium-label">JUARA 1 (CHAMPION) • ${isSMP ? 'SMP' : 'SD'}</div>
-                    <div class="champ-school-title" title="${champTeam.name}">${champTeam.name}</div>
-                    <div class="champ-school-sub">📍 ${champTeam.city || 'Maros'} • Kampiun & Pemegang Trofi ACC 2026</div>
+                  <div class="champ-content-row">
+                    <div class="champ-logo-wrap" style="border-color: ${champTeam.badgeColor || '#f59e0b'};">
+                      ${champTeam.logo ? `<img src="${champTeam.logo}" alt="${champTeam.name}">` : `<span class="champ-logo-fallback" style="background:${champTeam.badgeColor || '#059669'};">${(champTeam.shortName || 'ACC').substring(0, 3)}</span>`}
+                      <div class="champ-crown-badge">👑</div>
+                    </div>
+                    <div class="champ-info-text">
+                      <div class="champ-podium-label">JUARA 1 (CHAMPION) • ${isSMP ? 'SMP' : 'SD'}</div>
+                      <div class="champ-school-title" title="${champTeam.name}">${champTeam.name}</div>
+                      <div class="champ-school-sub">📍 ${champTeam.city || 'Maros'} • Kampiun & Pemegang Trofi ACC 2026</div>
+                    </div>
+                  </div>
+                  ${runnerUpTeam || thirdTeam ? `
+                    <div class="champ-podium-pills">
+                      ${runnerUpTeam ? `<div class="champ-pill champ-pill-silver">🥈 Juara 2: <strong>${runnerUpTeam.name}</strong></div>` : ''}
+                      ${thirdTeam ? `<div class="champ-pill champ-pill-bronze">🥉 Juara 3: <strong>${thirdTeam.name}</strong></div>` : ''}
+                    </div>
+                  ` : ''}
+                </div>
+              ` : `
+                <div class="bracket-trophy-top">
+                  <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 4px;">🏆</div>
+                  <div style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px;">
+                    BAGAN JUARA 1 • TROFI BERGILIR ACC 2026
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+                    🥇 Juara 1 • 🥈 Juara 2 • 🥉 Juara 3
                   </div>
                 </div>
-                ${runnerUpTeam || thirdTeam ? `
-                  <div class="champ-podium-pills">
-                    ${runnerUpTeam ? `<div class="champ-pill champ-pill-silver">🥈 Juara 2: <strong>${runnerUpTeam.name}</strong></div>` : ''}
-                    ${thirdTeam ? `<div class="champ-pill champ-pill-bronze">🥉 Juara 3: <strong>${thirdTeam.name}</strong></div>` : ''}
-                  </div>
-                ` : ''}
-              </div>
-            ` : `
-              <div class="bracket-trophy-top">
-                <div style="font-size: 1.8rem; line-height: 1; margin-bottom: 4px;">🏆</div>
-                <div style="color: var(--accent-gold); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px;">
-                  BAGAN JUARA 1 • TROFI BERGILIR ACC 2026
-                </div>
-                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
-                  🥇 Juara 1 • 🥈 Juara 2 • 🥉 Juara 3
-                </div>
-              </div>
-            `}
+              `}
+            </div>
 
             <!-- Center Grand Final Slot -->
             <div class="bracket-final-slot">
@@ -6028,11 +6037,38 @@ var app = window.app = Object.assign(window.app || {}, {
 
             <!-- Bottom Bronze Match Slot -->
             <div class="bracket-bronze-slot">
-              <div style="font-size: 0.75rem; font-weight: 800; color: #cd7f32; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <div style="font-size: 0.75rem; font-weight: 800; color: #cd7f32; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
                 <span>🥉</span> PEREBUTAN JUARA 3 (BRONZE FINAL)
               </div>
               ${thirdMatch ? renderBracketCard(thirdMatch, "bronze") : ''}
             </div>
+          </div>
+
+          <!-- CONNECTOR 3: GRAND FINAL <- SEMIFINAL 2 -->
+          <div class="bracket-connector-col conn-inner">
+            <svg class="bracket-connector-svg" viewBox="0 0 20 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 0 250 H 20" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+          </div>
+
+          <!-- COLUMN 4 (KANAN): SEMIFINAL 2 (QF2 vs QF4) -->
+          <div class="bracket-col-sf-side">
+            <div class="bracket-sf-slot">
+              ${sfMatches[1] ? renderBracketCard(sfMatches[1], "sf") : ''}
+            </div>
+          </div>
+
+          <!-- CONNECTOR 4: SEMIFINAL 2 <- QF (KANAN) -->
+          <div class="bracket-connector-col">
+            <svg class="bracket-connector-svg" viewBox="0 0 24 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 24 62 H 12 V 438 H 24 M 12 250 H 0" stroke="var(--border-bracket, #94a3b8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+
+          <!-- COLUMN 5 (KANAN): QF 2 & QF 4 -->
+          <div class="bracket-col-qf-side">
+            ${qfMatches[1] ? renderBracketCard(qfMatches[1], "qf") : ''}
+            ${qfMatches[3] ? renderBracketCard(qfMatches[3], "qf") : ''}
           </div>
         </div>
       </div>
@@ -6042,12 +6078,17 @@ var app = window.app = Object.assign(window.app || {}, {
   scrollBracket(target) {
     const wrapper = document.querySelector(".bracket-wrapper");
     if (!wrapper) return;
-    if (target === "qf") {
+    const maxScroll = Math.max(0, wrapper.scrollWidth - wrapper.clientWidth);
+    if (target === "qf" || target === "qf-left") {
       wrapper.scrollTo({ left: 0, behavior: "smooth" });
-    } else if (target === "sf") {
-      wrapper.scrollTo({ left: 340, behavior: "smooth" });
+    } else if (target === "sf" || target === "sf1") {
+      wrapper.scrollTo({ left: Math.min(maxScroll, 220), behavior: "smooth" });
     } else if (target === "final") {
-      wrapper.scrollTo({ left: wrapper.scrollWidth, behavior: "smooth" });
+      wrapper.scrollTo({ left: Math.round(maxScroll / 2), behavior: "smooth" });
+    } else if (target === "sf2") {
+      wrapper.scrollTo({ left: Math.max(0, maxScroll - 220), behavior: "smooth" });
+    } else if (target === "qf-right") {
+      wrapper.scrollTo({ left: maxScroll, behavior: "smooth" });
     }
   },
 
