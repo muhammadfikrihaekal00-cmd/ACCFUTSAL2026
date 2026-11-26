@@ -341,9 +341,11 @@ class TournamentStore {
     let liveElapsedSec = typeof m.liveElapsedSec === "number" ? m.liveElapsedSec : null;
     let liveClockDisplay = m.liveClockDisplay || null;
 
+    let metaManualTeam = null;
     const metaCard = cleanCards.find(c => c && c._meta);
     if (metaCard) {
       if (metaCard.knockoutKey && !knockoutKey) knockoutKey = metaCard.knockoutKey;
+      if (metaCard.isManualTeam !== undefined) metaManualTeam = Boolean(metaCard.isManualTeam);
       if (metaCard.lineup && !lineup) lineup = metaCard.lineup;
       if (Array.isArray(metaCard.substitutions) && substitutions.length === 0) substitutions = metaCard.substitutions;
       if (typeof metaCard.homeFouls === "number") homeFouls = metaCard.homeFouls;
@@ -386,7 +388,13 @@ class TournamentStore {
       awayId: awayId || "",
       homePlaceholder: m.homePlaceholder !== undefined ? m.homePlaceholder : (m.home_placeholder || ""),
       awayPlaceholder: m.awayPlaceholder !== undefined ? m.awayPlaceholder : (m.away_placeholder || ""),
-      isManualTeam: m.isManualTeam !== undefined ? Boolean(m.isManualTeam) : Boolean(homeId || awayId),
+      isManualTeam: metaManualTeam !== null
+        ? metaManualTeam
+        : (m.is_manual_team !== undefined
+          ? Boolean(m.is_manual_team)
+          : (m.isManualTeam !== undefined
+            ? (stage === "knockout" ? false : Boolean(m.isManualTeam))
+            : (stage === "knockout" ? false : Boolean(homeId || awayId)))),
       status,
       homeScore,
       awayScore,
@@ -1070,12 +1078,34 @@ class TournamentStore {
 
   // Automatically sync Group Winners & Runners-Up to Knockout (4 Grup SMP & 4 Grup SD)
   syncKnockoutFromStandings() {
-    // Helper: hanya isi QF jika SEMUA pertandingan grup sudah "finished"
+    // Pastikan slot resmi Fase Gugur (QF, SF, 3RD, FINAL) tersedia di matches jika belum ada (mis. dari sync DB parsial)
+    if (typeof DEFAULT_DATA !== "undefined" && Array.isArray(DEFAULT_DATA.matches)) {
+      const existingIds = new Set((this.data.matches || []).map(m => m && m.id).filter(Boolean));
+      const deletedSet = this._deletedMatchIds instanceof Set ? this._deletedMatchIds : null;
+      DEFAULT_DATA.matches.forEach(dm => {
+        if (!dm || !dm.id || dm.stage !== "knockout") return;
+        if (!existingIds.has(dm.id) && !(deletedSet && deletedSet.has(dm.id))) {
+          const clone = JSON.parse(JSON.stringify(dm));
+          clone.homeId = "";
+          clone.awayId = "";
+          this.data.matches.push(clone);
+          existingIds.add(dm.id);
+        }
+      });
+    }
+
+    // Helper: isi QF jika seluruh laga grup aktif (kecuali laga yang melibatkan tim diskualifikasi/mundur yang belum dimainkan) sudah "finished"
     const isGroupCompleted = (groupLetter, category) => {
-      const gm = this.data.matches.filter(m =>
-        m.stage === "group" && m.group === groupLetter &&
-        (!category || category === "all" || (m.category || "SMP") === category)
-      );
+      const gm = this.data.matches.filter(m => {
+        if (m.stage !== "group" || m.group !== groupLetter) return false;
+        if (category && category !== "all" && (m.category || "SMP") !== category) return false;
+        const hTeam = m.homeId ? this.getTeam(m.homeId) : null;
+        const aTeam = m.awayId ? this.getTeam(m.awayId) : null;
+        const hExcl = hTeam && this.getTeamTournamentStatus(hTeam).excluded;
+        const aExcl = aTeam && this.getTeamTournamentStatus(aTeam).excluded;
+        if ((hExcl || aExcl) && m.status !== "finished") return false;
+        return true;
+      });
       return gm.length > 0 && gm.every(m => m.status === "finished");
     };
 
@@ -1522,6 +1552,8 @@ var app = window.app = Object.assign(window.app || {}, {
   isAutoDrawing: false,
   _autoDrawTimer: null,
   _audioCtx: null,
+  _routeStack: [],
+  _historyPushedCount: 0,
 
   isAdmin() {
     return Boolean(window.admin && window.admin.isAuthenticated === true);
@@ -2510,9 +2542,6 @@ var app = window.app = Object.assign(window.app || {}, {
           ? this.store.normalizeMatch(remoteMatch, this.store.data.teams)
           : remoteMatch;
         if (!norm) return null;
-        if (curMatch && curMatch.isManualTeam) {
-          norm.isManualTeam = true;
-        }
 
         if (norm.status === "live") {
           const isActiveInAdminModal = Boolean(this.isAdmin() && window.admin && (window.admin.activeMatchId === norm.id || window.admin.activeQuickMatchId === norm.id));
@@ -3579,9 +3608,25 @@ var app = window.app = Object.assign(window.app || {}, {
 
     // Mobile swipe-back gesture & modern full-page routing (Clean URL & History API)
     window.addEventListener("popstate", (e) => {
-      // 1. Tutup mobile menu overlay jika sedang terbuka
+      const topRoute = this._routeStack && this._routeStack.length > 0
+        ? this._routeStack[this._routeStack.length - 1]
+        : null;
+      const restoreCurrentRouteState = () => {
+        if (!topRoute) return;
+        try {
+          const st = { tab: topRoute.tab };
+          if (topRoute.teamId) st.teamId = topRoute.teamId;
+          if (topRoute.playerId) st.playerId = topRoute.playerId;
+          if (topRoute.matchId) st.matchId = topRoute.matchId;
+          history.pushState(st, "", topRoute.path || window.location.pathname);
+          this._historyPushedCount = (this._historyPushedCount || 0) + 1;
+        } catch (_) { }
+      };
+
+      // 1. Tutup mobile menu overlay jika sedang terbuka tanpa meninggalkan halaman aktif
       if (this._isMobileMenuOpen) {
         this.closeMobileMenu();
+        restoreCurrentRouteState();
         return;
       }
 
@@ -3590,7 +3635,7 @@ var app = window.app = Object.assign(window.app || {}, {
       if (activeModals.length > 0) {
         const topModal = activeModals[activeModals.length - 1];
         if (!readOnlyViewerModals.includes(topModal.id)) {
-          try { history.pushState({ tab: this.currentTab, editing: true }, ""); } catch (err) { }
+          restoreCurrentRouteState();
           const box = topModal.querySelector(".modal-box");
           if (box) {
             box.classList.remove("modal-shake");
@@ -3600,6 +3645,10 @@ var app = window.app = Object.assign(window.app || {}, {
           return;
         }
         topModal.classList.remove("active");
+        if (!document.querySelector(".modal-overlay.active")) {
+          document.body.classList.remove("modal-open");
+        }
+        restoreCurrentRouteState();
         return;
       }
 
@@ -3610,24 +3659,57 @@ var app = window.app = Object.assign(window.app || {}, {
         return;
       }
 
+      this._historyPushedCount = Math.max(0, (this._historyPushedCount || 0) - 1);
+
+      let targetEntry = null;
+      if (e.state && e.state.tab) {
+        targetEntry = {
+          tab: e.state.tab,
+          teamId: e.state.teamId || "",
+          playerId: e.state.playerId || "",
+          matchId: e.state.matchId || ""
+        };
+      }
+
+      let restoreScrollY = 0;
+      if (targetEntry && Array.isArray(this._routeStack) && this._routeStack.length >= 2) {
+        const prevIdx = this._routeStack.length - 2;
+        if (this._sameRouteEntry(this._routeStack[prevIdx], targetEntry)) {
+          this._routeStack.pop();
+          restoreScrollY = this._routeStack[this._routeStack.length - 1].scrollY || 0;
+        }
+      } else if (!targetEntry && Array.isArray(this._routeStack) && this._routeStack.length >= 2) {
+        this._routeStack.pop();
+        restoreScrollY = this._routeStack[this._routeStack.length - 1].scrollY || 0;
+      }
+
       // 4. Jika ada state riwayat eksplisit
       if (e.state) {
+        if (e.state.tab === "match-detail" && e.state.matchId) {
+          this.showMatchDetail(e.state.matchId, false);
+          if (restoreScrollY > 0) requestAnimationFrame(() => window.scrollTo(0, restoreScrollY));
+          return;
+        }
         if (e.state.tab === "player-detail" && e.state.teamId && e.state.playerId) {
           this.openPlayerDetailPage(e.state.teamId, e.state.playerId, false);
+          if (restoreScrollY > 0) requestAnimationFrame(() => window.scrollTo(0, restoreScrollY));
           return;
         }
         if (e.state.tab === "team-detail" && e.state.teamId) {
           this.openTeamDetailPage(e.state.teamId, false);
+          if (restoreScrollY > 0) requestAnimationFrame(() => window.scrollTo(0, restoreScrollY));
           return;
         }
         if (e.state.tab) {
           this.switchTab(e.state.tab, false);
+          if (restoreScrollY > 0) requestAnimationFrame(() => window.scrollTo(0, restoreScrollY));
           return;
         }
       }
 
       // 5. Fallback ke pembacaan path URL browser
       this.parseCurrentRoute(false);
+      if (restoreScrollY > 0) requestAnimationFrame(() => window.scrollTo(0, restoreScrollY));
     });
 
     // Jalankan routing otomatis saat halaman pertama kali dimuat
@@ -3689,6 +3771,106 @@ var app = window.app = Object.assign(window.app || {}, {
     document.documentElement.style.overflow = "";
   },
 
+  _sameRouteEntry(a, b) {
+    if (!a || !b) return false;
+    return a.tab === b.tab &&
+      String(a.teamId || "") === String(b.teamId || "") &&
+      String(a.playerId || "") === String(b.playerId || "") &&
+      String(a.matchId || "") === String(b.matchId || "");
+  },
+
+  recordRoute(entry, pushHistory = true) {
+    if (!entry || !entry.tab) return;
+    if (!Array.isArray(this._routeStack)) this._routeStack = [];
+
+    const cleanEntry = {
+      tab: entry.tab,
+      path: entry.path || window.location.pathname || "/",
+      teamId: entry.teamId || "",
+      playerId: entry.playerId || "",
+      matchId: entry.matchId || "",
+      scrollY: 0
+    };
+
+    const stateObj = { tab: cleanEntry.tab };
+    if (cleanEntry.teamId) stateObj.teamId = cleanEntry.teamId;
+    if (cleanEntry.playerId) stateObj.playerId = cleanEntry.playerId;
+    if (cleanEntry.matchId) stateObj.matchId = cleanEntry.matchId;
+
+    if (this._routeStack.length === 0) {
+      this._routeStack.push(cleanEntry);
+      try {
+        history.replaceState(stateObj, "", cleanEntry.path);
+      } catch (_) { }
+      return;
+    }
+
+    if (pushHistory) {
+      const top = this._routeStack[this._routeStack.length - 1];
+      top.scrollY = window.scrollY || window.pageYOffset || 0;
+      if (!this._sameRouteEntry(top, cleanEntry)) {
+        this._routeStack.push(cleanEntry);
+        if (this._routeStack.length > 40) this._routeStack.shift();
+        this._historyPushedCount = (this._historyPushedCount || 0) + 1;
+        try {
+          history.pushState(stateObj, "", cleanEntry.path);
+        } catch (_) { }
+      }
+    }
+  },
+
+  getPreviousRoute() {
+    if (!Array.isArray(this._routeStack) || this._routeStack.length < 2) return null;
+    return this._routeStack[this._routeStack.length - 2];
+  },
+
+  getBackButtonText(fallbackText = "← Kembali") {
+    const prev = this.getPreviousRoute();
+    if (!prev || !prev.tab) return fallbackText;
+    const labelMap = {
+      home: "← Kembali ke Beranda",
+      matches: "← Kembali ke Jadwal & Skor",
+      standings: "← Kembali ke Klasemen",
+      draw: "← Kembali ke Drawing",
+      bracket: "← Kembali ke Bagan",
+      teams: "← Kembali ke Daftar Tim",
+      stats: "← Kembali ke Statistik",
+      juknis: "← Kembali ke Regulasi",
+      "team-detail": "← Kembali ke Profil Tim",
+      "player-detail": "← Kembali ke Profil Pemain",
+      "match-detail": "← Kembali ke Detail Laga"
+    };
+    return labelMap[prev.tab] || fallbackText;
+  },
+
+  goBack(fallbackPath = "/beranda", fallbackTab = "home", fallbackData = null) {
+    this.closeMobileMenu();
+
+    if ((this._historyPushedCount || 0) > 0 && Array.isArray(this._routeStack) && this._routeStack.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    if (Array.isArray(this._routeStack) && this._routeStack.length > 1) {
+      this._routeStack.pop();
+      const prev = this._routeStack[this._routeStack.length - 1];
+      const restoreY = prev.scrollY || 0;
+      if (prev.tab === "match-detail" && prev.matchId) {
+        this.showMatchDetail(prev.matchId, false);
+      } else if (prev.tab === "player-detail" && prev.teamId && prev.playerId) {
+        this.openPlayerDetailPage(prev.teamId, prev.playerId, false, prev.path);
+      } else if (prev.tab === "team-detail" && prev.teamId) {
+        this.openTeamDetailPage(prev.teamId, false, prev.path);
+      } else {
+        this.switchTab(prev.tab, false, prev.path);
+      }
+      if (restoreY > 0) requestAnimationFrame(() => window.scrollTo(0, restoreY));
+      return;
+    }
+
+    this.navigateTo(fallbackPath, fallbackTab, fallbackData, true);
+  },
+
   navigateTo(path, tabId, data = null, pushHistory = true) {
     this.closeMobileMenu();
 
@@ -3731,7 +3913,7 @@ var app = window.app = Object.assign(window.app || {}, {
     const matchDetailMatch = path.match(/\/jadwal-skor\/detail-laga\/([^/]+)/i);
     if (matchDetailMatch) {
       const matchId = decodeURIComponent(matchDetailMatch[1]);
-      this.showMatchDetail(matchId);
+      this.showMatchDetail(matchId, pushHistory);
       return;
     }
 
@@ -3752,11 +3934,11 @@ var app = window.app = Object.assign(window.app || {}, {
       "/regulasi": "juknis"
     };
 
-    const cleanPath = path.replace(/\/$/, "");
+    const cleanPath = path.replace(/\/$/, "") || "/";
     if (cleanPath && tabMap[cleanPath]) {
       this.switchTab(tabMap[cleanPath], pushHistory, cleanPath);
     } else {
-      this.switchTab(this.currentTab || "home", pushHistory);
+      this.switchTab("home", pushHistory, "/beranda");
     }
   },
 
@@ -3795,12 +3977,14 @@ var app = window.app = Object.assign(window.app || {}, {
     const team = this.store.getTeam(teamId);
     if (!team) {
       // Pertahankan rute detail-tim, jangan switchTab('teams') karena data sedang dimuat dari Cloud Supabase
+      const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(teamId)}`;
+      this.recordRoute({ tab: "team-detail", path, teamId }, pushHistory);
       const container = document.getElementById("teamDetailPageContainer");
       if (container) {
         container.innerHTML = `
           <div class="fullpage-nav-bar">
-            <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/tim', 'teams')">
-              <span>←</span> Kembali ke Daftar Tim
+            <button type="button" class="btn-fullpage-back" onclick="app.goBack('/tim', 'teams')">
+              ${this.getBackButtonText("← Kembali ke Daftar Tim")}
             </button>
             <div style="font-size: 0.76rem; color: #94a3b8;">
               Turnamen Futsal ACC 2026 / Profil Tim
@@ -3838,11 +4022,7 @@ var app = window.app = Object.assign(window.app || {}, {
     }
 
     const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}`;
-    if (pushHistory) {
-      try {
-        history.pushState({ tab: "team-detail", teamId: team.id }, "", path);
-      } catch (_) { }
-    }
+    this.recordRoute({ tab: "team-detail", path, teamId: team.id }, pushHistory);
 
     // Hitung statistik turnamen tim secara aktual dari data.matches (TIDAK ADA DATA STATIS)
     let mp = 0, w = 0, d = 0, l = 0, gf = 0, ga = 0;
@@ -3979,8 +4159,8 @@ var app = window.app = Object.assign(window.app || {}, {
     if (container) {
       container.innerHTML = `
         <div class="fullpage-nav-bar">
-          <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/tim', 'teams')">
-            <span>←</span> Kembali ke Daftar Tim
+          <button type="button" class="btn-fullpage-back" onclick="app.goBack('/tim', 'teams')">
+            ${this.getBackButtonText("← Kembali ke Daftar Tim")}
           </button>
           <div style="font-size: 0.76rem; color: #94a3b8;">
             Turnamen Futsal ACC 2026 / Profil Tim
@@ -4114,12 +4294,15 @@ var app = window.app = Object.assign(window.app || {}, {
     const team = this.store.getTeam(teamId);
     if (!team) {
       // Pertahankan rute detail-pemain, jangan switchTab('teams') karena data sedang dimuat dari Cloud Supabase
+      const decodedId = decodeURIComponent(playerIdOrName);
+      const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(teamId)}/detail-pemain/${encodeURIComponent(decodedId)}`;
+      this.recordRoute({ tab: "player-detail", path, teamId, playerId: decodedId }, pushHistory);
       const container = document.getElementById("playerDetailPageContainer");
       if (container) {
         container.innerHTML = `
           <div class="fullpage-nav-bar">
-            <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/tim', 'teams')">
-              <span>←</span> Kembali ke Daftar Tim
+            <button type="button" class="btn-fullpage-back" onclick="app.goBack('/tim', 'teams')">
+              ${this.getBackButtonText("← Kembali ke Daftar Tim")}
             </button>
             <div style="font-size: 0.76rem; color: #94a3b8;">
               Turnamen Futsal ACC 2026 / Profil Pemain
@@ -4144,11 +4327,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     this.currentTab = "player-detail";
     const path = customPath || `/daftar-tim/detail-tim/${encodeURIComponent(team.id)}/detail-pemain/${encodeURIComponent(player.name || decodedId)}`;
-    if (pushHistory) {
-      try {
-        history.pushState({ tab: "player-detail", teamId: team.id, playerId: decodedId }, "", path);
-      } catch (_) { }
-    }
+    this.recordRoute({ tab: "player-detail", path, teamId: team.id, playerId: decodedId }, pushHistory);
 
     const cleanPName = (player.name || "").toLowerCase().trim();
     const pNo = player.no ? String(player.no).trim() : "";
@@ -4272,8 +4451,8 @@ var app = window.app = Object.assign(window.app || {}, {
     if (container) {
       container.innerHTML = `
         <div class="fullpage-nav-bar">
-          <button type="button" class="btn-fullpage-back" onclick="app.navigateTo('/daftar-tim/detail-tim/${encodeURIComponent(team.id)}', 'team-detail', { teamId: '${team.id}' })">
-            <span>←</span> Kembali ke Profil Tim ${typeof Security !== 'undefined' ? Security.sanitize(team.name) : team.name}
+          <button type="button" class="btn-fullpage-back" onclick="app.goBack('/daftar-tim/detail-tim/${encodeURIComponent(team.id)}', 'team-detail', { teamId: '${team.id}' })">
+            ${this.getBackButtonText(`← Kembali ke Profil Tim ${typeof Security !== 'undefined' ? Security.sanitize(team.name) : team.name}`)}
           </button>
           <div style="font-size: 0.76rem; color: #94a3b8;">
             Turnamen Futsal ACC 2026 / Profil Pemain
@@ -4396,11 +4575,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
       const targetPath = customPath || tabToPath[tabId] || ("/" + tabId);
 
-      if (pushHistory && tabId !== this.currentTab) {
-        try {
-          history.pushState({ tab: tabId }, "", targetPath);
-        } catch (err) { }
-      }
+      this.recordRoute({ tab: tabId, path: targetPath }, pushHistory && tabId !== this.currentTab);
       this.currentTab = tabId;
 
       // Update Desktop Tabs
@@ -5163,6 +5338,10 @@ var app = window.app = Object.assign(window.app || {}, {
   renderMatches() {
     const container = document.getElementById("matchesList");
     if (!container) return;
+
+    if (this.store && typeof this.store.syncKnockoutFromStandings === "function") {
+      try { this.store.syncKnockoutFromStandings(); } catch (_) { }
+    }
 
     // Pastikan daftar filter klub selalu sinkron dengan kategori aktif
     this.populateTeamFilter();
@@ -8844,7 +9023,7 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   backFromMatchDetail() {
-    this.switchTab("matches");
+    this.goBack("/jadwal", "matches");
   },
 
   refreshActiveMatchDetail() {
@@ -8858,7 +9037,7 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   // DEDICATED FULL-PAGE MATCH DETAIL CENTER
-  showMatchDetail(matchId) {
+  showMatchDetail(matchId, pushHistory = true) {
     try {
       const early = document.getElementById("earlyRouteStyle");
       if (early) early.remove();
@@ -8883,16 +9062,20 @@ var app = window.app = Object.assign(window.app || {}, {
       pane.style.display = "block";
     }
 
-    try {
-      history.pushState({ tab: "match-detail", matchId: matchId }, "", `/jadwal-skor/detail-laga/${encodeURIComponent(matchId)}`);
-    } catch (_) { }
+    this.recordRoute({
+      tab: "match-detail",
+      path: `/jadwal-skor/detail-laga/${encodeURIComponent(matchId)}`,
+      matchId: matchId
+    }, pushHistory);
 
     this.renderMatchDetailPage(matchId);
     this.updateFloatingCategoryVisibility();
 
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+    if (pushHistory) {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   },
 
   renderMatchDetailPage(matchId) {
@@ -8903,7 +9086,7 @@ var app = window.app = Object.assign(window.app || {}, {
     if (!match) {
       container.innerHTML = `
         <div class="md-nav-header">
-          <button type="button" class="md-back-btn" onclick="app.backFromMatchDetail()">← Kembali ke Jadwal &amp; Skor</button>
+          <button type="button" class="md-back-btn" onclick="app.backFromMatchDetail()">${this.getBackButtonText("← Kembali ke Jadwal & Skor")}</button>
         </div>
         <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
           Pertandingan dengan ID "${matchId}" tidak ditemukan.
@@ -9071,7 +9254,7 @@ var app = window.app = Object.assign(window.app || {}, {
       <!-- NAV HEADER BREADCRUMB & TOMBOL PANITIA -->
       <div class="md-nav-header">
         <button type="button" class="md-back-btn" onclick="app.backFromMatchDetail()">
-          ← Kembali ke Jadwal &amp; Skor
+          ${this.getBackButtonText("← Kembali ke Jadwal & Skor")}
         </button>
         <div style="display: flex; gap: 8px; align-items: center;">
           ${this.isAdmin() ? `
