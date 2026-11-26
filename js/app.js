@@ -2264,13 +2264,23 @@ var app = window.app = Object.assign(window.app || {}, {
       window.SupabaseService.fetchLiveMatchesOnly().then(matchesData => {
         isSyncing = false;
         if (matchesData && Array.isArray(matchesData) && matchesData.length > 0) {
-          const matchSig = matchesData.map(m =>
-            `${m.id}:${m.status}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${m.updated_at}`
-          ).join("|");
+          const matchSig = [...matchesData]
+            .sort((a, b) => String(a.id || "").localeCompare(String(b.id || "")))
+            .map(m => {
+              const meta = Array.isArray(m.cards) ? m.cards.find(c => c && c._meta) : null;
+              return `${m.id}:${m.status}:${m.date || ""}:${m.time || ""}:${m.home_id || ""}:${m.away_id || ""}:${m.stage || ""}:${m.group_letter || ""}:${m.round_name || ""}:${m.home_placeholder || ""}:${m.away_placeholder || ""}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${meta ? Boolean(meta.isManualTeam) : ""}:${m.updated_at || ""}`;
+            })
+            .join("|");
 
           if (matchSig !== lastMatchSignature) {
             lastMatchSignature = matchSig;
             this.applyRemoteData({ matches: matchesData });
+          } else if (this._pendingRemoteRender && !this.isUserEditing()) {
+            this._pendingRemoteRender = false;
+            this.renderCurrentView();
+            this.renderMatches();
+            this.renderBracket();
+            this.refreshActiveMatchDetail();
           }
         }
       }).catch(err => {
@@ -2679,7 +2689,11 @@ var app = window.app = Object.assign(window.app || {}, {
     } catch (e) { }
     this.store.saveData();
     // Jika panitia sedang mengisi form/upload di modal editor, jangan re-render DOM supaya fokus ketikan tidak terganggu!
-    if (this.isUserEditing()) return;
+    if (this.isUserEditing()) {
+      this._pendingRemoteRender = true;
+      return;
+    }
+    this._pendingRemoteRender = false;
 
     // Render current active view immediately (< 30ms CPU time)
     this.renderCurrentView();
@@ -2756,6 +2770,7 @@ var app = window.app = Object.assign(window.app || {}, {
           const metaObj = payload.cards.find(c => c && c._meta);
           if (metaObj) {
             if (metaObj.knockoutKey && !mapped.knockoutKey) mapped.knockoutKey = metaObj.knockoutKey;
+            if (metaObj.isManualTeam !== undefined) mapped.isManualTeam = Boolean(metaObj.isManualTeam);
             if (metaObj.lineup && !mapped.lineup) mapped.lineup = metaObj.lineup;
             if (Array.isArray(metaObj.substitutions)) mapped.substitutions = metaObj.substitutions;
             if (typeof metaObj.homeFouls === "number") mapped.homeFouls = metaObj.homeFouls;
@@ -2910,13 +2925,17 @@ var app = window.app = Object.assign(window.app || {}, {
           cards: payload.cards || [],
           isManualTeam: Boolean(payload.is_manual_team)
         };
-        const normalized = this.store.normalizeMatch(rawM);
-        this.store.data.matches.push(normalized);
-        this.store.saveData();
-        this.renderCurrentView();
-        this.renderMatches();
-        this.renderStandings();
-        this.renderBracket();
+        const normalized = this.store.normalizeMatch(rawM, this.store.data.teams);
+        if (normalized) {
+          this.store.data.matches.push(normalized);
+          this.store.syncPlayerStatsFromMatches();
+          this.store.syncKnockoutFromStandings();
+          this.store.saveData();
+          this.renderCurrentView();
+          this.renderMatches();
+          this.renderStandings();
+          this.renderBracket();
+        }
       }
     } else if (table === 'teams') {
       if (payload._deleted && payload.id) {

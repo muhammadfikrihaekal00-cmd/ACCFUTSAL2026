@@ -2614,14 +2614,19 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     app.store.saveData();
 
     // Sinkronisasi permanen ke Supabase Cloud (Awaited agar pasti tersimpan saat di-refresh)
+    let cloudSynced = true;
     if (window.SupabaseService && typeof window.SupabaseService.syncMatch === 'function') {
-      await window.SupabaseService.syncMatch(match, this.adminPinHash);
+      cloudSynced = await window.SupabaseService.syncMatch(match, this.adminPinHash);
     }
 
     const stageDesc = (app.store && typeof app.store.getMatchStageName === 'function')
       ? app.store.getMatchStageName(match)
       : (match.stage === "group" ? `Grup ${match.group}` : (match.roundName || 'Babak Gugur'));
-    app.showToast(`✅ Pertandingan (${stageDesc} • ${match.date} • ${match.time}) berhasil disimpan!`);
+    if (cloudSynced) {
+      app.showToast(`✅ Pertandingan (${stageDesc} • ${match.date} • ${match.time}) berhasil disimpan!`);
+    } else {
+      app.showToast(`⚠️ Tersimpan lokal (${stageDesc}), tapi GAGAL sinkron ke server Supabase. Cek koneksi internet!`);
+    }
     app.renderCurrentView();
     if (app && typeof app.renderBracket === 'function') app.renderBracket();
     if (app && typeof app.renderMatches === 'function') app.renderMatches();
