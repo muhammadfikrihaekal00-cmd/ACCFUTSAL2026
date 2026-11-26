@@ -334,7 +334,7 @@
       if (!this.client || !this.isConfigured) return null;
       try {
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Supabase request timed out after 5s')), 5000)
+          setTimeout(() => reject(new Error('Supabase request timed out after 10s')), 10000)
         );
         const { data, error } = await Promise.race([
           this.client.from('matches').select('*'),
@@ -359,28 +359,40 @@
       if (!this.client || !this.isConfigured) return null;
 
       try {
-        // Kolom skuad pemain wajib selalu dimuat agar panitia dapat mencatat gol, kartu, dan susunan pemain di detail laga
-        const teamCols = 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, players, updated_at';
+        // Ambil metadata & ofisial tim dulu TANPA JSONB players (~10 KB vs ~2 MB) agar matches & jadwal instan terload!
+        const teamCols = 'id, name, short_name, badge_color, city, group_letter, official_coach, official_manager, official_jersey_home, official_jersey_away, updated_at';
 
-        // 1. Fetch complete tournament dataset in parallel with optimized payload & 7s network timeout safeguard
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Supabase request timed out after 7s (server unreachable/paused)')), 7000)
-        );
-
-        const [configListRes, teamsRes, matchesRes, momentsRes, sponsorsRes] = await Promise.race([
-          Promise.all([
-            this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'team_logos_registry', 'mvp_spotlight_registry']),
-            this.client.from('teams').select(teamCols),
-            this.client.from('matches').select('*'),
-            this.client.from('moments').select('id, title, player, team, category, badge, media_url, caption, sort_order, created_at').order('sort_order', { ascending: true }).limit(30),
-            this.client.from('sponsors').select('*').order('sort_order', { ascending: true })
-          ]),
-          timeoutPromise
+        const withTimeout = (promise, ms, label) => Promise.race([
+          promise,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Supabase ${label} timed out after ${ms}ms`)), ms)
+          )
         ]);
 
-        if (matchesRes.error && teamsRes.error) {
-          console.warn('[Supabase] Both matches and teams errored:', matchesRes.error, teamsRes.error);
-          return null; // Database tables might not be migrated yet, fallback to local
+        // Gunakan Promise.allSettled agar satu tabel lambat TIDAK membatalkan matches/config/teams!
+        const results = await Promise.allSettled([
+          withTimeout(this.client.from('tournament_config').select('*').in('id', ['config_main', 'team_meta_registry', 'team_logos_registry', 'mvp_spotlight_registry']), 12000, 'config'),
+          withTimeout(this.client.from('teams').select(teamCols), 12000, 'teams'),
+          withTimeout(this.client.from('matches').select('*'), 12000, 'matches'),
+          withTimeout(this.client.from('moments').select('id, title, player, team, category, badge, media_url, caption, sort_order, created_at').order('sort_order', { ascending: true }).limit(30), 12000, 'moments'),
+          withTimeout(this.client.from('sponsors').select('*').order('sort_order', { ascending: true }), 12000, 'sponsors')
+        ]);
+
+        const valOrErr = (r, name) => {
+          if (r.status === 'fulfilled') return r.value;
+          console.warn(`[Supabase] ${name} fetch warning:`, r.reason);
+          return { data: null, error: r.reason };
+        };
+
+        const configListRes = valOrErr(results[0], 'config');
+        const teamsRes = valOrErr(results[1], 'teams');
+        const matchesRes = valOrErr(results[2], 'matches');
+        const momentsRes = valOrErr(results[3], 'moments');
+        const sponsorsRes = valOrErr(results[4], 'sponsors');
+
+        if (!matchesRes.data && !teamsRes.data && !configListRes.data) {
+          console.warn('[Supabase] All core fetches failed/timed out:', matchesRes.error, teamsRes.error);
+          return null;
         }
 
         const teamsRawData = (teamsRes && teamsRes.data && Array.isArray(teamsRes.data)) ? teamsRes.data : null;
@@ -474,6 +486,24 @@
         };
       } catch (err) {
         console.error('[Supabase] fetchAllData exception:', err);
+        return null;
+      }
+    }
+
+    // Background fetch skuad lengkap (players + foto) tanpa memblokir boot awal atau jadwal laga
+    async fetchTeamsPlayersOnly() {
+      if (!this.client || !this.isConfigured) return null;
+      try {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Supabase players roster timed out after 25s')), 25000)
+        );
+        const { data, error } = await Promise.race([
+          this.client.from('teams').select('id, players'),
+          timeoutPromise
+        ]);
+        if (error) return null;
+        return Array.isArray(data) ? data : null;
+      } catch (e) {
         return null;
       }
     }

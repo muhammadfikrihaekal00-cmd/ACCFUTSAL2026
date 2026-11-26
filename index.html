@@ -18,6 +18,7 @@
   <!-- Preconnect Candidates for Lightning LCP -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://qxanfoqijpznszezwzef.supabase.co" crossorigin>
 
   <!-- Google Fonts Optimized Loading -->
   <link rel="preload" as="style"
@@ -1439,13 +1440,13 @@
           <form id="adminSupabaseAuthForm"
             onsubmit="event.preventDefault(); (window.admin || admin).loginWithSupabase(); return false;">
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 5px;">Email Panitia Terdaftar</label>
+              <label for="adminEmailInput" class="form-label" style="font-size: 0.78rem; margin-bottom: 5px;">Email Panitia Terdaftar</label>
               <input type="email" id="adminEmailInput" class="form-input" placeholder="contoh: panitia@al-fayyadh.org"
                 autocomplete="username" style="font-size: 0.92rem; padding: 10px 12px;">
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 5px;">Password Akun Panitia</label>
+              <label for="adminPasswordInput" class="form-label" style="font-size: 0.78rem; margin-bottom: 5px;">Password Akun Panitia</label>
               <div style="position: relative; display: flex; align-items: center;">
                 <input type="password" id="adminPasswordInput" class="form-input"
                   placeholder="Masukkan password akun panitia..." autocomplete="current-password"
@@ -1485,7 +1486,7 @@
         <div id="paneLoginPin" style="display: none;">
           <form id="adminLoginForm" onsubmit="event.preventDefault(); (window.admin || admin).doLogin(); return false;">
             <div class="form-group" style="margin-bottom: 10px;">
-              <label class="form-label" style="font-size: 0.78rem; margin-bottom: 5px;">PIN Darurat Panitia
+              <label for="adminPinInput" class="form-label" style="font-size: 0.78rem; margin-bottom: 5px;">PIN Darurat Panitia
                 (Offline)</label>
               <div style="position: relative; display: flex; align-items: center;">
                 <input type="password" id="adminPinInput" class="form-input" placeholder="Masukkan PIN Panitia..."
@@ -1586,7 +1587,7 @@
             <!-- Status & Menit Laga -->
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                <label class="form-label" style="margin: 0; font-size: 0.78rem;">Status Pertandingan</label>
+                <div class="form-label" style="margin: 0; font-size: 0.78rem;">Status Pertandingan</div>
                 <div style="display: inline-flex; align-items: center; gap: 4px;">
                   <span class="form-label" style="margin: 0; font-size: 0.76rem;">Menit Acuan:</span>
                   <button type="button" class="btn btn-outline btn-sm" onclick="admin.stepMatchMinute(-1)"
@@ -1642,7 +1643,7 @@
                 </div>
               </div>
               <div style="margin-top: 8px;">
-                <label
+                <label for="penaltyWinnerSelect"
                   style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight: 600;">Tim
                   Pemenang Lolos:</label>
                 <select id="penaltyWinnerSelect" class="form-select"
@@ -1658,7 +1659,7 @@
 
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Tim Penerima Skor (Poin Masuk
+                <label for="goalTeamSelect" class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Tim Penerima Skor (Poin Masuk
                   ke Tim Ini):</label>
                 <select id="goalTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
                   onchange="admin.onGoalTeamChange()">
@@ -1679,7 +1680,7 @@
               </div>
 
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol:</label>
+                <label for="goalScorerSelect" class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pencetak Gol:</label>
                 <select id="goalScorerSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
                   onchange="admin.onGoalScorerChange()">
                   <option value="">Pilih Pencetak Gol</option>
@@ -1709,7 +1710,7 @@
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Tim Penerima
+                <label for="cardTeamSelect" class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Tim Penerima
                   Kartu:</label>
                 <select id="cardTeamSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;"
                   onchange="admin.onCardTeamChange()">
@@ -1717,7 +1718,7 @@
                 </select>
               </div>
               <div>
-                <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Penerima Kartu (Pemain /
+                <label for="cardRecipientSelect" class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Pilih Penerima Kartu (Pemain /
                   Ofisial):</label>
                 <select id="cardRecipientSelect" class="form-select" style="padding: 6px 8px; font-size: 0.82rem;">
                   <option value="">-- Pilih Orang yang Diberi Kartu --</option>
@@ -1788,7 +1789,7 @@
           <!-- Kejadian Laga (Live Events List) -->
           <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" style="font-size: 0.75rem; margin: 0;">📜 Catatan Kejadian Laga</label>
+              <div class="form-label" style="font-size: 0.75rem; margin: 0;">📜 Catatan Kejadian Laga</div>
               <span id="eventCountBadge" style="font-size: 0.68rem; color: var(--text-muted);">0 Kejadian</span>
             </div>
             <div id="adminEventsList"
@@ -1835,7 +1836,7 @@
             style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
             <div class="form-row">
               <div class="form-group" style="flex: 1;">
-                <label class="form-label" style="font-weight: 700; color: var(--accent-gold);">🏆 Jenis / Babak
+                <label for="editMatchStageSelect" class="form-label" style="font-weight: 700; color: var(--accent-gold);">🏆 Jenis / Babak
                   Pertandingan</label>
                 <select id="editMatchStageSelect" class="form-select" onchange="admin.onMatchStageChange()">
                   <option value="group">⚽ Pertandingan Biasa (Fase Grup)</option>
@@ -1850,7 +1851,7 @@
                 </select>
               </div>
               <div class="form-group" id="editMatchGroupWrap" style="flex: 1;">
-                <label class="form-label" style="font-weight: 700; color: #10b981;">🏷️ Pilihan Grup</label>
+                <label for="editMatchGroupSelect" class="form-label" style="font-weight: 700; color: #10b981;">🏷️ Pilihan Grup</label>
                 <select id="editMatchGroupSelect" class="form-select" onchange="admin.onMatchGroupChange()">
                   <option value="A">Grup A</option>
                   <option value="B">Grup B</option>
@@ -1870,7 +1871,7 @@
             </div>
             <div class="form-row">
               <div class="form-group" style="flex: 1;">
-                <label class="form-label" style="font-weight: 600;">Tanggal Laga</label>
+                <label for="editMatchDateInput" class="form-label" style="font-weight: 600;">Tanggal Laga</label>
                 <input type="text" id="editMatchDateInput" class="form-input" list="matchDateSuggestions"
                   placeholder="contoh: 22 Nov 2026" required>
                 <datalist id="matchDateSuggestions">
@@ -1887,7 +1888,7 @@
                 </datalist>
               </div>
               <div class="form-group" style="flex: 1;">
-                <label class="form-label" style="font-weight: 600;">Waktu Kick-off</label>
+                <label for="editMatchTimeInput" class="form-label" style="font-weight: 600;">Waktu Kick-off</label>
                 <input type="text" id="editMatchTimeInput" class="form-input" list="matchTimeSuggestions"
                   placeholder="contoh: 08:00 - 08:35 WITA" required>
                 <datalist id="matchTimeSuggestions">
@@ -1920,7 +1921,7 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-weight: 700; color: #10b981;">🟢 Tim 1 (Tuan Rumah / Home)</label>
+              <label for="editMatchHomeSelect" class="form-label" style="font-weight: 700; color: #10b981;">🟢 Tim 1 (Tuan Rumah / Home)</label>
               <select id="editMatchHomeSelect" class="form-select">
                 <!-- Populated dynamically -->
               </select>
@@ -1932,7 +1933,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" style="font-weight: 700; color: #3b82f6;">🔵 Tim 2 (Tamu / Away)</label>
+              <label for="editMatchAwaySelect" class="form-label" style="font-weight: 700; color: #3b82f6;">🔵 Tim 2 (Tamu / Away)</label>
               <select id="editMatchAwaySelect" class="form-select">
                 <!-- Populated dynamically -->
               </select>
@@ -1971,33 +1972,33 @@
           </h4>
 
           <div class="form-group">
-            <label class="form-label">Nama Turnamen</label>
+            <label for="settingName" class="form-label">Nama Turnamen</label>
             <input type="text" id="settingName" class="form-input" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Sub Judul</label>
+            <label for="settingSub" class="form-label">Sub Judul</label>
             <input type="text" id="settingSub" class="form-input">
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Lokasi / Venue</label>
+              <label for="settingVenue" class="form-label">Lokasi / Venue</label>
               <input type="text" id="settingVenue" class="form-input">
             </div>
             <div class="form-group">
-              <label class="form-label">Tanggal Turnamen</label>
+              <label for="settingDates" class="form-label">Tanggal Turnamen</label>
               <input type="text" id="settingDates" class="form-input">
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Pengumuman Berjalan (Running Text Ticker)</label>
+            <label for="settingAnnouncement" class="form-label">Pengumuman Berjalan (Running Text Ticker)</label>
             <textarea id="settingAnnouncement" class="form-textarea" rows="2"></textarea>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Ganti PIN Panitia</label>
+            <label for="settingPin" class="form-label">Ganti PIN Panitia</label>
             <input type="password" id="settingPin" class="form-input" style="width: 150px;">
           </div>
 
@@ -2151,13 +2152,13 @@
             Anda.
           </p>
           <div class="form-group" style="margin-bottom: 8px;">
-            <label class="form-label" style="font-size: 0.75rem;">Supabase Project URL</label>
+            <label for="settingSupabaseUrl" class="form-label" style="font-size: 0.75rem;">Supabase Project URL</label>
             <input type="text" id="settingSupabaseUrl" class="form-input"
               placeholder="https://qxanfoqijpznszezwzef.supabase.co"
               style="font-size: 0.78rem; font-family: monospace;">
           </div>
           <div class="form-group" style="margin-bottom: 8px;">
-            <label class="form-label" style="font-size: 0.75rem;">Supabase Publishable Key (sb_publishable_... atau
+            <label for="settingSupabaseKey" class="form-label" style="font-size: 0.75rem;">Supabase Publishable Key (sb_publishable_... atau
               eyJ...)</label>
             <input type="text" id="settingSupabaseKey" class="form-input" placeholder="sb_publishable_3sH1x2Ehz..."
               autocomplete="off" style="font-size: 0.78rem; font-family: monospace;">
@@ -2230,7 +2231,7 @@
 
         <form id="masterResetForm" onsubmit="event.preventDefault(); admin.executeMasterReset();">
           <div class="form-group" style="margin-bottom: 14px;">
-            <label class="form-label" style="font-weight: 700; color: #ef4444; font-size: 0.82rem;">Masukkan Sandi
+            <label for="masterResetPinInput" class="form-label" style="font-weight: 700; color: #ef4444; font-size: 0.82rem;">Masukkan Sandi
               Khusus Hapus Data:</label>
             <input type="password" id="masterResetPinInput" class="form-input"
               placeholder="Masukkan Sandi Reset (Default: 9999)" autocomplete="off" required
@@ -2272,7 +2273,7 @@
 
         <!-- Preview Box -->
         <div style="margin-bottom: 16px;">
-          <label class="form-label">Pratinjau Banner Saat Ini:</label>
+          <div class="form-label">Pratinjau Banner Saat Ini:</div>
           <div id="bannerPreviewBox"
             style="width: 100%; height: 160px; border-radius: var(--radius-md); background-size: cover; background-position: center; border: 2px dashed var(--accent-gold); position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 10px;">
             <span
@@ -2282,14 +2283,14 @@
         </div>
 
         <div class="form-group" style="margin-bottom: 12px;">
-          <label class="form-label">Opsi 1: Upload Gambar dari HP / Komputer</label>
+          <label for="heroBannerFileInput" class="form-label">Opsi 1: Upload Gambar dari HP / Komputer</label>
           <input type="file" id="heroBannerFileInput" accept="image/*" class="form-input"
             onchange="admin.handleBannerFileUpload(event)">
           <small style="color: var(--text-subtle); font-size: 0.72rem;">Mendukung format JPG, PNG, WebP</small>
         </div>
 
         <div class="form-group" style="margin-bottom: 12px;">
-          <label class="form-label">Opsi 2: Atau Masukkan Link / URL Gambar</label>
+          <label for="heroBannerUrlInput" class="form-label">Opsi 2: Atau Masukkan Link / URL Gambar</label>
           <input type="text" id="heroBannerUrlInput" class="form-input"
             placeholder="contoh: https://... atau assets/hero_banner.jpg"
             oninput="admin.handleBannerUrlInput(this.value)">
@@ -2337,7 +2338,7 @@
           <!-- Selector Cepat Pilih Tim untuk Diedit (Auto-fill Data Lama) -->
           <div
             style="background: #f8fafc; border: 2px solid #0284c7; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.1);">
-            <label class="form-label"
+            <label for="teamEditorSelectTarget" class="form-label"
               style="font-weight: 800; color: #0369a1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
               <span>🎯 PILIH TIM UNTUK DIEDIT:</span>
               <span
@@ -2363,11 +2364,11 @@
 
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
-              <label class="form-label">Nama Lengkap Tim / Sekolah <span style="color:#ef4444;">*</span></label>
+              <label for="editTeamName" class="form-label">Nama Lengkap Tim / Sekolah <span style="color:#ef4444;">*</span></label>
               <input type="text" id="editTeamName" class="form-input" placeholder="contoh: SMP Islam Al-Azhar" required>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Nama Singkat / Inisial <span style="color:#ef4444;">*</span></label>
+              <label for="editTeamShortName" class="form-label">Nama Singkat / Inisial <span style="color:#ef4444;">*</span></label>
               <input type="text" id="editTeamShortName" class="form-input" placeholder="contoh: AL-AZHAR" maxlength="16"
                 required>
             </div>
@@ -2375,14 +2376,14 @@
 
           <div class="form-row">
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Kelas / Kategori <span style="color:#ef4444;">*</span></label>
+              <label for="editTeamCategory" class="form-label">Kelas / Kategori <span style="color:#ef4444;">*</span></label>
               <select id="editTeamCategory" class="form-select" required>
                 <option value="SMP">🏆 Kategori SMP</option>
                 <option value="SD">⚽ Kategori SD</option>
               </select>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Grup Turnamen <span style="color:#ef4444;">*</span></label>
+              <label for="editTeamGroup" class="form-label">Grup Turnamen <span style="color:#ef4444;">*</span></label>
               <select id="editTeamGroup" class="form-select" required>
                 <option value="A">Grup A</option>
                 <option value="B">Grup B</option>
@@ -2391,14 +2392,14 @@
               </select>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Asal Kota / Wilayah</label>
+              <label for="editTeamCity" class="form-label">Asal Kota / Wilayah</label>
               <input type="text" id="editTeamCity" class="form-input" placeholder="contoh: Maros">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group" style="flex: 1;">
-              <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
+              <label for="editTeamInstansi" class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
                 <span>🏫 Instansi <span style="font-size: 0.7rem; color: #059669; font-weight: 700;">(Aturan Pemisah
                     Draw Grup)</span></span>
               </label>
@@ -2414,7 +2415,7 @@
           <!-- Logo & Color Row -->
           <div class="form-row" style="align-items: center; margin-top: 8px;">
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Logo / Lambang Tim Sekolah</label>
+              <div class="form-label">Logo / Lambang Tim Sekolah</div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <img id="teamLogoThumb" class="team-logo-preview-box" src="/assets/acc_logo.webp"
                   onerror="this.src='/assets/acc_logo.webp'">
@@ -2433,7 +2434,7 @@
               </div>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Warna Tema / Badge</label>
+              <label for="editTeamColorPicker" class="form-label">Warna Tema / Badge</label>
               <div style="display: flex; gap: 6px; align-items: center;">
                 <input type="color" id="editTeamColorPicker" value="#10b981"
                   style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; padding: 2px;"
@@ -2450,7 +2451,7 @@
           </h4>
           <div class="form-row">
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Nama Pelatih (Coach)</label>
+              <label for="editTeamCoach" class="form-label">Nama Pelatih (Coach)</label>
               <input type="text" id="editTeamCoach" class="form-input" placeholder="contoh: Coach Bayu Saputra">
               <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
                 <button type="button" class="btn btn-outline btn-sm"
@@ -2467,7 +2468,7 @@
               </div>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Nama Asisten Pelatih</label>
+              <label for="editTeamManager" class="form-label">Nama Asisten Pelatih</label>
               <input type="text" id="editTeamManager" class="form-input" placeholder="contoh: Ust. M. Ridwan, S.Pd">
               <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
                 <button type="button" class="btn btn-outline btn-sm"
@@ -2486,18 +2487,18 @@
           </div>
           <div class="form-row">
             <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Petugas Medis Tim</label>
+              <label for="editTeamMedic" class="form-label">Petugas Medis Tim</label>
               <input type="text" id="editTeamMedic" class="form-input" placeholder="contoh: Rian Hidayat">
               <input type="hidden" id="editTeamPhone" value="">
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Warna Jersey Utama (Home)</label>
+              <label for="editTeamJerseyHome" class="form-label">Warna Jersey Utama (Home)</label>
               <input type="text" id="editTeamJerseyHome" class="form-input" placeholder="contoh: Hijau - Putih">
             </div>
             <div class="form-group">
-              <label class="form-label">Warna Jersey Cadangan (Away)</label>
+              <label for="editTeamJerseyAway" class="form-label">Warna Jersey Cadangan (Away)</label>
               <input type="text" id="editTeamJerseyAway" class="form-input" placeholder="contoh: Hitam - Emas">
             </div>
           </div>
@@ -2591,12 +2592,12 @@
 
             <div class="form-row">
               <div class="form-group" style="flex: 2;">
-                <label class="form-label">Nama Perusahaan / Sponsor <span style="color:#ef4444;">*</span></label>
+                <label for="sponsorNameInput" class="form-label">Nama Perusahaan / Sponsor <span style="color:#ef4444;">*</span></label>
                 <input type="text" id="sponsorNameInput" class="form-input"
                   placeholder="contoh: Bank Syariah Al-Barakah" required>
               </div>
               <div class="form-group" style="flex: 1.5;">
-                <label class="form-label">Pilihan Ukuran Sponsor <span style="color:#ef4444;">*</span></label>
+                <label for="sponsorTierSelect" class="form-label">Pilihan Ukuran Sponsor <span style="color:#ef4444;">*</span></label>
                 <select id="sponsorTierSelect" class="form-select" required>
                   <option value="platinum">⭐ Sponsor Utama (Ukuran Besar - Baris Atas)</option>
                   <option value="gold">🔹 Sponsor Kedua (Ukuran Lebih Kecil - Dua Baris Bawah)</option>
@@ -2605,7 +2606,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Keterangan / Subtitle <span
+              <label for="sponsorRoleInput" class="form-label">Keterangan / Subtitle <span
                   style="color: var(--text-muted); font-size: 0.75rem;">(Opsional)</span></label>
               <input type="text" id="sponsorRoleInput" class="form-input"
                 placeholder="contoh: Official Banking Partner / Mitra Kebaikan">
@@ -2613,7 +2614,7 @@
 
             <div class="form-row">
               <div class="form-group" style="flex: 1;">
-                <label class="form-label">Pilih Icon Emoji (Cepat)</label>
+                <label for="sponsorIconSelect" class="form-label">Pilih Icon Emoji (Cepat)</label>
                 <select id="sponsorIconSelect" class="form-select">
                   <option value="🏦">🏦 Bank / Finance</option>
                   <option value="👕">👕 Apparel / Jersey</option>
@@ -2628,7 +2629,7 @@
                 </select>
               </div>
               <div class="form-group" style="flex: 2;">
-                <label class="form-label">Atau Upload Logo Foto / Gambar Sponsor</label>
+                <label for="sponsorLogoFileInput" class="form-label">Atau Upload Logo Foto / Gambar Sponsor</label>
                 <input type="file" id="sponsorLogoFileInput" accept="image/*" class="form-input"
                   onchange="admin.handleSponsorLogoUpload(event)">
               </div>
@@ -2801,19 +2802,19 @@
           <input type="hidden" id="editMomentImage" value="">
 
           <div class="form-group">
-            <label class="form-label">Judul Momen Spektakuler *</label>
+            <label for="momentTitleInput" class="form-label">Judul Momen Spektakuler *</label>
             <input type="text" id="momentTitleInput" class="form-input"
               placeholder="Contoh: Tendangan Roket Voli Spektakuler" required>
           </div>
 
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Nama Pemain & No Punggung *</label>
+              <label for="momentPlayerInput" class="form-label">Nama Pemain & No Punggung *</label>
               <input type="text" id="momentPlayerInput" class="form-input" placeholder="Contoh: Athar Barra (#9)"
                 required>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Nama Sekolah / Tim *</label>
+              <label for="momentTeamInput" class="form-label">Nama Sekolah / Tim *</label>
               <input type="text" id="momentTeamInput" class="form-input" placeholder="Contoh: SMA Islam Al-Azhar"
                 required>
             </div>
@@ -2821,7 +2822,7 @@
 
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Kategori / Badge</label>
+              <label for="momentBadgeSelect" class="form-label">Kategori / Badge</label>
               <select id="momentBadgeSelect" class="form-select">
                 <option value="🔥 MATCHDAY HIGHLIGHT">🔥 MATCHDAY HIGHLIGHT</option>
                 <option value="🚀 GOAL OF THE TOURNAMENT">🚀 GOAL OF THE TOURNAMENT</option>
@@ -2831,7 +2832,7 @@
               </select>
             </div>
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Pita Tag</label>
+              <label for="momentTagSelect" class="form-label">Pita Tag</label>
               <select id="momentTagSelect" class="form-select">
                 <option value="NEW">NEW (Baru)</option>
                 <option value="HOT">HOT (Viral)</option>
@@ -2842,7 +2843,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Upload Foto Momen (dari HP / Laptop)</label>
+            <label for="momentFileInput" class="form-label">Upload Foto Momen (dari HP / Laptop)</label>
             <input type="file" id="momentFileInput" accept="image/*" class="form-input"
               onchange="admin.handleMomentImageUpload(event)">
           </div>
@@ -2857,7 +2858,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Deskripsi / Cerita Momen *</label>
+            <label for="momentCaptionInput" class="form-label">Deskripsi / Cerita Momen *</label>
             <textarea id="momentCaptionInput" class="form-textarea" rows="2" placeholder="Ceritakan momen seru ini..."
               required></textarea>
           </div>
@@ -2921,7 +2922,7 @@
           </h4>
           <div class="form-row">
             <div class="form-group" style="flex: 1;">
-              <label class="form-label">Gunakan Sebagai</label>
+              <label for="mediaHubTargetType" class="form-label">Gunakan Sebagai</label>
               <select id="mediaHubTargetType" class="form-select" onchange="admin.updateMediaHubTargetOptions()">
                 <option value="teamLogo">🏫 Logo Tim / Lambang Sekolah</option>
                 <option value="moment">⚡ Momen ACC (Galeri Highlight Beranda)</option>
@@ -2930,7 +2931,7 @@
               </select>
             </div>
             <div class="form-group" style="flex: 1;" id="mediaHubTeamGroup">
-              <label class="form-label">Pilih Tim / Sekolah</label>
+              <label for="mediaHubTargetTeam" class="form-label">Pilih Tim / Sekolah</label>
               <select id="mediaHubTargetTeam" class="form-select">
                 <!-- Injected dynamically by admin -->
               </select>
@@ -2938,7 +2939,7 @@
           </div>
 
           <div class="form-group" id="mediaHubCaptionGroup" style="display: none;">
-            <label class="form-label">Judul / Keterangan Momen</label>
+            <label for="mediaHubCaptionInput" class="form-label">Judul / Keterangan Momen</label>
             <input type="text" id="mediaHubCaptionInput" class="form-input"
               placeholder="contoh: Selebrasi Tiket Semifinal">
           </div>
@@ -3005,7 +3006,7 @@
           </div>
 
           <div style="margin-bottom: 14px;">
-            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+            <label for="deviceSyncExportCode" class="form-label" style="font-size: 0.8rem; font-weight: 700;">
               Opsi 1: Salin Kode Data (Paling Praktis)
             </label>
             <textarea id="deviceSyncExportCode" readonly class="form-input"
@@ -3030,9 +3031,9 @@
           <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
 
           <div>
-            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+            <div class="form-label" style="font-size: 0.8rem; font-weight: 700;">
               Opsi 2: Download File Cadangan (.json)
-            </label>
+            </div>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
               Unduh file backup lengkap data turnamen, kirim via email/drive/WA dokumen, lalu upload di laptop.
             </p>
@@ -3056,7 +3057,7 @@
           </div>
 
           <div class="form-group" style="margin-bottom: 14px;">
-            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+            <label for="deviceSyncInputCode" class="form-label" style="font-size: 0.8rem; font-weight: 700;">
               Tempel Kode Sinkronisasi dari HP:
             </label>
             <textarea id="deviceSyncInputCode" class="form-input"
@@ -3076,9 +3077,9 @@
           <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
 
           <div>
-            <label class="form-label" style="font-size: 0.8rem; font-weight: 700;">
+            <div class="form-label" style="font-size: 0.8rem; font-weight: 700;">
               Atau Upload File Backup (.json):
-            </label>
+            </div>
             <label class="btn btn-outline btn-sm"
               style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
               📁 Pilih File Backup .json
@@ -3210,7 +3211,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         <!-- QUICK PASTE TEXT BOX (SANGAT PRAKTIS UNTUK TEKS WHATSAPP & EXCEL) -->
         <div class="batch-paste-box">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-            <label
+            <label for="batchTextPasteInput"
               style="font-size: 0.82rem; font-weight: 800; color: #0284c7; display: flex; align-items: center; gap: 6px;">
               <span>📝</span> Tempel Teks Pendaftaran Langsung (Format WhatsApp / Excel / Word / Catatan):
             </label>
@@ -3320,13 +3321,13 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
             </div>
             <div class="form-row">
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.72rem;">1. Pilih Tim</label>
+                <label for="mvpSelectTeam" class="form-label" style="font-size: 0.72rem;">1. Pilih Tim</label>
                 <select id="mvpSelectTeam" class="form-input" onchange="admin.onMvpTeamSelectChange()">
                   <option value="">-- Pilih Tim (Opsional) --</option>
                 </select>
               </div>
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.72rem;">2. Pilih Pemain (Auto-Isi)</label>
+                <label for="mvpSelectPlayer" class="form-label" style="font-size: 0.72rem;">2. Pilih Pemain (Auto-Isi)</label>
                 <select id="mvpSelectPlayer" class="form-input" onchange="admin.onMvpPlayerSelectChange()">
                   <option value="">-- Pilih Pemain --</option>
                 </select>
@@ -3336,22 +3337,22 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Nama Pemain <span style="color: #ef4444;">*</span></label>
+              <label for="mvpItemName" class="form-label">Nama Pemain <span style="color: #ef4444;">*</span></label>
               <input type="text" id="mvpItemName" class="form-input" required placeholder="Nama Lengkap / Panggilan">
             </div>
             <div class="form-group">
-              <label class="form-label">Nomor Punggung</label>
+              <label for="mvpItemNumber" class="form-label">Nomor Punggung</label>
               <input type="number" id="mvpItemNumber" class="form-input" placeholder="10">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Klub / Sekolah <span style="color: #ef4444;">*</span></label>
+              <label for="mvpItemTeam" class="form-label">Klub / Sekolah <span style="color: #ef4444;">*</span></label>
               <input type="text" id="mvpItemTeam" class="form-input" required placeholder="Nama Sekolah / Tim">
             </div>
             <div class="form-group">
-              <label class="form-label">Kategori Turnamen</label>
+              <label for="mvpItemCategory" class="form-label">Kategori Turnamen</label>
               <select id="mvpItemCategory" class="form-input">
                 <option value="SMP">SMP</option>
                 <option value="SD">SD</option>
@@ -3361,17 +3362,17 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Posisi Bermain</label>
+              <label for="mvpItemPos" class="form-label">Posisi Bermain</label>
               <input type="text" id="mvpItemPos" class="form-input" placeholder="Pivot / Flank / Anchor / Kiper">
             </div>
             <div class="form-group">
-              <label class="form-label">Label Badge Atas</label>
+              <label for="mvpItemBadge" class="form-label">Label Badge Atas</label>
               <input type="text" id="mvpItemBadge" class="form-input" placeholder="MVP MATCHDAY / BINTANG LAPANGAN">
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Tagline Motivasi / Sorotan</label>
+            <label for="mvpItemTagline" class="form-label">Tagline Motivasi / Sorotan</label>
             <input type="text" id="mvpItemTagline" class="form-input" placeholder="PERFORMA GEMILANG &amp; FAIR PLAY">
           </div>
 
@@ -3383,15 +3384,15 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.7rem;">Gol</label>
+                <label for="mvpItemGoals" class="form-label" style="font-size: 0.7rem;">Gol</label>
                 <input type="number" id="mvpItemGoals" class="form-input" style="padding: 6px;" value="0">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.7rem;">MotM</label>
+                <label for="mvpItemMotm" class="form-label" style="font-size: 0.7rem;">MotM</label>
                 <input type="text" id="mvpItemMotm" class="form-input" style="padding: 6px;" placeholder="2x">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.7rem;">Rating</label>
+                <label for="mvpItemRating" class="form-label" style="font-size: 0.7rem;">Rating</label>
                 <input type="text" id="mvpItemRating" class="form-input" style="padding: 6px;" placeholder="9.5">
               </div>
             </div>
@@ -3399,7 +3400,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
           <!-- Foto Pemain -->
           <div class="form-group">
-            <label class="form-label">Foto Pemain (Bisa Unggah / Kamera / URL)</label>
+            <div class="form-label">Foto Pemain (Bisa Unggah / Kamera / URL)</div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
               <div
                 style="width: 70px; height: 90px; border-radius: 8px; border: 2px dashed var(--accent-gold); overflow: hidden; background: #0b1120; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -3417,7 +3418,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Kutipan Kata Mutiara Pemain</label>
+            <label for="mvpItemQuote" class="form-label">Kutipan Kata Mutiara Pemain</label>
             <textarea id="mvpItemQuote" class="form-input" rows="2"
               placeholder="Bermain dengan hati, menjunjung sportivitas dan persaudaraan..."></textarea>
           </div>
@@ -3441,10 +3442,10 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <!-- SUPABASE & CORE CLIENT MODULES (Deferred for Non-blocking Fast First Paint & Local/Web Compatibility) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="/js/security.js?v=20261125_v70"></script>
-  <script defer src="/js/supabase-client.js?v=20261126_v87"></script>
+  <script defer src="/js/supabase-client.js?v=20261126_v88"></script>
   <script defer src="/js/data.js?v=20261126_v87"></script>
   <script defer src="/js/admin.js?v=20261126_v86"></script>
-  <script defer src="/js/app.js?v=20261126_v89"></script>
+  <script defer src="/js/app.js?v=20261126_v90"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
@@ -3503,10 +3504,14 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
         }
 
         if (progressEl) {
-          var docEl = document.documentElement;
-          var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
-          var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
-          progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+          if (y <= 2) {
+            progressEl.style.transform = "scaleX(0)";
+          } else {
+            var docEl = document.documentElement;
+            var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
+            var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
+            progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+          }
         }
 
         lastY = y;

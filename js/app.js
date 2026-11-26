@@ -1654,15 +1654,7 @@ var app = window.app = Object.assign(window.app || {}, {
     try { this.initFloatingCategorySwitcher(); } catch (e) { console.warn("FloatingCat init:", e); }
     try { this.initSupabaseSync(); } catch (e) { console.warn("Supabase init:", e); }
 
-    // Pre-populate all tabs immediately if cache exists so navigation is instant on laptops & mobiles
-    if (this.store && this.store.data && Array.isArray(this.store.data.teams) && this.store.data.teams.length > 0) {
-      try { this.renderMatches(); } catch (_) { }
-      try { this.renderStandings(); } catch (_) { }
-      try { this.renderTeams(); } catch (_) { }
-      try { this.renderBracket(); } catch (_) { }
-      try { this.renderJuknis(); } catch (_) { }
-      try { this.renderStats(); } catch (_) { }
-    }
+    // Hidden tabs are rendered lazily on demand by switchTab() -> renderCurrentView() to minimize TBT & DOM size.
 
     // DOM-level guarantee (Critical)
     try {
@@ -2331,11 +2323,54 @@ var app = window.app = Object.assign(window.app || {}, {
             }
             this.applyRemoteData(data);
           }
+
+          // Fallback jika fetchAllData tidak membawa matches, langsung tarik tabel matches
+          if (!Array.isArray(data.matches) || data.matches.length === 0) {
+            syncMatchesOnlyFromRemote();
+          }
+
+          // Muat skuad pemain (JSONB berat) di background tanpa memblokir jadwal & render awal
+          if (!this._playersHydratedFromCloud && window.SupabaseService && typeof window.SupabaseService.fetchTeamsPlayersOnly === 'function') {
+            this._playersHydratedFromCloud = true;
+            const loadRosterBg = () => {
+              window.SupabaseService.fetchTeamsPlayersOnly().then(rows => {
+                if (!Array.isArray(rows) || rows.length === 0 || !this.store || !this.store.data) return;
+                const rosterMap = new Map(rows.filter(r => r && r.id && Array.isArray(r.players)).map(r => [r.id, r.players]));
+                let updatedCount = 0;
+                (this.store.data.teams || []).forEach(t => {
+                  const rawPlayers = rosterMap.get(t.id);
+                  if (rawPlayers) {
+                    const normT = this.store.normalizeTeam({ ...t, players: rawPlayers });
+                    if (normT && Array.isArray(normT.players)) {
+                      t.players = normT.players;
+                      updatedCount++;
+                    }
+                  }
+                });
+                if (updatedCount > 0) {
+                  this.store.syncPlayerStatsFromMatches();
+                  this.store.saveData();
+                  if (!this.isUserEditing() && ["teams", "team-detail", "player-detail", "stats", "match-detail"].includes(this.currentTab)) {
+                    this.renderCurrentView();
+                  }
+                }
+              }).catch(() => { });
+            };
+            if ("requestIdleCallback" in window) {
+              window.requestIdleCallback(loadRosterBg, { timeout: 2500 });
+            } else {
+              setTimeout(loadRosterBg, 350);
+            }
+          }
+        } else {
+          // Fallback: bila fetchAllData gagal/timeout, langsung tarik matches saja
+          syncMatchesOnlyFromRemote();
         }
       }).catch(err => {
         isSyncing = false;
         if (syncWatchdogTimer) clearTimeout(syncWatchdogTimer);
         console.warn("Supabase sync notice:", err);
+        syncMatchesOnlyFromRemote();
       });
     };
 
@@ -2896,11 +2931,6 @@ var app = window.app = Object.assign(window.app || {}, {
         this.store.saveData();
         this.store.syncKnockoutFromStandings();
         this.renderCurrentView();
-        this.renderMatches();
-        this.renderStandings();
-        this.renderBracket();
-        if (typeof this.renderTopScorer === "function") this.renderTopScorer();
-        if (typeof this.renderDisciplinary === "function") this.renderDisciplinary();
         this.updateHeroLiveBadge();
         this.updateFloatingLiveNotice();
         this.renderLiveStreamHero();
@@ -2932,9 +2962,6 @@ var app = window.app = Object.assign(window.app || {}, {
           this.store.syncKnockoutFromStandings();
           this.store.saveData();
           this.renderCurrentView();
-          this.renderMatches();
-          this.renderStandings();
-          this.renderBracket();
         }
       }
     } else if (table === 'teams') {
@@ -3425,12 +3452,12 @@ var app = window.app = Object.assign(window.app || {}, {
     const vh = (window.innerHeight || 800) + 80;
     const activePane = document.querySelector(".tab-pane.active");
     if (activePane) {
-      activePane.querySelectorAll(revealTargets).forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < vh) {
-          el.classList.add("is-revealed");
-        }
-      });
+      // Pisahkan fase READ (getBoundingClientRect) dan fase WRITE (classList.add) agar ZERO forced reflow!
+      const candidates = Array.from(activePane.querySelectorAll(revealTargets));
+      const toReveal = candidates.filter(el => el.getBoundingClientRect().top < vh);
+      for (let i = 0; i < toReveal.length; i++) {
+        toReveal[i].classList.add("is-revealed");
+      }
     }
 
     if (!("IntersectionObserver" in window)) {
@@ -4941,7 +4968,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
       return `
         <div class="moment-card" onclick="app.openMomentModal('${m.id}')" title="Klik untuk lihat sorotan momen">
-          <img src="${photoUrl}" class="moment-card-bg-img" alt="${titleText}" loading="${idx < 2 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${idx === 0 ? 'high' : 'auto'}" onerror="this.onerror=null;this.src='/assets/hero_banner.webp';">
+          <img src="${photoUrl}" class="moment-card-bg-img" alt="${titleText}" width="400" height="250" loading="${idx < 2 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${idx === 0 ? 'high' : 'auto'}" onerror="this.onerror=null;this.src='/assets/hero_banner.webp';">
           <!-- Top Bar: Non-colliding Flex Layout -->
           <div class="moment-card-topbar">
             <div class="moment-badges-wrap">
@@ -5219,7 +5246,7 @@ var app = window.app = Object.assign(window.app || {}, {
       const generateGroup = (isCloned = false) => {
         return baseList.map(s => {
           const logoHtml = s.image ?
-            `<img src="${s.image}" alt="${s.name}" class="sponsor-marquee-logo ${tierClass}" loading="lazy">` :
+            `<img src="${s.image}" alt="${s.name}" class="sponsor-marquee-logo ${tierClass}" width="${tierClass === 'tier-primary' ? '180' : '140'}" height="${tierClass === 'tier-primary' ? '105' : '70'}" loading="lazy" decoding="async">` :
             `<div class="sponsor-marquee-fallback ${tierClass}">
               <span class="sponsor-fallback-icon">${s.icon || '🤝'}</span>
               <span class="sponsor-fallback-name">${s.name}</span>
@@ -6424,30 +6451,58 @@ var app = window.app = Object.assign(window.app || {}, {
       }
     };
 
+    const runWhenIdle = (fn) => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(fn, { timeout: 1200 });
+      } else {
+        setTimeout(fn, 16);
+      }
+    };
+
     const isCrossOriginHttp = /^https?:\/\//i.test(src) && !src.startsWith(window.location.origin);
     if (!isCrossOriginHttp) {
-      const out = computeTrimmed(imgEl);
-      this._normalizedLogoCache.set(src, out);
-      if (out) {
-        imgEl.dataset.logoNormalized = "1";
-        imgEl.src = out;
-      }
-    } else {
-      const probe = new Image();
-      probe.crossOrigin = "anonymous";
-      probe.onload = () => {
-        const out = computeTrimmed(probe);
+      runWhenIdle(() => {
+        if (!imgEl.isConnected) return;
+        const out = computeTrimmed(imgEl);
         this._normalizedLogoCache.set(src, out);
-        if (out && imgEl.isConnected) {
+        if (out) {
           imgEl.dataset.logoNormalized = "1";
           imgEl.src = out;
         }
-      };
-      probe.onerror = () => {
-        this._normalizedLogoCache.set(src, null);
-      };
-      probe.src = src;
+      });
+      return;
     }
+
+    if (!this._normalizedLogoPending) this._normalizedLogoPending = new Map();
+    if (this._normalizedLogoPending.has(src)) {
+      this._normalizedLogoPending.get(src).push(imgEl);
+      return;
+    }
+    this._normalizedLogoPending.set(src, [imgEl]);
+
+    const probe = new Image();
+    probe.crossOrigin = "anonymous";
+    probe.onload = () => {
+      runWhenIdle(() => {
+        const out = computeTrimmed(probe);
+        this._normalizedLogoCache.set(src, out);
+        const waiters = this._normalizedLogoPending.get(src) || [];
+        this._normalizedLogoPending.delete(src);
+        if (out) {
+          waiters.forEach(el => {
+            if (el && el.isConnected) {
+              el.dataset.logoNormalized = "1";
+              el.src = out;
+            }
+          });
+        }
+      });
+    };
+    probe.onerror = () => {
+      this._normalizedLogoCache.set(src, null);
+      this._normalizedLogoPending.delete(src);
+    };
+    probe.src = src;
   },
 
   renderTeams() {
@@ -7852,7 +7907,7 @@ var app = window.app = Object.assign(window.app || {}, {
             const logoSrc = t.logo || (teamObj && teamObj.logo) || "";
             const instansi = (teamObj && teamObj.instansi) || t.instansi || "";
             const avatarHtml = logoSrc
-              ? `<img src="${logoSrc}" alt="${t.name}" class="draw-user-team-logo" loading="lazy">`
+              ? `<img src="${logoSrc}" alt="${t.name}" class="draw-user-team-logo" width="28" height="28" loading="lazy" decoding="async">`
               : `<span class="draw-user-team-abbr">${(t.shortName || t.name).substring(0, 2).toUpperCase()}</span>`;
 
             teamsListHtml += `
@@ -7978,7 +8033,7 @@ var app = window.app = Object.assign(window.app || {}, {
       } else {
         teamsBadgesHtml = allTeams.map((t, idx) => {
           const avatarHtml = t.logo
-            ? `<img src="${t.logo}" alt="${t.name}" class="draw-pool-logo-img" loading="lazy">`
+            ? `<img src="${t.logo}" alt="${t.name}" class="draw-pool-logo-img" width="36" height="36" loading="lazy" decoding="async">`
             : `<span class="draw-pool-logo-abbr">${(t.shortName || t.name).substring(0, 2).toUpperCase()}</span>`;
 
           return `
