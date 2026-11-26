@@ -7562,3 +7562,147 @@ body.modal-open .header {
     margin-bottom: 0 !important;
   }
 }
+
+/* ============================================================================
+   21. MOBILE LANDSCAPE OPTIMIZATION (HP MIRING / SHORT VIEWPORT HEIGHT)
+   ============================================================================ */
+@media (orientation: landscape) and (max-height: 540px) {
+
+  html.snap-scroll-active,
+  body.snap-scroll-active {
+    scroll-snap-type: y proximity !important;
+    scroll-padding-top: 62px !important;
+  }
+
+  body {
+    padding-top: 64px !important;
+    padding-left: env(safe-area-inset-left, 0px) !important;
+    padding-right: env(safe-area-inset-right, 0px) !important;
+  }
+
+  .header,
+  .header.scrolled {
+    max-width: min(880px, calc(100% - 28px)) !important;
+  }
+
+  .mobile-menu-content {
+    max-width: min(880px, calc(100% - 28px)) !important;
+    max-height: calc(100dvh - 68px) !important;
+  }
+
+  .home-slide-section {
+    min-height: calc(100dvh - 62px) !important;
+    scroll-snap-stop: normal !important;
+    padding: 12px 16px !important;
+  }
+
+  .home-slide-nav {
+    display: none !important;
+  }
+
+  /* Hero Horizontal Split agar pas di layar landscape pendek */
+  #homeHeroFullscreen .hero-identity-stack {
+    flex-direction: row !important;
+    text-align: left !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 22px !important;
+  }
+
+  #homeHeroFullscreen .hero-emblem-badge {
+    width: 96px !important;
+    height: auto !important;
+  }
+
+  #homeHeroFullscreen .hero-title {
+    font-size: clamp(1.3rem, 3.2vw, 1.8rem) !important;
+    margin-bottom: 4px !important;
+  }
+
+  #homeHeroFullscreen .hero-meta {
+    justify-content: flex-start !important;
+    font-size: 0.78rem !important;
+  }
+
+  .home-stats-showcase-section .hero-quick-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .home-stats-showcase-section .stat-pill {
+    padding: 14px 10px !important;
+  }
+
+  /* Moments & MVP compact landscape layout */
+  #accMomentsContainer.home-slide-section {
+    min-height: auto !important;
+    padding: 12px 16px !important;
+    margin: 10px auto !important;
+  }
+
+  .moment-card {
+    flex: 0 0 185px !important;
+    width: 185px !important;
+    height: 225px !important;
+  }
+
+  #mvpSpotlightSection.home-slide-section {
+    min-height: auto !important;
+    padding: 12px 16px !important;
+  }
+
+  .mvp-spotlight-card {
+    grid-template-columns: 150px 1fr !important;
+    text-align: left !important;
+    padding: 14px 16px !important;
+    gap: 16px !important;
+  }
+
+  .mvp-photo-wrapper {
+    max-width: 150px !important;
+  }
+
+  .mvp-photo-img {
+    height: 180px !important;
+    object-position: center 20% !important;
+  }
+
+  .mvp-details-col {
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .mvp-tagline,
+  .mvp-team-row,
+  .mvp-actions-row {
+    justify-content: flex-start !important;
+  }
+
+  .mvp-player-name {
+    font-size: 1.25rem !important;
+  }
+
+  .mvp-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin: 4px 0 !important;
+    width: 100% !important;
+  }
+
+  .mvp-stat-box {
+    padding: 6px 8px !important;
+  }
+
+  .mvp-stat-val {
+    font-size: 1.1rem !important;
+  }
+
+  .sponsors-showcase-bar {
+    min-height: auto !important;
+    padding: 14px 0 !important;
+  }
+
+  .modal-content {
+    max-height: calc(100dvh - 20px) !important;
+  }
+}
