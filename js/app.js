@@ -213,11 +213,37 @@ class TournamentStore {
   cleanDuplicateMatches(matches) {
     if (!Array.isArray(matches)) return [];
     const seenMatchups = new Map();
+    const seenKnockout = new Map();
     const clean = [];
+    const koPriority = (item) => {
+      let score = 0;
+      if (item.status === "finished") score += 100;
+      else if (item.status === "live") score += 80;
+      if (Array.isArray(item.scorers) && item.scorers.length > 0) score += 20;
+      if (item.homeId && item.awayId) score += 10;
+      if (String(item.id).startsWith("M_")) score += 5;
+      return score;
+    };
     for (const m of matches) {
       if (!m || !m.id || this.isInvalidMatchId(m.id)) continue;
+      const cat = (m.category || "SMP").toUpperCase();
+      if (this.isKnockoutMatch(m)) {
+        const kKey = this.classifyKnockoutKey(m);
+        if (kKey) {
+          const slotKey = `KO_${cat}_${kKey}`;
+          if (seenKnockout.has(slotKey)) {
+            const existing = seenKnockout.get(slotKey);
+            if (koPriority(m) > koPriority(existing)) {
+              const idx = clean.indexOf(existing);
+              if (idx !== -1) clean[idx] = m;
+              seenKnockout.set(slotKey, m);
+            }
+            continue;
+          }
+          seenKnockout.set(slotKey, m);
+        }
+      }
       if (m.homeId && m.awayId) {
-        const cat = (m.category || "SMP").toUpperCase();
         const isGroup = (m.stage === "group" || !m.stage);
         const pairKey = isGroup
           ? `GRP_${cat}_` + [m.homeId, m.awayId].sort().join("_")
@@ -1078,22 +1104,6 @@ class TournamentStore {
 
   // Automatically sync Group Winners & Runners-Up to Knockout (4 Grup SMP & 4 Grup SD)
   syncKnockoutFromStandings() {
-    // Pastikan slot resmi Fase Gugur (QF, SF, 3RD, FINAL) tersedia di matches jika belum ada (mis. dari sync DB parsial)
-    if (typeof DEFAULT_DATA !== "undefined" && Array.isArray(DEFAULT_DATA.matches)) {
-      const existingIds = new Set((this.data.matches || []).map(m => m && m.id).filter(Boolean));
-      const deletedSet = this._deletedMatchIds instanceof Set ? this._deletedMatchIds : null;
-      DEFAULT_DATA.matches.forEach(dm => {
-        if (!dm || !dm.id || dm.stage !== "knockout") return;
-        if (!existingIds.has(dm.id) && !(deletedSet && deletedSet.has(dm.id))) {
-          const clone = JSON.parse(JSON.stringify(dm));
-          clone.homeId = "";
-          clone.awayId = "";
-          this.data.matches.push(clone);
-          existingIds.add(dm.id);
-        }
-      });
-    }
-
     // Helper: isi QF jika seluruh laga grup aktif (kecuali laga yang melibatkan tim diskualifikasi/mundur yang belum dimainkan) sudah "finished"
     const isGroupCompleted = (groupLetter, category) => {
       const gm = this.data.matches.filter(m => {
