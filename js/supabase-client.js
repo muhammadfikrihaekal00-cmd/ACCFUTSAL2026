@@ -562,7 +562,8 @@
         const cleanCards = (Array.isArray(match.cards) ? [...match.cards] : []).filter(c => c && !c._meta);
         const hasPenHome = match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined && match.penaltyHomeScore !== "";
         const hasPenAway = match.penaltyAwayScore !== null && match.penaltyAwayScore !== undefined && match.penaltyAwayScore !== "";
-        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined || match.knockoutKey || match.isManualTeam !== undefined || match.isTimerPaused !== undefined || match.liveElapsedSec !== undefined || hasPenHome || hasPenAway || match.penaltyWinner) {
+        const hasPenScorers = Array.isArray(match.penaltyScorers) && match.penaltyScorers.length > 0;
+        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined || match.knockoutKey || match.isManualTeam !== undefined || match.isTimerPaused !== undefined || match.liveElapsedSec !== undefined || hasPenHome || hasPenAway || match.penaltyWinner || hasPenScorers) {
           cleanCards.push({
             _meta: true,
             knockoutKey: match.knockoutKey || null,
@@ -576,7 +577,8 @@
             liveClockDisplay: match.liveClockDisplay || null,
             penaltyHomeScore: hasPenHome ? parseInt(match.penaltyHomeScore, 10) : null,
             penaltyAwayScore: hasPenAway ? parseInt(match.penaltyAwayScore, 10) : null,
-            penaltyWinner: match.penaltyWinner || null
+            penaltyWinner: match.penaltyWinner || null,
+            penaltyScorers: hasPenScorers ? match.penaltyScorers : []
           });
         }
 

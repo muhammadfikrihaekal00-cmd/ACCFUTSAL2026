@@ -371,6 +371,7 @@ class TournamentStore {
     let metaPenaltyHome = undefined;
     let metaPenaltyAway = undefined;
     let metaPenaltyWinner = undefined;
+    let metaPenaltyScorers = null;
     const metaCard = cleanCards.find(c => c && c._meta);
     if (metaCard) {
       if (metaCard.knockoutKey && !knockoutKey) knockoutKey = metaCard.knockoutKey;
@@ -385,6 +386,7 @@ class TournamentStore {
       if (metaCard.penaltyHomeScore !== undefined && metaCard.penaltyHomeScore !== null) metaPenaltyHome = metaCard.penaltyHomeScore;
       if (metaCard.penaltyAwayScore !== undefined && metaCard.penaltyAwayScore !== null) metaPenaltyAway = metaCard.penaltyAwayScore;
       if (metaCard.penaltyWinner) metaPenaltyWinner = metaCard.penaltyWinner;
+      if (Array.isArray(metaCard.penaltyScorers)) metaPenaltyScorers = metaCard.penaltyScorers;
     }
     // Filter ketat agar metadata atau kartu tanpa nama pemain tidak pernah masuk ke cards
     cleanCards = cleanCards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
@@ -458,6 +460,15 @@ class TournamentStore {
     }
     if (m.penaltyWinner !== undefined || m.penalty_winner !== undefined || metaPenaltyWinner !== undefined) {
       normalized.penaltyWinner = m.penaltyWinner !== undefined ? m.penaltyWinner : (m.penalty_winner !== undefined ? m.penalty_winner : metaPenaltyWinner);
+    }
+    const rawPenScorers = Array.isArray(m.penaltyScorers) ? m.penaltyScorers : (Array.isArray(metaPenaltyScorers) ? metaPenaltyScorers : []);
+    if (rawPenScorers.length > 0) {
+      normalized.penaltyScorers = rawPenScorers.map(p => p && typeof p === "object" ? {
+        ...p,
+        player: p.player ? formatPersonName(p.player) : p.player
+      } : p);
+    } else {
+      normalized.penaltyScorers = [];
     }
     if (m.liveStartedAt && !isTimerPaused) normalized.liveStartedAt = m.liveStartedAt;
     return normalized;
@@ -2266,7 +2277,7 @@ var app = window.app = Object.assign(window.app || {}, {
             .sort((a, b) => String(a.id || "").localeCompare(String(b.id || "")))
             .map(m => {
               const meta = Array.isArray(m.cards) ? m.cards.find(c => c && c._meta) : null;
-              return `${m.id}:${m.status}:${m.date || ""}:${m.time || ""}:${m.home_id || ""}:${m.away_id || ""}:${m.stage || ""}:${m.group_letter || ""}:${m.round_name || ""}:${m.home_placeholder || ""}:${m.away_placeholder || ""}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${meta ? Boolean(meta.isManualTeam) : ""}:${meta ? (meta.penaltyHomeScore ?? "") : ""}:${meta ? (meta.penaltyAwayScore ?? "") : ""}:${meta ? (meta.penaltyWinner || "") : ""}:${m.updated_at || ""}`;
+              return `${m.id}:${m.status}:${m.date || ""}:${m.time || ""}:${m.home_id || ""}:${m.away_id || ""}:${m.stage || ""}:${m.group_letter || ""}:${m.round_name || ""}:${m.home_placeholder || ""}:${m.away_placeholder || ""}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${meta ? Boolean(meta.isManualTeam) : ""}:${meta ? (meta.penaltyHomeScore ?? "") : ""}:${meta ? (meta.penaltyAwayScore ?? "") : ""}:${meta ? (meta.penaltyWinner || "") : ""}:${meta && Array.isArray(meta.penaltyScorers) ? meta.penaltyScorers.length : 0}:${m.updated_at || ""}`;
             })
             .join("|");
 
@@ -2822,6 +2833,7 @@ var app = window.app = Object.assign(window.app || {}, {
             if (metaObj.penaltyHomeScore !== undefined) mapped.penaltyHomeScore = metaObj.penaltyHomeScore;
             if (metaObj.penaltyAwayScore !== undefined) mapped.penaltyAwayScore = metaObj.penaltyAwayScore;
             if (metaObj.penaltyWinner !== undefined) mapped.penaltyWinner = metaObj.penaltyWinner;
+            if (Array.isArray(metaObj.penaltyScorers)) mapped.penaltyScorers = metaObj.penaltyScorers;
           }
           mapped.cards = payload.cards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
         }
@@ -5738,10 +5750,23 @@ var app = window.app = Object.assign(window.app || {}, {
             ` : ''}
 
             ${hasPenalties ? `
-              <div class="fixture-penalty-badge">
-                <span>🎯</span>
-                <span>Adu Penalti: <strong>${m.penaltyHomeScore} - ${m.penaltyAwayScore}</strong></span>
-                ${penWinnerTeam ? `<span>• Lolos: <strong>${penWinnerTeam.shortName || penWinnerTeam.name}</strong></span>` : ''}
+              <div class="fixture-penalty-badge" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <span>🎯</span>
+                  <span>Adu Penalti: <strong>${m.penaltyHomeScore} - ${m.penaltyAwayScore}</strong></span>
+                  ${penWinnerTeam ? `<span>• Lolos: <strong>${penWinnerTeam.shortName || penWinnerTeam.name}</strong></span>` : ''}
+                </div>
+                ${Array.isArray(m.penaltyScorers) && m.penaltyScorers.filter(ps => ps && ps.scored !== false).length > 0 ? (() => {
+        const homePenGoals = m.penaltyScorers.filter(ps => ps && ps.scored !== false && ps.team === m.homeId).map(ps => ps.player);
+        const awayPenGoals = m.penaltyScorers.filter(ps => ps && ps.scored !== false && ps.team === m.awayId).map(ps => ps.player);
+        return `
+                    <div style="font-size: 0.7rem; color: #fde68a; line-height: 1.4;">
+                      ${homePenGoals.length > 0 ? `<span><strong>${home.shortName || home.name}:</strong> ${homePenGoals.join(', ')}</span>` : ''}
+                      ${homePenGoals.length > 0 && awayPenGoals.length > 0 ? ' • ' : ''}
+                      ${awayPenGoals.length > 0 ? `<span><strong>${away.shortName || away.name}:</strong> ${awayPenGoals.join(', ')}</span>` : ''}
+                    </div>
+                  `;
+      })() : ''}
               </div>
             ` : ''}
 
@@ -9491,6 +9516,37 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
         `}
       </div>
+
+      ${(hasPenalties || (Array.isArray(match.penaltyScorers) && match.penaltyScorers.length > 0)) ? (() => {
+      const penList = Array.isArray(match.penaltyScorers) ? match.penaltyScorers : [];
+      const hPens = penList.filter(p => p && p.team === match.homeId);
+      const aPens = penList.filter(p => p && p.team === match.awayId);
+      const renderPenSide = (items, teamObj) => items.length === 0
+        ? `<div style="font-size: 0.76rem; color: var(--text-muted);">-</div>`
+        : items.map((p, i) => `
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.04);">
+              <span>${p.scored !== false ? '⚽' : '❌'}</span>
+              <span style="font-weight: 700; color: ${p.scored !== false ? '#fde68a' : '#fca5a5'};">#${i + 1} ${p.player}</span>
+            </div>
+          `).join("");
+      return `
+        <div class="md-section-title" style="margin-top: 14px;">
+          <span>🎯</span> Pencetak Gol Adu Penalti (${match.penaltyHomeScore ?? 0} - ${match.penaltyAwayScore ?? 0})
+        </div>
+        <div class="md-timeline-card" style="padding: 12px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <div style="font-size: 0.76rem; font-weight: 800; color: #10b981; margin-bottom: 6px;">${home.shortName || home.name}</div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">${renderPenSide(hPens, home)}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.76rem; font-weight: 800; color: #60a5fa; margin-bottom: 6px;">${away.shortName || away.name}</div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">${renderPenSide(aPens, away)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    })() : ''}
       
       <!-- AKUMULASI PELANGGARAN TIM (FOULS BANNER) -->
       <div class="md-foul-banner">

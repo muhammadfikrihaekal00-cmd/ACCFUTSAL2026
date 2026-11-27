@@ -813,6 +813,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
         if (penHInput) penHInput.value = (match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined) ? match.penaltyHomeScore : "";
         if (penAInput) penAInput.value = (match.penaltyAwayScore !== null && match.penaltyAwayScore !== undefined) ? match.penaltyAwayScore : "";
 
+        this.populatePenaltyScorerUI(match, "qs");
         this.checkPenaltySectionVisibility(match, homeScoreVal, awayScoreVal);
       } else {
         penaltySection.style.display = "none";
@@ -1987,10 +1988,21 @@ var admin = window.admin = Object.assign(window.admin || {}, {
       </div>
     ` : '';
 
-    const allEvents = scorers + cards + foulSummary;
+    const penEvents = (Array.isArray(match.penaltyScorers) ? match.penaltyScorers : []).map((ps, idx) => {
+      const tName = app.store.getTeam(ps.team)?.shortName || ps.team;
+      const isScored = ps.scored !== false;
+      return `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(234,179,8,0.06); padding:5px 8px; border-radius:4px; font-size:0.75rem; border-left: 3px solid ${isScored ? '#10b981' : '#ef4444'};">
+        <span>${isScored ? '🎯' : '❌'} <strong>${ps.player}</strong> (Adu Penalti • ${isScored ? 'Gol' : 'Gagal'}) - <span style="color:#fbbf24;">${tName}</span></span>
+        <button type="button" class="btn btn-outline btn-sm" onclick="admin.removePenaltyScorer(${idx}, 'qs')" style="padding:2px 6px; color:#ef4444; font-size:0.68rem;">Hapus</button>
+      </div>
+      `;
+    }).join("");
+
+    const allEvents = scorers + cards + penEvents + foulSummary;
     listEl.innerHTML = allEvents || `<p style="font-size:0.72rem; color:var(--text-subtle); margin:0;">Belum ada kejadian tercatat di laga ini.</p>`;
 
-    const totalCount = (match.scorers?.length || 0) + (match.cards?.length || 0);
+    const totalCount = (match.scorers?.length || 0) + (match.cards?.length || 0) + (match.penaltyScorers?.length || 0);
     if (countBadge) countBadge.textContent = `${totalCount} Kejadian`;
   },
 
@@ -2367,6 +2379,186 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (penAInput) {
       penAInput.value = (match && match.penaltyAwayScore !== null && match.penaltyAwayScore !== undefined) ? match.penaltyAwayScore : "";
     }
+    this.populatePenaltyScorerUI(match, "edit");
+  },
+
+  _getMatchForPenaltyPrefix(prefix) {
+    const mId = prefix === "edit"
+      ? (document.getElementById("editMatchId")?.value || this.activeMatchId)
+      : (this.activeMatchId || this.activeQuickMatchId);
+    return app.store.data.matches.find(m => m.id === mId) || null;
+  },
+
+  populatePenaltyScorerUI(match, prefix = "qs") {
+    const teamSel = document.getElementById(`${prefix}PenTeamSelect`);
+    const listEl = document.getElementById(`${prefix}PenaltyScorersList`);
+    if (!match) {
+      if (listEl) listEl.innerHTML = "";
+      return;
+    }
+
+    const homeId = prefix === "edit" ? (document.getElementById("editMatchHomeSelect")?.value || match.homeId) : match.homeId;
+    const awayId = prefix === "edit" ? (document.getElementById("editMatchAwaySelect")?.value || match.awayId) : match.awayId;
+    const home = homeId ? app.store.getTeam(homeId) : null;
+    const away = awayId ? app.store.getTeam(awayId) : null;
+
+    if (teamSel) {
+      const prevTeam = teamSel.value;
+      teamSel.innerHTML = `
+        <option value="">-- Pilih Tim --</option>
+        ${home ? `<option value="${home.id}">${home.shortName || home.name}</option>` : ""}
+        ${away ? `<option value="${away.id}">${away.shortName || away.name}</option>` : ""}
+      `;
+      teamSel.value = (prevTeam === home?.id || prevTeam === away?.id) ? prevTeam : (home?.id || away?.id || "");
+    }
+
+    this.onPenaltyTeamChange(prefix);
+
+    if (listEl) {
+      const items = Array.isArray(match.penaltyScorers) ? match.penaltyScorers : [];
+      if (items.length === 0) {
+        listEl.innerHTML = `<div style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">Belum ada penendang penalti yang dicatat.</div>`;
+      } else {
+        listEl.innerHTML = items.map((ps, idx) => {
+          const tObj = app.store.getTeam(ps.team);
+          const tName = tObj ? (tObj.shortName || tObj.name) : ps.team;
+          const isScored = ps.scored !== false;
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:5px; font-size:0.74rem; border-left:3px solid ${isScored ? '#10b981' : '#ef4444'};">
+              <span>${isScored ? '⚽' : '❌'} <strong>${ps.player}</strong> <span style="color:#fbbf24;">(${tName})</span></span>
+              <button type="button" class="btn btn-outline btn-sm" onclick="admin.removePenaltyScorer(${idx}, '${prefix}')" style="padding:1px 6px; font-size:0.68rem; color:#ef4444;">Hapus</button>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+  },
+
+  onPenaltyTeamChange(prefix = "qs") {
+    const teamSel = document.getElementById(`${prefix}PenTeamSelect`);
+    const playerSel = document.getElementById(`${prefix}PenPlayerSelect`);
+    if (!teamSel || !playerSel) return;
+
+    const teamId = teamSel.value;
+    if (!teamId) {
+      playerSel.innerHTML = `<option value="">-- Pilih Pemain --</option>`;
+      return;
+    }
+
+    const team = app.store.getTeam(teamId);
+    const players = (team?.players || []).slice().sort((a, b) => (Number(a.no) || 99) - (Number(b.no) || 99));
+
+    if (players.length === 0 && window.SupabaseService && typeof window.SupabaseService.fetchTeamFull === "function") {
+      window.SupabaseService.fetchTeamFull(teamId).then(remTeam => {
+        if (remTeam && Array.isArray(remTeam.players) && remTeam.players.length > 0) {
+          if (team) team.players = remTeam.players;
+          const stTeam = app.store.getTeam(teamId);
+          if (stTeam) stTeam.players = remTeam.players;
+          app.store.saveData();
+          this.onPenaltyTeamChange(prefix);
+        }
+      });
+    }
+
+    playerSel.innerHTML = `
+      <option value="">-- Pilih Pemain Penendang --</option>
+      ${players.length > 0
+        ? players.map(p => `<option value="${p.name}">#${p.no || "-"} ${p.name}</option>`).join("")
+        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => `<option value="Pemain #${n}">#${n} Pemain #${n}</option>`).join("")}
+    `;
+  },
+
+  _syncPenaltyScoresFromScorers(match, prefix = "qs") {
+    const items = Array.isArray(match.penaltyScorers) ? match.penaltyScorers : [];
+    const hGoals = items.filter(ps => ps && ps.scored !== false && ps.team === match.homeId).length;
+    const aGoals = items.filter(ps => ps && ps.scored !== false && ps.team === match.awayId).length;
+    match.penaltyHomeScore = hGoals;
+    match.penaltyAwayScore = aGoals;
+    if (hGoals > aGoals) match.penaltyWinner = match.homeId;
+    else if (aGoals > hGoals) match.penaltyWinner = match.awayId;
+
+    const hId = prefix === "edit" ? "editMatchPenaltyHomeScore" : "penaltyHomeScore";
+    const aId = prefix === "edit" ? "editMatchPenaltyAwayScore" : "penaltyAwayScore";
+    const wId = prefix === "edit" ? "editMatchPenaltyWinnerSelect" : "penaltyWinnerSelect";
+    const hInput = document.getElementById(hId);
+    const aInput = document.getElementById(aId);
+    const wSelect = document.getElementById(wId);
+    if (hInput) hInput.value = hGoals;
+    if (aInput) aInput.value = aGoals;
+    if (wSelect && match.penaltyWinner) wSelect.value = match.penaltyWinner;
+
+    // Keep the other modal inputs in sync too if present
+    const otherH = document.getElementById(prefix === "edit" ? "penaltyHomeScore" : "editMatchPenaltyHomeScore");
+    const otherA = document.getElementById(prefix === "edit" ? "penaltyAwayScore" : "editMatchPenaltyAwayScore");
+    if (otherH) otherH.value = hGoals;
+    if (otherA) otherA.value = aGoals;
+  },
+
+  addPenaltyScorer(prefix = "qs") {
+    const match = this._getMatchForPenaltyPrefix(prefix);
+    if (!match) return;
+    const teamSel = document.getElementById(`${prefix}PenTeamSelect`);
+    const playerSel = document.getElementById(`${prefix}PenPlayerSelect`);
+    const statusSel = document.getElementById(`${prefix}PenStatusSelect`);
+    const teamId = teamSel ? teamSel.value : "";
+    const playerName = playerSel ? playerSel.value : "";
+    const isScored = !statusSel || statusSel.value !== "gagal";
+
+    if (!teamId || !playerName) {
+      alert("Pilih tim dan pemain penendang penalti terlebih dahulu!");
+      return;
+    }
+
+    if (!Array.isArray(match.penaltyScorers)) match.penaltyScorers = [];
+    match.penaltyScorers.push({ team: teamId, player: playerName, scored: isScored });
+
+    this._syncPenaltyScoresFromScorers(match, prefix);
+    if (match.status === "upcoming" || match.status === "scheduled" || !match.status) {
+      match.homeScore = match.homeScore !== null && match.homeScore !== undefined ? match.homeScore : 0;
+      match.awayScore = match.awayScore !== null && match.awayScore !== undefined ? match.awayScore : 0;
+      match.homeScoreLive = match.homeScore;
+      match.awayScoreLive = match.awayScore;
+      match.status = "finished";
+    }
+
+    app.store.syncKnockoutFromStandings();
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+
+    this.populatePenaltyScorerUI(match, prefix);
+    if (prefix === "qs") this.renderAdminEventsList(match);
+    app.renderCurrentView();
+    if (typeof app.renderMatches === "function") app.renderMatches();
+    if (typeof app.renderBracket === "function") app.renderBracket();
+    if (typeof app.refreshActiveMatchDetail === "function") app.refreshActiveMatchDetail();
+    app.showToast(`${isScored ? '⚽' : '❌'} Penalti ${playerName} (${isScored ? 'Gol' : 'Gagal'}) dicatat!`);
+  },
+
+  removePenaltyScorer(index, prefix = "qs") {
+    const match = this._getMatchForPenaltyPrefix(prefix);
+    if (!match || !Array.isArray(match.penaltyScorers) || !match.penaltyScorers[index]) return;
+    const removed = match.penaltyScorers.splice(index, 1)[0];
+
+    this._syncPenaltyScoresFromScorers(match, prefix);
+    if (match.penaltyScorers.length === 0 && match.penaltyHomeScore === 0 && match.penaltyAwayScore === 0) {
+      delete match.penaltyWinner;
+    }
+
+    app.store.syncKnockoutFromStandings();
+    app.store.saveData();
+    if (window.SupabaseService && window.SupabaseService.syncMatch) {
+      window.SupabaseService.syncMatch(match, this.adminPinHash || "");
+    }
+
+    this.populatePenaltyScorerUI(match, prefix);
+    if (prefix === "qs") this.renderAdminEventsList(match);
+    app.renderCurrentView();
+    if (typeof app.renderMatches === "function") app.renderMatches();
+    if (typeof app.renderBracket === "function") app.renderBracket();
+    if (typeof app.refreshActiveMatchDetail === "function") app.refreshActiveMatchDetail();
+    app.showToast(`Penendang penalti ${removed.player} dihapus`);
   },
 
   updateEditPenaltyTeamOptions(preferredWinnerId = null) {
@@ -2472,12 +2664,18 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (homeSelect) {
       homeSelect.innerHTML = teamOptions;
       homeSelect.value = currentHome;
-      homeSelect.onchange = () => this.updateEditPenaltyTeamOptions();
+      homeSelect.onchange = () => {
+        this.updateEditPenaltyTeamOptions();
+        this.populatePenaltyScorerUI(this._getMatchForPenaltyPrefix("edit"), "edit");
+      };
     }
     if (awaySelect) {
       awaySelect.innerHTML = teamOptions;
       awaySelect.value = currentAway;
-      awaySelect.onchange = () => this.updateEditPenaltyTeamOptions();
+      awaySelect.onchange = () => {
+        this.updateEditPenaltyTeamOptions();
+        this.populatePenaltyScorerUI(this._getMatchForPenaltyPrefix("edit"), "edit");
+      };
     }
   },
 
