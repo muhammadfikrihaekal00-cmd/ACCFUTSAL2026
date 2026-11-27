@@ -330,7 +330,7 @@
     }
 
     // Lightweight Live Fetch: Hanya ambil tabel matches (Sangat hemat CPU & Disk IO untuk polling background)
-    async fetchLiveMatchesOnly() {
+    async fetchLiveMatchesOnly(attempt = 1) {
       if (!this.client || !this.isConfigured) return null;
       try {
         const timeoutPromise = new Promise((_, reject) =>
@@ -342,11 +342,19 @@
         ]);
         if (error) {
           console.warn('[Supabase] fetchLiveMatchesOnly error:', error);
+          if (attempt < 2) {
+            await new Promise(r => setTimeout(r, 1500));
+            return this.fetchLiveMatchesOnly(attempt + 1);
+          }
           return null;
         }
         return Array.isArray(data) ? data : null;
       } catch (err) {
         console.warn('[Supabase] fetchLiveMatchesOnly exception:', err);
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 1500));
+          return this.fetchLiveMatchesOnly(attempt + 1);
+        }
         return null;
       }
     }
