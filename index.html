@@ -1675,8 +1675,8 @@
                   </select>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                  <select id="qsPenPlayerSelect" class="form-select" style="flex: 1; font-size: 0.76rem; padding: 5px 6px;"
-                    aria-label="Pemain Penendang Penalti">
+                  <select id="qsPenPlayerSelect" class="form-select"
+                    style="flex: 1; font-size: 0.76rem; padding: 5px 6px;" aria-label="Pemain Penendang Penalti">
                     <option value="">-- Pilih Pemain --</option>
                   </select>
                   <button type="button" class="btn btn-primary btn-sm" onclick="admin.addPenaltyScorer('qs')"
@@ -1684,7 +1684,8 @@
                     ➕ Catat
                   </button>
                 </div>
-                <div id="qsPenaltyScorersList" style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;"></div>
+                <div id="qsPenaltyScorersList"
+                  style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;"></div>
               </div>
             </div>
           </div>
@@ -2048,7 +2049,8 @@
                   ➕ Catat
                 </button>
               </div>
-              <div id="editPenaltyScorersList" style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;"></div>
+              <div id="editPenaltyScorersList"
+                style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;"></div>
             </div>
           </div>
         </div>
@@ -3574,7 +3576,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
           for (var i = 0; i < regs.length; i++) {
-            regs[i].unregister();
+        unregister();
           }
         }).catch(function () { });
       }
@@ -3648,7 +3650,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
       window.addEventListener("scroll", onScroll, { passive: true });
       if (window.requestAnimationFrame) {
-        window.requestAnimationFrame(updateOnScroll);
+        window.requestAnati(updateOnScroll);
       } else {
         setTimet(uScroll, 60);
       }
