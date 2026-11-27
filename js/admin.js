@@ -726,8 +726,9 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     document.getElementById("awayScoreDisplay").textContent = awayScoreVal;
 
     const statusSelect = document.getElementById("matchStatusSelect");
-    if (statusSelect) statusSelect.value = match.status;
-    this.updateStatusPills(match.status === 'live' ? 'finished' : (match.status || 'upcoming'));
+    const uiStatus = (match.status === 'live' || match.status === 'finished') ? 'finished' : 'upcoming';
+    if (statusSelect) statusSelect.value = uiStatus;
+    this.updateStatusPills(uiStatus);
 
     // Dapatkan menit acuan awal
     let cur = parseInt((match.liveMinute || "1").replace(/[^0-9]/g, ""), 10) || 1;
@@ -783,7 +784,12 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     this.switchQuickScoreTab('score');
 
     // Setup penalty shootout section for knockout matches
-    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
+    const isKnockout = (app.store && typeof app.store.isKnockoutMatch === "function")
+      ? app.store.isKnockoutMatch(match)
+      : (match.stage === "knockout" || /(QF|SF|FINAL|3RD)/i.test(match.id || ""));
+    this._forcePenaltyVisible = false;
+    const togglePenBtn = document.getElementById("btnTogglePenaltySection");
+    if (togglePenBtn) togglePenBtn.style.display = isKnockout ? "inline-flex" : "none";
     const penaltySection = document.getElementById("penaltySection");
     if (penaltySection) {
       if (isKnockout) {
@@ -817,22 +823,66 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     document.body.classList.add("modal-open");
   },
 
+  togglePenaltySection() {
+    const match = app.store.data.matches.find(m => m.id === this.activeMatchId);
+    if (!match) return;
+    const penaltySection = document.getElementById("penaltySection");
+    if (!penaltySection) return;
+    const isCurrentlyVisible = penaltySection.style.display === "block";
+    this._forcePenaltyVisible = !isCurrentlyVisible;
+    penaltySection.style.display = this._forcePenaltyVisible ? "block" : "none";
+  },
+
+  _isKnockoutMatch(match) {
+    if (!match) return false;
+    if (app.store && typeof app.store.isKnockoutMatch === "function") {
+      return app.store.isKnockoutMatch(match);
+    }
+    return match.stage !== "group" && (match.stage === "knockout" || /(QF|SF|FINAL|3RD)/i.test(match.id || ""));
+  },
+
+  _applyPenaltyInputsToMatch(match, penHRaw, penARaw, penWinnerRaw, hScore = null, aScore = null) {
+    const penHVal = (penHRaw !== "" && penHRaw !== null && penHRaw !== undefined) ? parseInt(penHRaw, 10) : NaN;
+    const penAVal = (penARaw !== "" && penARaw !== null && penARaw !== undefined) ? parseInt(penARaw, 10) : NaN;
+    const hasPenH = !isNaN(penHVal);
+    const hasPenA = !isNaN(penAVal);
+    const penWinner = penWinnerRaw || (hasPenH && hasPenA ? (penHVal > penAVal ? match.homeId : (penAVal > penHVal ? match.awayId : null)) : null);
+    const hasAnyPenalty = hasPenH || hasPenA || Boolean(penWinner);
+
+    if (this._isKnockoutMatch(match) && hasAnyPenalty) {
+      if (hasPenH) match.penaltyHomeScore = penHVal;
+      else delete match.penaltyHomeScore;
+      if (hasPenA) match.penaltyAwayScore = penAVal;
+      else delete match.penaltyAwayScore;
+      if (penWinner) match.penaltyWinner = penWinner;
+      else delete match.penaltyWinner;
+      return true;
+    }
+
+    if (!this._isKnockoutMatch(match) || !hasAnyPenalty || (hScore !== null && aScore !== null && hScore !== aScore && !hasAnyPenalty)) {
+      delete match.penaltyHomeScore;
+      delete match.penaltyAwayScore;
+      delete match.penaltyWinner;
+    }
+    return false;
+  },
+
   checkPenaltySectionVisibility(match, hScore, aScore) {
     const penaltySection = document.getElementById("penaltySection");
     if (!penaltySection) return;
-    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
-    if (!isKnockout) {
+    if (!this._isKnockoutMatch(match)) {
       penaltySection.style.display = "none";
       return;
     }
     const h = (hScore !== undefined) ? parseInt(hScore, 10) : parseInt(document.getElementById("homeScoreDisplay").textContent, 10);
     const a = (aScore !== undefined) ? parseInt(aScore, 10) : parseInt(document.getElementById("awayScoreDisplay").textContent, 10);
-    const statusSelect = document.getElementById("matchStatusSelect");
-    const isFinishedOrLive = statusSelect && (statusSelect.value === 'finished' || statusSelect.value === 'live');
 
-    if (h === a && isFinishedOrLive) {
-      penaltySection.style.display = "block";
-    } else if (match.penaltyWinner || (match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined)) {
+    const hasSavedPenalty = Boolean(
+      match.penaltyWinner ||
+      (match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined) ||
+      (match.penaltyAwayScore !== null && match.penaltyAwayScore !== undefined)
+    );
+    if (h === a || hasSavedPenalty || this._forcePenaltyVisible) {
       penaltySection.style.display = "block";
     } else {
       penaltySection.style.display = "none";
@@ -930,7 +980,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const hName = home ? (home.shortName || home.name) : "Home";
     const aName = away ? (away.shortName || away.name) : "Away";
 
-    const isKnockout = match.stage === "knockout" || (match.id && (match.id.startsWith("QF") || match.id.startsWith("SF") || match.id.includes("FINAL") || match.id.includes("3RD")));
+    const isKnockout = this._isKnockoutMatch(match);
     if (isKnockout && hScore === aScore) {
       const penWinner = document.getElementById("penaltyWinnerSelect") ? document.getElementById("penaltyWinnerSelect").value : "";
       const penH = document.getElementById("penaltyHomeScore") ? document.getElementById("penaltyHomeScore").value : "";
@@ -2062,21 +2112,17 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     delete match.liveElapsedSec;
     delete match.liveClockDisplay;
 
-    // Handle Knockout Penalty Shootout if tied
-    const isKnockout = match.stage !== "group" && (app.store && typeof app.store.classifyKnockoutStage === 'function' ? Boolean(app.store.classifyKnockoutStage(match)) : (match.stage === "knockout" || /(QF|SF|FINAL|3RD)/i.test(match.id)));
-    if (isKnockout && status === "finished" && hScore === aScore) {
-      const penHVal = document.getElementById("penaltyHomeScore") ? parseInt(document.getElementById("penaltyHomeScore").value, 10) : NaN;
-      const penAVal = document.getElementById("penaltyAwayScore") ? parseInt(document.getElementById("penaltyAwayScore").value, 10) : NaN;
-      const penWinner = document.getElementById("penaltyWinnerSelect") ? document.getElementById("penaltyWinnerSelect").value : "";
-
-      if (!isNaN(penHVal)) match.penaltyHomeScore = penHVal;
-      if (!isNaN(penAVal)) match.penaltyAwayScore = penAVal;
-      match.penaltyWinner = penWinner || (!isNaN(penHVal) && !isNaN(penAVal) ? (penHVal > penAVal ? match.homeId : (penAVal > penHVal ? match.awayId : null)) : null);
-
-      if (!match.penaltyWinner && isNaN(penHVal) && isNaN(penAVal)) {
+    // Handle Knockout Penalty Shootout
+    const isKnockout = this._isKnockoutMatch(match);
+    const penHRaw = document.getElementById("penaltyHomeScore") ? document.getElementById("penaltyHomeScore").value : "";
+    const penARaw = document.getElementById("penaltyAwayScore") ? document.getElementById("penaltyAwayScore").value : "";
+    const penWinnerRaw = document.getElementById("penaltyWinnerSelect") ? document.getElementById("penaltyWinnerSelect").value : "";
+    if (isKnockout) {
+      const hasPen = this._applyPenaltyInputsToMatch(match, penHRaw, penARaw, penWinnerRaw, hScore, aScore);
+      if (status === "finished" && hScore === aScore && !hasPen) {
         app.showToast("⚠️ Babak gugur seri: tentukan pemenang penalti agar bagan terisi.");
       }
-    } else if (hScore !== aScore) {
+    } else {
       delete match.penaltyHomeScore;
       delete match.penaltyAwayScore;
       delete match.penaltyWinner;
@@ -2299,6 +2345,72 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     const isGroup = stageSelect.value === "group";
     if (groupWrap) groupWrap.style.display = isGroup ? "block" : "none";
     this.refreshTeamOptionsForCurrentStage();
+    const mId = document.getElementById("editMatchId")?.value;
+    const match = this.getValidMatches().find(m => m.id === mId) || null;
+    this.syncEditMatchPenaltyUI(match);
+  },
+
+  syncEditMatchPenaltyUI(match) {
+    const penWrap = document.getElementById("editMatchPenaltyWrap");
+    const stageSelect = document.getElementById("editMatchStageSelect");
+    if (!penWrap) return;
+    const isKnockout = stageSelect ? stageSelect.value !== "group" : this._isKnockoutMatch(match);
+    penWrap.style.display = isKnockout ? "block" : "none";
+    if (!isKnockout) return;
+
+    this.updateEditPenaltyTeamOptions(match?.penaltyWinner || "");
+    const penHInput = document.getElementById("editMatchPenaltyHomeScore");
+    const penAInput = document.getElementById("editMatchPenaltyAwayScore");
+    if (penHInput) {
+      penHInput.value = (match && match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined) ? match.penaltyHomeScore : "";
+    }
+    if (penAInput) {
+      penAInput.value = (match && match.penaltyAwayScore !== null && match.penaltyAwayScore !== undefined) ? match.penaltyAwayScore : "";
+    }
+  },
+
+  updateEditPenaltyTeamOptions(preferredWinnerId = null) {
+    const homeSelect = document.getElementById("editMatchHomeSelect");
+    const awaySelect = document.getElementById("editMatchAwaySelect");
+    const homeId = homeSelect ? homeSelect.value : "";
+    const awayId = awaySelect ? awaySelect.value : "";
+    const homeTeam = homeId && app.store ? app.store.getTeam(homeId) : null;
+    const awayTeam = awayId && app.store ? app.store.getTeam(awayId) : null;
+    const hName = homeTeam ? (homeTeam.shortName || homeTeam.name) : "Tim 1 (Home)";
+    const aName = awayTeam ? (awayTeam.shortName || awayTeam.name) : "Tim 2 (Away)";
+
+    const hLabel = document.getElementById("editPenaltyHomeLabel");
+    const aLabel = document.getElementById("editPenaltyAwayLabel");
+    if (hLabel) hLabel.textContent = hName;
+    if (aLabel) aLabel.textContent = aName;
+
+    const winnerSel = document.getElementById("editMatchPenaltyWinnerSelect");
+    if (winnerSel) {
+      const prevVal = preferredWinnerId !== null ? preferredWinnerId : winnerSel.value;
+      let opts = `<option value="">-- Otomatis / Pilih Pemenang Adu Penalti --</option>`;
+      if (homeId) opts += `<option value="${homeId}">${hName}</option>`;
+      if (awayId) opts += `<option value="${awayId}">${aName}</option>`;
+      winnerSel.innerHTML = opts;
+      winnerSel.value = (prevVal === homeId || prevVal === awayId) ? prevVal : "";
+    }
+  },
+
+  onEditPenaltyScoreInput() {
+    const penH = parseInt(document.getElementById("editMatchPenaltyHomeScore")?.value, 10);
+    const penA = parseInt(document.getElementById("editMatchPenaltyAwayScore")?.value, 10);
+    const homeId = document.getElementById("editMatchHomeSelect")?.value || "";
+    const awayId = document.getElementById("editMatchAwaySelect")?.value || "";
+    const winnerSel = document.getElementById("editMatchPenaltyWinnerSelect");
+    if (!winnerSel || isNaN(penH) || isNaN(penA)) return;
+    if (penH > penA && homeId) winnerSel.value = homeId;
+    else if (penA > penH && awayId) winnerSel.value = awayId;
+  },
+
+  openQuickScoreFromEditor() {
+    const mId = document.getElementById("editMatchId")?.value || this.activeMatchId;
+    const modal = document.getElementById("matchEditorModal");
+    if (modal) modal.classList.remove("active");
+    if (mId) this.openQuickScore(mId);
   },
 
   onMatchGroupChange() {
@@ -2360,10 +2472,12 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (homeSelect) {
       homeSelect.innerHTML = teamOptions;
       homeSelect.value = currentHome;
+      homeSelect.onchange = () => this.updateEditPenaltyTeamOptions();
     }
     if (awaySelect) {
       awaySelect.innerHTML = teamOptions;
       awaySelect.value = currentAway;
+      awaySelect.onchange = () => this.updateEditPenaltyTeamOptions();
     }
   },
 
@@ -2488,6 +2602,7 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     if (dateInput) dateInput.value = match.date || "22 Nov 2026";
     const timeInput = document.getElementById("editMatchTimeInput");
     if (timeInput) timeInput.value = match.time || (cat === "SD" ? "08:00 - 08:30 WITA" : "08:00 - 08:40 WITA");
+    this.syncEditMatchPenaltyUI(match);
   },
 
   async saveMatchSchedule(andNext = false) {
@@ -2605,6 +2720,24 @@ var admin = window.admin = Object.assign(window.admin || {}, {
     }
     const timeInput = document.getElementById("editMatchTimeInput");
     if (timeInput && timeInput.value.trim()) match.time = timeInput.value.trim();
+
+    if (selectedStage !== "group") {
+      const penHRaw = document.getElementById("editMatchPenaltyHomeScore")?.value ?? "";
+      const penARaw = document.getElementById("editMatchPenaltyAwayScore")?.value ?? "";
+      const penWinnerRaw = document.getElementById("editMatchPenaltyWinnerSelect")?.value ?? "";
+      const hasPen = this._applyPenaltyInputsToMatch(match, penHRaw, penARaw, penWinnerRaw);
+      if (hasPen && (match.status === "upcoming" || match.status === "scheduled" || !match.status)) {
+        match.homeScore = match.homeScore !== null && match.homeScore !== undefined ? match.homeScore : 0;
+        match.awayScore = match.awayScore !== null && match.awayScore !== undefined ? match.awayScore : 0;
+        match.homeScoreLive = match.homeScore;
+        match.awayScoreLive = match.awayScore;
+        match.status = "finished";
+      }
+    } else {
+      delete match.penaltyHomeScore;
+      delete match.penaltyAwayScore;
+      delete match.penaltyWinner;
+    }
 
     if (app.store && typeof app.store.syncPlayerStatsFromMatches === 'function') {
       app.store.syncPlayerStatsFromMatches();

@@ -558,9 +558,11 @@
           ? (parseInt(String(match.liveMinute || "1").replace(/\D/g, ''), 10) || 1)
           : 0;
 
-        // Siapkan kartu dan sematkan metadata laga (lineup 5 pemain, pergantian, foul, manual team, & pause timer) secara aman tanpa merusak skema database
+        // Siapkan kartu dan sematkan metadata laga (lineup 5 pemain, pergantian, foul, manual team, penalti, & pause timer) secara aman tanpa merusak skema database
         const cleanCards = (Array.isArray(match.cards) ? [...match.cards] : []).filter(c => c && !c._meta);
-        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined || match.knockoutKey || match.isManualTeam !== undefined || match.isTimerPaused !== undefined || match.liveElapsedSec !== undefined) {
+        const hasPenHome = match.penaltyHomeScore !== null && match.penaltyHomeScore !== undefined && match.penaltyHomeScore !== "";
+        const hasPenAway = match.penaltyAwayScore !== null && match.penaltyAwayScore !== undefined && match.penaltyAwayScore !== "";
+        if (match.lineup || match.substitutions || match.homeFouls !== undefined || match.awayFouls !== undefined || match.knockoutKey || match.isManualTeam !== undefined || match.isTimerPaused !== undefined || match.liveElapsedSec !== undefined || hasPenHome || hasPenAway || match.penaltyWinner) {
           cleanCards.push({
             _meta: true,
             knockoutKey: match.knockoutKey || null,
@@ -571,7 +573,10 @@
             awayFouls: parseInt(match.awayFouls, 10) || 0,
             isTimerPaused: Boolean(match.isTimerPaused),
             liveElapsedSec: typeof match.liveElapsedSec === "number" ? match.liveElapsedSec : null,
-            liveClockDisplay: match.liveClockDisplay || null
+            liveClockDisplay: match.liveClockDisplay || null,
+            penaltyHomeScore: hasPenHome ? parseInt(match.penaltyHomeScore, 10) : null,
+            penaltyAwayScore: hasPenAway ? parseInt(match.penaltyAwayScore, 10) : null,
+            penaltyWinner: match.penaltyWinner || null
           });
         }
 

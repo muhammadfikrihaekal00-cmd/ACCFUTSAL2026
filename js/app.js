@@ -368,6 +368,9 @@ class TournamentStore {
     let liveClockDisplay = m.liveClockDisplay || null;
 
     let metaManualTeam = null;
+    let metaPenaltyHome = undefined;
+    let metaPenaltyAway = undefined;
+    let metaPenaltyWinner = undefined;
     const metaCard = cleanCards.find(c => c && c._meta);
     if (metaCard) {
       if (metaCard.knockoutKey && !knockoutKey) knockoutKey = metaCard.knockoutKey;
@@ -379,6 +382,9 @@ class TournamentStore {
       if (metaCard.isTimerPaused !== undefined) isTimerPaused = Boolean(metaCard.isTimerPaused);
       if (typeof metaCard.liveElapsedSec === "number") liveElapsedSec = metaCard.liveElapsedSec;
       if (metaCard.liveClockDisplay) liveClockDisplay = metaCard.liveClockDisplay;
+      if (metaCard.penaltyHomeScore !== undefined && metaCard.penaltyHomeScore !== null) metaPenaltyHome = metaCard.penaltyHomeScore;
+      if (metaCard.penaltyAwayScore !== undefined && metaCard.penaltyAwayScore !== null) metaPenaltyAway = metaCard.penaltyAwayScore;
+      if (metaCard.penaltyWinner) metaPenaltyWinner = metaCard.penaltyWinner;
     }
     // Filter ketat agar metadata atau kartu tanpa nama pemain tidak pernah masuk ke cards
     cleanCards = cleanCards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
@@ -444,14 +450,14 @@ class TournamentStore {
       awayFouls: awayFouls
     };
 
-    if (m.penaltyHomeScore !== undefined || m.penalty_home_score !== undefined) {
-      normalized.penaltyHomeScore = m.penaltyHomeScore !== undefined ? m.penaltyHomeScore : m.penalty_home_score;
+    if (m.penaltyHomeScore !== undefined || m.penalty_home_score !== undefined || metaPenaltyHome !== undefined) {
+      normalized.penaltyHomeScore = m.penaltyHomeScore !== undefined ? m.penaltyHomeScore : (m.penalty_home_score !== undefined ? m.penalty_home_score : metaPenaltyHome);
     }
-    if (m.penaltyAwayScore !== undefined || m.penalty_away_score !== undefined) {
-      normalized.penaltyAwayScore = m.penaltyAwayScore !== undefined ? m.penaltyAwayScore : m.penalty_away_score;
+    if (m.penaltyAwayScore !== undefined || m.penalty_away_score !== undefined || metaPenaltyAway !== undefined) {
+      normalized.penaltyAwayScore = m.penaltyAwayScore !== undefined ? m.penaltyAwayScore : (m.penalty_away_score !== undefined ? m.penalty_away_score : metaPenaltyAway);
     }
-    if (m.penaltyWinner !== undefined || m.penalty_winner !== undefined) {
-      normalized.penaltyWinner = m.penaltyWinner !== undefined ? m.penaltyWinner : m.penalty_winner;
+    if (m.penaltyWinner !== undefined || m.penalty_winner !== undefined || metaPenaltyWinner !== undefined) {
+      normalized.penaltyWinner = m.penaltyWinner !== undefined ? m.penaltyWinner : (m.penalty_winner !== undefined ? m.penalty_winner : metaPenaltyWinner);
     }
     if (m.liveStartedAt && !isTimerPaused) normalized.liveStartedAt = m.liveStartedAt;
     return normalized;
@@ -2260,7 +2266,7 @@ var app = window.app = Object.assign(window.app || {}, {
             .sort((a, b) => String(a.id || "").localeCompare(String(b.id || "")))
             .map(m => {
               const meta = Array.isArray(m.cards) ? m.cards.find(c => c && c._meta) : null;
-              return `${m.id}:${m.status}:${m.date || ""}:${m.time || ""}:${m.home_id || ""}:${m.away_id || ""}:${m.stage || ""}:${m.group_letter || ""}:${m.round_name || ""}:${m.home_placeholder || ""}:${m.away_placeholder || ""}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${meta ? Boolean(meta.isManualTeam) : ""}:${m.updated_at || ""}`;
+              return `${m.id}:${m.status}:${m.date || ""}:${m.time || ""}:${m.home_id || ""}:${m.away_id || ""}:${m.stage || ""}:${m.group_letter || ""}:${m.round_name || ""}:${m.home_placeholder || ""}:${m.away_placeholder || ""}:${m.home_score}:${m.away_score}:${m.home_score_live}:${m.away_score_live}:${m.minute_live}:${(m.scorers || []).length}:${(m.cards || []).length}:${meta ? Boolean(meta.isManualTeam) : ""}:${meta ? (meta.penaltyHomeScore ?? "") : ""}:${meta ? (meta.penaltyAwayScore ?? "") : ""}:${meta ? (meta.penaltyWinner || "") : ""}:${m.updated_at || ""}`;
             })
             .join("|");
 
@@ -2813,6 +2819,9 @@ var app = window.app = Object.assign(window.app || {}, {
             if (metaObj.isTimerPaused !== undefined) mapped.isTimerPaused = Boolean(metaObj.isTimerPaused);
             if (typeof metaObj.liveElapsedSec === "number") mapped.liveElapsedSec = metaObj.liveElapsedSec;
             if (metaObj.liveClockDisplay) mapped.liveClockDisplay = metaObj.liveClockDisplay;
+            if (metaObj.penaltyHomeScore !== undefined) mapped.penaltyHomeScore = metaObj.penaltyHomeScore;
+            if (metaObj.penaltyAwayScore !== undefined) mapped.penaltyAwayScore = metaObj.penaltyAwayScore;
+            if (metaObj.penaltyWinner !== undefined) mapped.penaltyWinner = metaObj.penaltyWinner;
           }
           mapped.cards = payload.cards.filter(c => c && !c._meta && c.player && c.player !== 'undefined' && c.player !== 'null' && (c.type === 'yellow' || c.type === 'red'));
         }
