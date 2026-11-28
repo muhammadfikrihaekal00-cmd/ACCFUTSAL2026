@@ -720,7 +720,7 @@ body.snap-scroll-active {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
 
   html.snap-scroll-active,
   body.snap-scroll-active {
@@ -7040,6 +7040,11 @@ body.modal-open .header {
     scroll-snap-stop: normal !important;
   }
 
+  .header {
+    backdrop-filter: blur(10px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+  }
+
   .match-card,
   .standings-card,
   .group-card,
@@ -7060,6 +7065,14 @@ body.modal-open .header {
   .draw-group-card,
   .draw-pool-card,
   .draw-controls-card,
+  .draw-status-card,
+  .draw-user-group-card,
+  .draw-pre-groups-section,
+  .bracket-tree-container,
+  .moment-badge-tag,
+  .moment-admin-quick-actions,
+  .group-tag-corner,
+  .floating-cat-pill-tooltip,
   .scorer-card,
   .discipline-card {
     backdrop-filter: none !important;
@@ -7079,6 +7092,90 @@ body.modal-open .header {
   }
 }
 
+/* ============================================================================
+   20. MOBILE SPORTS APP EXPERIENCE: TACTILE TAP, CONTENT-VISIBILITY & STICKY
+   ============================================================================ */
+.match-card,
+.team-card,
+.school-card,
+.bracket-match-card,
+.moment-card,
+.stats-summary-card,
+.tab-btn,
+.filter-pill,
+.btn,
+.mobile-nav-link,
+.hero-live-score-card,
+.player-interactive-card {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.match-card:active,
+.team-card:active,
+.bracket-match-card:active,
+.moment-card:active,
+.stats-summary-card:active,
+.tab-btn:active,
+.filter-pill:active,
+.btn:active,
+.hero-live-score-card:active,
+.player-interactive-card:active {
+  transform: scale(0.975) !important;
+  transition: transform 95ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Defer off-screen card layout & paint on long scrollable lists */
+.match-card,
+.team-card,
+.school-card,
+.group-card,
+.juknis-chapter-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 156px;
+}
+
+/* Sticky Table Headers for Standings & Statistics */
+.standings-table thead th,
+.stats-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Horizontal Snap Carousel for Home News / Highlights on Mobile */
+@media (max-width: 768px) {
+  #homeNewsContainer {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 12px !important;
+    padding-bottom: 6px;
+  }
+
+  #homeNewsContainer .news-card {
+    min-width: 82vw !important;
+    scroll-snap-align: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Pause non-essential continuous ambient loops on mobile to preserve 60fps & battery */
+  .mvp-spotlight-card::before,
+  .hero-emblem-badge {
+    animation-duration: 10s !important;
+  }
+}
+
+/* Lightweight Skeleton Shimmer Utility */
+.acc-skeleton-card {
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.9) 25%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.9) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  min-height: 110px;
+}
+
 /* Respect System Accessibility & Battery-Saver Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
 
@@ -7091,6 +7188,7 @@ body.modal-open .header {
   .tab-pane.active,
   .tab-pane.active .scroll-reveal,
   .match-card.score-goal-flash,
+  .acc-skeleton-card,
   .pulse-dot::after,
   .floating-pulse-dot::after,
   .admin-live-pulse-dot::after,

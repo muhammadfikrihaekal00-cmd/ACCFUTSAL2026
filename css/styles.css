@@ -6776,20 +6776,27 @@ body.dark-theme .fixture-team-row:hover {
 /* ========================================================= */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(32px) scale(0.98);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(14px);
+  transition: opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1), transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: opacity, transform;
 }
 
 .scroll-reveal.reveal-right {
   opacity: 0;
-  transform: translateY(32px);
+  transform: translateY(14px);
 }
 
 .scroll-reveal.is-revealed {
   opacity: 1 !important;
-  transform: translateY(0) scale(1) !important;
+  transform: translateY(0) !important;
+  will-change: auto;
 }
+
+.tab-pane.active .scroll-reveal:nth-child(2) { transition-delay: 25ms; }
+.tab-pane.active .scroll-reveal:nth-child(3) { transition-delay: 50ms; }
+.tab-pane.active .scroll-reveal:nth-child(4) { transition-delay: 75ms; }
+.tab-pane.active .scroll-reveal:nth-child(5) { transition-delay: 100ms; }
+.tab-pane.active .scroll-reveal.is-revealed { transition-delay: 0ms; }
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal {
@@ -8265,13 +8272,13 @@ body.dark-theme .fixture-team-row:hover {
 
 /* Page Transition Animation */
 .tab-pane.active {
-  animation: pageFadeSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: pageFadeSlideIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
 @keyframes pageFadeSlideIn {
   0% {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 
   100% {
