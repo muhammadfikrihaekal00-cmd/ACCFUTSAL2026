@@ -2300,6 +2300,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
     const syncFromRemote = () => {
       if (!window.SupabaseService || isSyncing) return;
+      this._isInitialCloudSyncPending = isInitialLoad;
       const isReady = typeof window.SupabaseService.isReady === 'function'
         ? window.SupabaseService.isReady()
         : Boolean(window.SupabaseService.isConfigured);
@@ -2318,6 +2319,7 @@ var app = window.app = Object.assign(window.app || {}, {
 
       window.SupabaseService.fetchAllData().then(data => {
         isSyncing = false;
+        this._isInitialCloudSyncPending = false;
         if (syncWatchdogTimer) clearTimeout(syncWatchdogTimer);
         if (data) {
           // Generate signature lengkap: pertandingan, waktu, skor, menit, kartu, config, DAN DATA TIM BESERTA SKUAD & LOGO
@@ -2385,6 +2387,7 @@ var app = window.app = Object.assign(window.app || {}, {
         }
       }).catch(err => {
         isSyncing = false;
+        this._isInitialCloudSyncPending = false;
         if (syncWatchdogTimer) clearTimeout(syncWatchdogTimer);
         console.warn("Supabase sync notice:", err);
         syncMatchesOnlyFromRemote();
@@ -5529,6 +5532,10 @@ var app = window.app = Object.assign(window.app || {}, {
     });
 
     if (matches.length === 0) {
+      if (this._isInitialCloudSyncPending) {
+        container.innerHTML = Array.from({ length: 4 }, () => `<div class="acc-skeleton-card" aria-hidden="true"></div>`).join("");
+        return;
+      }
       const hasActiveFilters = this.filterDay !== "all" || (this.filterTeam && this.filterTeam !== "all") || this.filterGroup !== "all" || this.filterStatus !== "all";
       container.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed rgba(255,255,255,0.12);">
@@ -5555,7 +5562,19 @@ var app = window.app = Object.assign(window.app || {}, {
       return;
     }
 
+    let lastMatchGroupKey = "";
     container.innerHTML = matches.map((m, idx) => {
+      const groupKey = m.status === "live" ? "__LIVE__" : `${m.date || "Jadwal"}|${m.matchday || m.day || ""}`;
+      let stickyHeaderHtml = "";
+      if (groupKey !== lastMatchGroupKey) {
+        lastMatchGroupKey = groupKey;
+        const isLiveGroup = groupKey === "__LIVE__";
+        const mdLabel = (m.matchday || m.day) ? `Matchday ${m.matchday || m.day}` : "";
+        const dateLabel = m.date || "Jadwal Pertandingan";
+        stickyHeaderHtml = isLiveGroup
+          ? `<div class="matches-date-sticky-header is-live-group"><span>🔴 SEDANG BERLANGSUNG</span><span>LIVE</span></div>`
+          : `<div class="matches-date-sticky-header"><span>📅 ${dateLabel}</span>${mdLabel ? `<span>${mdLabel}</span>` : ""}</div>`;
+      }
       const isKnockout = m.stage === "knockout" || /(QF|SF|3RD|FINAL)/i.test(m.id || "");
       const realHomeTeam = m.homeId ? this.store.getTeam(m.homeId) : null;
       const realAwayTeam = m.awayId ? this.store.getTeam(m.awayId) : null;
@@ -5649,7 +5668,7 @@ var app = window.app = Object.assign(window.app || {}, {
         `<span class="match-category-tag cat-sd">SD</span>` :
         `<span class="match-category-tag cat-smp">SMP</span>`;
 
-      return `
+      return `${stickyHeaderHtml}
         <div id="match-card-${m.id}" data-match-id="${m.id}" class="match-card uefa-fixture-card ${statusClass} ${swipeClass} ${this.isMatchGoalFlashing(m.id) ? 'score-goal-flash' : ''}">
           ${statusBarHtml}
           <!-- HEADER META -->

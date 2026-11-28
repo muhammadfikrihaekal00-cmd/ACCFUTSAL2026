@@ -6990,46 +6990,47 @@ body.modal-open .header {
   }
 }
 
-/* Broadcast Real-Time Goal Score Flash (FotMob / TV Broadcast Feel) */
+/* Broadcast Real-Time Goal Score Flash (GPU-Only, Once per Goal) */
 @keyframes accGoalCardFlash {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.75), var(--shadow-card) !important;
     border-color: rgba(16, 185, 129, 0.95) !important;
   }
 
-  40% {
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0), 0 0 28px rgba(251, 191, 36, 0.45) !important;
+  55% {
     border-color: rgba(251, 191, 36, 0.95) !important;
   }
 
   100% {
-    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0), var(--shadow-card) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
   }
 }
 
 @keyframes accScoreDigitPop {
   0% {
-    transform: scale(1);
-    color: #ffffff;
+    transform: translateY(5px) scale(0.92);
+    opacity: 0.65;
+    color: #34d399;
   }
 
-  35% {
-    transform: scale(1.26);
+  55% {
+    transform: translateY(-2px) scale(1.18);
+    opacity: 1;
     color: #34d399;
   }
 
   100% {
-    transform: scale(1);
+    transform: translateY(0) scale(1);
+    opacity: 1;
   }
 }
 
 .match-card.score-goal-flash {
-  animation: accGoalCardFlash 1.5s cubic-bezier(0.22, 1, 0.36, 1) 2 !important;
+  animation: accGoalCardFlash 0.65s cubic-bezier(0.22, 1, 0.36, 1) 1 !important;
 }
 
 .match-card.score-goal-flash .fixture-score-number,
 .md-score-center.score-goal-flash .md-score-digits {
-  animation: accScoreDigitPop 650ms cubic-bezier(0.22, 1, 0.36, 1) 2 !important;
+  animation: accScoreDigitPop 280ms cubic-bezier(0.22, 1, 0.36, 1) 1 !important;
 }
 
 /* Mobile 60fps Performance Offload: Skip costly multi-card backdrop blur while scrolling */
@@ -7130,17 +7131,90 @@ body.modal-open .header {
 .team-card,
 .school-card,
 .group-card,
-.juknis-chapter-card {
+.juknis-chapter-card,
+.scorer-card,
+.discipline-card,
+.leaderboard-card,
+#statsTableBody tr {
   content-visibility: auto;
-  contain-intrinsic-size: auto 156px;
+  contain-intrinsic-size: auto 140px;
 }
 
-/* Sticky Table Headers for Standings & Statistics */
+/* Sticky Section Header for Schedule Matchdays & Standings */
+.matches-date-sticky-header {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: 66px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  margin-top: 4px;
+  border-radius: 10px;
+  background: rgba(10, 16, 32, 0.94);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.matches-date-sticky-header.is-live-group {
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #f87171;
+}
+
+/* Sticky Table Headers & Sticky Team Column on Horizontal Mobile Scroll */
 .standings-table thead th,
 .stats-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .standings-table th.th-team,
+  .standings-table td.td-team {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: #0f172a;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.25);
+  }
+
+  .standings-table tr.qualify td.td-team {
+    background: #0d2420;
+  }
+
+  .standings-table tr.excluded-row td.td-team {
+    background: #23141a;
+  }
+}
+
+/* Limit continuous infinite decorative loops on mobile (preserve LIVE pulse, marquee & skeleton) */
+@media (max-width: 980px) {
+  .champion-crown,
+  .hero-scroll-hint,
+  .splash-glow-bg,
+  .splash-logo-pulse-ring,
+  .splash-logo-img,
+  .moments-section::before,
+  .hero-emblem-badge {
+    animation: none !important;
+  }
+
+  .modal-overlay {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+
+  .tab-pane.active,
+  .mobile-menu-overlay {
+    transition-duration: 200ms !important;
+  }
 }
 
 /* Horizontal Snap Carousel for Home News / Highlights on Mobile */
