@@ -6792,11 +6792,25 @@ body.dark-theme .fixture-team-row:hover {
   will-change: auto;
 }
 
-.tab-pane.active .scroll-reveal:nth-child(2) { transition-delay: 25ms; }
-.tab-pane.active .scroll-reveal:nth-child(3) { transition-delay: 50ms; }
-.tab-pane.active .scroll-reveal:nth-child(4) { transition-delay: 75ms; }
-.tab-pane.active .scroll-reveal:nth-child(5) { transition-delay: 100ms; }
-.tab-pane.active .scroll-reveal.is-revealed { transition-delay: 0ms; }
+.tab-pane.active .scroll-reveal:nth-child(2) {
+  transition-delay: 25ms;
+}
+
+.tab-pane.active .scroll-reveal:nth-child(3) {
+  transition-delay: 50ms;
+}
+
+.tab-pane.active .scroll-reveal:nth-child(4) {
+  transition-delay: 75ms;
+}
+
+.tab-pane.active .scroll-reveal:nth-child(5) {
+  transition-delay: 100ms;
+}
+
+.tab-pane.active .scroll-reveal.is-revealed {
+  transition-delay: 0ms;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal {

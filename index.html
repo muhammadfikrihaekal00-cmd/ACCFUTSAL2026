@@ -3576,7 +3576,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
           for (var i = 0; i < regs.length; i++) {
-        unregister();
+      un;
           }
         }).catch(function () { });
       }
@@ -3650,9 +3650,9 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
 
       window.addEventListener("scroll", onScroll, { passive: true });
       if (window.requestAnimationFrame) {
-        window.requestAnati(updateOnScroll);
+        window.requestAnimationFrame(updateOnScroll);
       } else {
-        setTimet(uScroll, 60);
+        setTimeout(updateOnScroll, 60);
       }
     })();
   </script>
