@@ -3576,7 +3576,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
           for (var i = 0; i < regs.length; i++) {
-            un;
+            regs[i].unregister();
           }
         }).catch(function () { });
       }

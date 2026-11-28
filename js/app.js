@@ -2121,7 +2121,7 @@ var app = window.app = Object.assign(window.app || {}, {
     }
   },
 
-  playYoutubeLiveStream(videoId) {},
+  playYoutubeLiveStream(videoId) { },
 
   setCategory(cat, showToastMsg = true) {
     if (this.isDrawingSpinning) return;
@@ -5354,7 +5354,7 @@ var app = window.app = Object.assign(window.app || {}, {
     }
     this._lastTeamFilterKey = cacheKey;
 
-    let html = `<option value="all">⚽ Semua Klub / Tim (${combinedTeams.length})</option>`;
+    let html = `<option value="all">⚽ Semua Klub</option>`;
     combinedTeams.forEach(t => {
       const gBadge = t.group && t.group !== 'null' && t.group !== '-' ? ` [Grup ${t.group}]` : "";
       html += `<option value="${t.id}">${t.name}${gBadge}</option>`;
@@ -5757,16 +5757,16 @@ var app = window.app = Object.assign(window.app || {}, {
                   ${penWinnerTeam ? `<span>• Lolos: <strong>${penWinnerTeam.shortName || penWinnerTeam.name}</strong></span>` : ''}
                 </div>
                 ${Array.isArray(m.penaltyScorers) && m.penaltyScorers.filter(ps => ps && ps.scored !== false).length > 0 ? (() => {
-        const homePenGoals = m.penaltyScorers.filter(ps => ps && ps.scored !== false && ps.team === m.homeId).map(ps => ps.player);
-        const awayPenGoals = m.penaltyScorers.filter(ps => ps && ps.scored !== false && ps.team === m.awayId).map(ps => ps.player);
-        return `
+            const homePenGoals = m.penaltyScorers.filter(ps => ps && ps.scored !== false && ps.team === m.homeId).map(ps => ps.player);
+            const awayPenGoals = m.penaltyScorers.filter(ps => ps && ps.scored !== false && ps.team === m.awayId).map(ps => ps.player);
+            return `
                     <div style="font-size: 0.7rem; color: #fde68a; line-height: 1.4;">
                       ${homePenGoals.length > 0 ? `<span><strong>${home.shortName || home.name}:</strong> ${homePenGoals.join(', ')}</span>` : ''}
                       ${homePenGoals.length > 0 && awayPenGoals.length > 0 ? ' • ' : ''}
                       ${awayPenGoals.length > 0 ? `<span><strong>${away.shortName || away.name}:</strong> ${awayPenGoals.join(', ')}</span>` : ''}
                     </div>
                   `;
-      })() : ''}
+          })() : ''}
               </div>
             ` : ''}
 
@@ -6635,12 +6635,12 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
           <div class="player-search-grid">
             ${visiblePlayers.map(({ team: t, player: p }) => {
-              const pName = typeof Security !== "undefined" ? Security.sanitize(p.name || "Pemain") : (p.name || "Pemain");
-              const pPos = typeof Security !== "undefined" ? Security.sanitize(p.pos || "Pemain") : (p.pos || "Pemain");
-              const tName = typeof Security !== "undefined" ? Security.sanitize(t.name || "") : (t.name || "");
-              const playerKey = p.id || p.no || p.name;
-              const detailUrl = `/daftar-tim/detail-tim/${encodeURIComponent(t.id)}/detail-pemain/${encodeURIComponent(playerKey)}`;
-              return `
+          const pName = typeof Security !== "undefined" ? Security.sanitize(p.name || "Pemain") : (p.name || "Pemain");
+          const pPos = typeof Security !== "undefined" ? Security.sanitize(p.pos || "Pemain") : (p.pos || "Pemain");
+          const tName = typeof Security !== "undefined" ? Security.sanitize(t.name || "") : (t.name || "");
+          const playerKey = p.id || p.no || p.name;
+          const detailUrl = `/daftar-tim/detail-tim/${encodeURIComponent(t.id)}/detail-pemain/${encodeURIComponent(playerKey)}`;
+          return `
                 <div class="player-search-card" onclick="app.navigateTo('${detailUrl}', 'player-detail', { teamId: '${t.id}', playerId: '${encodeURIComponent(playerKey)}' })" title="Klik untuk lihat profil ${pName}">
                   <div class="player-search-num" style="background: ${t.badgeColor || '#0284c7'};">#${p.no || '-'}</div>
                   <div class="player-search-meta">
@@ -6650,7 +6650,7 @@ var app = window.app = Object.assign(window.app || {}, {
                   <span style="color:#94a3b8; font-size:0.8rem;">➔</span>
                 </div>
               `;
-            }).join("")}
+        }).join("")}
           </div>
         `;
       } else {
@@ -9518,18 +9518,18 @@ var app = window.app = Object.assign(window.app || {}, {
       </div>
 
       ${(hasPenalties || (Array.isArray(match.penaltyScorers) && match.penaltyScorers.length > 0)) ? (() => {
-      const penList = Array.isArray(match.penaltyScorers) ? match.penaltyScorers : [];
-      const hPens = penList.filter(p => p && p.team === match.homeId);
-      const aPens = penList.filter(p => p && p.team === match.awayId);
-      const renderPenSide = (items, teamObj) => items.length === 0
-        ? `<div style="font-size: 0.76rem; color: var(--text-muted);">-</div>`
-        : items.map((p, i) => `
+        const penList = Array.isArray(match.penaltyScorers) ? match.penaltyScorers : [];
+        const hPens = penList.filter(p => p && p.team === match.homeId);
+        const aPens = penList.filter(p => p && p.team === match.awayId);
+        const renderPenSide = (items, teamObj) => items.length === 0
+          ? `<div style="font-size: 0.76rem; color: var(--text-muted);">-</div>`
+          : items.map((p, i) => `
             <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.04);">
               <span>${p.scored !== false ? '⚽' : '❌'}</span>
               <span style="font-weight: 700; color: ${p.scored !== false ? '#fde68a' : '#fca5a5'};">#${i + 1} ${p.player}</span>
             </div>
           `).join("");
-      return `
+        return `
         <div class="md-section-title" style="margin-top: 14px;">
           <span>🎯</span> Pencetak Gol Adu Penalti (${match.penaltyHomeScore ?? 0} - ${match.penaltyAwayScore ?? 0})
         </div>
@@ -9546,7 +9546,7 @@ var app = window.app = Object.assign(window.app || {}, {
           </div>
         </div>
       `;
-    })() : ''}
+      })() : ''}
       
       <!-- AKUMULASI PELANGGARAN TIM (FOULS BANNER) -->
       <div class="md-foul-banner">
