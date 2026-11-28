@@ -3552,26 +3552,7 @@ var app = window.app = Object.assign(window.app || {}, {
   },
 
   bindEvents() {
-    // Dynamic Scroll-Driven Size Transition on Sticky Header (rAF Throttled)
-    const headerEl = document.querySelector(".header");
-    if (headerEl) {
-      let isHeaderScrolled = false;
-      let headerTick = false;
-      const onScrollHeader = () => {
-        if (!headerTick) {
-          window.requestAnimationFrame(() => {
-            const scrolled = (window.scrollY || window.pageYOffset || 0) > 20;
-            if (scrolled !== isHeaderScrolled) {
-              isHeaderScrolled = scrolled;
-              headerEl.classList.toggle("scrolled", isHeaderScrolled);
-            }
-            headerTick = false;
-          });
-          headerTick = true;
-        }
-      };
-      window.addEventListener("scroll", onScrollHeader, { passive: true });
-    }
+    // Sticky header & scroll progress are managed by a single throttled rAF handler in index.html.
 
     // Desktop Tabs
     document.querySelectorAll(".tab-btn").forEach(btn => {

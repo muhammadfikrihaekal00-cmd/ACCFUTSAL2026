@@ -11,8 +11,8 @@
   <title>ACC 2026 • Ma'had Tahfizhul Qur'an Al Fayyadh</title>
 
   <!-- Preload Critical Stylesheets & Hero Emblem for Instant LCP -->
-  <link rel="preload" as="style" href="/css/styles.css?v=20261128_v87">
-  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261128_v88">
+  <link rel="preload" as="style" href="/css/styles.css?v=20261128_v88">
+  <link rel="preload" as="style" href="/css/acc-midnight-theme.css?v=20261128_v89">
   <link rel="preload" as="image" href="/assets/acc_logo.webp" type="image/webp" fetchpriority="high">
 
   <!-- Preconnect Candidates for Lightning LCP -->
@@ -379,8 +379,8 @@
   </style>
 
   <!-- Core Stylesheets (Loaded Synchronously for 100% Smooth, Glitch-Free Rendering) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20261128_v87">
-  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261128_v88">
+  <link rel="stylesheet" href="/css/styles.css?v=20261128_v88">
+  <link rel="stylesheet" href="/css/acc-midnight-theme.css?v=20261128_v89">
 </head>
 
 <body class="snap-scroll-active">
@@ -3568,7 +3568,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
   <script defer src="/js/supabase-client.js?v=20261127_v91"></script>
   <script defer src="/js/data.js?v=20261127_v91"></script>
   <script defer src="/js/admin.js?v=20261127_v88"></script>
-  <script defer src="/js/app.js?v=20261128_v93"></script>
+  <script defer src="/js/app.js?v=20261128_v94"></script>
 
   <!-- Auto-Cleaner for PWA Caches & Stale Registrations -->
   <script>
@@ -3593,6 +3593,22 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
       var isHidden = false;
       var lastY = window.scrollY || window.pageYOffset || 0;
       var ticking = false;
+      var cachedMaxScroll = 0;
+      var lastMeasureTs = 0;
+
+      function getMaxScroll() {
+        var now = Date.now();
+        if (!cachedMaxScroll || (now - lastMeasureTs) > 600) {
+          var docEl = document.documentElement;
+          cachedMaxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
+          lastMeasureTs = now;
+        }
+        return cachedMaxScroll;
+      }
+
+      window.addEventListener("resize", function () {
+        cachedMaxScroll = 0;
+      }, { passive: true });
 
       function updateOnScroll() {
         var y = Math.max(0, window.scrollY || window.pageYOffset || 0);
@@ -3630,8 +3646,7 @@ ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;</code></pre>
           if (y <= 2) {
             progressEl.style.transform = "scaleX(0)";
           } else {
-            var docEl = document.documentElement;
-            var maxScroll = Math.max(0, (docEl ? docEl.scrollHeight : 0) - window.innerHeight);
+            var maxScroll = getMaxScroll();
             var ratio = maxScroll > 20 ? Math.min(1, y / maxScroll) : 0;
             progressEl.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
           }
