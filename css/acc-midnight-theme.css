@@ -7176,6 +7176,7 @@ body.modal-open .header {
 }
 
 @media (max-width: 768px) {
+
   .standings-table th.th-team,
   .standings-table td.td-team {
     position: sticky;
@@ -7196,6 +7197,7 @@ body.modal-open .header {
 
 /* Limit continuous infinite decorative loops on mobile (preserve LIVE pulse, marquee & skeleton) */
 @media (max-width: 980px) {
+
   .champion-crown,
   .hero-scroll-hint,
   .splash-glow-bg,
